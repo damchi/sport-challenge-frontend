@@ -14,7 +14,8 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows an error page and renders the page again on retry', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    // React logs the caught error; kept out of the test output.
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     render(
       <ErrorBoundary>
         <Flaky />
@@ -29,5 +30,6 @@ describe('ErrorBoundary', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
 
     expect(screen.getByText('content')).toBeInTheDocument();
+    consoleError.mockRestore();
   });
 });
