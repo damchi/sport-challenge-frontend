@@ -1,3 +1,4 @@
+import i18n from 'i18next';
 import en from '../i18n/en.json';
 import fr from '../i18n/fr.json';
 import { ApiError, errorMessage } from './errors';
@@ -34,8 +35,17 @@ describe('error messages', () => {
   });
 
   it('maps an error to its key and values', () => {
-    expect(errorMessage(new ApiError('network_error', 0))).toEqual({
+    expect(errorMessage(new ApiError('network_error', 0), (key) => i18n.exists(key))).toEqual({
       key: 'errors.network_error',
+      values: {},
+    });
+  });
+
+  it('falls back on errors.unknown_error for a code without text', () => {
+    const error = new ApiError('week_locked', 409, { week: '3' });
+
+    expect(errorMessage(error, (key) => i18n.exists(key))).toEqual({
+      key: 'errors.unknown_error',
       values: {},
     });
   });

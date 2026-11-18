@@ -1,3 +1,4 @@
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { createApiClient, type Session } from './client';
@@ -5,6 +6,8 @@ import { ApiError, errorMessage } from './errors';
 
 const BASE_URL = 'https://api.test';
 const SPORTS = `${BASE_URL}/api/v1/sports`;
+
+const hasKey = (key: string) => i18n.exists(key);
 
 const server = setupServer();
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
@@ -133,7 +136,7 @@ describe('createApiClient', () => {
     const error = await failure(client.GET('/api/v1/sports'));
 
     expect(error.params).toEqual({ retry_after: '30' });
-    expect(errorMessage(error)).toEqual({
+    expect(errorMessage(error, hasKey)).toEqual({
       key: 'errors.rate_limited_delay',
       values: { retry_after: '30' },
     });
@@ -147,7 +150,7 @@ describe('createApiClient', () => {
 
     const error = await failure(client.GET('/api/v1/sports'));
 
-    expect(errorMessage(error).key).toBe('errors.rate_limited');
+    expect(errorMessage(error, hasKey).key).toBe('errors.rate_limited');
   });
 
   it('renews the session once on 401 and replays the request', async () => {
@@ -253,6 +256,24 @@ describe('createApiClient', () => {
 
     expect(session.renew).toHaveBeenCalledTimes(1);
     expect(session.expire).toHaveBeenCalledTimes(1);
+  });
+
+  it('replays without the previous token when the renewal leaves none', async () => {
+    const seen: (string | null)[] = [];
+    server.use(
+      http.get(SPORTS, ({ request }) => {
+        seen.push(request.headers.get('authorization'));
+        return HttpResponse.json(errorBody('unauthenticated'), { status: 401 });
+      }),
+    );
+    const client = createApiClient({
+      baseUrl: BASE_URL,
+      session: fakeSession(['stale', undefined]),
+    });
+
+    await failure(client.GET('/api/v1/sports'));
+
+    expect(seen).toEqual(['Bearer stale', null]);
   });
 
   it('expires the session when the replay is still refused', async () => {

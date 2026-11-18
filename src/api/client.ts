@@ -23,7 +23,9 @@ export interface ApiClientOptions {
 
 function withToken(request: Request, token: string | undefined): Request {
   const next = new Request(request);
+  // A replayed request may still carry the previous token.
   if (token) next.headers.set('Authorization', `Bearer ${token}`);
+  else next.headers.delete('Authorization');
   return next;
 }
 
@@ -36,8 +38,9 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
   // Copies of the sent requests and their token, to replay them after a renewal.
   const sent = new Map<string, { request: Request; token: string | undefined }>();
   let renewal: Promise<boolean> | undefined;
-  // Tokens of a session already lost: no new renewal, no second expire().
-  const expiredTokens = new Set<string>();
+  // Tokens of the last lost session (two at most): no new renewal, no second
+  // expire(). Replaced, never accumulated.
+  let expiredTokens = new Set<string>();
 
   function renewOnce(): Promise<boolean> {
     renewal ??= session
@@ -52,7 +55,7 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
   function expireSession(...tokens: (string | undefined)[]): void {
     const lost = tokens.filter((token): token is string => token !== undefined);
     if (lost.every((token) => expiredTokens.has(token))) return;
-    lost.forEach((token) => expiredTokens.add(token));
+    expiredTokens = new Set(lost);
     session.expire();
   }
 
