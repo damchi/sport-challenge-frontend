@@ -16,5 +16,12 @@
     "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s.",
     "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
     "unknown": "Une erreur est survenue. Réessaie."
+  },
+  "errorPage": {
+    "title": "Oups, cette page n'a pas pu s'afficher",
+    "retry": "Réessayer"
+  },
+  "globalError": {
+    "dismiss": "Fermer le message"
   }
 }

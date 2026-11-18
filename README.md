@@ -165,9 +165,9 @@ frontend/
 
 ### 4.3 Données et état
 
-- 🟡 **Données serveur** : TanStack Query (cache, rafraîchissement).
+- ✅ **Données serveur** : TanStack Query (cache, rafraîchissement), configuré dans `src/api/queryClient.ts` ; clés de requête centralisées dans `src/api/queryKeys.ts`.
 - ✅ **V1 : classement mis à jour au rafraîchissement** : rechargement à l'ouverture de l'écran, au retour dans l'app et par tirer-pour-rafraîchir.
-- 🟡 **État local** : minimal (contexte React ou Zustand), pour la session et les préférences.
+- ✅ **État local** : minimal, sans bibliothèque d'état global : contextes React pour la session, la langue et les messages (décision FD4).
 - 🟡 **Formulaires** : react-hook-form avec schémas de validation partagés avec le backend.
 - Plus tard : mise à jour instantanée via flux serveur (SSE) sans changer les écrans.
 

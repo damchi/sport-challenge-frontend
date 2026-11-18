@@ -223,6 +223,16 @@ Conteneur `--color-segment`, rayon 14 px, padding 4 px, deux colonnes égales.
 Onglet actif : fond `--color-segment-active`, ombre légère en clair seulement, texte `--color-ink` ; inactif :
 transparent, texte `--color-muted`. `aria-pressed` sur chaque bouton.
 
+### Bandeau d'erreur
+
+🟡 Pour une erreur qu'aucun écran n'affiche lui-même (une action qui échoue,
+un rafraîchissement raté alors que l'écran montre déjà des données) : bandeau
+en haut de page, fond `--color-surface-raised`, texte `--color-on-raised`,
+rayon 14 px, message traduit (`errors.<code>`, repli `errors.unknown`) et
+bouton de fermeture de 44 × 44 avec `aria-label`. `role="alert"` pour qu'il
+soit annoncé. Une erreur de chargement reste affichée par l'écran (état
+d'erreur avec « Réessayer »).
+
 ### Barre de navigation
 En bas, 72 px, fond `--color-surface`, bordure haute : **Défis**, **Activités**,
 **Profil** en V1 (**Badges** s'ajoute en V1.1, entre Activités et Profil),
