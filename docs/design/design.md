@@ -11,9 +11,14 @@ traduction et fait foi pour le code.
 
 ## Principes
 
-- **Mobile d'abord.** Les écrans sont pensés à 390 px de large. Sur grand
-  écran, le contenu reste dans une colonne centrée de 480 px maximum (pages
-  de l'application) ; seules les pages publiques peuvent s'élargir.
+- **Mobile d'abord.** Les écrans fonctionnent dès **360 px** de large (règle
+  de `CLAUDE.md`) ; les maquettes sont dessinées à 390 px. Sur grand écran, le
+  contenu reste dans une colonne centrée de 480 px maximum (pages de
+  l'application) ; seules les pages publiques peuvent s'élargir.
+- **Périmètre V1** : badges, photo d'avatar (V1.1, décision D10) et
+  notifications (V3) apparaissent dans les maquettes mais ne sont pas
+  construits en V1. Les maquettes montrent aussi une activité « synchronisée
+  depuis Garmin » : aucune synchronisation n'est prévue, c'est un exemple.
 - **Répondre en une seconde à « où j'en suis cette semaine ? ».** Le chiffre
   de la semaine, l'objectif et le temps avant la clôture sont toujours visibles
   en premier.
@@ -70,8 +75,10 @@ Toute nouvelle couleur de texte doit aussi passer 4,5:1 (3:1 au-delà de 24 px).
 L'accent est un seul token : changer de couleur de marque ne doit demander
 qu'une modification.
 
-**Mode sombre** : pas encore dessiné. Quand il le sera, il redéfinit les mêmes
-tokens ; aucun composant ne teste le thème lui-même.
+**Thème sombre** : obligatoire en V1 (`CLAUDE.md`), mais pas encore dessiné.
+Il redéfinit les mêmes tokens (`prefers-color-scheme: dark`) ; aucun
+composant ne teste le thème lui-même. 🟡 Ses valeurs sont à proposer au
+ticket SC-WEB-003 et à valider, avec les mêmes contrastes minimum.
 
 ## Typographie
 
@@ -104,8 +111,8 @@ dans les classements et les compteurs.
 ## Icônes
 
 Icônes au trait, épaisseur 2, 20–22 px (14–16 px dans un badge), couleur
-`currentColor`. Utiliser **Lucide** (`lucide-react`) si aucune bibliothèque
-n'est déjà choisie. Correspondances : défis `trophy`, activités `activity`,
+`currentColor`. 🟡 Bibliothèque proposée : **Lucide** (`lucide-react`) ; c'est
+une nouvelle dépendance, à valider avant de l'installer. Correspondances : défis `trophy`, activités `activity`,
 badges `award`, profil `user`, notifications `bell`, à risque `triangle-alert`,
 atteint `check`, retour `chevron-left`, suite `chevron-right`, inviter
 `user-plus`, compte à rebours `timer`, ajouter `plus`.
@@ -160,8 +167,8 @@ ligne : contour 2 px `--color-accent` et fond `--color-accent-soft` ; mon nom
 s'affiche « Toi ». Utiliser `<ol>` pour un classement.
 
 ### Avatar
-Cercle de 32 px (lignes) avec initiales en 12 px / 700, ou photo si
-l'utilisateur en a une. Le nom est toujours affiché à côté : l'avatar est
+Cercle de 32 px (lignes) avec initiales en 12 px / 700. En V1, initiales
+seulement ; la photo arrive avec l'upload d'avatar (V1.1). Le nom est toujours affiché à côté : l'avatar est
 `aria-hidden`.
 
 ### Tuiles de semaines
@@ -184,17 +191,18 @@ transparent, texte `--color-muted`. `aria-pressed` sur chaque bouton.
 
 ### Barre de navigation
 En bas, 72 px, fond blanc, bordure haute : **Défis**, **Activités**,
-**Badges**, **Profil**, icône au-dessus du libellé. Onglet actif en
+**Profil** en V1 (**Badges** s'ajoute en V1.1, entre Activités et Profil),
+icône au-dessus du libellé. Onglet actif en
 `--color-accent` avec `aria-current="page"`. Dans un `<nav
 aria-label="Navigation principale">`.
 
 ## Écrans de référence
 
-1. **Accueil « Mes défis »** : salutation + titre, bouton notifications ;
-   bandeau de clôture ; cartes de défi (à risque en premier, puis en cours,
-   puis éliminés) ; dernière activité (« Course · 8,2 km », source
-   « synchronisée depuis Garmin », contribution « +8,2 km » en accent) ;
-   bouton flottant ; barre de navigation.
+1. **Accueil « Mes défis »** : salutation + titre (bouton notifications en
+   V3) ; bandeau de clôture ; cartes de défi (à risque en premier, puis en
+   cours, puis éliminés) ; dernière activité (« Course · 8,2 km », date,
+   contribution « +8,2 km » en accent) ; bouton flottant ; barre de
+   navigation.
 2. **Page d'un défi** : retour, bouton « Inviter » ; titre et méta
    (participants, sports, « Semaine 3 sur 4 ») ; bloc « Ta semaine » ;
    classement de la semaine (top 5, ma ligne visible même si je suis plus bas,
@@ -204,16 +212,21 @@ aria-label="Navigation principale">`.
    classée ; section « Éliminés ».
 
 À dessiner plus tard dans le même style : création d'un défi (assistant en 3
-ou 4 étapes, lien d'invitation à partager), badges (obtenus en couleur, à
-obtenir en silhouette avec leur condition), activités, profil.
+ou 4 étapes, lien d'invitation à partager), activités, profil, et en V1.1
+les badges (obtenus en couleur, à obtenir en silhouette avec leur condition).
 
 ## Rédaction
 
-- Français, tutoiement, phrases courtes. Le texte dit ce qui va se passer
-  (« Encore 7 km avant la clôture, sinon tu es éliminé »).
-- Nombres et dates au format québécois : `8,2 km`, `23 h 59`, `5e sur 8`,
-  `dimanche`, espace insécable avant les unités et `:` (via
-  `Intl.NumberFormat('fr-CA')` et `Intl.DateTimeFormat('fr-CA', { timeZone })`).
+- Français et anglais : chaque texte existe dans les deux langues, via
+  i18next (aucune chaîne en dur). En français, tutoiement ; dans les deux
+  langues, phrases courtes. Le texte dit ce qui va se passer (« Encore 7 km
+  avant la clôture, sinon tu es éliminé »).
+- Nombres et dates formatés selon la langue active, avec `Intl.NumberFormat`
+  et `Intl.DateTimeFormat` (option `timeZone` du défi). En français :
+  `8,2 km`, `23 h 59`, `5e sur 8`, `dimanche`, espace insécable avant les
+  unités et `:` ; en anglais (`en-CA`) : `8.2 km`, `Sunday 11:59 p.m.`, `5th of 8`.
+  🟡 Locales proposées : `fr-CA` et `en-CA`, à confirmer à la mise en place
+  de l'i18n.
 - Pas de texte factice dans le code livré : tout chiffre vient de l'API.
 
 ## Accessibilité (obligatoire)
