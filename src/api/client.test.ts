@@ -228,6 +228,33 @@ describe('createApiClient', () => {
     expect(error).toMatchObject({ code: 'network_error', status: 0 });
   });
 
+  it('neither renews nor expires on a 401 sent without a session', async () => {
+    server.use(
+      http.get(SPORTS, () => HttpResponse.json(errorBody('unauthenticated'), { status: 401 })),
+    );
+    const session = fakeSession([undefined]);
+    const client = createApiClient({ baseUrl: BASE_URL, session });
+
+    const error = await failure(client.GET('/api/v1/sports'));
+
+    expect(error).toMatchObject({ code: 'unauthenticated', status: 401 });
+    expect(session.renew).not.toHaveBeenCalled();
+    expect(session.expire).not.toHaveBeenCalled();
+  });
+
+  it('expires the session once when concurrent replays are still refused', async () => {
+    server.use(
+      http.get(SPORTS, () => HttpResponse.json(errorBody('account_deleted'), { status: 401 })),
+    );
+    const session = fakeSession(['stale', 'fresh']);
+    const client = createApiClient({ baseUrl: BASE_URL, session });
+
+    await Promise.allSettled([client.GET('/api/v1/sports'), client.GET('/api/v1/sports')]);
+
+    expect(session.renew).toHaveBeenCalledTimes(1);
+    expect(session.expire).toHaveBeenCalledTimes(1);
+  });
+
   it('expires the session when the replay is still refused', async () => {
     server.use(
       http.get(SPORTS, () => HttpResponse.json(errorBody('account_deleted'), { status: 401 })),

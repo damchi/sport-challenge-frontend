@@ -36,8 +36,8 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
   // Copies of the sent requests and their token, to replay them after a renewal.
   const sent = new Map<string, { request: Request; token: string | undefined }>();
   let renewal: Promise<boolean> | undefined;
-  // Token whose session is already lost: no new renewal, no second expire().
-  let expired: { token: string | undefined } | undefined;
+  // Tokens of a session already lost: no new renewal, no second expire().
+  const expiredTokens = new Set<string>();
 
   function renewOnce(): Promise<boolean> {
     renewal ??= session
@@ -49,9 +49,10 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
     return renewal;
   }
 
-  function expireFor(token: string | undefined): void {
-    if (expired && expired.token === token) return;
-    expired = { token };
+  function expireSession(...tokens: (string | undefined)[]): void {
+    const lost = tokens.filter((token): token is string => token !== undefined);
+    if (lost.every((token) => expiredTokens.has(token))) return;
+    lost.forEach((token) => expiredTokens.add(token));
     session.expire();
   }
 
@@ -81,16 +82,18 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
       sent.delete(id);
 
       let final = response;
-      const current = final.status === 401 && original ? await session.getAccessToken() : undefined;
-      const lost = expired !== undefined && expired.token === current;
-      if (final.status === 401 && original && !lost) {
+      // Only a request sent with a session that is not already lost renews it;
+      // a signed-out request just fails.
+      const sentToken = original?.token;
+      if (final.status === 401 && original && sentToken && !expiredTokens.has(sentToken)) {
         // A request sent before a renewal that already ended only needs a replay.
-        if (current !== original.token || (await renewOnce())) {
+        const current = await session.getAccessToken();
+        if (current !== sentToken || (await renewOnce())) {
           const replayed = await replay(original.request, options.fetch);
           final = replayed.response;
-          if (final.status === 401) expireFor(replayed.token);
+          if (final.status === 401) expireSession(sentToken, replayed.token);
         } else {
-          expireFor(current);
+          expireSession(sentToken);
         }
       }
 
