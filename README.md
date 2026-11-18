@@ -231,6 +231,8 @@ frontend/
 - Les créations d'activité envoient une **clé d'idempotence** (utile pour le hors-ligne et les envois répétés).
 - Les adresses de l'API et la configuration d'authentification (domaine, audience) viennent de variables d'environnement, une par environnement (développement, staging, production).
 - Toute évolution de l'API passe d'abord par le backend ; le frontend régénère son client.
+- ✅ Synchronisation : `pnpm api:sync` copie le contrat dans `openapi/openapi.yaml` (versionné), depuis la variable `API_CONTRACT` (chemin ou adresse https), sinon le backend cloné à côté (`../backend` ou `../sport-challenge-api`), sinon la branche `main` du backend. Avant d'écraser la copie, il compare les deux contrats avec oasdiff (dans Docker) et s'arrête sur un changement incompatible ; `--accept-breaking` l'accepte après relecture.
+- ✅ Génération (FD6) : `pnpm api:generate` produit les types dans `src/api/generated/schema.ts` avec `openapi-typescript` ; la CI échoue si ces types ne correspondent plus au contrat. Le client `openapi-fetch` et les hooks TanStack Query arrivent avec le premier écran qui appelle l'API.
 
 ---
 

@@ -1,0 +1,1920 @@
+openapi: 3.0.3
+info:
+  title: Sport Challenge API
+  version: 0.1.0
+  description: |
+    Backend of the Sport Challenge app. This file is the source of truth:
+    change it first, then run `make generate`.
+
+    Health endpoints live at the root; business routes live under `/api/v1`.
+
+    Every route requires an Auth0 access token (`bearerAuth`), declared once
+    below: a new route is protected without adding anything. Only the health
+    probes opt out with `security: []`.
+
+    Every response, errors included, carries `X-Content-Type-Options: nosniff`
+    and `Cache-Control: no-store` (the responses hold personal data). A route
+    whose response can be kept declares its own `Cache-Control`, which
+    replaces it (`GET /api/v1/sports`).
+  license:
+    name: Proprietary
+    url: https://github.com/damchi/sport-challenge-api
+servers:
+  - url: /
+security:
+  - bearerAuth: []
+tags:
+  - name: health
+    description: Liveness and readiness probes.
+  - name: me
+    description: Profile of the authenticated user.
+  - name: sports
+    description: Catalogue of sports.
+  - name: challenges
+    description: Challenges, their categories and participants.
+  - name: activities
+    description: Activities of the user, entered once and counted in every challenge where they belong.
+  - name: invitations
+    description: Invitation links to a challenge, reusable until the end of week 1.
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness probe
+      description: |
+        Always returns 200 while the process is able to serve requests. It also
+        tells which build runs (version and commit), so that a deployment can
+        be checked without a token. No trailing "z" (as in /healthz): Cloud Run
+        reserves some paths ending in z and answers them itself.
+      tags: [health]
+      security: []
+      responses:
+        "200":
+          description: The process is alive.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /ready:
+    get:
+      operationId: getReady
+      summary: Readiness probe
+      description: Returns 200 when the database answers, 503 otherwise.
+      tags: [health]
+      security: []
+      responses:
+        "200":
+          description: The API can serve traffic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Readiness"
+              example:
+                status: ok
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          description: A dependency (the database) does not answer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Readiness"
+              example:
+                status: unavailable
+  /api/v1/me:
+    get:
+      operationId: getMe
+      summary: Read my profile
+      description: |
+        Profile of the authenticated user, created empty on first login. The
+        profile is complete once the pseudo is set: creating or joining a
+        challenge requires it (`profile_incomplete`).
+      tags: [me]
+      responses:
+        "200":
+          description: The profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      operationId: patchMe
+      summary: Update my profile
+      description: |
+        Changes the pseudo and the language. An absent field is left
+        unchanged; `null` is refused (a pseudo cannot be removed).
+      tags: [me]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeUpdate"
+      responses:
+        "200":
+          description: The updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: |
+            The pseudo is already taken, regardless of case
+            (`validation_failed`, `params.fields` = `pseudo`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteMe
+      summary: Delete my account
+      description: |
+        Final: the account is anonymized (pseudo and avatar erased) and
+        abandons every challenge not finished; a finished challenge keeps its
+        results under a neutral name. The user is also deleted at the auth
+        provider. Every later request with a token of this account, even
+        one still valid, answers 401 `account_deleted`; logging in again
+        with this identity never creates a new account. The client asks for confirmation first.
+        A 500 may come after the account is deleted: retrying then answers
+        401 `account_deleted`, which the client treats as done.
+        Refused (422 `last_creator`) while the account is the last creator
+        with an account of a challenge not finished: the user first adds
+        another creator, or deletes the challenge; `params.challenges` lists
+        their ids, comma-separated. Nothing is deleted then.
+      tags: [me]
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: |
+            The account is the last creator of challenges not finished
+            (`last_creator`); `params.challenges` lists them.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/me/activities:
+    get:
+      operationId: listMyActivities
+      summary: List my activities
+      description: |
+        The activities of the authenticated user, deleted ones left out,
+        most recent first (`started_at`, then `id`). `from` and `to` keep
+        those started in `[from, to)`; `to` must come after `from`. Each one
+        lists the challenges where it counts now and whether it is `locked`
+        (its week has ended in one of them).
+      tags: [activities]
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          description: The `next_cursor` of the previous page, as is.
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        "200":
+          description: A page of activities.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityPage"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/sports:
+    get:
+      operationId: getSports
+      summary: List the sports
+      description: |
+        Catalogue of sports, sorted by code. The apps translate the codes and
+        prefill the distance factors of the challenge creation form with the
+        suggested ones; the creator may change them.
+      tags: [sports]
+      responses:
+        "200":
+          description: The catalogue.
+          headers:
+            Cache-Control:
+              description: The catalogue rarely changes; private because the request is authenticated.
+              required: true
+              schema:
+                type: string
+                example: private, max-age=300
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SportList"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges:
+    get:
+      operationId: listChallenges
+      summary: List challenges
+      description: |
+        `public`: the public challenges; `mine`: those the user created or
+        joined (abandoned included). Deleted challenges never appear, and a
+        private challenge never appears in `public`. The status is computed
+        from the current instant. Upcoming and ongoing challenges come
+        soonest first, finished ones most recent first; without a status
+        filter, by start date.
+      tags: [challenges]
+      parameters:
+        - name: scope
+          in: query
+          schema:
+            type: string
+            enum: [public, mine]
+            default: public
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [upcoming, ongoing, finished]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          description: The `next_cursor` of the previous page, as is.
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        "200":
+          description: A page of challenges.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengePage"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      operationId: createChallenge
+      summary: Create a challenge
+      description: |
+        Creates a challenge with its 3 categories; the creator becomes its
+        first participant. Requires a complete profile (`profile_incomplete`).
+        The window starts at local midnight of `start_date` in `timezone` and
+        lasts `weeks` local weeks. Distance factors not given keep the
+        catalogue's suggested factor; all are frozen at creation.
+      tags: [challenges]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeCreate"
+      responses:
+        "201":
+          description: The created challenge.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Challenge"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: The profile is incomplete (`profile_incomplete`); choose a pseudo first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}:
+    get:
+      operationId: getChallenge
+      summary: Read a challenge
+      description: |
+        The challenge, its categories, the user's role and participation,
+        and fields computed by the server from the current instant. A
+        challenge that does not exist, was deleted, or is private and not
+        visible to the user answers the same 404 `challenge_not_found`.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The challenge.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeDetail"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteChallenge
+      summary: Delete a challenge
+      description: |
+        Creators only (403 `forbidden`), at any time, even ongoing or
+        finished. The challenge disappears at once for everyone, its creators
+        included (404 from then on); its data stays until the final purge.
+        Deleting it again answers 404, like a missing challenge.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Deleted.
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      operationId: updateChallenge
+      summary: Edit the title and the description
+      description: |
+        Creators only (403 `forbidden`), at any time, even after the start.
+        Only `title` and `description` change; every other field of the
+        challenge is frozen at creation and answers 422 `field_not_editable`
+        with the fields in `params.fields`. An absent field is left as is;
+        an empty `description` removes it. `null` is refused for `title` and
+        `description`; a frozen field sent as `null` changes nothing and is
+        ignored, like an absent one.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeUpdate"
+      responses:
+        "200":
+          description: The challenge after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeDetail"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "422":
+          description: A field frozen at creation was sent (`field_not_editable`, `params.fields`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/join:
+    post:
+      operationId: joinChallenge
+      summary: Join a challenge
+      description: |
+        Makes the user an active participant, ranked in every category.
+        Open until the end of week 1 (`registration_closed` from that exact
+        instant); a public challenge to every logged-in user, a private one
+        on invitation (otherwise the same 404 as a missing challenge). Never
+        twice: `already_participant`, or `participation_abandoned` after an
+        abandon, which is final. Requires a complete profile
+        (`profile_incomplete`).
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: Joined; the challenge as the user now sees it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeDetail"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "409":
+          description: Already a participant (`already_participant`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: |
+            Registration closed after week 1 (`registration_closed`), abandoned
+            for good (`participation_abandoned`), or incomplete profile
+            (`profile_incomplete`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/abandon:
+    post:
+      operationId: abandonChallenge
+      summary: Abandon a challenge
+      description: |
+        Ends the user's participation for good: eliminated from every
+        category, shown as abandoned, never able to join again. A creator
+        keeps the creator rights but no longer competes. Abandoning again
+        answers 200 and changes nothing. A finished challenge answers 422
+        `challenge_ended`; a visible challenge the user never joined answers
+        404 `not_found`, a hidden one the same 404 `challenge_not_found` as a
+        missing challenge.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Abandoned; the challenge as the user now sees it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeDetail"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: |
+            No participation to abandon (`not_found`), or a missing, deleted or
+            hidden challenge (`challenge_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: The challenge is finished (`challenge_ended`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/participants:
+    get:
+      operationId: listParticipants
+      summary: List the participants
+      description: |
+        Visible to whoever sees the challenge: every user for a public one;
+        its creators, participants (abandoned included) and invited users
+        for a private one. Anyone else, like a missing or deleted challenge,
+        gets the same 404 `challenge_not_found`. Every participant is listed,
+        abandoned or excluded ones included (shown as abandoned), in order
+        of registration.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          description: The `next_cursor` of the previous page, as is.
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        "200":
+          description: A page of participants.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParticipantPage"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/leaderboard:
+    get:
+      operationId: getLeaderboard
+      summary: Get the leaderboard
+      description: |
+        The ranking of each of the 3 categories, always computed from the
+        raw activities at `computed_at`. Visible to whoever sees the
+        challenge: every user for a public one (a non-participant sees the
+        ranking only); its creators, participants (abandoned included) and
+        invited users for a private one. Anyone else, like a missing or
+        deleted challenge, gets the same 404 `challenge_not_found`.
+
+        Equal values share a rank (1, 1, 3). Participants who abandoned
+        (also the excluded and the deleted accounts) are listed last in every
+        category, with `abandoned` true and no rank nor value.
+
+        In `run_elimination`, `elimination` gives the live situation: the
+        survivors first by distance, then the eliminated, the last
+        eliminated first. `status` is `reached` once the distance of the
+        week reaches the minimum, else `at_risk` when the end of the week is
+        at most the configured threshold (24 h by default) away, else
+        `in_progress`; `eliminated` once eliminated. There is no minimum and
+        no status in week 1, nor outside the weeks of the challenge.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The leaderboard.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Leaderboard"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/participants/{userId}:
+    delete:
+      operationId: excludeParticipant
+      summary: Exclude a participant
+      description: |
+        Creators only (403 `forbidden`). The participant is eliminated from
+        every category for good and shown as abandoned, with no mention of
+        the exclusion. A creator cannot be excluded, even one who abandoned
+        (422 `cannot_exclude_creator`); a finished challenge answers 422
+        `challenge_ended`; excluding a participant already out answers 204
+        and changes nothing; a user who never joined answers 404 `not_found`.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Excluded (or already out).
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: |
+            No such participant (`not_found`), or a missing, deleted or hidden
+            challenge (`challenge_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: The target is a creator (`cannot_exclude_creator`), or the challenge is finished (`challenge_ended`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/participants/{userId}/activities:
+    get:
+      operationId: listParticipantActivities
+      summary: List the activities of a participant
+      description: |
+        The activities of participant `userId` started in the window of the
+        challenge, deleted ones left out, most recent first (`started_at`,
+        then `id`). Visible to the participants of the challenge (abandoned
+        or excluded ones included) and its creators. A challenge the user
+        may not see answers 404 `challenge_not_found`; a visible one the
+        user never joined (a public challenge shows them its leaderboard
+        only), or a `userId` who never joined it, answers 404 `not_found`.
+        `challenge_ids` and `locked` are read from this challenge only, never
+        from the other challenges of the participant: `challenge_ids` holds
+        it when the activity counts in it (never for a participant who
+        abandoned: empty), and `locked` is true once its week has ended in
+        it, where it counts (never for a participant who abandoned). The author's own listing (`/me/activities`) may still show an
+        activity locked by another challenge.
+      tags: [activities]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          description: The `next_cursor` of the previous page, as is.
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        "200":
+          description: A page of activities.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityPage"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: |
+            A missing, deleted or hidden challenge (`challenge_not_found`), or
+            an actor or a `userId` who never joined it (`not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/creators:
+    post:
+      operationId: addCreator
+      summary: Add a creator
+      description: |
+        Creators only (403 `forbidden`). The target must be an active
+        participant (422 `not_active_participant`): every creator is a
+        participant. Adding an existing creator answers 200 and changes
+        nothing. A finished challenge answers 422 `challenge_ended`.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorAdd"
+      responses:
+        "200":
+          description: The target is a creator; the challenge as the user sees it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeDetail"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "422":
+          description: The target is not an active participant (`not_active_participant`), or the challenge is finished (`challenge_ended`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/invitations:
+    post:
+      operationId: createInvitation
+      summary: Create an invitation link
+      description: |
+        Creates a link to the challenge, reusable by several people until
+        the end of week 1. Creators, and active participants when the
+        challenge was created with `members_can_invite` (otherwise 403
+        `forbidden`); nobody from the end of week 1 (422
+        `registration_closed`). The token is answered here only: the server
+        keeps its hash.
+      tags: [invitations]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: The invitation, with its token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationCreated"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/ChallengeNotFound"
+        "422":
+          description: Registration closed after week 1 (`registration_closed`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/invitations/open:
+    post:
+      operationId: openInvitation
+      summary: Open an invitation link
+      description: |
+        A limited preview of the challenge of the invitation whose token is
+        in the body (never in the URL: the logs of the platform record the
+        URLs). Opening the link makes the user invited: while the invitation
+        is valid, they read the challenge (`GET /challenges/{challengeId}`)
+        and may join it. Opening it again changes nothing. An unknown or
+        malformed token, an expired or revoked invitation, one whose author
+        may no longer invite (or whose account is deleted), and one to a
+        deleted challenge answer the same 404 `invitation_invalid`.
+      tags: [invitations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationTokenRequest"
+      responses:
+        "200":
+          description: The preview of the challenge.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationPreview"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/InvitationInvalid"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/invitations/accept:
+    post:
+      operationId: acceptInvitation
+      summary: Accept an invitation
+      description: |
+        Opens the link whose token is in the body, then joins its challenge
+        under the rules of `POST /challenges/{challengeId}/join`: never twice
+        (`already_participant`), never after an abandon
+        (`participation_abandoned`), with a complete profile
+        (`profile_incomplete`). An invitation expires at the end of week 1,
+        when joining closes: from that instant the answer is 404
+        `invitation_invalid`, as for every invalid token.
+      tags: [invitations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationTokenRequest"
+      responses:
+        "201":
+          description: Joined; the challenge as the user now sees it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeDetail"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/InvitationInvalid"
+        "409":
+          description: Already a participant (`already_participant`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: |
+            Abandoned for good (`participation_abandoned`), incomplete profile
+            (`profile_incomplete`), or registration closed while accepting
+            (`registration_closed`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/activities:
+    post:
+      operationId: createActivity
+      summary: Record an activity
+      description: |
+        Records a manual activity of the authenticated user, who needs a
+        complete profile (`profile_incomplete`). It belongs to the user, not
+        to a challenge: it counts in every challenge, not deleted, where the
+        user is an active participant and whose window holds `started_at`
+        (`challenge_ids`, possibly empty). An activity outside every window
+        is recorded all the same. It is refused (`week_locked`) when its week
+        has ended in one of those challenges, finished ones included. Its end
+        (`started_at` plus `duration_seconds`) is never in the future (5
+        minutes of tolerance) and `started_at` never before 2000-01-01
+        (`validation_failed`). It never overlaps another activity of the user
+        (`activity_overlap`); activities one after the other (a triathlon)
+        are fine, the end of one being the start of the next. The
+        speed is computed, never sent. With `Idempotency-Key`, a valid
+        request sent again with the same key answers 200 with the activity
+        recorded first, as it is now (replaced since, maybe), even if the
+        body differs; once that activity is deleted, it answers 404
+        `activity_not_found` and records nothing.
+      tags: [activities]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: Key chosen by the client (a UUID, for instance), unique per user.
+          schema:
+            type: string
+            pattern: "^[!-~]{1,128}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityCreate"
+      responses:
+        "201":
+          description: The recorded activity.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "200":
+          description: The activity already recorded with this `Idempotency-Key`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ActivityNotFound"
+        "422":
+          description: |
+            The profile is incomplete (`profile_incomplete`), the sport needs
+            a distance (`distance_required`) or takes none
+            (`distance_not_allowed`), the activity overlaps another of the
+            user (`activity_overlap`), or the week of `started_at` has ended
+            in a challenge where the activity counts (`week_locked`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/activities/{activityId}:
+    parameters:
+      - name: activityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateActivity
+      summary: Replace an activity
+      description: |
+        Author only: the activity of someone else, a deleted one or a missing
+        one answers 404 `activity_not_found`, the same answer in every case.
+        The body replaces every field the author entered, with the
+        validations of the creation: a field left out is cleared
+        (`sport_label`, `distance_meters`). The source and the
+        `Idempotency-Key` of the creation stay. It is refused
+        (`week_locked`) when the week of the current `started_at`, or of the
+        new one, has ended in a challenge where the activity counts, and
+        (`activity_overlap`) when it would overlap another activity of the
+        user.
+      tags: [activities]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityCreate"
+      responses:
+        "200":
+          description: The activity as replaced, with the challenges where it counts now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Activity"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ActivityNotFound"
+        "422":
+          description: |
+            The sport needs a distance (`distance_required`) or takes none
+            (`distance_not_allowed`), it would overlap another activity of
+            the user (`activity_overlap`), or the week of the current or the
+            new `started_at` has ended in a challenge where the activity
+            counts (`week_locked`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      operationId: deleteActivity
+      summary: Delete an activity
+      description: |
+        Author only, as for the update (404 `activity_not_found`). The
+        activity stops counting at once; it is refused (`week_locked`) when
+        its week has ended in a challenge where it counts. Deleting it again
+        answers 404.
+      tags: [activities]
+      responses:
+        "204":
+          description: Deleted.
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/ActivityNotFound"
+        "422":
+          description: The week of the activity has ended in a challenge where it counts (`week_locked`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Auth0 access token of a user (audience of the API); machine-to-machine tokens are refused.
+  responses:
+    Unauthorized:
+      description: |
+        Missing or malformed credentials (`unauthenticated`), invalid access
+        token (`invalid_token`), expired access token (`token_expired`) or
+        deleted account (`account_deleted`).
+      headers:
+        WWW-Authenticate:
+          description: '`Bearer`, or `Bearer error="invalid_token"` for an invalid or expired token (RFC 6750).'
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: The resource is visible but the action is not allowed to the user (`forbidden`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ChallengeNotFound:
+      description: |
+        No such challenge, a deleted one, or a private one the user may not
+        see (`challenge_not_found`): the same answer in every case.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InvitationInvalid:
+      description: |
+        No valid invitation for the token (`invitation_invalid`): unknown,
+        malformed, expired, revoked, of an author who may no longer invite,
+        or to a deleted challenge. The same answer in every case.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ActivityNotFound:
+      description: |
+        No such activity, a deleted one, or one of another user
+        (`activity_not_found`): the same answer in every case. Also the
+        answer of a creation whose `Idempotency-Key` gave a deleted activity.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: |
+        Technical failure (`internal_error`), logged with its `request_id`;
+        the cause is never sent back.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: |
+        Too many requests (`rate_limited`): from the same IP address on any
+        route, or by the same user on a write route. Retry after the delay.
+      headers:
+        Retry-After:
+          description: Seconds to wait before the next request.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationFailed:
+      description: |
+        The request does not match the contract (`validation_failed`).
+        `params.fields` lists the invalid fields, comma-separated
+        (`pseudo,language`).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      description: Single error format of the API. Clients translate `code`; `message` is only an English fallback.
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code:
+              $ref: "#/components/schemas/ErrorCode"
+            message:
+              type: string
+              description: English fallback text, never shown as is by the apps.
+            params:
+              type: object
+              description: Values for the client's text (a deadline...); never personal data.
+              additionalProperties:
+                type: string
+            request_id:
+              type: string
+              description: Identifier of the request, also in the server logs.
+    ErrorCode:
+      description: Stable error codes. Each ticket adds the codes it returns.
+      type: string
+      enum:
+        - unauthenticated
+        - invalid_token
+        - token_expired
+        - account_deleted
+        - profile_incomplete
+        - challenge_not_found
+        - activity_not_found
+        - invitation_invalid
+        - forbidden
+        - field_not_editable
+        - registration_closed
+        - already_participant
+        - participation_abandoned
+        - challenge_ended
+        - cannot_exclude_creator
+        - not_active_participant
+        - last_creator
+        - distance_required
+        - distance_not_allowed
+        - week_locked
+        - activity_overlap
+        - rate_limited
+        - not_found
+        - validation_failed
+        - internal_error
+    Health:
+      type: object
+      required: [status, version, commit]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+          description: |
+            The semantic version of the running build (`v1.2.3`), or `dev` for
+            a build that was not released.
+          example: v1.2.3
+        commit:
+          type: string
+          description: The full SHA of the Git commit the running build was made from, or `unknown`.
+          example: 0123456789abcdef0123456789abcdef01234567
+    Readiness:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]
+    Pseudo:
+      description: 3 to 20 ASCII letters, digits, `_`, `.` or `-`; unique regardless of case.
+      type: string
+      pattern: "^[A-Za-z0-9_.-]{3,20}$"
+      example: marie_92
+    Language:
+      type: string
+      enum: [fr, en]
+    Me:
+      type: object
+      required: [id, pseudo, avatar, language, profile_complete]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        pseudo:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Pseudo"
+          description: Null until the user chooses one.
+        avatar:
+          type: string
+          nullable: true
+          description: Avatar image; always null in V1, where the apps show the pseudo's initials.
+        language:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Language"
+          description: Null until the user chooses one.
+        profile_complete:
+          type: boolean
+          description: True once the pseudo is set.
+    MeUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        pseudo:
+          $ref: "#/components/schemas/Pseudo"
+        language:
+          $ref: "#/components/schemas/Language"
+    SportList:
+      type: object
+      required: [sports]
+      additionalProperties: false
+      properties:
+        sports:
+          type: array
+          items:
+            $ref: "#/components/schemas/Sport"
+    Sport:
+      type: object
+      required: [code, distance_mode, suggested_factor]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          description: Stable code, translated by the apps (`run`, `ride`, `other`...).
+          example: ride
+        distance_mode:
+          type: string
+          enum: [required, none, optional]
+          description: Whether an activity of this sport has a distance; `optional` for `other`.
+        suggested_factor:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0.1
+          maximum: 2
+          description: Suggested distance factor (0.1 to 2, two decimals); null for sports without distance.
+          example: 0.3
+    ChallengeCreate:
+      type: object
+      required: [title, visibility, timezone, start_date, weeks, elimination_step_meters]
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          description: |
+            3 to 80 characters once surrounding spaces are removed, 3 of them
+            visible (the kept formatting characters below do not count); checked
+            by the service, not by the schema, which would count those spaces. No
+            control character, no line or
+            paragraph separator (U+2028, U+2029), no invisible or bidirectional
+            formatting character (Unicode Cf, such as U+200B or U+202E) but
+            U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+            U+E007F).
+          example: Spring run
+        description:
+          type: string
+          maxLength: 2000
+          description: |
+            2000 characters at most; an empty string means no description. No
+            control character but line breaks and tabs, no line or
+            paragraph separator (U+2028, U+2029), no invisible or bidirectional
+            formatting character (Unicode Cf, such as U+200B or U+202E) but
+            U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+            U+E007F).
+        visibility:
+          type: string
+          enum: [public, private]
+        members_can_invite:
+          type: boolean
+          default: false
+          description: Whether participants may invite people, not only creators.
+        timezone:
+          type: string
+          description: IANA time zone of the place the challenge is run from; the weeks are cut in it.
+          example: America/Toronto
+        start_date:
+          type: string
+          format: date
+          description: First local day, between today and the same day next year in `timezone`.
+          example: "2026-12-07"
+        weeks:
+          type: integer
+          minimum: 2
+          maximum: 52
+          description: Duration in whole weeks.
+        elimination_step_meters:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          description: Increment X of the run elimination category, in meters.
+        distance_factors:
+          type: object
+          description: |
+            Factors chosen by the creator, by sport code (distance sports only,
+            0.1 to 2, two decimals at most). Send only the factors the creator
+            changed: sports not given keep their suggested factor. `run` is
+            refused, even at 1: it is the reference and always counts x1.
+          additionalProperties:
+            type: number
+            format: double
+            minimum: 0.1
+            maximum: 2
+          example:
+            ride: 0.25
+    Challenge:
+      type: object
+      required: [id, title, description, visibility, members_can_invite, timezone, starts_at, ends_at, categories]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        visibility:
+          type: string
+          enum: [public, private]
+        members_can_invite:
+          type: boolean
+        timezone:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+          description: Local midnight of the first day, in UTC.
+        ends_at:
+          type: string
+          format: date-time
+          description: End of the window (excluded), in UTC.
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+    Category:
+      type: object
+      required: [type, position, params]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: [cumulative_time, cumulative_distance, run_elimination]
+        position:
+          type: integer
+          minimum: 1
+          maximum: 3
+        params:
+          $ref: "#/components/schemas/CategoryParams"
+    CategoryParams:
+      type: object
+      additionalProperties: false
+      description: Frozen settings of the category.
+      properties:
+        factors:
+          type: object
+          description: cumulative_distance only, distance factor by sport code.
+          additionalProperties:
+            type: number
+            format: double
+        sport:
+          type: string
+          description: run_elimination only, always `run`.
+        step_meters:
+          type: integer
+          description: run_elimination only, increment X in meters.
+    ChallengePage:
+      type: object
+      required: [items, next_cursor]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChallengeSummary"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass it as `cursor` for the next page; null on the last page.
+    ParticipantPage:
+      type: object
+      required: [items, next_cursor]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Participant"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass it as `cursor` for the next page; null on the last page.
+    Participant:
+      type: object
+      required: [user_id, pseudo, avatar, status, joined_at]
+      additionalProperties: false
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        pseudo:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Pseudo"
+          description: Null for a deleted (anonymized) account; the apps show a neutral name.
+        avatar:
+          type: string
+          nullable: true
+          description: Avatar image; always null in V1, where the apps show the pseudo's initials.
+        status:
+          type: string
+          enum: [active, abandoned]
+          description: "`abandoned` also covers an excluded participant and a deleted account."
+        joined_at:
+          type: string
+          format: date-time
+    Leaderboard:
+      type: object
+      required: [computed_at, categories]
+      additionalProperties: false
+      properties:
+        computed_at:
+          type: string
+          format: date-time
+          description: The instant the ranking was computed at; weeks are judged at it.
+        categories:
+          type: array
+          description: The 3 categories, in the order of the challenge.
+          items:
+            $ref: "#/components/schemas/CategoryRanking"
+    CategoryRanking:
+      type: object
+      required: [type, entries]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: [cumulative_time, cumulative_distance, run_elimination]
+        entries:
+          type: array
+          description: |
+            Every participant. Ranked ones first, best first; abandoned ones
+            last. `value` is in seconds for `cumulative_time` and in meters
+            for the other two.
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+    LeaderboardEntry:
+      type: object
+      required: [rank, user, value, abandoned, elimination]
+      additionalProperties: false
+      properties:
+        rank:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: Null for a participant who abandoned.
+        user:
+          $ref: "#/components/schemas/LeaderboardUser"
+        value:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Null for a participant who abandoned.
+        abandoned:
+          type: boolean
+        elimination:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/EliminationProgress"
+          description: Only in `run_elimination`, and null for a participant who abandoned.
+    LeaderboardUser:
+      type: object
+      required: [id, pseudo, avatar]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        pseudo:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Pseudo"
+          description: Null for a deleted (anonymized) account; the apps show a neutral name.
+        avatar:
+          type: string
+          nullable: true
+          description: Avatar image; always null in V1, where the apps show the pseudo's initials.
+    EliminationProgress:
+      type: object
+      required: [status, eliminated_week, minimum_meters, run_meters, week_ends_at]
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          nullable: true
+          enum: [reached, at_risk, in_progress, eliminated]
+          description: Null in week 1 and outside the weeks of the challenge.
+        eliminated_week:
+          type: integer
+          minimum: 2
+          nullable: true
+          description: The week the participant was eliminated at the end of; null if not eliminated.
+        minimum_meters:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: The distance the current week needs; null in week 1, when eliminated, or outside the weeks.
+        run_meters:
+          type: integer
+          minimum: 0
+          description: The distance already run in the current week; 0 when eliminated or outside the weeks.
+        week_ends_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: The end of the current week; null when eliminated or outside the weeks.
+    ChallengeSummary:
+      type: object
+      required: [id, title, visibility, timezone, starts_at, ends_at, participant_count, my_status]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        visibility:
+          type: string
+          enum: [public, private]
+        timezone:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        participant_count:
+          type: integer
+          description: Everyone who joined, abandoned included.
+        my_status:
+          type: string
+          enum: [active, abandoned]
+          nullable: true
+          description: The user's participation; null when not a participant.
+    ChallengeDetail:
+      type: object
+      required: [id, title, description, visibility, members_can_invite, timezone, starts_at, ends_at, categories, my_role, my_status, status, can_join, registration_deadline, current_week, week_ends_at]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        visibility:
+          type: string
+          enum: [public, private]
+        members_can_invite:
+          type: boolean
+        timezone:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+        my_role:
+          type: string
+          enum: [creator, participant, abandoned, invited, outsider]
+          description: The user's role in the challenge.
+        my_status:
+          type: string
+          enum: [active, abandoned]
+          nullable: true
+          description: The user's participation; null when not a participant.
+        status:
+          type: string
+          enum: [upcoming, ongoing, finished]
+        can_join:
+          type: boolean
+          description: |
+            Whether the user may join now (rights, before the end of week 1,
+            not already a participant). The complete profile is checked apart
+            (`profile_complete` of `GET /me`).
+        registration_deadline:
+          type: string
+          format: date-time
+          description: End of week 1, when joining closes.
+        current_week:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Number of the current week; null before the start and after the end.
+        week_ends_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: End of the current week; null before the start and after the end.
+    ChallengeUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          description: |
+            3 to 80 characters once surrounding spaces are removed, 3 of them
+            visible (the kept formatting characters below do not count); checked
+            by the service. No control character, no line or
+            paragraph separator (U+2028, U+2029), no invisible or bidirectional
+            formatting character (Unicode Cf, such as U+200B or U+202E) but
+            U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+            U+E007F).
+        description:
+          type: string
+          maxLength: 2000
+          description: |
+            2000 characters at most; an empty string removes the description.
+            No control character but line breaks and tabs, no line or
+            paragraph separator (U+2028, U+2029), no invisible or bidirectional
+            formatting character (Unicode Cf, such as U+200B or U+202E) but
+            U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+            U+E007F).
+        visibility:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        members_can_invite:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        timezone:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        start_date:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        weeks:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        elimination_step_meters:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        distance_factors:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        categories:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        starts_at:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+        ends_at:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+    CreatorAdd:
+      type: object
+      required: [user_id]
+      additionalProperties: false
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: The participant to make a creator.
+    InvitationCreated:
+      type: object
+      required: [token, expires_at]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          description: The token of the link, to send in the body of `POST /invitations/open` and `POST /invitations/accept`. Never answered again.
+        expires_at:
+          type: string
+          format: date-time
+          description: End of week 1 of the challenge, when the invitation expires.
+    InvitationTokenRequest:
+      description: |
+        The token of an invitation link, in the body so that no URL carries
+        it. No format is checked: a malformed token is an invalid invitation
+        (404), never a 400; a missing or empty one is a 400.
+      type: object
+      required: [token]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          minLength: 1
+    InvitationPreview:
+      type: object
+      required: [challenge_id, title, starts_at, ends_at]
+      additionalProperties: false
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+    ActivityCreate:
+      type: object
+      required: [sport_code, started_at, duration_seconds]
+      additionalProperties: false
+      properties:
+        sport_code:
+          type: string
+          description: |
+            Code of a sport of the catalogue (`GET /api/v1/sports`): a
+            lowercase letter, then lowercase letters, digits or `_`, as the
+            catalogue allows (constraint `sports_code_check`).
+          pattern: "^[a-z][a-z0-9_]{0,31}$"
+          example: run
+        sport_label:
+          type: string
+          maxLength: 200
+          description: |
+            Free label of the sport `other`, required for it and refused for
+            the others: 2 to 40 characters once spaces are cleaned, 2 of them
+            visible (the kept formatting characters below do not count), no
+            control character, no line or
+            paragraph separator (U+2028, U+2029), no invisible or bidirectional
+            formatting character (Unicode Cf, such as U+200B or U+202E) but
+            U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+            U+E007F).
+        started_at:
+          type: string
+          format: date-time
+          description: |
+            Start of the activity; never before 2000-01-01T00:00:00Z, and the
+            activity is entered once done: its end (`started_at` plus
+            `duration_seconds`) is never in the future either (5 minutes of
+            tolerance).
+        duration_seconds:
+          type: integer
+          minimum: 1
+          maximum: 86400
+        distance_meters:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: Required or refused according to the sport's `distance_mode`.
+    Activity:
+      type: object
+      required: [id, sport_code, sport_label, started_at, duration_seconds, distance_meters, source, speed_mps, pace_seconds_per_km, challenge_ids, locked]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        sport_code:
+          type: string
+        sport_label:
+          type: string
+          nullable: true
+          description: Label of the sport `other`, cleaned; null for the others.
+        started_at:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: integer
+        distance_meters:
+          type: integer
+          nullable: true
+        source:
+          type: string
+          enum: [manual]
+        speed_mps:
+          type: number
+          format: double
+          nullable: true
+          description: Speed in meters per second, computed; null without distance.
+        pace_seconds_per_km:
+          type: number
+          format: double
+          nullable: true
+          description: Pace in seconds per kilometer, computed; null without distance.
+        challenge_ids:
+          type: array
+          description: Challenges where the activity counts, now; possibly empty.
+          items:
+            type: string
+            format: uuid
+        locked:
+          type: boolean
+          description: |
+            True once the week of the activity has ended in a challenge where
+            it counts: it can no longer be changed nor deleted.
+    ActivityPage:
+      type: object
+      required: [items, next_cursor]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass it as `cursor` for the next page; null on the last page.

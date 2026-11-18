@@ -89,7 +89,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 | FD3 ✅ | Structure du dépôt | **Une seule application Vite**, sans monorepo en V1 ; passage en monorepo pnpm en V2, à l'arrivée du mobile | 001 |
 | FD4 | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages | 009, 016 |
 | FD5 | Champs date et heure | Champs HTML natifs (`date`, `datetime-local`) ; fuseaux via `Intl` | 022, 034 |
-| FD6 | Génération du client d'API | `openapi-typescript` et `openapi-fetch`, hooks TanStack Query écrits à la main | 007 |
+| FD6 ✅ | Génération du client d'API | **`openapi-typescript`** pour les types, validé au ticket 007 ; `openapi-fetch` et hooks TanStack Query écrits à la main, avec le premier écran qui appelle l'API | 007 |
 | FD7 | Formulaires | `react-hook-form` avec schémas `zod` | 018, 021 |
 
 ## Épopées
