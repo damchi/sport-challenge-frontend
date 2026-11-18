@@ -120,6 +120,12 @@ Règles de structure :
 - Mettre une chaîne utilisateur en dur, un secret dans le bundle, ou un appel HTTP dans un composant.
 - Inventer une règle produit absente des README.
 
+## Design
+
+- Toute interface suit `docs/design/design.md` (couleurs, typo, composants, rédaction, accessibilité). Le lire avant de créer ou modifier un écran ou un composant.
+- Avant de construire un écran, regarder sa maquette dans `docs/design/maquettes/` s'il y en a une. Les noms et chiffres des maquettes sont des exemples, `design.md` fait foi.
+- Les couleurs passent par les tokens qui y sont définis, jamais en dur.
+
 ## Agents et skills du projet
 
 | Nom | Type | Quand l'utiliser |
