@@ -76,14 +76,18 @@ L'accent est un seul token : changer de couleur de marque ne doit demander
 qu'une modification.
 
 **Thème sombre** : obligatoire en V1 (`CLAUDE.md`), mais pas encore dessiné.
-Il redéfinit les mêmes tokens (`prefers-color-scheme: dark`) ; aucun
-composant ne teste le thème lui-même. 🟡 Ses valeurs sont à proposer au
+Il redéfinit les mêmes tokens (`prefers-color-scheme: dark`), y compris les
+couleurs de statut et la palette des avatars, qui sont donc aussi des tokens ;
+aucun composant ne teste le thème lui-même. 🟡 Ses valeurs sont à proposer au
 ticket SC-WEB-003 et à valider, avec les mêmes contrastes minimum.
 
 ## Typographie
 
-Polices Google : **Space Grotesk** (titres et grands chiffres) et **Inter**
-(tout le reste). Chiffres tabulaires (`font-variant-numeric: tabular-nums`)
+Polices **Space Grotesk** (titres et grands chiffres) et **Inter** (tout le
+reste), **auto-hébergées** : servies par l'application, jamais chargées depuis
+les serveurs de Google, qui recevraient l'adresse IP de l'utilisateur avant
+tout consentement. 🟡 Mode d'intégration (fichiers dans le dépôt ou paquet)
+à valider au ticket SC-WEB-003. Chiffres tabulaires (`font-variant-numeric: tabular-nums`)
 dans les classements et les compteurs.
 
 | Rôle | Police | Taille / graisse | Divers |
@@ -112,7 +116,9 @@ dans les classements et les compteurs.
 
 Icônes au trait, épaisseur 2, 20–22 px (14–16 px dans un badge), couleur
 `currentColor`. 🟡 Bibliothèque proposée : **Lucide** (`lucide-react`) ; c'est
-une nouvelle dépendance, à valider avant de l'installer. Correspondances : défis `trophy`, activités `activity`,
+une nouvelle dépendance, à valider avant de l'installer, au premier ticket qui
+affiche une icône (elle est réservée au web ; le mobile en V2 aura son
+équivalent). Correspondances : défis `trophy`, activités `activity`,
 badges `award`, profil `user`, notifications `bell`, à risque `triangle-alert`,
 atteint `check`, retour `chevron-left`, suite `chevron-right`, inviter
 `user-plus`, compte à rebours `timer`, ajouter `plus`.
@@ -131,9 +137,11 @@ icône ou un libellé.
 | À risque (sous l'objectif à l'approche de la clôture) | badge `--color-risk-bg` / `--color-risk-fg` avec icône `triangle-alert` et le texte « À risque » ; carte entourée d'un bord 2 px `#FDBA74` ; barre `--color-risk-bar` |
 | Objectif atteint | badge `--color-ok-bg` / `--color-ok-fg` avec icône `check` et « Objectif atteint » ; barre `--color-ok-bar` |
 | Éliminé | carte ou ligne en bordure pointillée `--color-border-dashed`, fond transparent, texte `--color-muted`, avatar gris, mention « Éliminé en semaine N » ; regroupés en fin de liste sous le libellé « Éliminés » |
+| A abandonné (a quitté le défi, ou compte supprimé) | même rendu qu'« Éliminé », avec la mention « A abandonné » à la place de la semaine ; hors podium, dans la section « Éliminés » |
 
-Le seuil « à risque » vient de l'API (`AT_RISK_THRESHOLD` côté backend) : le
-frontend ne le recalcule pas.
+Tous les statuts viennent de l'API, y compris le seuil « à risque »
+(`AT_RISK_THRESHOLD` côté backend) : le frontend ne les déduit jamais des
+chiffres.
 
 ### Barre de progression
 Piste `--color-track`, hauteur 10 px (cartes) ou 6 px (lignes de
@@ -151,9 +159,10 @@ ligne méta (ce qui manque avant la clôture, ou les sports) et rang « 5e sur
 
 ### Bandeau de clôture
 Fond `--color-ink`, texte blanc, rayon 14 px, icône `timer` : « Semaine 3 ·
-clôture dans 2 j 14 h » puis « Dimanche 23 h 59, heure de Montréal ». Le
-fuseau affiché est **celui du défi** (fourni par l'API), pas celui de
-l'appareil.
+clôture dans 2 j 14 h » puis « Dimanche 23 h 59, heure de Montréal ». L'heure
+est toujours donnée dans **le fuseau du défi** (fourni par l'API), pas celui
+de l'appareil ; la mention du fuseau (« heure de Montréal ») n'apparaît que
+si le fuseau de l'utilisateur est différent.
 
 ### Bloc « Ta semaine » (page d'un défi)
 Fond `--color-ink`, rayon 20 px : libellé en majuscules, badge de statut,
@@ -164,7 +173,11 @@ passe à la clôture.
 Rang (22 px de large, `--color-muted`), avatar, nom, valeur à droite, barre
 de 6 px sous le nom (classement complet), badge « À risque » si besoin. Ma
 ligne : contour 2 px `--color-accent` et fond `--color-accent-soft` ; mon nom
-s'affiche « Toi ». Utiliser `<ol>` pour un classement.
+s'affiche « Toi ». Utiliser `<ol>` pour un classement, avec le rang écrit en
+texte (pas la numérotation automatique de la liste) : les ex aequo ont le
+même rang (1, 1, 3), tel que fourni par l'API. Le classement se met à jour au
+rafraîchissement (retour dans l'app, tirer pour rafraîchir), pas en temps
+réel.
 
 ### Avatar
 Cercle de 32 px (lignes) avec initiales en 12 px / 700. En V1, initiales
@@ -214,6 +227,21 @@ aria-label="Navigation principale">`.
 À dessiner plus tard dans le même style : création d'un défi (assistant en 3
 ou 4 étapes, lien d'invitation à partager), activités, profil, et en V1.1
 les badges (obtenus en couleur, à obtenir en silhouette avec leur condition).
+
+## États des écrans
+
+Chaque écran gère quatre états en plus du contenu (`CLAUDE.md`). 🟡 Rendu
+proposé, à affiner avec le premier écran qui les construit :
+
+- **Chargement** : squelettes aux dimensions des cartes et des lignes (fond
+  `--color-track`), sans texte factice ; pas d'animation si
+  `prefers-reduced-motion`.
+- **Erreur** : message traduit depuis le code d'erreur de l'API
+  (`errors.<code>`, jamais le message brut du serveur) et bouton secondaire
+  « Réessayer ».
+- **Vide** : une phrase qui dit quoi faire et l'action principale de l'écran
+  (par exemple « Créer un défi » sur l'accueil).
+- **Connexion requise** : une phrase et le bouton principal « Se connecter ».
 
 ## Rédaction
 
