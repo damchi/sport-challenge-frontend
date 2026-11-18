@@ -1,0 +1,9 @@
+{
+  "home": {
+    "title": "Sport Challenge"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "backHome": "Back to home"
+  }
+}
