@@ -84,7 +84,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 | # | Point | Proposition utilisée dans le backlog | Tickets |
 |---|---|---|---|
-| FD1 | Bibliothèque d'interface | Tailwind CSS avec des composants de type shadcn/ui, ajoutés un par un à l'usage | 003 |
+| FD1 ✅ | Bibliothèque d'interface | **Tailwind CSS v4** et polices Fontsource, validés au ticket 003 ; composants de type shadcn/ui, ajoutés un par un à l'usage, encore à valider | 003 |
 | FD2 | Hébergement du web | Firebase Hosting (CDN, réécriture pour une application monopage) ; sinon Cloud Storage avec CDN | 047 |
 | FD3 ✅ | Structure du dépôt | **Une seule application Vite**, sans monorepo en V1 ; passage en monorepo pnpm en V2, à l'arrivée du mobile | 001 |
 | FD4 | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages | 009, 016 |

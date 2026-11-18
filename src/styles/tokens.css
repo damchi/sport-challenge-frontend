@@ -1,0 +1,115 @@
+/* Design tokens from docs/design/design.md. Components use the Tailwind
+   utilities generated from them (bg-surface, text-muted, rounded-card...),
+   never a raw color. */
+
+@theme {
+  /* Only the project colors exist: Tailwind's default palette is removed. */
+  --color-*: initial;
+
+  --color-bg: #f5f4f0;
+  --color-surface: #ffffff;
+  --color-surface-raised: #16181d;
+  --color-raised-border: #16181d;
+  --color-ink: #16181d;
+  --color-muted: #5b5f68;
+  --color-on-raised: #ffffff;
+  --color-on-raised-muted: #c9ccd2;
+  --color-on-raised-soft: #c9ccd2;
+  --color-border: #e2e0da;
+  --color-border-dashed: #c9c6be;
+  --color-track: #edebe6;
+  --color-track-raised: #33363d;
+  --color-rank-bar: #16181d;
+  --color-segment: #eae8e2;
+  --color-segment-active: #ffffff;
+  --color-accent: #c2410c;
+  --color-on-accent: #ffffff;
+  --color-accent-soft: #fff4eb;
+  --color-risk-bg: #ffedd5;
+  --color-risk-fg: #9a3412;
+  --color-risk-bar: #fb923c;
+  --color-risk-border: #fdba74;
+  --color-ok-bg: #dcfce7;
+  --color-ok-fg: #166534;
+  --color-ok-bar: #16a34a;
+  --color-out-bg: #e5e7eb;
+  --color-out-fg: #4b5563;
+
+  --color-avatar-1-bg: #dbeafe;
+  --color-avatar-1-fg: #1e3a8a;
+  --color-avatar-2-bg: #ede9fe;
+  --color-avatar-2-fg: #4c1d95;
+  --color-avatar-3-bg: #dcfce7;
+  --color-avatar-3-fg: #14532d;
+  --color-avatar-4-bg: #fce7f3;
+  --color-avatar-4-fg: #831843;
+  --color-avatar-5-bg: #ffedd5;
+  --color-avatar-5-fg: #7c2d12;
+  --color-avatar-6-bg: #e0f2fe;
+  --color-avatar-6-fg: #0c4a6e;
+
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', system-ui, sans-serif;
+
+  /* 4 px scale at the default font size (p-4 = 16 px, px-5 = 20 px page
+     gutter); in rem, so spacing follows the user's font size. */
+  --spacing: 0.25rem;
+
+  /* App pages stay in a centered column on large screens. */
+  --container-page: 30rem;
+
+  /* Page title (h1). */
+  --text-title: 1.75rem;
+  --tracking-title: -0.5px;
+
+  --radius-tab: 10px;
+  --radius-row: 14px;
+  --radius-card: 20px;
+}
+
+/* Dark theme: the same tokens, redefined. No component tests the theme. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f1115;
+    --color-surface: #1a1d23;
+    --color-surface-raised: #23272f;
+    --color-raised-border: #2f343d;
+    --color-ink: #f3f4f6;
+    --color-muted: #a1a6b0;
+    --color-on-raised: #f3f4f6;
+    --color-on-raised-muted: #a1a6b0;
+    --color-on-raised-soft: #d4d7dd;
+    --color-border: #2a2e36;
+    --color-border-dashed: #3a3f48;
+    --color-track: #2a2e36;
+    --color-track-raised: #33373f;
+    --color-rank-bar: #e5e7eb;
+    --color-segment: #22262d;
+    --color-segment-active: #343943;
+    --color-accent: #fb923c;
+    --color-on-accent: #16181d;
+    --color-accent-soft: #2a1d14;
+    --color-risk-bg: #3b2414;
+    --color-risk-fg: #fdba74;
+    --color-risk-bar: #fb923c;
+    --color-risk-border: #c2410c;
+    --color-ok-bg: #12301f;
+    --color-ok-fg: #86efac;
+    --color-ok-bar: #22c55e;
+    --color-out-bg: #2a2e36;
+    --color-out-fg: #a1a6b0;
+
+    --color-avatar-1-bg: #1e3a5f;
+    --color-avatar-1-fg: #bfdbfe;
+    --color-avatar-2-bg: #3b2a63;
+    --color-avatar-2-fg: #ddd6fe;
+    --color-avatar-3-bg: #14402a;
+    --color-avatar-3-fg: #bbf7d0;
+    --color-avatar-4-bg: #4a1d35;
+    --color-avatar-4-fg: #fbcfe8;
+    --color-avatar-5-bg: #4a2a12;
+    --color-avatar-5-fg: #fed7aa;
+    --color-avatar-6-bg: #10364d;
+    --color-avatar-6-fg: #bae6fd;
+  }
+}
