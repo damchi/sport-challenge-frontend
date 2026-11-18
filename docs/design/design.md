@@ -49,7 +49,9 @@ jamais en dur dans les composants.
 | `--color-accent-soft` | `#FFF4EB` | fond de « ma ligne » dans un classement |
 | `--color-risk-bg` | `#FFEDD5` | fond du badge « À risque » |
 | `--color-risk-fg` | `#9A3412` | texte et icône du badge « À risque » |
-| `--color-risk-bar` | `#FB923C` | barre de progression d'un participant à risque, bord de carte à risque (`#FDBA74`) |
+| `--color-risk-bar` | `#FB923C` | barre de progression d'un participant à risque |
+| `--color-risk-border` | `#FDBA74` | bord d'une carte à risque |
+| `--color-track-on-dark` | `#33363D` | fond des barres de progression sur le bloc sombre « Ta semaine » |
 | `--color-ok-bg` | `#DCFCE7` | fond du badge « Objectif atteint » |
 | `--color-ok-fg` | `#166534` | texte du badge « Objectif atteint », semaine réussie |
 | `--color-ok-bar` | `#16A34A` | barre de progression complète |
@@ -57,16 +59,17 @@ jamais en dur dans les composants.
 | `--color-out-fg` | `#4B5563` | initiales d'un éliminé |
 
 Palette des avatars (fond / texte), attribuée de façon stable par utilisateur
-(par exemple un hachage de son identifiant), jamais au hasard à chaque rendu :
+(par exemple un hachage de son identifiant), jamais au hasard à chaque rendu.
+Chaque couple est un token (`--avatar-N-bg` / `--avatar-N-fg`) :
 
-| Fond | Texte |
-|---|---|
-| `#DBEAFE` | `#1E3A8A` |
-| `#EDE9FE` | `#4C1D95` |
-| `#DCFCE7` | `#14532D` |
-| `#FCE7F3` | `#831843` |
-| `#FFEDD5` | `#7C2D12` |
-| `#E0F2FE` | `#0C4A6E` |
+| N | Fond | Texte |
+|---|---|---|
+| 1 | `#DBEAFE` | `#1E3A8A` |
+| 2 | `#EDE9FE` | `#4C1D95` |
+| 3 | `#DCFCE7` | `#14532D` |
+| 4 | `#FCE7F3` | `#831843` |
+| 5 | `#FFEDD5` | `#7C2D12` |
+| 6 | `#E0F2FE` | `#0C4A6E` |
 
 Contrastes vérifiés : tous les couples texte/fond ci-dessus dépassent 4,5:1
 (`--color-accent` sur blanc ≈ 5,2:1, texte blanc sur `--color-accent` ≈ 5,2:1).
@@ -134,7 +137,7 @@ icône ou un libellé.
 
 | Statut | Rendu |
 |---|---|
-| À risque (sous l'objectif à l'approche de la clôture) | badge `--color-risk-bg` / `--color-risk-fg` avec icône `triangle-alert` et le texte « À risque » ; carte entourée d'un bord 2 px `#FDBA74` ; barre `--color-risk-bar` |
+| À risque (sous l'objectif à l'approche de la clôture) | badge `--color-risk-bg` / `--color-risk-fg` avec icône `triangle-alert` et le texte « À risque » ; carte entourée d'un bord 2 px `--color-risk-border` ; barre `--color-risk-bar` |
 | Objectif atteint | badge `--color-ok-bg` / `--color-ok-fg` avec icône `check` et « Objectif atteint » ; barre `--color-ok-bar` |
 | Éliminé | carte ou ligne en bordure pointillée `--color-border-dashed`, fond transparent, texte `--color-muted`, avatar gris, mention « Éliminé en semaine N » ; regroupés en fin de liste sous le libellé « Éliminés » |
 | A abandonné (a quitté le défi, ou compte supprimé) | même rendu qu'« Éliminé », avec la mention « A abandonné » à la place de la semaine ; hors podium, dans la section « Éliminés » |
@@ -166,7 +169,7 @@ si le fuseau de l'utilisateur est différent.
 
 ### Bloc « Ta semaine » (page d'un défi)
 Fond `--color-ink`, rayon 20 px : libellé en majuscules, badge de statut,
-grand chiffre 48 px, barre (piste `#33363D`), phrase explicite sur ce qui se
+grand chiffre 48 px, barre (piste `--color-track-on-dark`), phrase explicite sur ce qui se
 passe à la clôture.
 
 ### Ligne de classement
