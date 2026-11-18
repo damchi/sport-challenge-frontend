@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { getConfig } from './lib/config';
 import './styles/index.css';
+import i18n from 'i18next';
 import './i18n';
 import { App } from './App';
 
@@ -20,11 +21,16 @@ try {
     </StrictMode>,
   );
 } catch (error) {
-  // A configuration mistake (VITE_* variable) is for the developer: its
-  // message is shown as is, in place of the app, and stays in the console.
+  // A configuration mistake (VITE_* variable): its detail is for the
+  // developer, shown in development only; users get the generic message.
+  // The error stays in the console either way.
   root.render(
     <main className="mx-auto max-w-page px-5 py-8">
-      <pre className="whitespace-pre-wrap text-ink">{String(error)}</pre>
+      {import.meta.env.DEV ? (
+        <pre className="whitespace-pre-wrap text-ink">{String(error)}</pre>
+      ) : (
+        <p className="text-ink">{i18n.t('errors.unknown_error')}</p>
+      )}
     </main>,
   );
   throw error;
