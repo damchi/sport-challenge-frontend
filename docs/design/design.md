@@ -34,33 +34,37 @@ traduction et fait foi pour le code.
 À définir une seule fois comme variables CSS (ou tokens du thème Tailwind),
 jamais en dur dans les composants.
 
-| Token | Valeur | Usage |
-|---|---|---|
-| `--color-bg` | `#F5F4F0` | fond des pages |
-| `--color-surface` | `#FFFFFF` | cartes, lignes, barre de navigation |
-| `--color-ink` | `#16181D` | texte principal, bandeau sombre, barres du classement |
-| `--color-muted` | `#5B5F68` | texte secondaire, rangs, libellés |
-| `--color-on-dark-muted` | `#C9CCD2` | texte secondaire sur le bandeau sombre |
-| `--color-border` | `#E2E0DA` | bordures de cartes et de lignes |
-| `--color-border-dashed` | `#C9C6BE` | bordure pointillée (éliminé, à venir) |
-| `--color-track` | `#EDEBE6` | fond des barres de progression |
-| `--color-segment` | `#EAE8E2` | fond du sélecteur à onglets |
-| `--color-accent` | `#C2410C` | couleur d'accent : bouton principal, onglet actif, ma ligne, liens d'action |
-| `--color-accent-soft` | `#FFF4EB` | fond de « ma ligne » dans un classement |
-| `--color-risk-bg` | `#FFEDD5` | fond du badge « À risque » |
-| `--color-risk-fg` | `#9A3412` | texte et icône du badge « À risque » |
-| `--color-risk-bar` | `#FB923C` | barre de progression d'un participant à risque |
-| `--color-risk-border` | `#FDBA74` | bord d'une carte à risque |
-| `--color-track-on-dark` | `#33363D` | fond des barres de progression sur le bloc sombre « Ta semaine » |
-| `--color-ok-bg` | `#DCFCE7` | fond du badge « Objectif atteint » |
-| `--color-ok-fg` | `#166534` | texte du badge « Objectif atteint », semaine réussie |
-| `--color-ok-bar` | `#16A34A` | barre de progression complète |
-| `--color-out-bg` | `#E5E7EB` | avatar d'un éliminé |
-| `--color-out-fg` | `#4B5563` | initiales d'un éliminé |
+| Token | Clair | Sombre | Usage |
+|---|---|---|---|
+| `--color-bg` | `#F5F4F0` | `#111316` | fond des pages |
+| `--color-surface` | `#FFFFFF` | `#1C1E23` | cartes, lignes, barre de navigation |
+| `--color-ink` | `#16181D` | `#ECEDEF` | texte principal, barres du classement |
+| `--color-muted` | `#5B5F68` | `#A1A5AE` | texte secondaire, rangs, libellés |
+| `--color-hero` | `#16181D` | `#262930` | fond des blocs sombres (bandeau de clôture, « Ta semaine ») |
+| `--color-on-hero` | `#FFFFFF` | `#FFFFFF` | texte sur `--color-hero` |
+| `--color-on-dark-muted` | `#C9CCD2` | `#C9CCD2` | texte secondaire sur `--color-hero` |
+| `--color-border` | `#E2E0DA` | `#2E3138` | bordures de cartes et de lignes |
+| `--color-border-dashed` | `#C9C6BE` | `#4A4E57` | bordure pointillée (éliminé, à venir) |
+| `--color-track` | `#EDEBE6` | `#2E3138` | fond des barres de progression |
+| `--color-track-on-dark` | `#33363D` | `#3A3E46` | fond des barres de progression sur `--color-hero` |
+| `--color-segment` | `#EAE8E2` | `#24272D` | fond du sélecteur à onglets |
+| `--color-accent` | `#C2410C` | `#FB923C` | couleur d'accent : bouton principal, onglet actif, ma ligne, liens d'action |
+| `--color-on-accent` | `#FFFFFF` | `#16181D` | texte sur `--color-accent` |
+| `--color-accent-soft` | `#FFF4EB` | `#2A1D14` | fond de « ma ligne » dans un classement |
+| `--color-risk-bg` | `#FFEDD5` | `#3A2210` | fond du badge « À risque » |
+| `--color-risk-fg` | `#9A3412` | `#FDBA74` | texte et icône du badge « À risque » |
+| `--color-risk-bar` | `#FB923C` | `#FB923C` | barre de progression d'un participant à risque |
+| `--color-risk-border` | `#FDBA74` | `#9A3412` | bord d'une carte à risque |
+| `--color-ok-bg` | `#DCFCE7` | `#12301E` | fond du badge « Objectif atteint » |
+| `--color-ok-fg` | `#166534` | `#86EFAC` | texte du badge « Objectif atteint », semaine réussie |
+| `--color-ok-bar` | `#16A34A` | `#22C55E` | barre de progression complète |
+| `--color-out-bg` | `#E5E7EB` | `#2E3138` | avatar d'un éliminé |
+| `--color-out-fg` | `#4B5563` | `#A1A5AE` | initiales d'un éliminé |
 
 Palette des avatars (fond / texte), attribuée de façon stable par utilisateur
 (par exemple un hachage de son identifiant), jamais au hasard à chaque rendu.
-Chaque couple est un token (`--avatar-N-bg` / `--avatar-N-fg`) :
+Chaque couple est un token (`--color-avatar-N-bg` / `--color-avatar-N-fg`) ;
+le thème sombre inverse fond et texte :
 
 | N | Fond | Texte |
 |---|---|---|
@@ -71,26 +75,26 @@ Chaque couple est un token (`--avatar-N-bg` / `--avatar-N-fg`) :
 | 5 | `#FFEDD5` | `#7C2D12` |
 | 6 | `#E0F2FE` | `#0C4A6E` |
 
-Contrastes vérifiés : tous les couples texte/fond ci-dessus dépassent 4,5:1
-(`--color-accent` sur blanc ≈ 5,2:1, texte blanc sur `--color-accent` ≈ 5,2:1).
-Toute nouvelle couleur de texte doit aussi passer 4,5:1 (3:1 au-delà de 24 px).
+Contrastes : tous les couples texte/fond dépassent 4,5:1 dans les deux thèmes
+(vérifié par `src/styles/tokens.test.ts`). Toute nouvelle couleur de texte doit
+aussi passer 4,5:1 (3:1 au-delà de 24 px).
 
 L'accent est un seul token : changer de couleur de marque ne doit demander
 qu'une modification.
 
-**Thème sombre** : obligatoire en V1 (`CLAUDE.md`), mais pas encore dessiné.
-Il redéfinit les mêmes tokens (`prefers-color-scheme: dark`), y compris les
-couleurs de statut et la palette des avatars, qui sont donc aussi des tokens ;
-aucun composant ne teste le thème lui-même. 🟡 Ses valeurs sont à proposer au
-ticket SC-WEB-003 et à valider, avec les mêmes contrastes minimum.
+**Thème sombre** : suit la préférence du système (`prefers-color-scheme:
+dark`) en redéfinissant les mêmes tokens (`src/styles/tokens.css`) ; le choix
+manuel viendra avec la coque de l'application (ticket SC-WEB-019). Aucun
+composant ne teste le thème lui-même. 🟡 Valeurs sombres proposées au ticket
+SC-WEB-003, sans maquette : à revoir quand le thème sera dessiné.
 
 ## Typographie
 
 Polices **Space Grotesk** (titres et grands chiffres) et **Inter** (tout le
 reste), **auto-hébergées** : servies par l'application, jamais chargées depuis
 les serveurs de Google, qui recevraient l'adresse IP de l'utilisateur avant
-tout consentement. 🟡 Mode d'intégration (fichiers dans le dépôt ou paquet)
-à valider au ticket SC-WEB-003. Chiffres tabulaires (`font-variant-numeric: tabular-nums`)
+tout consentement : paquets Fontsource (`@fontsource-variable/inter` et
+`@fontsource-variable/space-grotesk`), empaquetés par Vite. Chiffres tabulaires (`font-variant-numeric: tabular-nums`)
 dans les classements et les compteurs.
 
 | Rôle | Police | Taille / graisse | Divers |
@@ -155,20 +159,20 @@ classement). Toujours accompagnée du chiffre en texte ; la barre seule a un
 ou `aria-hidden` si le chiffre est juste à côté.
 
 ### Carte de défi (accueil)
-Lien vers la page du défi, fond blanc, rayon 18 px. Ordre : titre + badge de
+Lien vers la page du défi, fond `--color-surface`, rayon 18 px. Ordre : titre + badge de
 statut → grand chiffre « 18 » suivi de « / 25 km cette semaine » → barre →
 ligne méta (ce qui manque avant la clôture, ou les sports) et rang « 5e sur
 8 » à droite.
 
 ### Bandeau de clôture
-Fond `--color-ink`, texte blanc, rayon 14 px, icône `timer` : « Semaine 3 ·
+Fond `--color-hero`, texte `--color-on-hero`, rayon 14 px, icône `timer` : « Semaine 3 ·
 clôture dans 2 j 14 h » puis « Dimanche 23 h 59, heure de Montréal ». L'heure
 est toujours donnée dans **le fuseau du défi** (fourni par l'API), pas celui
 de l'appareil ; la mention du fuseau (« heure de Montréal ») n'apparaît que
 si le fuseau de l'utilisateur est différent.
 
 ### Bloc « Ta semaine » (page d'un défi)
-Fond `--color-ink`, rayon 20 px : libellé en majuscules, badge de statut,
+Fond `--color-hero`, rayon 20 px : libellé en majuscules, badge de statut,
 grand chiffre 48 px, barre (piste `--color-track-on-dark`), phrase explicite sur ce qui se
 passe à la clôture.
 
@@ -193,20 +197,20 @@ Grille de 4 colonnes égales, gap 8 px : « Sem. N », valeur, statut
 venir » en pointillés).
 
 ### Boutons
-- Principal : fond `--color-accent`, texte blanc 15 px / 700, hauteur 52 px,
+- Principal : fond `--color-accent`, texte `--color-on-accent` 15 px / 700, hauteur 52 px,
   rayon 26 px. Une seule action principale par écran (« Ajouter une
   activité » en bouton flottant en bas à droite sur l'accueil).
-- Secondaire : fond blanc, bordure `--color-border`, hauteur 40–44 px.
+- Secondaire : fond `--color-surface`, bordure `--color-border`, hauteur 40–44 px.
 - Icône seule : 44 × 44, rond.
 - Toujours de vrais `<button>` ou `<a href>`, jamais un `div` cliquable.
 
 ### Sélecteur à onglets (« Semaine 3 » / « Général »)
 Conteneur `--color-segment`, rayon 14 px, padding 4 px, deux colonnes égales.
-Onglet actif : fond blanc, ombre légère, texte `--color-ink` ; inactif :
+Onglet actif : fond `--color-surface`, ombre légère, texte `--color-ink` ; inactif :
 transparent, texte `--color-muted`. `aria-pressed` sur chaque bouton.
 
 ### Barre de navigation
-En bas, 72 px, fond blanc, bordure haute : **Défis**, **Activités**,
+En bas, 72 px, fond `--color-surface`, bordure haute : **Défis**, **Activités**,
 **Profil** en V1 (**Badges** s'ajoute en V1.1, entre Activités et Profil),
 icône au-dessus du libellé. Onglet actif en
 `--color-accent` avec `aria-current="page"`. Dans un `<nav
