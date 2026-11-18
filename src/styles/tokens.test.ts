@@ -11,10 +11,17 @@ function colorsIn(block: string): Palette {
   return palette;
 }
 
-const darkStart = tokensCss.indexOf('@media (prefers-color-scheme: dark)');
+// Light tokens live in the @theme block, dark ones in the :root of the dark
+// media query; a missing block fails the tests instead of an empty palette.
+function blockBody(pattern: RegExp): string {
+  const body = pattern.exec(tokensCss)?.[1];
+  if (!body) throw new Error(`No block matching ${pattern} in tokens.css`);
+  return body;
+}
+
 const themes = {
-  light: colorsIn(tokensCss.slice(0, darkStart)),
-  dark: colorsIn(tokensCss.slice(darkStart)),
+  light: colorsIn(blockBody(/@theme\s*\{([^}]*)\}/)),
+  dark: colorsIn(blockBody(/@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{([^}]*)\}/)),
 };
 
 function channel(hex: string, offset: number): number {
@@ -57,7 +64,7 @@ const textPairs: [text: string, background: string][] = [
 
 describe('design tokens', () => {
   it('redefines every light color in the dark theme', () => {
-    expect(darkStart).toBeGreaterThan(0);
+    expect(themes.light.size).toBeGreaterThan(0);
     expect([...themes.dark.keys()].sort()).toEqual([...themes.light.keys()].sort());
   });
 
