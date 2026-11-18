@@ -34,6 +34,13 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # Fails when openapi/openapi.yaml and src/api/generated disagree.
+      - name: Generated API types are up to date
+        run: |
+          pnpm api:generate
+          git diff --exit-code src/api/generated
+          test -z "$(git status --porcelain src/api/generated)"
+
       - name: Typecheck
         run: pnpm typecheck
 

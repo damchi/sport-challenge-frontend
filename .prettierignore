@@ -2,3 +2,5 @@ dist
 pnpm-lock.yaml
 *.md
 .claude
+src/api/generated
+openapi/openapi.yaml
