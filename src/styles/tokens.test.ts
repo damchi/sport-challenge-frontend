@@ -56,6 +56,7 @@ const textPairs: [text: string, background: string][] = [
   ['accent', 'accent-soft'],
   ['on-accent', 'accent'],
   ['ink', 'accent-soft'],
+  ['muted', 'accent-soft'],
   ['risk-fg', 'risk-bg'],
   ['ok-fg', 'ok-bg'],
   ['out-fg', 'out-bg'],
