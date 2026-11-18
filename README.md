@@ -217,7 +217,8 @@ frontend/
 - ✅ **Les dossiers partageables restent indépendants de la plateforme** (`src/api`, `src/domain`, `src/i18n` : aucun import du navigateur, de `react-dom` ni de `react-native`) pour que le mobile les réutilise tels quels en V2 : client d'API, schémas, domaine, traductions.
 - Les liens d'invitation ouvrent une **page web** (ils fonctionnent partout) ; les liens profonds vers l'application viendront avec le mobile.
 - Les formalités des stores (comptes développeur, étiquettes de confidentialité, signalement, builds) sont reportées à la V2.
-- 🟡 Pour aller vite : une bibliothèque de composants plutôt qu'un système de design sur mesure (proposition : Tailwind CSS avec des composants du type shadcn/ui), à valider avant l'installation.
+- ✅ Styles : **Tailwind CSS v4**, avec les jetons de `docs/design/design.md` en variables CSS (`src/styles/tokens.css`) ; polices Inter et Space Grotesk servies par l'application (Fontsource). Décision FD1, validée au ticket SC-WEB-003.
+- 🟡 Composants du type shadcn/ui, ajoutés un par un à l'usage : à valider avec le premier composant qui en a besoin.
 
 ---
 
