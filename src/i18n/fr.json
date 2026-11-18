@@ -7,7 +7,13 @@
     "backHome": "Retour à l'accueil"
   },
   "errors": {
+    "forbidden": "Tu n'as pas accès à cette page.",
+    "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
+    "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
+    "not_found": "Cette page n'existe pas ou plus.",
     "rate_limited": "Trop de requêtes. Réessaie dans un instant.",
-    "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s."
+    "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s.",
+    "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
+    "unknown_error": "Une erreur est survenue. Réessaie."
   }
 }

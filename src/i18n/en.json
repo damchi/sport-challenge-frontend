@@ -7,7 +7,13 @@
     "backHome": "Back to home"
   },
   "errors": {
+    "forbidden": "You don't have access to this page.",
+    "internal_error": "The service is temporarily unavailable. Try again in a moment.",
+    "network_error": "Unable to connect. Check your internet connection, then try again.",
+    "not_found": "This page doesn't exist or was removed.",
     "rate_limited": "Too many requests. Try again in a moment.",
-    "rate_limited_delay": "Too many requests. Try again in {{retry_after}} s."
+    "rate_limited_delay": "Too many requests. Try again in {{retry_after}} s.",
+    "unauthenticated": "Your session has ended. Sign in again.",
+    "unknown_error": "Something went wrong. Try again."
   }
 }
