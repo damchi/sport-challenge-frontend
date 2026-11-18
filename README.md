@@ -204,6 +204,8 @@ frontend/
 
 - 🟡 Tests : Vitest et Testing Library (composants), Playwright (web), Maestro (parcours mobile).
 - Suivi d'erreurs sur web et mobile (ex. Sentry) ; analytics produit plus tard, avec consentement.
+- ✅ CI GitHub Actions (`.github/workflows/ci.yml`) sur chaque pull request et sur `main` : `typecheck`, `lint`, `test`, `build`. Claude relit chaque pull request (`.github/workflows/claude-review.yml`) et commente seulement, sans droit de pousser ni de fusionner ; il lui faut le secret de dépôt `CLAUDE_CODE_OAUTH_TOKEN`.
+- ✅ Protection de `main` (réglée à la main dans GitHub, Settings > Rules) : pull request obligatoire, vérification « typecheck, lint, test, build » verte avant fusion, pas de push forcé ni de suppression.
 - Web : hébergement statique (Firebase Hosting ou Cloud Storage avec CDN), déployé par la CI.
 - Mobile : builds avec EAS Build, diffusion de test par TestFlight (iOS) et pistes de test internes (Android), puis publication sur les deux stores.
 - Les stores exigent une étiquette de confidentialité, et une option de signalement ou de blocage si du contenu public est visible.
