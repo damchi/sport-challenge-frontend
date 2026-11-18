@@ -25,5 +25,10 @@ export function readConfig(env: Record<string, unknown>): Config {
   return { apiUrl: apiUrl.replace(/\/+$/, '') };
 }
 
-// Evaluated on import: the app fails at startup when a variable is missing.
-export const config = readConfig(import.meta.env);
+let current: Config | undefined;
+
+/** Configuration of the app; main.tsx reads it first, so a mistake stops the startup. */
+export function getConfig(): Config {
+  current ??= readConfig(import.meta.env);
+  return current;
+}
