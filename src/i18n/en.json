@@ -5,5 +5,9 @@
   "notFound": {
     "title": "Page not found",
     "backHome": "Back to home"
+  },
+  "errors": {
+    "rate_limited": "Too many requests. Try again in a moment.",
+    "rate_limited_delay": "Too many requests. Try again in {{retry_after}} s."
   }
 }

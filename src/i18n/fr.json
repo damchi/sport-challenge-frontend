@@ -5,5 +5,9 @@
   "notFound": {
     "title": "Page introuvable",
     "backHome": "Retour à l'accueil"
+  },
+  "errors": {
+    "rate_limited": "Trop de requêtes. Réessaie dans un instant.",
+    "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s."
   }
 }
