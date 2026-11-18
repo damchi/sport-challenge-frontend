@@ -230,7 +230,7 @@ un rafraîchissement raté alors que l'écran montre déjà des données) : band
 en haut de page, fond `--color-surface-raised`, texte `--color-on-raised`,
 rayon 14 px, message traduit (`errors.<code>`, repli `errors.unknown`) et
 bouton de fermeture de 44 × 44 avec `aria-label`. `role="alert"` pour qu'il
-soit annoncé. Une erreur de chargement reste affichée par l'écran (état
+soit annoncé. ✅ Il disparaît au changement de page. Une erreur de chargement reste affichée par l'écran (état
 d'erreur avec « Réessayer »).
 
 ### Barre de navigation

@@ -1,8 +1,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { createQueryClient } from './api/queryClient';
-import { GlobalErrorBanner } from './components/GlobalErrorBanner';
+import { GlobalErrorContext } from './lib/globalError';
 import { routes } from './routes/routes';
 
 const router = createBrowserRouter(routes);
@@ -18,14 +18,14 @@ export function App() {
     return client;
   });
 
+  const dismiss = useCallback(() => setGlobalError(undefined), []);
+  const globalErrorValue = useMemo(() => ({ error: globalError, dismiss }), [globalError, dismiss]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      {globalError !== undefined && (
-        <div className="px-5">
-          <GlobalErrorBanner error={globalError} onDismiss={() => setGlobalError(undefined)} />
-        </div>
-      )}
-      <RouterProvider router={router} />
+      <GlobalErrorContext.Provider value={globalErrorValue}>
+        <RouterProvider router={router} />
+      </GlobalErrorContext.Provider>
     </QueryClientProvider>
   );
 }
