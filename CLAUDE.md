@@ -104,15 +104,16 @@ Règles de structure :
 1. Lis la partie du README concernée (et la règle du backend si besoin). S'il y a un ❓ ou un 🟡 qui bloque, pose la question.
 2. Fais un court plan avant les changements importants (nouvel écran, nouvelle dépendance, changement de structure).
 3. Implémente, puis lance `pnpm check`.
-4. Fais relire par les agents adaptés (voir ci-dessous) avant de proposer un commit.
-5. **Git : tu ne commits et ne pushes jamais de ta propre initiative.** À la fin d'un changement, présente la liste des fichiers modifiés, le résumé du diff et un **message de commit proposé** (en anglais, un changement cohérent par commit), puis attends l'accord explicite de l'utilisateur dans la conversation. Même après cet accord, la commande demande une confirmation à l'écran : c'est voulu.
-   - Tu peux utiliser `git status`, `git diff`, `git log` et `git add` librement.
-   - Commit, push, merge, rebase, tag, reset, `gh pr create/merge` : uniquement sur demande explicite de l'utilisateur, une action à la fois.
+4. Fais relire par les agents adaptés (voir ci-dessous) avant de committer.
+5. **Git** : une fois `pnpm check` (et les tests de bout en bout concernés) et les relectures passés, tu **commits et pushes sans demander l'accord** (en anglais, un changement cohérent par commit, sur la branche du ticket). Tu présentes ensuite les fichiers modifiés, le résumé du diff et les commits poussés.
+   - Tu peux utiliser `git status`, `git diff`, `git log`, `git add`, `git commit` et `git push` (branche de travail) librement.
+   - **Pull request** : une fois ouverte, et après chaque push, attends la fin de la CI (`Monitor` sur `gh pr checks`, sans sondage), vérifie qu'elle est entièrement verte, puis lis tous les commentaires (`gh pr view --comments`, commentaires en ligne). Applique les corrections fondées (commit et push sur la même branche) ou explique pourquoi tu ne les suis pas, et recommence jusqu'à une CI verte sans commentaire en suspens. Ne dis un ticket terminé qu'à ce moment-là ; un point qui touche une règle produit (🟡 ou ❓) ou le périmètre se demande à l'utilisateur.
+   - Push vers `main`, suppression de branche distante, merge, rebase, tag, reset, `gh pr create/merge` : uniquement sur demande explicite de l'utilisateur, une action à la fois.
    - Push forcé, `git reset --hard`, `git clean`, `--no-verify` : interdits (bloqués par la configuration).
 
 ## Ne jamais
 
-- Faire un commit ou un push sans validation explicite de l'utilisateur, enchaîner plusieurs commits d'un coup, ou contourner la confirmation (autre commande git équivalente, script, `git -C`, etc.).
+- Pousser sur `main`, fusionner une pull request, ou contourner une confirmation ou un refus de la configuration (autre commande git équivalente, script, `git -C`, etc.).
 - Publier ou soumettre une application (`eas submit`, `eas update`, `firebase deploy`) : le déploiement passe par la CI/CD, sur demande explicite.
 - Modifier le code généré de `src/api/generated`, ou le backend depuis ce projet.
 - Écrire du code d'avance : composant, fonction, schéma, mock, clé de traduction, variable d'environnement, dépendance ou script que le ticket en cours n'utilise pas.
@@ -123,7 +124,7 @@ Règles de structure :
 
 | Nom | Type | Quand l'utiliser |
 |---|---|---|
-| `next-task` | skill | Prendre la prochaine issue GitHub du backlog, l'implémenter, proposer le commit |
+| `next-task` | skill | Prendre la prochaine issue GitHub du backlog, l'implémenter, committer, pousser, relire les commentaires de la PR |
 | `bootstrap` | skill | Aperçu des phases du projet (le détail est dans `TASKS.md`) |
 | `new-screen` | skill | Créer un écran (page web + route mobile) avec sa feature |
 | `api-client-sync` | skill | Synchroniser le contrat, régénérer le client, ajouter un hook de requête |

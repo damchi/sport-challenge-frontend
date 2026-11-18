@@ -1,11 +1,11 @@
 ---
 name: next-task
-description: Prend la prochaine issue GitHub du backlog du frontend web Sport Challenge, l'implémente et prépare le commit. À utiliser quand on dit « prochain ticket », « next task », « prends le ticket SC-WEB-0xx », « on continue le backlog » ou « quelle est la suite ».
+description: Prend la prochaine issue GitHub du backlog du frontend web Sport Challenge, l'implémente, committe, pousse et attend la CI de la pull request, lit ses commentaires et applique les corrections. À utiliser quand on dit « prochain ticket », « next task », « prends le ticket SC-WEB-0xx », « on continue le backlog » ou « quelle est la suite ».
 ---
 
 # Traiter un ticket du backlog frontend
 
-> **V1 = web uniquement.** Le backlog est dans les **issues GitHub** (tickets `SC-WEB-001` à `SC-WEB-052`, numérotation non consécutive : les tickets listés dans « Tickets fusionnés » de `TASKS.md` n'existent plus). **Un ticket = un commit.** Ne traite jamais deux tickets d'affilée sans que l'utilisateur ait validé le commit du premier.
+> **V1 = web uniquement.** Le backlog est dans les **issues GitHub** (tickets `SC-WEB-001` à `SC-WEB-052`, numérotation non consécutive : les tickets listés dans « Tickets fusionnés » de `TASKS.md` n'existent plus). **Un ticket = un commit.** Ne traite jamais deux tickets d'affilée sans que la pull request du premier soit fusionnée ou que l'utilisateur te le demande.
 
 ## 1. Choisir le ticket
 
@@ -47,10 +47,25 @@ Les tickets sont des **issues GitHub** (importées depuis `TASKS.md`). Le statut
 - `pnpm check` (typecheck, lint, tests). Pour un parcours critique, lance aussi les tests de bout en bout concernés.
 - Lance les agents indiqués dans le champ **Revue** et corrige les points bloquants.
 
-## 5. Clôturer, sans committer
+## 5. Clôturer : commit, push et revue de la pull request
 
 - Si **tous** les critères d'acceptation sont remplis : `python3 .claude/scripts/tasks.py tick <numéro>` coche les cases dans l'issue. S'il en reste un non rempli, ne lance pas `tick` : dis lequel et pourquoi.
 - Ne ferme pas l'issue et ne change pas son statut : elle se ferme toute seule à la fusion de la pull request qui contient `Closes #<numéro>`.
-- Présente : fichiers modifiés, résumé du diff, résultat des vérifications, points ouverts, et le **message de commit** du ticket, terminé par `Closes #<numéro>` puis `Refs: SC-WEB-0xx` en pied.
-- **N'exécute ni `git commit`, ni `git push`, ni `gh pr create` (seule la création de branche du §2 est automatique).** Attends l'accord explicite de l'utilisateur. `git add`, `git status` et `git diff` sont permis. Propose le titre et la description de la pull request (avec `Closes #<numéro>`).
-- Indique que le ticket suivant sera disponible une fois cette pull request fusionnée, et ses décisions éventuellement en attente (FD1 à FD7 dans `TASKS.md`). L'utilisateur peut aussi demander explicitement un autre ticket.
+- **Commit et push sans demander l'accord de l'utilisateur**, une fois les vérifications du §4 passées : `git add` des seuls fichiers du ticket, un commit cohérent avec le message de commit du ticket (adapté si besoin), terminé par `Closes #<numéro>` puis `Refs: SC-WEB-0xx` en pied, puis push de la branche du ticket. Jamais de push forcé, de `--no-verify`, de reset destructif ni de nettoyage forcé du dépôt. Ne pousse jamais sur `main`.
+- La pull request s'ouvre **sur demande** de l'utilisateur : propose le titre et la description (avec `Closes #<numéro>`). Ne fusionne jamais.
+- **Boucle de revue de la pull request** (dès qu'elle est ouverte, et après chaque push) :
+  1. **Attends la fin de la CI** : surveille-la avec un `Monitor` (boucle `until` sur `gh pr checks <numéro>` tant qu'une vérification est `pending`, `queued` ou `in_progress`), sans `sleep` enchaînés ni sondage. Ne conclus rien tant que toutes les vérifications ne sont pas terminées.
+  2. **Vérifie que tout est passé** : `gh pr checks <numéro>`. Une vérification en échec se corrige (lis ses journaux avec `gh run view <run> --log-failed`, reproduis en local, corrige, relance `pnpm check`, plus les tests de bout en bout concernés pour un parcours critique).
+  3. **Lis tous les commentaires**, y compris ceux arrivés pendant la CI : `gh pr view <numéro> --comments` et `gh api repos/{owner}/{repo}/pulls/<numéro>/comments` (commentaires en ligne des relectures). Ne te fie pas au seul verdict : lis chaque point.
+  4. **Applique les corrections nécessaires** : pour chaque point fondé, corrige-le, commite (message `fix(...)` ou `test(...)` avec `Refs: SC-WEB-0xx`) et pousse sur la même branche ; sinon explique pourquoi tu ne le suis pas. Un point qui change une règle produit (🟡 ou ❓) ou qui sort du périmètre du ticket se demande à l'utilisateur, et tu continues le reste sans l'attendre.
+  5. Recommence à l'étape 1 après chaque push, jusqu'à ce que la CI soit entièrement verte et qu'aucun commentaire fondé ne reste sans réponse (les relectures automatiques repartent à chaque push). Ne dis « prêt à fusionner » qu'à ce moment-là, en listant ce qui reste à la charge de l'utilisateur.
+- Présente : la liste des fichiers modifiés, un résumé du diff, le résultat des vérifications locales et de la CI, les commits poussés (dont ceux des corrections de revue), l'état des commentaires de la pull request et les points ouverts éventuels.
+- Termine en indiquant que le ticket suivant sera disponible une fois cette pull request fusionnée (ses dépendances seront alors fermées), et ses décisions éventuellement en attente (FD1 à FD7 dans `TASKS.md`). L'utilisateur peut aussi demander explicitement un autre ticket.
+
+## Rappels
+
+- Anglais pour le code, les commentaires et les messages de commit ; français pour la documentation ; textes utilisateur uniquement dans `src/i18n` (FR et EN).
+- Aucun appel HTTP dans un composant : tout passe par les hooks de `src/api`. Ne modifie jamais `src/api/generated/`.
+- Pas de test qui dépend de l'heure réelle : injecte la date.
+- Jamais de nouvelle dépendance sans la justifier et demander (`pnpm add` reste soumis à validation).
+- Jamais de déploiement ni de publication (`eas submit`, `eas update`, `firebase deploy`) sans demande explicite.
