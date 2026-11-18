@@ -4,10 +4,12 @@ import fr from '../i18n/fr.json';
 import { ApiError, errorMessage } from './errors';
 
 // Codes the client produces itself (no response, no readable body, status
-// fallbacks), plus the 429 with a delay: the interface must translate them all.
+// fallbacks), the 429 with a delay and the configuration error of main.tsx:
+// the interface must translate them all.
 const CLIENT_KEYS = [
+  'errors.app_unavailable',
   'errors.network_error',
-  'errors.unknown_error',
+  'errors.unknown',
   'errors.unauthenticated',
   'errors.forbidden',
   'errors.not_found',
@@ -41,11 +43,11 @@ describe('error messages', () => {
     });
   });
 
-  it('falls back on errors.unknown_error for a code without text', () => {
+  it('falls back on errors.unknown for a code without text', () => {
     const error = new ApiError('week_locked', 409, { week: '3' });
 
     expect(errorMessage(error, (key) => i18n.exists(key))).toEqual({
-      key: 'errors.unknown_error',
+      key: 'errors.unknown',
       values: {},
     });
   });

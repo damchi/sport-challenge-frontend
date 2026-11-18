@@ -22,14 +22,14 @@ try {
   );
 } catch (error) {
   // A configuration mistake (VITE_* variable): its detail is for the
-  // developer, shown in development only; users get the generic message.
+  // developer, shown in development only; users get a generic message.
   // The error stays in the console either way.
   root.render(
     <main className="mx-auto max-w-page px-5 py-8">
       {import.meta.env.DEV ? (
         <pre className="whitespace-pre-wrap text-ink">{String(error)}</pre>
       ) : (
-        <p className="text-ink">{i18n.t('errors.unknown_error')}</p>
+        <p className="text-ink">{i18n.t('errors.app_unavailable')}</p>
       )}
     </main>,
   );

@@ -1,7 +1,7 @@
 import type { components } from './generated/schema';
 
 /** Codes of the API, plus the client's own: no response, or no readable error. */
-export type ApiErrorCode = components['schemas']['ErrorCode'] | 'network_error' | 'unknown_error';
+export type ApiErrorCode = components['schemas']['ErrorCode'] | 'network_error' | 'unknown';
 
 /**
  * Every failed request ends as an ApiError. The interface translates `code`
@@ -35,7 +35,7 @@ function codeForStatus(status: number): ApiErrorCode {
   if (status === 404) return 'not_found';
   if (status === 429) return 'rate_limited';
   if (status >= 500) return 'internal_error';
-  return 'unknown_error';
+  return 'unknown';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -107,7 +107,7 @@ export function networkError(cause: unknown): ApiError {
 /**
  * Translation key and values of an error, for i18next. `hasKey` tells
  * whether a key is translated (i18next.exists); a code without text falls
- * back on errors.unknown_error rather than showing the raw key.
+ * back on errors.unknown rather than showing the raw key.
  */
 export function errorMessage(
   error: ApiError,
@@ -117,5 +117,5 @@ export function errorMessage(
     return { key: 'errors.rate_limited_delay', values: error.params };
   }
   const key = `errors.${error.code}`;
-  return hasKey(key) ? { key, values: error.params } : { key: 'errors.unknown_error', values: {} };
+  return hasKey(key) ? { key, values: error.params } : { key: 'errors.unknown', values: {} };
 }
