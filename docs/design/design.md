@@ -36,44 +36,49 @@ jamais en dur dans les composants.
 
 | Token | Clair | Sombre | Usage |
 |---|---|---|---|
-| `--color-bg` | `#F5F4F0` | `#111316` | fond des pages |
-| `--color-surface` | `#FFFFFF` | `#1C1E23` | cartes, lignes, barre de navigation |
-| `--color-ink` | `#16181D` | `#ECEDEF` | texte principal, barres du classement |
-| `--color-muted` | `#5B5F68` | `#A1A5AE` | texte secondaire, rangs, libellés |
-| `--color-hero` | `#16181D` | `#262930` | fond des blocs sombres (bandeau de clôture, « Ta semaine ») |
-| `--color-on-hero` | `#FFFFFF` | `#FFFFFF` | texte sur `--color-hero` |
-| `--color-on-dark-muted` | `#C9CCD2` | `#C9CCD2` | texte secondaire sur `--color-hero` |
-| `--color-border` | `#E2E0DA` | `#2E3138` | bordures de cartes et de lignes |
-| `--color-border-dashed` | `#C9C6BE` | `#4A4E57` | bordure pointillée (éliminé, à venir) |
-| `--color-track` | `#EDEBE6` | `#2E3138` | fond des barres de progression |
-| `--color-track-on-dark` | `#33363D` | `#3A3E46` | fond des barres de progression sur `--color-hero` |
-| `--color-segment` | `#EAE8E2` | `#24272D` | fond du sélecteur à onglets |
-| `--color-accent` | `#C2410C` | `#FB923C` | couleur d'accent : bouton principal, onglet actif, ma ligne, liens d'action |
-| `--color-on-accent` | `#FFFFFF` | `#16181D` | texte sur `--color-accent` |
+| `--color-bg` | `#F5F4F0` | `#0F1115` | fond des pages |
+| `--color-surface` | `#FFFFFF` | `#1A1D23` | cartes, lignes, barre de navigation |
+| `--color-surface-raised` | `#16181D` | `#23272F` | blocs mis en avant : bandeau de clôture, bloc « Ta semaine » |
+| `--color-raised-border` | `#16181D` | `#2F343D` | bordure des blocs mis en avant (invisible en clair) |
+| `--color-ink` | `#16181D` | `#F3F4F6` | texte principal |
+| `--color-muted` | `#5B5F68` | `#A1A6B0` | texte secondaire, rangs, libellés |
+| `--color-on-raised` | `#FFFFFF` | `#F3F4F6` | texte principal des blocs mis en avant |
+| `--color-on-raised-muted` | `#C9CCD2` | `#A1A6B0` | texte secondaire des blocs mis en avant |
+| `--color-on-raised-soft` | `#C9CCD2` | `#D4D7DD` | phrase du bloc « Ta semaine » |
+| `--color-border` | `#E2E0DA` | `#2A2E36` | bordures de cartes et de lignes |
+| `--color-border-dashed` | `#C9C6BE` | `#3A3F48` | bordure pointillée (éliminé, à venir) |
+| `--color-track` | `#EDEBE6` | `#2A2E36` | fond des barres de progression |
+| `--color-track-raised` | `#33363D` | `#33373F` | fond des barres de progression dans les blocs mis en avant |
+| `--color-rank-bar` | `#16181D` | `#E5E7EB` | barres des autres participants dans un classement |
+| `--color-segment` | `#EAE8E2` | `#22262D` | fond du sélecteur à onglets |
+| `--color-segment-active` | `#FFFFFF` | `#343943` | onglet actif du sélecteur (ombre légère en clair, aucune en sombre) |
+| `--color-accent` | `#C2410C` | `#FB923C` | couleur d'accent : bouton principal, onglet actif, ma ligne, liens d'action ; l'orange foncé manque de contraste sur fond sombre |
+| `--color-on-accent` | `#FFFFFF` | `#16181D` | texte du bouton principal : **foncé** en sombre |
 | `--color-accent-soft` | `#FFF4EB` | `#2A1D14` | fond de « ma ligne » dans un classement |
-| `--color-risk-bg` | `#FFEDD5` | `#3A2210` | fond du badge « À risque » |
+| `--color-risk-bg` | `#FFEDD5` | `#3B2414` | fond du badge « À risque » |
 | `--color-risk-fg` | `#9A3412` | `#FDBA74` | texte et icône du badge « À risque » |
 | `--color-risk-bar` | `#FB923C` | `#FB923C` | barre de progression d'un participant à risque |
-| `--color-risk-border` | `#FDBA74` | `#9A3412` | bord d'une carte à risque |
-| `--color-ok-bg` | `#DCFCE7` | `#12301E` | fond du badge « Objectif atteint » |
-| `--color-ok-fg` | `#166534` | `#86EFAC` | texte du badge « Objectif atteint », semaine réussie |
+| `--color-risk-border` | `#FDBA74` | `#C2410C` | bord 2 px d'une carte à risque |
+| `--color-ok-bg` | `#DCFCE7` | `#12301F` | fond du badge « Objectif atteint » |
+| `--color-ok-fg` | `#166534` | `#86EFAC` | texte du badge « Objectif atteint », « Réussie » des tuiles de semaines |
 | `--color-ok-bar` | `#16A34A` | `#22C55E` | barre de progression complète |
-| `--color-out-bg` | `#E5E7EB` | `#2E3138` | avatar d'un éliminé |
-| `--color-out-fg` | `#4B5563` | `#A1A5AE` | initiales d'un éliminé |
+| `--color-out-bg` | `#E5E7EB` | `#2A2E36` | avatar d'un éliminé |
+| `--color-out-fg` | `#4B5563` | `#A1A6B0` | initiales d'un éliminé |
 
 Palette des avatars (fond / texte), attribuée de façon stable par utilisateur
 (par exemple un hachage de son identifiant), jamais au hasard à chaque rendu.
 Chaque couple est un token (`--color-avatar-N-bg` / `--color-avatar-N-fg`) ;
-le thème sombre inverse fond et texte :
+un utilisateur garde le même numéro, donc « sa » couleur, d'un thème à
+l'autre :
 
-| N | Fond | Texte |
-|---|---|---|
-| 1 | `#DBEAFE` | `#1E3A8A` |
-| 2 | `#EDE9FE` | `#4C1D95` |
-| 3 | `#DCFCE7` | `#14532D` |
-| 4 | `#FCE7F3` | `#831843` |
-| 5 | `#FFEDD5` | `#7C2D12` |
-| 6 | `#E0F2FE` | `#0C4A6E` |
+| N | Fond clair | Texte clair | Fond sombre | Texte sombre |
+|---|---|---|---|---|
+| 1 | `#DBEAFE` | `#1E3A8A` | `#1E3A5F` | `#BFDBFE` |
+| 2 | `#EDE9FE` | `#4C1D95` | `#3B2A63` | `#DDD6FE` |
+| 3 | `#DCFCE7` | `#14532D` | `#14402A` | `#BBF7D0` |
+| 4 | `#FCE7F3` | `#831843` | `#4A1D35` | `#FBCFE8` |
+| 5 | `#FFEDD5` | `#7C2D12` | `#4A2A12` | `#FED7AA` |
+| 6 | `#E0F2FE` | `#0C4A6E` | `#10364D` | `#BAE6FD` |
 
 Contrastes : tous les couples texte/fond dépassent 4,5:1 dans les deux thèmes
 (vérifié par `src/styles/tokens.test.ts`). Toute nouvelle couleur de texte doit
@@ -82,11 +87,18 @@ aussi passer 4,5:1 (3:1 au-delà de 24 px).
 L'accent est un seul token : changer de couleur de marque ne doit demander
 qu'une modification.
 
-**Thème sombre** : suit la préférence du système (`prefers-color-scheme:
-dark`) en redéfinissant les mêmes tokens (`src/styles/tokens.css`) ; le choix
-manuel viendra avec la coque de l'application (ticket SC-WEB-019). Aucun
-composant ne teste le thème lui-même. 🟡 Valeurs sombres proposées au ticket
-SC-WEB-003, sans maquette : à revoir quand le thème sera dessiné.
+## Thème sombre
+
+Le thème sombre **redéfinit les mêmes tokens** (colonne « Sombre » ci-dessus,
+`src/styles/tokens.css`) ; aucun composant ne teste le thème lui-même, et la
+mise en page ne change pas. Par défaut, l'application suit le réglage de
+l'appareil (`prefers-color-scheme: dark`) ; le choix manuel viendra avec la
+coque de l'application (ticket SC-WEB-019). Les maquettes `*-sombre.png`
+montrent les mêmes écrans avec les tokens sombres.
+
+Ombres en sombre : aucune, sauf le bouton d'action flottant
+(`0 6px 16px rgba(0,0,0,.45)`). Les reliefs viennent des surfaces plus
+claires (`--color-surface-raised`) et des bordures.
 
 ## Typographie
 
@@ -153,7 +165,7 @@ chiffres.
 ### Barre de progression
 Piste `--color-track`, hauteur 10 px (cartes) ou 6 px (lignes de
 classement), rayon égal à la moitié de la hauteur. Remplissage selon le
-statut (accent, à risque, atteint, ou `--color-ink` pour les autres dans un
+statut (accent, à risque, atteint, ou `--color-rank-bar` pour les autres dans un
 classement). Toujours accompagnée du chiffre en texte ; la barre seule a un
 `role="img"` et un `aria-label` du type « 72 % de l'objectif de la semaine »,
 ou `aria-hidden` si le chiffre est juste à côté.
@@ -165,15 +177,17 @@ ligne méta (ce qui manque avant la clôture, ou les sports) et rang « 5e sur
 8 » à droite.
 
 ### Bandeau de clôture
-Fond `--color-hero`, texte `--color-on-hero`, rayon 14 px, icône `timer` : « Semaine 3 ·
+Fond `--color-surface-raised`, bordure `--color-raised-border`, texte
+`--color-on-raised` (secondaire `--color-on-raised-muted`), rayon 14 px, icône `timer` : « Semaine 3 ·
 clôture dans 2 j 14 h » puis « Dimanche 23 h 59, heure de Montréal ». L'heure
 est toujours donnée dans **le fuseau du défi** (fourni par l'API), pas celui
 de l'appareil ; la mention du fuseau (« heure de Montréal ») n'apparaît que
 si le fuseau de l'utilisateur est différent.
 
 ### Bloc « Ta semaine » (page d'un défi)
-Fond `--color-hero`, rayon 20 px : libellé en majuscules, badge de statut,
-grand chiffre 48 px, barre (piste `--color-track-on-dark`), phrase explicite sur ce qui se
+Fond `--color-surface-raised`, bordure `--color-raised-border`, rayon 20 px : libellé en majuscules, badge de statut,
+grand chiffre 48 px, barre (piste `--color-track-raised`), phrase explicite
+(`--color-on-raised-soft`) sur ce qui se
 passe à la clôture.
 
 ### Ligne de classement
@@ -206,7 +220,7 @@ venir » en pointillés).
 
 ### Sélecteur à onglets (« Semaine 3 » / « Général »)
 Conteneur `--color-segment`, rayon 14 px, padding 4 px, deux colonnes égales.
-Onglet actif : fond `--color-surface`, ombre légère, texte `--color-ink` ; inactif :
+Onglet actif : fond `--color-segment-active`, ombre légère en clair seulement, texte `--color-ink` ; inactif :
 transparent, texte `--color-muted`. `aria-pressed` sur chaque bouton.
 
 ### Barre de navigation
