@@ -78,7 +78,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom, prénom et e-mail dans le profil).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil).
 
 ## Décisions à confirmer
 
@@ -94,7 +94,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **149 points** (47 tickets), dont **136 pour la V1** ; les 13 points de l'épopée F10 sont reportés en V1.1 (décision D10 : badges et upload d'avatar).
+Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de l'épopée F10 sont reportés en V1.1 (décision D10 : badges et upload d'avatar).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
@@ -645,19 +645,24 @@ Total : **149 points** (47 tickets), dont **136 pour la V1** ; les 13 points de 
 **Commit** : `feat(profile): add profile page`
 **Statut** : À faire
 
-### SC-WEB-053 · Profil : nom, prénom et e-mail
-`F8` · Story · Phase 8 · Estimation 2 · Dépend de : 040 · Backend : `GET /me` : prénom, nom et e-mail (champs à ajouter au contrat, ticket backend à venir)
+### SC-WEB-053 · Nom, prénom et e-mail : onboarding et profil
+`F8` · Story · Phase 8 · Estimation 3 · Dépend de : 018, 040 · Backend : `GET` et `PATCH /me` : prénom, nom et e-mail (champs à ajouter au contrat, ticket backend à venir)
+
+**Origine des données**
+- **E-mail** : vient du claim `email` du jeton Auth0 ; le backend le lit et le renvoie dans `GET /me`. Il n'est ni saisi ni modifiable dans l'app.
+- **Prénom et nom** : saisis par l'utilisateur à l'onboarding ; **obligatoires**. Le serveur décide si le profil est complet (`profile_complete`) ; l'app ne recalcule pas cette règle.
 
 **Critères d'acceptation**
-- [ ] La page `/me` affiche le prénom, le nom et l'adresse e-mail de l'utilisateur, en lecture seule, tels que `GET /me` les renvoie.
-- [ ] Une valeur absente (`null`) affiche une mention traduite (« non renseigné »), jamais un champ vide ni une valeur inventée.
+- [ ] Onboarding (`/onboarding`) : champs **Prénom** et **Nom** obligatoires à côté du pseudo, envoyés par `PATCH /me` ; validation en ligne avec un schéma de `src/domain/schemas` reprenant les règles du contrat (longueurs, caractères), messages traduits ; erreurs de l'API traduites par leur code.
+- [ ] Un utilisateur déjà inscrit sans prénom ni nom repasse par l'onboarding si `profile_complete` est faux (garde existante `ProfileGate`), avec son pseudo pré-rempli.
+- [ ] Page `/me` : prénom, nom et e-mail affichés en lecture seule, tels que `GET /me` les renvoie ; une valeur absente affiche une mention traduite (« non renseigné »), jamais un champ vide ni une valeur inventée.
 - [ ] Ces informations ne sont visibles que par l'utilisateur lui-même : jamais sur les écrans d'un challenge (participants, classement, activités), où seul le pseudo apparaît.
-- [ ] Ni le nom ni l'e-mail ne partent dans les journaux, les analytics ou Sentry.
+- [ ] Ni le nom, ni le prénom, ni l'e-mail ne partent dans les journaux, les analytics ou Sentry.
 - [ ] Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) dès que le backend expose les champs ; d'ici là, mocks MSW.
 
-**Tests** : valeurs présentes, valeurs absentes, aucun affichage hors du profil.
-**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`.
-**Commit** : `feat(profile): show name and email on the profile page`
+**Tests** : onboarding (champs vides refusés, valeurs valides envoyées, erreur de l'API), utilisateur existant sans nom renvoyé à l'onboarding, profil (valeurs présentes et absentes), aucun affichage hors du profil.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`, `spec-guardian`.
+**Commit** : `feat(profile): collect name at onboarding and show it with the email`
 **Statut** : À faire
 
 ### SC-WEB-041 · Suppression de compte
