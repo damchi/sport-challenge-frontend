@@ -42,6 +42,15 @@ describe('RequireAuth', () => {
     expect(screen.queryByText('protected page')).not.toBeInTheDocument();
   });
 
+  it('offers a retry when the redirect to Auth0 cannot start', async () => {
+    const auth = createFakeAuth({ signIn: vi.fn(() => Promise.reject(new Error('offline'))) });
+    renderProtected(auth);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("La connexion n'a pas abouti.");
+    expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument();
+    expect(auth.signIn).toHaveBeenCalledTimes(1);
+  });
+
   it('offers a retry instead of looping when the sign-in failed', () => {
     const auth = createFakeAuth({ hasError: true });
     renderProtected(auth);

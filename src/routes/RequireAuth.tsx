@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router';
 import { useAuth } from '../lib/auth/auth';
@@ -14,28 +14,37 @@ export function RequireAuth() {
   const auth = useAuth();
   const { pathname, search, hash } = useLocation();
   const redirecting = useRef(false);
+  // The redirect to Auth0 could not start (network...): show a retry.
+  const [failed, setFailed] = useState(false);
+  const returnTo = `${pathname}${search}${hash}`;
 
-  const mustSignIn = !auth.isLoading && !auth.isAuthenticated && !auth.hasError;
+  const mustSignIn = !auth.isLoading && !auth.isAuthenticated && !auth.hasError && !failed;
   useEffect(() => {
     if (!mustSignIn || redirecting.current) return;
     redirecting.current = true;
-    auth.signIn(`${pathname}${search}${hash}`).catch(() => {
+    auth.signIn(returnTo).catch(() => {
       redirecting.current = false;
+      setFailed(true);
     });
-  }, [mustSignIn, auth, pathname, search, hash]);
+  }, [mustSignIn, auth, returnTo]);
+
+  const retry = () => {
+    setFailed(false);
+    auth.signIn(returnTo).catch(() => setFailed(true));
+  };
 
   if (auth.isAuthenticated) return <Outlet />;
 
   return (
     <main className="mx-auto max-w-page px-5 py-8">
-      {auth.hasError ? (
+      {auth.hasError || failed ? (
         <>
           <p role="alert" className="text-muted">
             {t('auth.callback.error')}
           </p>
           <button
             type="button"
-            onClick={() => auth.signIn(`${pathname}${search}${hash}`).catch(() => undefined)}
+            onClick={retry}
             className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
           >
             {t('auth.signIn')}
