@@ -129,5 +129,48 @@
       "ongoing": "En cours",
       "finished": "Terminé"
     }
+  },
+  "wizard": {
+    "progress": "Étape {{current}} sur {{total}}",
+    "back": "Retour",
+    "next": "Suivant"
+  },
+  "challengeCreate": {
+    "title": "Créer un défi",
+    "steps": {
+      "info": "Informations"
+    },
+    "fields": {
+      "title": {
+        "label": "Titre",
+        "hint": "Entre 3 et 80 caractères.",
+        "length": "Le titre doit faire entre 3 et 80 caractères.",
+        "characters": "Le titre contient un caractère non autorisé (retour à la ligne, tabulation ou caractère invisible)."
+      },
+      "description": {
+        "label": "Description (facultative)",
+        "hint": "2000 caractères au plus.",
+        "length": "La description doit faire 2000 caractères au plus.",
+        "characters": "La description contient un caractère invisible non autorisé."
+      },
+      "visibility": {
+        "label": "Visibilité",
+        "private": "Privé",
+        "privateHint": "Sur invitation seulement.",
+        "public": "Public",
+        "publicHint": "Listé sur l'accueil : tout le monde peut le voir.",
+        "required": "Choisis la visibilité du défi."
+      },
+      "membersCanInvite": {
+        "label": "Les participants peuvent inviter",
+        "hint": "Sinon, seuls les créateurs du défi invitent."
+      }
+    },
+    "leave": {
+      "title": "Quitter la création ?",
+      "message": "Ta saisie n'est pas enregistrée : elle sera perdue.",
+      "confirm": "Quitter",
+      "cancel": "Continuer la saisie"
+    }
   }
 }

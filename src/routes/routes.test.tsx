@@ -22,6 +22,14 @@ describe('routes', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
   });
 
+  it('opens the challenge creation on /challenges/new', async () => {
+    renderAt('/challenges/new');
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Créer un défi' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
+  });
+
   it('sends a signed-out visitor to sign in, back to the requested page', () => {
     const auth = createFakeAuth();
     renderAt('/does-not-exist?tab=ranking', auth);

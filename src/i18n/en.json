@@ -128,5 +128,48 @@
       "ongoing": "Ongoing",
       "finished": "Finished"
     }
+  },
+  "wizard": {
+    "progress": "Step {{current}} of {{total}}",
+    "back": "Back",
+    "next": "Next"
+  },
+  "challengeCreate": {
+    "title": "Create a challenge",
+    "steps": {
+      "info": "Details"
+    },
+    "fields": {
+      "title": {
+        "label": "Title",
+        "hint": "3 to 80 characters.",
+        "length": "The title must be 3 to 80 characters long.",
+        "characters": "The title contains a character that is not allowed (line break, tab or invisible character)."
+      },
+      "description": {
+        "label": "Description (optional)",
+        "hint": "2000 characters at most.",
+        "length": "The description must be 2000 characters at most.",
+        "characters": "The description contains an invisible character that is not allowed."
+      },
+      "visibility": {
+        "label": "Visibility",
+        "private": "Private",
+        "privateHint": "By invitation only.",
+        "public": "Public",
+        "publicHint": "Listed on the home screen: everyone can see it.",
+        "required": "Choose who can see the challenge."
+      },
+      "membersCanInvite": {
+        "label": "Participants can invite",
+        "hint": "Otherwise, only the challenge creators invite."
+      }
+    },
+    "leave": {
+      "title": "Leave the challenge creation?",
+      "message": "What you entered is not saved: it will be lost.",
+      "confirm": "Leave",
+      "cancel": "Keep editing"
+    }
   }
 }
