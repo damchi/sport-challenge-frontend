@@ -138,7 +138,8 @@
   "challengeCreate": {
     "title": "Créer un défi",
     "steps": {
-      "info": "Informations"
+      "info": "Informations",
+      "duration": "Durée et fuseau"
     },
     "fields": {
       "title": {
@@ -164,7 +165,46 @@
       "membersCanInvite": {
         "label": "Les participants peuvent inviter",
         "hint": "Sinon, seuls les créateurs du défi invitent."
+      },
+      "weeks": {
+        "label": "Durée (en semaines)",
+        "hint": "De 2 à 52 semaines.",
+        "range": "La durée doit être un nombre entier de semaines, de 2 à 52."
+      },
+      "startDate": {
+        "label": "Date de début",
+        "hint": "Aujourd'hui ou plus tard, dans un an au plus. Le défi commence à minuit, dans le fuseau choisi ci-dessus.",
+        "required": "Choisis la date de début.",
+        "range": "La date de début doit être entre aujourd'hui et la même date l'an prochain."
+      },
+      "timezone": {
+        "label": "Fuseau horaire",
+        "hint": "Celui du lieu d'où tu lances le défi. Les semaines y commencent et s'y terminent, pour tous les participants.",
+        "placeholder": "Choisis un fuseau",
+        "option": "{{city}} — {{name}}",
+        "required": "Choisis un fuseau horaire dans la liste.",
+        "regions": {
+          "Africa": "Afrique",
+          "America": "Amérique",
+          "Antarctica": "Antarctique",
+          "Arctic": "Arctique",
+          "Asia": "Asie",
+          "Atlantic": "Atlantique",
+          "Australia": "Australie",
+          "Europe": "Europe",
+          "Indian": "Océan Indien",
+          "Pacific": "Pacifique",
+          "Other": "Autres"
+        }
       }
+    },
+    "preview": {
+      "title": "Aperçu",
+      "empty": "L'aperçu s'affiche une fois la durée, la date et le fuseau choisis.",
+      "period": "Du {{start}} au {{end}}, {{zone}}.",
+      "weeks_one": "{{count}} semaine",
+      "weeks_many": "{{count}} semaines",
+      "weeks_other": "{{count}} semaines"
     },
     "leave": {
       "title": "Quitter la création ?",

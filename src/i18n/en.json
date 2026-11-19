@@ -137,7 +137,8 @@
   "challengeCreate": {
     "title": "Create a challenge",
     "steps": {
-      "info": "Details"
+      "info": "Details",
+      "duration": "Duration and time zone"
     },
     "fields": {
       "title": {
@@ -163,7 +164,45 @@
       "membersCanInvite": {
         "label": "Participants can invite",
         "hint": "Otherwise, only the challenge creators invite."
+      },
+      "weeks": {
+        "label": "Duration (in weeks)",
+        "hint": "2 to 52 weeks.",
+        "range": "The duration must be a whole number of weeks, from 2 to 52."
+      },
+      "startDate": {
+        "label": "Start date",
+        "hint": "Today or later, one year ahead at most. The challenge starts at midnight, in the time zone chosen above.",
+        "required": "Choose the start date.",
+        "range": "The start date must be between today and the same date next year."
+      },
+      "timezone": {
+        "label": "Time zone",
+        "hint": "The one of the place you run the challenge from. Weeks start and end there, for every participant.",
+        "placeholder": "Choose a time zone",
+        "option": "{{city}} — {{name}}",
+        "required": "Choose a time zone from the list.",
+        "regions": {
+          "Africa": "Africa",
+          "America": "Americas",
+          "Antarctica": "Antarctica",
+          "Arctic": "Arctic",
+          "Asia": "Asia",
+          "Atlantic": "Atlantic",
+          "Australia": "Australia",
+          "Europe": "Europe",
+          "Indian": "Indian Ocean",
+          "Pacific": "Pacific",
+          "Other": "Other"
+        }
       }
+    },
+    "preview": {
+      "title": "Preview",
+      "empty": "The preview shows once the duration, date and time zone are chosen.",
+      "period": "From {{start}} to {{end}}, {{zone}}.",
+      "weeks_one": "{{count}} week",
+      "weeks_other": "{{count}} weeks"
     },
     "leave": {
       "title": "Leave the challenge creation?",

@@ -38,6 +38,39 @@ export function challengePeriod(
 }
 
 /**
+ * Bounds of a challenge window as written in its time zone, to the hour
+ * ("lundi 5 octobre à 00 h"): the end is the excluded instant, the start of
+ * the day after the last one. The year shows when the two differ.
+ */
+export function challengeWindowBounds(
+  startsAt: Date,
+  endsAt: Date,
+  timeZone: string,
+  locale: string,
+): { start: string; end: string } {
+  const year = (date: Date) =>
+    new Intl.DateTimeFormat('en', { timeZone, year: 'numeric' }).format(date);
+  const format = new Intl.DateTimeFormat(locale, {
+    timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(year(startsAt) !== year(endsAt) && { year: 'numeric' }),
+    hour: 'numeric',
+  });
+  return { start: format.format(startsAt), end: format.format(endsAt) };
+}
+
+/** Name of a time zone that holds all year ("heure de l'Est nord-américain"). */
+export function timeZoneName(timeZone: string, locale: string): string {
+  const parts = new Intl.DateTimeFormat(locale, {
+    timeZone,
+    timeZoneName: 'longGeneric',
+  }).formatToParts(new Date(0));
+  return parts.find((part) => part.type === 'timeZoneName')?.value ?? timeZone;
+}
+
+/**
  * Name of the challenge's time zone when it differs from the user's
  * ("heure normale de l'Est"), else undefined: the dates then need no mention.
  */
@@ -46,10 +79,5 @@ export function otherTimeZoneName(
   userTimeZone: string,
   locale: string,
 ): string | undefined {
-  if (timeZone === userTimeZone) return undefined;
-  const parts = new Intl.DateTimeFormat(locale, {
-    timeZone,
-    timeZoneName: 'longGeneric',
-  }).formatToParts(new Date(0));
-  return parts.find((part) => part.type === 'timeZoneName')?.value ?? timeZone;
+  return timeZone === userTimeZone ? undefined : timeZoneName(timeZone, locale);
 }
