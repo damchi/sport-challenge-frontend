@@ -84,5 +84,44 @@
       "dark": "Sombre"
     },
     "signOut": "Se déconnecter"
+  },
+  "states": {
+    "loading": "Chargement…",
+    "loadMore": "Charger plus",
+    "loadMoreFailed": "La suite n'a pas pu être chargée."
+  },
+  "challenges": {
+    "title": "Défis",
+    "listLabel": "Liste des défis",
+    "create": "Créer un défi",
+    "scope": {
+      "public": "Publics",
+      "mine": "Mes défis"
+    },
+    "status": {
+      "label": "Statut",
+      "all": "Tous",
+      "upcoming": "À venir",
+      "ongoing": "En cours",
+      "finished": "Terminés"
+    },
+    "empty": {
+      "public": "Aucun défi public pour l'instant. Lance le tien !",
+      "mine": "Tu ne participes encore à aucun défi. Crée le tien ou rejoins-en un.",
+      "filtered": "Aucun défi ne correspond à ce statut."
+    },
+    "period": "Du {{start}} au {{end}}",
+    "visibility": {
+      "public": "Public",
+      "private": "Privé"
+    },
+    "participants_one": "{{count}} participant",
+    "participants_many": "{{count}} participants",
+    "participants_other": "{{count}} participants",
+    "my": {
+      "active": "Participant",
+      "abandoned": "A abandonné"
+    },
+    "showAll": "Voir tous les défis"
   }
 }

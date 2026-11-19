@@ -1,0 +1,25 @@
+import type { LucideIcon } from 'lucide-react';
+
+// Tones of the statuses shown so far; each new status adds its own.
+const TONES = {
+  ok: 'bg-ok-bg text-ok-fg',
+  out: 'bg-out-bg text-out-fg',
+} as const;
+
+interface StatusPillProps {
+  label: string;
+  Icon: LucideIcon;
+  tone: keyof typeof TONES;
+}
+
+/** Status pill: an icon and a label, never the colour alone (design.md). */
+export function StatusPill({ label, Icon, tone }: StatusPillProps) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${TONES[tone]}`}
+    >
+      <Icon aria-hidden="true" size={14} strokeWidth={2} />
+      {label}
+    </span>
+  );
+}

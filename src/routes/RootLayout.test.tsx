@@ -36,9 +36,7 @@ describe('RootLayout', () => {
 
     fireEvent.click(await screen.findByRole('link', { name: "Retour à l'accueil" }));
 
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Sport Challenge' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

@@ -19,9 +19,7 @@ function renderAt(path: string, auth: Auth = signedIn()) {
 describe('routes', () => {
   it('renders the home page title on /', async () => {
     renderAt('/');
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Sport Challenge' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {
