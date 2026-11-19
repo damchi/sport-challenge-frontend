@@ -6,6 +6,7 @@ import { useSyncExternalStore } from 'react';
 
 export type ThemeChoice = 'system' | 'light' | 'dark';
 
+// Also read by the script of index.html: change both together.
 const KEY = 'sport-challenge:theme';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 

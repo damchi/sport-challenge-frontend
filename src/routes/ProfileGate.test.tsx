@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { mockMe } from '../mocks/handlers';
@@ -72,4 +73,12 @@ describe('ProfileGate', () => {
       expect(router.state.location.pathname).toBe('/');
     },
   );
+
+  it('applies the language kept in the profile', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    renderGate();
+
+    await waitFor(() => expect(i18n.language).toBe('en'));
+    await i18n.changeLanguage('fr');
+  });
 });
