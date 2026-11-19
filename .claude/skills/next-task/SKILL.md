@@ -5,7 +5,7 @@ description: Prend la prochaine issue GitHub du backlog du frontend web Sport Ch
 
 # Traiter un ticket du backlog frontend
 
-> **V1 = web uniquement.** Le backlog est dans les **issues GitHub** (tickets `SC-WEB-001` à `SC-WEB-052`, numérotation non consécutive : les tickets listés dans « Tickets fusionnés » de `TASKS.md` n'existent plus). **Un ticket = un commit.** Ne traite jamais deux tickets d'affilée sans que la pull request du premier soit fusionnée ou que l'utilisateur te le demande.
+> **V1 = web uniquement.** Le backlog est dans les **issues GitHub** (tickets `SC-WEB-001` à `SC-WEB-053`, numérotation non consécutive : les tickets listés dans « Tickets fusionnés » de `TASKS.md` n'existent plus). **Un ticket = un commit.** Ne traite jamais deux tickets d'affilée sans que la pull request du premier soit fusionnée ou que l'utilisateur te le demande.
 
 ## 1. Choisir le ticket
 
