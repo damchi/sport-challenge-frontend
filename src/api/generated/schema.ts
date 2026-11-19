@@ -146,10 +146,10 @@ export interface paths {
          * List challenges
          * @description `public`: the public challenges; `mine`: those the user created or
          *     joined (abandoned included). Deleted challenges never appear, and a
-         *     private challenge never appears in `public`. The status is computed
-         *     from the current instant. Upcoming and ongoing challenges come
-         *     soonest first, finished ones most recent first; without a status
-         *     filter, by start date.
+         *     private challenge never appears in `public`. The status, filter
+         *     and field alike, is computed from the current instant. Upcoming and
+         *     ongoing challenges come soonest first, finished ones most recent
+         *     first; without a status filter, by start date.
          */
         get: operations["listChallenges"];
         put?: never;
@@ -829,10 +829,17 @@ export interface components {
             /** @description Everyone who joined, abandoned included. */
             participant_count: number;
             /**
+             * @description The user's role in the challenge.
+             * @enum {string}
+             */
+            my_role: "creator" | "participant" | "abandoned" | "invited" | "outsider";
+            /**
              * @description The user's participation; null when not a participant.
              * @enum {string|null}
              */
             my_status: "active" | "abandoned" | null;
+            /** @enum {string} */
+            status: "upcoming" | "ongoing" | "finished";
         };
         ChallengeDetail: {
             /** Format: uuid */

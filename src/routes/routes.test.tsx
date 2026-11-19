@@ -19,9 +19,7 @@ function renderAt(path: string, auth: Auth = signedIn()) {
 describe('routes', () => {
   it('renders the home page title on /', async () => {
     renderAt('/');
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Sport Challenge' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {
@@ -30,6 +28,15 @@ describe('routes', () => {
 
     expect(auth.signIn).toHaveBeenCalledWith('/does-not-exist?tab=ranking');
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+  });
+
+  it('shows no challenge to a signed-out visitor of the home page', () => {
+    const auth = createFakeAuth();
+    renderAt('/', auth);
+
+    expect(auth.signIn).toHaveBeenCalledWith('/');
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Publics' })).not.toBeInTheDocument();
   });
 
   it('keeps /callback public', () => {

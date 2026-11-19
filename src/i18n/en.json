@@ -84,5 +84,49 @@
       "dark": "Dark"
     },
     "signOut": "Sign out"
+  },
+  "states": {
+    "loading": "Loading…",
+    "loadMore": "Load more",
+    "loadMoreFailed": "The next challenges couldn't be loaded."
+  },
+  "challenges": {
+    "title": "Challenges",
+    "listLabel": "Challenge list",
+    "create": "Create a challenge",
+    "scope": {
+      "public": "Public",
+      "mine": "My challenges"
+    },
+    "status": {
+      "label": "Status",
+      "all": "All",
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "finished": "Finished"
+    },
+    "empty": {
+      "public": "No public challenge yet. Start yours!",
+      "mine": "You are not in any challenge yet. Create yours or join one.",
+      "filtered": "No challenge matches this status."
+    },
+    "period": "{{start}} to {{end}}",
+    "visibility": {
+      "public": "Public",
+      "private": "Private"
+    },
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "showAll": "Show all challenges",
+    "role": {
+      "creator": "Creator",
+      "participant": "Participant",
+      "abandoned": "Abandoned"
+    },
+    "challengeStatus": {
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "finished": "Finished"
+    }
   }
 }
