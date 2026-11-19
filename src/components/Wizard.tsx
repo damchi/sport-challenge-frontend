@@ -8,7 +8,8 @@ export interface WizardStep {
 }
 
 /**
- * A form in steps: progress, current step, Back and Next. Next (or Enter)
+ * A form in steps: progress, current step, Back and Next (none on the last
+ * step). Next (or Enter)
  * moves on only once `validateStep` accepts the current step. The steps share
  * the caller's form state, so going back loses nothing.
  */
@@ -24,6 +25,7 @@ export function Wizard({
   const heading = useRef<HTMLHeadingElement>(null);
   const moved = useRef(false);
   const step = steps[index];
+  const isLast = index === steps.length - 1;
 
   // After a move, the focus goes to the new step's title so a screen reader
   // announces it; not on the first render.
@@ -39,7 +41,7 @@ export function Wizard({
   };
 
   const onSubmit = async () => {
-    if ((await validateStep(index)) && index < steps.length - 1) {
+    if ((await validateStep(index)) && !isLast) {
       goTo(index + 1);
     }
   };
@@ -77,24 +79,29 @@ export function Wizard({
         {step.content}
       </div>
 
-      <div className="mt-8 flex gap-3">
-        {index > 0 && (
-          <button
-            type="button"
-            onClick={() => goTo(index - 1)}
-            className="inline-flex h-13 items-center gap-1 rounded-full border border-border bg-surface px-5 font-bold"
-          >
-            <ChevronLeft aria-hidden="true" size={20} />
-            {t('wizard.back')}
-          </button>
-        )}
-        <button
-          type="submit"
-          className="h-13 flex-1 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
-        >
-          {t('wizard.next')}
-        </button>
-      </div>
+      {(index > 0 || !isLast) && (
+        <div className="mt-8 flex gap-3">
+          {index > 0 && (
+            <button
+              type="button"
+              onClick={() => goTo(index - 1)}
+              className="inline-flex h-13 items-center gap-1 rounded-full border border-border bg-surface px-5 font-bold"
+            >
+              <ChevronLeft aria-hidden="true" size={20} />
+              {t('wizard.back')}
+            </button>
+          )}
+          {/* No Next on the last step: nothing comes after it. */}
+          {!isLast && (
+            <button
+              type="submit"
+              className="h-13 flex-1 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+            >
+              {t('wizard.next')}
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }

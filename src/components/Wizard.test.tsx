@@ -59,7 +59,7 @@ describe('Wizard', () => {
     expect(await screen.findByLabelText('Field b')).toHaveValue('second');
   });
 
-  it('validates the step it is on and stays on the last one', async () => {
+  it('validates the step it is on, and has no Next on the last one', async () => {
     const validate = vi.fn<(index: number) => Promise<boolean>>(() => Promise.resolve(true));
     renderWithProviders(<ThreeSteps validate={validate} />);
 
@@ -67,11 +67,11 @@ describe('Wizard', () => {
     await screen.findByRole('heading', { name: 'Step b' });
     next();
     await screen.findByRole('heading', { name: 'Step c' });
-    next();
 
-    await waitFor(() => expect(validate).toHaveBeenCalledTimes(3));
-    expect(validate.mock.calls.map(([index]) => index)).toEqual([0, 1, 2]);
+    expect(validate.mock.calls.map(([index]) => index)).toEqual([0, 1]);
     expect(screen.getByText('Étape 3 sur 3')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Suivant' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retour' })).toBeInTheDocument();
   });
 
   it('moves on with Enter in a field', async () => {

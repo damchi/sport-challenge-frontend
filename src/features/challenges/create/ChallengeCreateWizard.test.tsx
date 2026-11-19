@@ -30,7 +30,8 @@ function renderWizard() {
 
 const title = () => screen.getByRole('textbox', { name: 'Titre' });
 const description = () => screen.getByRole('textbox', { name: 'Description (facultative)' });
-const next = () => fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
+// The only step is the last: no Next button, Enter in a field checks the step.
+const submit = () => fireEvent.submit(title());
 
 function type(field: HTMLElement, value: string) {
   fireEvent.change(field, { target: { value } });
@@ -52,6 +53,7 @@ describe('ChallengeCreateWizard', () => {
     expect(
       screen.getByRole('checkbox', { name: 'Les participants peuvent inviter' }),
     ).not.toBeChecked();
+    expect(screen.queryByRole('button', { name: 'Suivant' })).not.toBeInTheDocument();
   });
 
   it('checks the title once left, then as it is typed', async () => {
@@ -90,10 +92,10 @@ describe('ChallengeCreateWizard', () => {
     );
   });
 
-  it('shows every error of the step on Next and focuses the first field', async () => {
+  it('shows every error of the step on Enter and focuses the first field', async () => {
     renderWizard();
 
-    next();
+    submit();
 
     expect(
       await screen.findByText('Le titre doit faire entre 3 et 80 caractères.'),
@@ -104,13 +106,13 @@ describe('ChallengeCreateWizard', () => {
 
   it('clears the step errors once it is complete', async () => {
     renderWizard();
-    next();
+    submit();
     expect(await screen.findByText('Choisis la visibilité du défi.')).toBeInTheDocument();
 
     type(title(), 'Défi de printemps');
     fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Les participants peuvent inviter' }));
-    next();
+    submit();
 
     await waitFor(() => expect(screen.queryAllByRole('alert')).toHaveLength(0));
     expect(title()).not.toHaveAttribute('aria-invalid');
