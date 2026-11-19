@@ -10,7 +10,7 @@ function setup(initialAuth: Auth, { reauthAllowed = true } = {}) {
   const options = {
     clearCache: vi.fn(),
     currentPath: () => '/challenges/42',
-    reauth: { allowed: vi.fn(() => reauthAllowed), record: vi.fn() },
+    reauth: { allowed: vi.fn(() => reauthAllowed), record: vi.fn(), forget: vi.fn() },
     onSessionEnd: vi.fn(),
   };
   let auth = initialAuth;
@@ -97,13 +97,14 @@ describe('useHandleLostSession', () => {
     expect(auth.signIn).toHaveBeenCalledTimes(1);
   });
 
-  it('tries again on the next error after a failed attempt', async () => {
+  it('tries again on the next error after a failed attempt, which does not count', async () => {
     const signIn = vi.fn<Auth['signIn']>().mockRejectedValueOnce(new Error('offline'));
     signIn.mockResolvedValue(undefined);
-    const { authError } = setup(createFakeAuth({ isAuthenticated: true, signIn }));
+    const { reauth, authError } = setup(createFakeAuth({ isAuthenticated: true, signIn }));
 
     authError();
     await act(() => Promise.resolve());
+    expect(reauth.forget).toHaveBeenCalledTimes(1);
     authError();
 
     expect(signIn).toHaveBeenCalledTimes(2);

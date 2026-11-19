@@ -26,6 +26,7 @@ export function createReauthGuard(now: () => number = Date.now): ReauthGuard {
         // Storage unavailable: no loop protection across reloads.
       }
     },
+    forget: resetReauthGuard,
   };
 }
 

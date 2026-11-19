@@ -16,6 +16,8 @@ export interface ReauthGuard {
   /** False right after an automatic re-sign-in: a new 401 would loop. */
   allowed: () => boolean;
   record: () => void;
+  /** The re-sign-in did not start: it does not count. */
+  forget: () => void;
 }
 
 interface LostSessionOptions {
@@ -64,7 +66,10 @@ export function useHandleLostSession(
       auth.signOut({ local: true }).catch(allowNextAttempt);
     } else {
       reauth.record();
-      auth.signIn(currentPath()).catch(allowNextAttempt);
+      auth.signIn(currentPath()).catch(() => {
+        reauth.forget();
+        allowNextAttempt();
+      });
     }
   }, [authError, auth, clearCache, currentPath, reauth, onSessionEnd]);
 }
