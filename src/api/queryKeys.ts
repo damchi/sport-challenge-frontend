@@ -3,6 +3,7 @@
 // leaderboards). Each ticket adds the keys of its hooks.
 
 export const queryKeys = {
+  me: ['me'] as const,
   challenges: {
     detail: (challengeId: string) => ['challenges', challengeId] as const,
     leaderboard: (challengeId: string, categoryId: string) =>

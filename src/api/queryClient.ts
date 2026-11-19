@@ -46,7 +46,9 @@ export function createQueryClient({ onAuthError, onError }: QueryClientHandlers)
       onError: (error, query) => report(error, query.state.data === undefined),
     }),
     mutationCache: new MutationCache({
-      onError: (error) => report(error, false),
+      // A mutation whose form shows its own errors (meta.handlesError) skips the banner.
+      onError: (error, _variables, _context, mutation) =>
+        report(error, mutation.meta?.handlesError === true),
     }),
     defaultOptions: {
       queries: { retry: shouldRetry, staleTime: staleTimes.default },

@@ -1,10 +1,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
+import { ApiClientContext } from './api/ApiClientContext';
+import { createApiClient } from './api/client';
 import { createQueryClient } from './api/queryClient';
 import { useAuth } from './lib/auth/auth';
 import { Auth0AuthProvider } from './lib/auth/Auth0AuthProvider';
 import { createReauthGuard } from './lib/auth/reauthGuard';
+import { sessionFromAuth } from './lib/auth/session';
 import {
   sessionEndAction,
   useHandleLostSession,
@@ -30,6 +33,10 @@ function AppContent() {
   const [globalError, setGlobalError] = useState<unknown>();
   const [authError, setAuthError] = useState<AuthErrorEvent>();
   const [sessionEnd, setSessionEnd] = useState<SessionEnd>();
+  // Built once: the auth's getAccessToken always reads the current session.
+  const [apiClient] = useState(() =>
+    createApiClient({ baseUrl: getConfig().apiUrl, session: sessionFromAuth(auth) }),
+  );
   const [queryClient] = useState(() =>
     createQueryClient({
       onAuthError: (error) => setAuthError((last) => ({ id: (last?.id ?? 0) + 1, error })),
@@ -52,18 +59,20 @@ function AppContent() {
   const globalErrorValue = useMemo(() => ({ error: globalError, dismiss }), [globalError, dismiss]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GlobalErrorContext.Provider value={globalErrorValue}>
-        {sessionEnd ? (
-          <SessionEndPage
-            reason={sessionEnd.reason}
-            onAction={() => sessionEndAction(sessionEnd, auth, reauth)}
-          />
-        ) : (
-          <RouterProvider router={router} />
-        )}
-      </GlobalErrorContext.Provider>
-    </QueryClientProvider>
+    <ApiClientContext.Provider value={apiClient}>
+      <QueryClientProvider client={queryClient}>
+        <GlobalErrorContext.Provider value={globalErrorValue}>
+          {sessionEnd ? (
+            <SessionEndPage
+              reason={sessionEnd.reason}
+              onAction={() => sessionEndAction(sessionEnd, auth, reauth)}
+            />
+          ) : (
+            <RouterProvider router={router} />
+          )}
+        </GlobalErrorContext.Provider>
+      </QueryClientProvider>
+    </ApiClientContext.Provider>
   );
 }
 

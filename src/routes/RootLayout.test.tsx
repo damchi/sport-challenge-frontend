@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { ApiError } from '../api/errors';
 import { GlobalErrorContext } from '../lib/globalError';
 import { createFakeAuth } from '../test/fakeAuth';
-import { FakeAuthProvider } from '../test/FakeAuthProvider';
+import { AppProviders } from '../test/AppProviders';
 import { routes } from './routes';
 
 const signedIn = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
@@ -16,14 +16,14 @@ function AppWithError({ path }: { path: string }) {
   const value = useMemo(() => ({ error, dismiss }), [error, dismiss]);
 
   return (
-    <FakeAuthProvider auth={signedIn}>
+    <AppProviders auth={signedIn}>
       <GlobalErrorContext.Provider value={value}>
         <button type="button" onClick={() => setError(new ApiError('week_locked', 409))}>
           fail
         </button>
         <RouterProvider router={router} />
       </GlobalErrorContext.Provider>
-    </FakeAuthProvider>
+    </AppProviders>
   );
 }
 
@@ -34,7 +34,7 @@ describe('RootLayout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'fail' }));
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('link', { name: "Retour à l'accueil" }));
+    fireEvent.click(await screen.findByRole('link', { name: "Retour à l'accueil" }));
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Sport Challenge' }),

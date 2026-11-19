@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
-import { FakeAuthProvider } from '../test/FakeAuthProvider';
+import { AppProviders } from '../test/AppProviders';
 import { routes } from './routes';
 
 const signedIn = () => createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
@@ -10,16 +10,18 @@ const signedIn = () => createFakeAuth({ isAuthenticated: true, user: { id: 'auth
 function renderAt(path: string, auth: Auth = signedIn()) {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
-    <FakeAuthProvider auth={auth}>
+    <AppProviders auth={auth}>
       <RouterProvider router={router} />
-    </FakeAuthProvider>,
+    </AppProviders>,
   );
 }
 
 describe('routes', () => {
-  it('renders the home page title on /', () => {
+  it('renders the home page title on /', async () => {
     renderAt('/');
-    expect(screen.getByRole('heading', { level: 1, name: 'Sport Challenge' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Sport Challenge' }),
+    ).toBeInTheDocument();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {
@@ -38,9 +40,11 @@ describe('routes', () => {
     expect(auth.signIn).not.toHaveBeenCalled();
   });
 
-  it('renders the not found page on an unknown path', () => {
+  it('renders the not found page on an unknown path', async () => {
     renderAt('/does-not-exist');
-    expect(screen.getByRole('heading', { level: 1, name: 'Page introuvable' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Page introuvable' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
   });
 });
