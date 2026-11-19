@@ -2,22 +2,29 @@ import en from '../../i18n/en.json';
 import fr from '../../i18n/fr.json';
 import { challengeCreateSchema } from './challenge';
 
+// Thursday 19 November 2026, 22:00 in Montréal, already the 20th in Paris.
+const NOW = new Date('2026-11-20T03:00:00Z');
+const schema = challengeCreateSchema(NOW);
+
 const valid = {
   title: 'Spring run',
   description: '',
   visibility: 'private' as const,
   members_can_invite: false,
+  weeks: 4,
+  start_date: '2026-11-23',
+  timezone: 'America/Toronto',
 };
 
 function firstMessage(input: Record<string, unknown>): string | undefined {
-  const result = challengeCreateSchema.safeParse({ ...valid, ...input });
+  const result = schema.safeParse({ ...valid, ...input });
   return result.success ? undefined : result.error.issues[0]?.message;
 }
 
 describe('challengeCreateSchema', () => {
   it('accepts the contract fields, the title without surrounding spaces', () => {
     expect(
-      challengeCreateSchema.parse({
+      schema.parse({
         ...valid,
         title: '  Défi de printemps 🏃  ',
         visibility: 'public',
@@ -28,6 +35,9 @@ describe('challengeCreateSchema', () => {
       description: '',
       visibility: 'public',
       members_can_invite: true,
+      weeks: 4,
+      start_date: '2026-11-23',
+      timezone: 'America/Toronto',
     });
   });
 
@@ -95,16 +105,58 @@ describe('challengeCreateSchema', () => {
     );
   });
 
+  describe('weeks', () => {
+    it.each([2, 52])('accepts %d', (weeks) => {
+      expect(firstMessage({ weeks })).toBeUndefined();
+    });
+
+    it.each([1, 53, 2.5, Number.NaN])('refuses %d', (weeks) => {
+      expect(firstMessage({ weeks })).toBe('challengeCreate.fields.weeks.range');
+    });
+  });
+
+  describe('start date', () => {
+    it.each(['', '2026-02-30', '23/11/2026'])('asks for a real day instead of %j', (start_date) => {
+      expect(firstMessage({ start_date })).toBe('challengeCreate.fields.startDate.required');
+    });
+
+    it('takes today and the same day next year, in the chosen time zone', () => {
+      expect(firstMessage({ start_date: '2026-11-19' })).toBeUndefined();
+      expect(firstMessage({ start_date: '2027-11-19' })).toBeUndefined();
+      expect(firstMessage({ start_date: '2026-11-20', timezone: 'Europe/Paris' })).toBeUndefined();
+      expect(firstMessage({ start_date: '2027-11-20', timezone: 'Europe/Paris' })).toBeUndefined();
+    });
+
+    it.each([
+      ['2026-11-18', 'America/Toronto', 'yesterday in Montréal'],
+      ['2026-11-19', 'Europe/Paris', 'already yesterday in Paris'],
+      ['2027-11-20', 'America/Toronto', 'after the same day next year'],
+    ])('refuses %s in %s (%s)', (start_date, timezone) => {
+      expect(firstMessage({ start_date, timezone })).toBe('challengeCreate.fields.startDate.range');
+    });
+
+    it('checks the range even when another field is wrong', () => {
+      const result = schema.safeParse({ ...valid, title: '', start_date: '2020-01-01' });
+      expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+        'challengeCreate.fields.title.length',
+        'challengeCreate.fields.startDate.range',
+      ]);
+    });
+  });
+
+  it.each(['', 'Mars/Olympus_Mons'])('asks for a known time zone instead of %j', (timezone) => {
+    expect(firstMessage({ timezone })).toBe('challengeCreate.fields.timezone.required');
+  });
+
   it('only gives messages that exist in French and English', () => {
     const wrong = [
-      { title: 'ab', description: 'a'.repeat(2001), visibility: undefined },
-      { title: 'a\nb\nc', description: '\u200b', visibility: 'friends' },
+      { title: 'ab', description: 'a'.repeat(2001), visibility: undefined, weeks: 1 },
+      { title: 'a\nb\nc', description: '\u200b', start_date: '', timezone: '' },
+      { start_date: '2020-01-01' },
     ];
     const messages = wrong.flatMap(
       (input) =>
-        challengeCreateSchema
-          .safeParse({ ...valid, ...input })
-          .error?.issues.map((issue) => issue.message) ?? [],
+        schema.safeParse({ ...valid, ...input }).error?.issues.map((issue) => issue.message) ?? [],
     );
     const lookup = (texts: unknown, key: string) =>
       key
@@ -115,7 +167,7 @@ describe('challengeCreateSchema', () => {
           texts,
         );
 
-    expect(new Set(messages).size).toBe(5);
+    expect(new Set(messages).size).toBe(9);
     for (const message of messages) {
       expect(typeof lookup(fr, message), message).toBe('string');
       expect(typeof lookup(en, message), message).toBe('string');

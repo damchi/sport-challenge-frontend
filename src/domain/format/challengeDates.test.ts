@@ -1,4 +1,9 @@
-import { challengePeriod, otherTimeZoneName } from './challengeDates';
+import {
+  challengePeriod,
+  challengeWindowBounds,
+  otherTimeZoneName,
+  timeZoneName,
+} from './challengeDates';
 
 // A challenge of November 2026 in Montréal: local midnight is 04:00 or
 // 05:00 UTC, and ends_at is excluded.
@@ -43,5 +48,48 @@ describe('otherTimeZoneName', () => {
 
   it('names the challenge time zone when the user is elsewhere', () => {
     expect(otherTimeZoneName('America/Montreal', 'Europe/Paris', 'en')).toBe('Eastern Time');
+  });
+});
+
+describe('challengeWindowBounds', () => {
+  // Six weeks from Monday 5 October 2026 in Montréal, across the change to
+  // winter time on 1 November: both bounds stay at local midnight.
+  const start = new Date('2026-10-05T04:00:00Z');
+  const end = new Date('2026-11-16T05:00:00Z');
+
+  it('writes both bounds to the hour in the chosen time zone', () => {
+    expect(challengeWindowBounds(start, end, 'America/Toronto', 'fr')).toEqual({
+      start: 'lundi 5 octobre à 00 h',
+      end: 'lundi 16 novembre à 00 h',
+    });
+    expect(challengeWindowBounds(start, end, 'America/Toronto', 'en')).toEqual({
+      start: 'Monday, October 5 at 12 AM',
+      end: 'Monday, November 16 at 12 AM',
+    });
+  });
+
+  it('writes the same instants in another time zone', () => {
+    expect(challengeWindowBounds(start, end, 'Europe/Paris', 'fr')).toEqual({
+      start: 'lundi 5 octobre à 06 h',
+      end: 'lundi 16 novembre à 06 h',
+    });
+  });
+
+  it('shows the years when they differ', () => {
+    expect(
+      challengeWindowBounds(
+        new Date('2026-12-07T05:00:00Z'),
+        new Date('2027-01-04T05:00:00Z'),
+        'America/Toronto',
+        'fr',
+      ),
+    ).toEqual({ start: 'lundi 7 décembre 2026 à 00 h', end: 'lundi 4 janvier 2027 à 00 h' });
+  });
+});
+
+describe('timeZoneName', () => {
+  it('names the time zone without its summer or winter time', () => {
+    expect(timeZoneName('America/Toronto', 'fr')).toBe('heure de l’Est nord-américain');
+    expect(timeZoneName('America/Toronto', 'en')).toBe('Eastern Time');
   });
 });

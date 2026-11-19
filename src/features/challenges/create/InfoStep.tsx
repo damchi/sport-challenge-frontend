@@ -1,23 +1,8 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
-
-const inputClass =
-  'mt-2 w-full rounded-row border border-border bg-surface px-3 text-ink aria-[invalid=true]:border-2 aria-[invalid=true]:border-risk-fg';
-
-function FieldError({ id, message }: { id: string; message: string | undefined }) {
-  const { t } = useTranslation();
-  return message ? (
-    <p id={id} role="alert" className="mt-1 text-sm text-risk-fg">
-      {t(message)}
-    </p>
-  ) : null;
-}
-
-// Hint first, then the error once there is one.
-function describedBy(name: string, message: string | undefined): string {
-  return message ? `${name}-hint ${name}-error` : `${name}-hint`;
-}
+import { FieldError } from './FieldError';
+import { describedBy, inputClass } from './fields';
 
 /** Step 1 of the creation: title, description, visibility, who may invite. */
 export function InfoStep() {

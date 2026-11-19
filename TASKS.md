@@ -88,7 +88,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 | FD2 | Hébergement du web | Firebase Hosting (CDN, réécriture pour une application monopage) ; sinon Cloud Storage avec CDN | 047 |
 | FD3 ✅ | Structure du dépôt | **Une seule application Vite**, sans monorepo en V1 ; passage en monorepo pnpm en V2, à l'arrivée du mobile | 001 |
 | FD4 ✅ | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages ; validé au ticket 009 | 009, 016 |
-| FD5 | Champs date et heure | Champs HTML natifs (`date`, `datetime-local`) ; fuseaux via `Intl` | 022, 034 |
+| FD5 ✅ | Champs date et heure | **Champs HTML natifs** (`date`, `datetime-local`) ; fuseaux via `Intl` ; validé au ticket 022 | 022, 034 |
 | FD6 ✅ | Génération du client d'API | **`openapi-typescript`** pour les types, validé au ticket 007 ; `openapi-fetch` et hooks TanStack Query écrits à la main, avec le premier écran qui appelle l'API | 007 |
 | FD7 ✅ | Formulaires | `react-hook-form` avec schémas `zod` (`src/domain/schemas`), validé au ticket 018 | 018, 021 |
 
@@ -366,7 +366,7 @@ Total : **147 points** (46 tickets), dont **134 pour la V1** ; les 13 points de 
 
 **Critères d'acceptation**
 - [ ] Durée en **nombre de semaines** (2 à 52), jamais en dates libres ; date de début (champ natif, aujourd'hui ou plus tard, FD5).
-- [ ] Sélecteur de fuseau (créé ici) : fuseau du lieu de lancement (liste IANA, valeur par défaut : celui de l'appareil, par exemple Montréal).
+- [ ] Sélecteur de fuseau (créé ici) : fuseau du lieu de lancement (liste IANA, valeur par défaut : ✅ Montréal, `America/Toronto`, quel que soit le fuseau de l'appareil ; décision du 2026-11-19).
 - [ ] Aperçu clair : « Du lundi 5 octobre à 0 h au lundi 16 novembre à 0 h, heure de Montréal », calculé avec `Intl` dans le fuseau choisi, avec le nombre de semaines.
 - [ ] Les changements d'heure pendant la période sont correctement affichés (test de novembre).
 
