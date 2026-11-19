@@ -133,7 +133,7 @@ export function CategoriesStep({ factorsWaiting }: { factorsWaiting: boolean }) 
               step={0.1}
               aria-invalid={stepError ? true : undefined}
               aria-describedby={`${describedBy('elimination_step_km', stepError)} elimination-example`}
-              className={`${inputClass} h-11 w-full`}
+              className={`${inputClass} block h-11 w-32`}
               {...register('elimination_step_km', { valueAsNumber: true })}
             />
             <p id="elimination_step_km-hint" className="mt-1 text-sm text-muted">

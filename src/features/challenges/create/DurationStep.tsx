@@ -66,7 +66,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           step={1}
           aria-invalid={weeksError ? true : undefined}
           aria-describedby={describedBy('weeks', weeksError)}
-          className={`${inputClass} h-11 w-full`}
+          className={`${inputClass} block h-11 w-32`}
           {...register('weeks', { valueAsNumber: true })}
         />
         <p id="weeks-hint" className="mt-1 text-sm text-muted">
