@@ -95,7 +95,7 @@ export function ChallengeCreateWizard({
 
   // After the render that lifted the leave warning, so it does not block.
   useEffect(() => {
-    if (createdId) void navigate(`/challenges/${createdId}`, { replace: true });
+    if (createdId) void navigate(`/challenges/${encodeURIComponent(createdId)}`, { replace: true });
   }, [createdId, navigate]);
 
   const label = (field: string) =>

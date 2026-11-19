@@ -263,7 +263,6 @@
     }
   },
   "sports": {
-    "run": "Course",
     "walk": "Marche",
     "hike": "Randonnée",
     "swim": "Natation",
@@ -271,9 +270,6 @@
     "rowing": "Aviron",
     "roller": "Roller",
     "xc_ski": "Ski de fond",
-    "yoga": "Yoga",
-    "climbing": "Escalade",
-    "strength": "Renforcement",
     "other": "Autre"
   }
 }
