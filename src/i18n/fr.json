@@ -31,6 +31,15 @@
       "loading": "Connexion en cours…",
       "error": "La connexion n'a pas abouti. Réessaie."
     },
-    "signInRequired": "Connecte-toi pour continuer."
+    "signInRequired": "Connecte-toi pour continuer.",
+    "accountDeleted": {
+      "title": "Compte supprimé",
+      "message": "Ce compte a été supprimé : tu as été déconnecté. Tes résultats dans les défis terminés restent affichés sous un nom neutre.",
+      "finish": "Terminer"
+    },
+    "sessionUnavailable": {
+      "title": "Connexion impossible",
+      "message": "La connexion n'a pas pu être rétablie. Réessaie dans un instant."
+    }
   }
 }

@@ -4,26 +4,57 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import { createQueryClient } from './api/queryClient';
 import { useAuth } from './lib/auth/auth';
 import { Auth0AuthProvider } from './lib/auth/Auth0AuthProvider';
-import { useSignOutOnAuthError } from './lib/auth/useSignOutOnAuthError';
+import { createReauthGuard, resetReauthGuard } from './lib/auth/reauthGuard';
+import {
+  useHandleLostSession,
+  type AuthErrorEvent,
+  type SessionEnd,
+} from './lib/auth/useHandleLostSession';
 import { getConfig } from './lib/config';
 import { GlobalErrorContext } from './lib/globalError';
+import { SessionEndPage } from './pages/SessionEndPage';
 import { routes } from './routes/routes';
 
 const router = createBrowserRouter(routes);
 
+const reauth = createReauthGuard();
+
+function currentPath(): string {
+  const { pathname, search, hash } = router.state.location;
+  return `${pathname}${search}${hash}`;
+}
+
 function AppContent() {
   const auth = useAuth();
   const [globalError, setGlobalError] = useState<unknown>();
-  // Count of authentication errors, handled by useSignOutOnAuthError.
-  const [authErrors, setAuthErrors] = useState(0);
+  const [authError, setAuthError] = useState<AuthErrorEvent>();
+  const [sessionEnd, setSessionEnd] = useState<SessionEnd>();
   const [queryClient] = useState(() =>
     createQueryClient({
-      onAuthError: () => setAuthErrors((count) => count + 1),
+      onAuthError: (error) => setAuthError((last) => ({ id: (last?.id ?? 0) + 1, error })),
       onError: setGlobalError,
     }),
   );
-  const clearCache = useCallback(() => queryClient.clear(), [queryClient]);
-  useSignOutOnAuthError(auth, authErrors, clearCache);
+  // The global error goes with the user's data.
+  const clearCache = useCallback(() => {
+    queryClient.clear();
+    setGlobalError(undefined);
+  }, [queryClient]);
+  useHandleLostSession(auth, authError, {
+    clearCache,
+    currentPath,
+    reauth,
+    onSessionEnd: setSessionEnd,
+  });
+
+  const onSessionEndAction = () => {
+    if (sessionEnd === 'account_deleted') {
+      void auth.signOut();
+    } else {
+      resetReauthGuard();
+      window.location.assign('/');
+    }
+  };
 
   const dismiss = useCallback(() => setGlobalError(undefined), []);
   const globalErrorValue = useMemo(() => ({ error: globalError, dismiss }), [globalError, dismiss]);
@@ -31,7 +62,11 @@ function AppContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalErrorContext.Provider value={globalErrorValue}>
-        <RouterProvider router={router} />
+        {sessionEnd ? (
+          <SessionEndPage reason={sessionEnd} onAction={onSessionEndAction} />
+        ) : (
+          <RouterProvider router={router} />
+        )}
       </GlobalErrorContext.Provider>
     </QueryClientProvider>
   );

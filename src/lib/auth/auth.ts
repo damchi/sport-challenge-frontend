@@ -18,8 +18,11 @@ export interface Auth {
   hasError: boolean;
   /** Redirects to the sign-in page, then back to `returnTo` (a path of the app). */
   signIn: (returnTo?: string) => Promise<void>;
-  /** Revokes the session and leaves the app signed out. */
-  signOut: () => Promise<void>;
+  /**
+   * Revokes the session and leaves the app signed out. `local` stays in the
+   * app (no redirect to the sign-out page), to show a message afterwards.
+   */
+  signOut: (options?: { local?: boolean }) => Promise<void>;
   /** Access token for the API, or undefined when signed out; `forceRefresh` renews it. */
   getAccessToken: (options?: { forceRefresh?: boolean }) => Promise<string | undefined>;
 }

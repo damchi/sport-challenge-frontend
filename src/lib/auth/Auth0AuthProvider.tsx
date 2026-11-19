@@ -82,10 +82,12 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
           // The sign-in page speaks the app's language.
           authorizationParams: { ui_locales: i18n.language },
         }),
-      signOut: async () => {
+      signOut: async ({ local = false } = {}) => {
         // The logout redirect does not revoke the refresh token: revoke it first.
         await revokeRefreshToken().catch(() => undefined);
-        await logout({ logoutParams: { returnTo: window.location.origin } });
+        await logout(
+          local ? { openUrl: false } : { logoutParams: { returnTo: window.location.origin } },
+        );
       },
       getAccessToken: async ({ forceRefresh = false } = {}) => {
         // While the session loads (silent sign-in after a reload), wait for it
