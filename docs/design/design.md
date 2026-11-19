@@ -134,10 +134,9 @@ dans les classements et les compteurs.
 ## Icônes
 
 Icônes au trait, épaisseur 2, 20–22 px (14–16 px dans un badge), couleur
-`currentColor`. 🟡 Bibliothèque proposée : **Lucide** (`lucide-react`) ; c'est
-une nouvelle dépendance, à valider avant de l'installer, au premier ticket qui
-affiche une icône (elle est réservée au web ; le mobile en V2 aura son
-équivalent). Correspondances : défis `trophy`, activités `activity`,
+`currentColor`. ✅ Bibliothèque : **Lucide** (`lucide-react`, validée au ticket
+SC-WEB-019 ; réservée au web, le mobile en V2 aura son équivalent).
+Correspondances : défis `trophy`, activités `activity`,
 badges `award`, profil `user`, notifications `bell`, à risque `triangle-alert`,
 atteint `check`, retour `chevron-left`, suite `chevron-right`, inviter
 `user-plus`, compte à rebours `timer`, ajouter `plus`.
@@ -239,6 +238,10 @@ En bas, 72 px, fond `--color-surface`, bordure haute : **Défis**, **Activités*
 icône au-dessus du libellé. Onglet actif en
 `--color-accent` avec `aria-current="page"`. Dans un `<nav
 aria-label="Navigation principale">`.
+✅ Sur grand écran (à partir de `md`), la même barre passe en haut de page,
+icône à gauche du libellé. Les réglages (langue, thème, déconnexion) sont
+dans l'onglet Profil ; le thème (comme l'appareil, clair ou sombre) est
+mémorisé sur l'appareil.
 
 ## Écrans de référence
 

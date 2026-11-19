@@ -65,5 +65,24 @@
       "taken": "Ce pseudo est déjà pris. Essaie-en un autre.",
       "invalid": "Ce pseudo n'est pas accepté. Essaie-en un autre."
     }
+  },
+  "nav": {
+    "label": "Navigation principale",
+    "challenges": "Défis",
+    "activities": "Activités",
+    "profile": "Profil"
+  },
+  "activities": {
+    "title": "Mes activités",
+    "empty": "Tes activités apparaîtront ici."
+  },
+  "settings": {
+    "theme": {
+      "label": "Thème",
+      "system": "Comme l'appareil",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
+    "signOut": "Se déconnecter"
   }
 }

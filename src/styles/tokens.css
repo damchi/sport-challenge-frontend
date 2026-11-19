@@ -65,54 +65,57 @@
   /* Text of the buttons. */
   --text-button: 0.9375rem;
 
+  /* Labels of the main navigation tabs. */
+  --text-nav: 0.6875rem;
+
   --radius-tab: 10px;
   --radius-row: 14px;
   --radius-card: 20px;
 }
 
-/* Dark theme: the same tokens, redefined. No component tests the theme. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0f1115;
-    --color-surface: #1a1d23;
-    --color-surface-raised: #23272f;
-    --color-raised-border: #2f343d;
-    --color-ink: #f3f4f6;
-    --color-muted: #a1a6b0;
-    --color-on-raised: #f3f4f6;
-    --color-on-raised-muted: #a1a6b0;
-    --color-on-raised-soft: #d4d7dd;
-    --color-border: #2a2e36;
-    --color-border-dashed: #3a3f48;
-    --color-track: #2a2e36;
-    --color-track-raised: #33373f;
-    --color-rank-bar: #e5e7eb;
-    --color-segment: #22262d;
-    --color-segment-active: #343943;
-    --color-accent: #fb923c;
-    --color-on-accent: #16181d;
-    --color-accent-soft: #2a1d14;
-    --color-risk-bg: #3b2414;
-    --color-risk-fg: #fdba74;
-    --color-risk-bar: #fb923c;
-    --color-risk-border: #c2410c;
-    --color-ok-bg: #12301f;
-    --color-ok-fg: #86efac;
-    --color-ok-bar: #22c55e;
-    --color-out-bg: #2a2e36;
-    --color-out-fg: #a1a6b0;
+/* Dark theme: the same tokens, redefined. src/lib/theme.ts (and the script
+   of index.html) sets data-theme from the device or the user's choice. No
+   component tests the theme. */
+:root[data-theme='dark'] {
+  --color-bg: #0f1115;
+  --color-surface: #1a1d23;
+  --color-surface-raised: #23272f;
+  --color-raised-border: #2f343d;
+  --color-ink: #f3f4f6;
+  --color-muted: #a1a6b0;
+  --color-on-raised: #f3f4f6;
+  --color-on-raised-muted: #a1a6b0;
+  --color-on-raised-soft: #d4d7dd;
+  --color-border: #2a2e36;
+  --color-border-dashed: #3a3f48;
+  --color-track: #2a2e36;
+  --color-track-raised: #33373f;
+  --color-rank-bar: #e5e7eb;
+  --color-segment: #22262d;
+  --color-segment-active: #343943;
+  --color-accent: #fb923c;
+  --color-on-accent: #16181d;
+  --color-accent-soft: #2a1d14;
+  --color-risk-bg: #3b2414;
+  --color-risk-fg: #fdba74;
+  --color-risk-bar: #fb923c;
+  --color-risk-border: #c2410c;
+  --color-ok-bg: #12301f;
+  --color-ok-fg: #86efac;
+  --color-ok-bar: #22c55e;
+  --color-out-bg: #2a2e36;
+  --color-out-fg: #a1a6b0;
 
-    --color-avatar-1-bg: #1e3a5f;
-    --color-avatar-1-fg: #bfdbfe;
-    --color-avatar-2-bg: #3b2a63;
-    --color-avatar-2-fg: #ddd6fe;
-    --color-avatar-3-bg: #14402a;
-    --color-avatar-3-fg: #bbf7d0;
-    --color-avatar-4-bg: #4a1d35;
-    --color-avatar-4-fg: #fbcfe8;
-    --color-avatar-5-bg: #4a2a12;
-    --color-avatar-5-fg: #fed7aa;
-    --color-avatar-6-bg: #10364d;
-    --color-avatar-6-fg: #bae6fd;
-  }
+  --color-avatar-1-bg: #1e3a5f;
+  --color-avatar-1-fg: #bfdbfe;
+  --color-avatar-2-bg: #3b2a63;
+  --color-avatar-2-fg: #ddd6fe;
+  --color-avatar-3-bg: #14402a;
+  --color-avatar-3-fg: #bbf7d0;
+  --color-avatar-4-bg: #4a1d35;
+  --color-avatar-4-fg: #fbcfe8;
+  --color-avatar-5-bg: #4a2a12;
+  --color-avatar-5-fg: #fed7aa;
+  --color-avatar-6-bg: #10364d;
+  --color-avatar-6-fg: #bae6fd;
 }

@@ -4,6 +4,7 @@ import { getConfig } from './lib/config';
 import './styles/index.css';
 import i18n from 'i18next';
 import { startLanguage } from './lib/language';
+import { startTheme } from './lib/theme';
 import { App } from './App';
 
 const rootElement = document.getElementById('root');
@@ -13,6 +14,7 @@ if (!rootElement) {
 
 // Before anything renders: the error screen below is translated too.
 startLanguage();
+startTheme();
 const root = createRoot(rootElement);
 
 // Development mocks, before the first request; the DEV guard removes them, and

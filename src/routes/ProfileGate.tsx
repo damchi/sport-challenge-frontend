@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { ApiError, errorMessage } from '../api/errors';
@@ -16,6 +17,13 @@ export function ProfileGate() {
   const me = useMe();
   const location = useLocation();
   const onOnboarding = location.pathname === ONBOARDING;
+
+  // The language kept in the profile wins over the device's.
+  const profileLanguage = me.data?.language;
+  useEffect(() => {
+    if (profileLanguage && profileLanguage !== i18n.language)
+      void i18n.changeLanguage(profileLanguage);
+  }, [profileLanguage, i18n]);
 
   if (me.isPending) {
     return (
