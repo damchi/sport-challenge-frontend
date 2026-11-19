@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
-import { FormProvider, useForm, type FieldPath } from 'react-hook-form';
+import { FormProvider, useForm, type FieldErrors, type FieldPath } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { ApiError, errorMessage } from '../../../api/errors';
@@ -103,6 +103,17 @@ export function ChallengeCreateWizard({
       ? sportName(field.slice('factors.'.length))
       : t(FIELD_LABELS[field] ?? field);
 
+  // The recap checks the whole form once more: a value refused at that point
+  // (the steps let none through, so a safety net) is named, never silent.
+  const showInvalid = (errors: FieldErrors<ChallengeCreateInput>) => {
+    const fields = Object.keys(errors).flatMap((field) =>
+      field === 'factors'
+        ? Object.keys(errors.factors ?? {}).map((code) => `factors.${code}`)
+        : [field],
+    );
+    setSubmitError(t('challengeCreate.submit.check', { fields: fields.map(label).join(', ') }));
+  };
+
   // validation_failed names the refused fields: each shows an error where it
   // is entered, and the recap lists them.
   const showError = (error: unknown) => {
@@ -174,7 +185,7 @@ export function ChallengeCreateWizard({
           label: t('challengeCreate.submit.label'),
           busyLabel: t('challengeCreate.submit.busy'),
           busy: createChallenge.isPending || createdId !== undefined,
-          onFinish: () => void form.handleSubmit(create)(),
+          onFinish: () => void form.handleSubmit(create, showInvalid)(),
         }}
       />
       <ConfirmDialog

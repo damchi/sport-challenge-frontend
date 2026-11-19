@@ -49,7 +49,20 @@ describe('the sports mock', () => {
     const { result } = renderHook(() => useSportCodes(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toContain('run');
+    expect(result.current.data).toEqual([
+      'climbing',
+      'hike',
+      'other',
+      'ride',
+      'roller',
+      'rowing',
+      'run',
+      'strength',
+      'swim',
+      'walk',
+      'xc_ski',
+      'yoga',
+    ]);
   });
 
   it('answers a component rendered with the providers, and can be overridden', async () => {

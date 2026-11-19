@@ -82,7 +82,8 @@ async function reachRecap() {
 
 /** Answers the creation and keeps each request body. */
 function answerCreation(
-  response: () => Response = () => HttpResponse.json({ id: 'c42' }, { status: 201 }),
+  response: () => Response | Promise<Response> = () =>
+    HttpResponse.json({ id: 'c42' }, { status: 201 }),
 ) {
   const bodies: ChallengeCreate[] = [];
   server.use(
@@ -529,16 +530,12 @@ describe('ChallengeCreateWizard', () => {
 
     it('sends once on a double click, the button showing it is busy', async () => {
       let answer: () => void = () => undefined;
-      const bodies = answerCreation(() => HttpResponse.json({ id: 'c42' }, { status: 201 }));
-      server.use(
-        http.post('*/api/v1/challenges', async ({ request }) => {
-          bodies.push((await request.json()) as ChallengeCreate);
-          await new Promise<void>((resolve) => {
-            answer = resolve;
-          });
-          return HttpResponse.json({ id: 'c42' }, { status: 201 });
-        }),
-      );
+      const bodies = answerCreation(async () => {
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return HttpResponse.json({ id: 'c42' }, { status: 201 });
+      });
       await reachRecap();
 
       send();

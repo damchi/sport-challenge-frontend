@@ -252,7 +252,8 @@
     "submit": {
       "label": "Créer le défi",
       "busy": "Création…",
-      "invalid": "Certaines informations ont été refusées : {{fields}}. Corrige-les, puis réessaie."
+      "invalid": "Certaines informations ont été refusées : {{fields}}. Corrige-les, puis réessaie.",
+      "check": "Vérifie ces informations : {{fields}}."
     },
     "leave": {
       "title": "Quitter la création ?",

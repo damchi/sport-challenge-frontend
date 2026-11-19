@@ -250,7 +250,8 @@
     "submit": {
       "label": "Create the challenge",
       "busy": "Creating…",
-      "invalid": "Some details were refused: {{fields}}. Fix them, then try again."
+      "invalid": "Some details were refused: {{fields}}. Fix them, then try again.",
+      "check": "Check these details: {{fields}}."
     },
     "leave": {
       "title": "Leave the challenge creation?",
