@@ -16,5 +16,12 @@
     "rate_limited_delay": "Too many requests. Try again in {{retry_after}} s.",
     "unauthenticated": "Your session has ended. Sign in again.",
     "unknown": "Something went wrong. Try again."
+  },
+  "errorPage": {
+    "title": "Oops, this page couldn't be displayed",
+    "retry": "Try again"
+  },
+  "globalError": {
+    "dismiss": "Close the message"
   }
 }

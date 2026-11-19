@@ -87,7 +87,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 | FD1 ✅ | Bibliothèque d'interface | **Tailwind CSS v4** et polices Fontsource, validés au ticket 003 ; composants de type shadcn/ui, ajoutés un par un à l'usage, encore à valider | 003 |
 | FD2 | Hébergement du web | Firebase Hosting (CDN, réécriture pour une application monopage) ; sinon Cloud Storage avec CDN | 047 |
 | FD3 ✅ | Structure du dépôt | **Une seule application Vite**, sans monorepo en V1 ; passage en monorepo pnpm en V2, à l'arrivée du mobile | 001 |
-| FD4 | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages | 009, 016 |
+| FD4 ✅ | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages ; validé au ticket 009 | 009, 016 |
 | FD5 | Champs date et heure | Champs HTML natifs (`date`, `datetime-local`) ; fuseaux via `Intl` | 022, 034 |
 | FD6 ✅ | Génération du client d'API | **`openapi-typescript`** pour les types, validé au ticket 007 ; `openapi-fetch` et hooks TanStack Query écrits à la main, avec le premier écran qui appelle l'API | 007 |
 | FD7 | Formulaires | `react-hook-form` avec schémas `zod` | 018, 021 |
