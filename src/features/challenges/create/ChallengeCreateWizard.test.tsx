@@ -10,10 +10,7 @@ import { ChallengeCreateWizard } from './ChallengeCreateWizard';
 const NOW = new Date('2026-09-30T15:00:00Z');
 const ZONES = ['America/Toronto', 'Europe/Paris', 'Asia/Tokyo'];
 
-function renderWizard({
-  deviceTimeZone = 'America/Toronto',
-  timeZones = ZONES,
-}: { deviceTimeZone?: string; timeZones?: readonly string[] } = {}) {
+function renderWizard({ timeZones = ZONES }: { timeZones?: readonly string[] } = {}) {
   const router = createMemoryRouter(
     [
       {
@@ -21,11 +18,7 @@ function renderWizard({
         element: (
           <>
             <Link to="/">Accueil</Link>
-            <ChallengeCreateWizard
-              now={NOW}
-              deviceTimeZone={deviceTimeZone}
-              timeZones={timeZones}
-            />
+            <ChallengeCreateWizard now={NOW} timeZones={timeZones} />
           </>
         ),
       },
@@ -147,7 +140,7 @@ describe('ChallengeCreateWizard', () => {
   });
 
   describe('duration and time zone step', () => {
-    it('starts with the device time zone and today as the earliest date', async () => {
+    it("starts on Montréal's time zone and today as the earliest date", async () => {
       renderWizard();
       await fillInfoStep();
 
@@ -165,22 +158,6 @@ describe('ChallengeCreateWizard', () => {
       expect(screen.queryByRole('button', { name: 'Suivant' })).not.toBeInTheDocument();
     });
 
-    it('offers the device time zone even when the list lacks it', async () => {
-      renderWizard({ deviceTimeZone: 'UTC' });
-      await fillInfoStep();
-
-      expect(timeZone()).toHaveValue('UTC');
-      expect(startDate()).toHaveAttribute('min', '2026-09-30');
-    });
-
-    it('leaves the time zone to choose when the device one is unknown', async () => {
-      renderWizard({ deviceTimeZone: 'Mars/Olympus_Mons' });
-      await fillInfoStep();
-
-      expect(timeZone()).toHaveValue('');
-      expect(startDate()).not.toHaveAttribute('min');
-    });
-
     it.each(['1', '53', '2.5'])('refuses %s weeks', async (value) => {
       renderWizard();
       await fillInfoStep();
@@ -194,8 +171,9 @@ describe('ChallengeCreateWizard', () => {
     });
 
     it('asks for every field on Enter', async () => {
-      renderWizard({ deviceTimeZone: 'Mars/Olympus_Mons' });
+      renderWizard();
       await fillInfoStep();
+      fireEvent.change(timeZone(), { target: { value: '' } });
 
       fireEvent.submit(weeks());
 

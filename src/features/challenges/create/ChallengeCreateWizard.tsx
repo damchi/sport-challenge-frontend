@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
-import { isTimeZone } from '../../../domain/challengeWindow';
 import { Wizard } from '../../../components/Wizard';
 import {
   challengeCreateSchema,
@@ -20,33 +19,27 @@ const STEP_FIELDS = [
   ['weeks', 'start_date', 'timezone'],
 ] as const;
 
+// Montréal's time zone (IANA names it after Toronto): the product's default.
+const DEFAULT_TIME_ZONE = 'America/Toronto';
+
 /**
  * Challenge creation in steps, over one form: a step keeps its input when
  * the user goes back, and leaving with unsent input asks first. The time
- * zone starts as the device's, offered even when the runtime list lacks it
- * ("UTC"). Tests give `now`, the device's time zone and the listed ones.
+ * zone starts as Montréal's, whatever the device's. Tests give `now` and the
+ * offered time zones.
  */
 export function ChallengeCreateWizard({
   now: givenNow,
-  deviceTimeZone: givenDeviceTimeZone,
   timeZones: givenTimeZones,
 }: {
   now?: Date;
-  deviceTimeZone?: string;
   timeZones?: readonly string[];
 }) {
   const { t } = useTranslation();
   // "Today" is the page's opening day: the server checks the date again.
   const [now] = useState(() => givenNow ?? new Date());
   // Read once: the picker's labels cost one Intl format per zone.
-  const [{ deviceTimeZone, timeZones }] = useState(() => {
-    const device = givenDeviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const listed = givenTimeZones ?? Intl.supportedValuesOf('timeZone');
-    return {
-      deviceTimeZone: device,
-      timeZones: isTimeZone(device) && !listed.includes(device) ? [...listed, device] : listed,
-    };
-  });
+  const [timeZones] = useState(() => givenTimeZones ?? Intl.supportedValuesOf('timeZone'));
   const form = useForm<ChallengeCreateInput, unknown, ChallengeCreateValues>({
     resolver: zodResolver(challengeCreateSchema(now)),
     // Checked once the field is left, then at each keystroke.
@@ -57,7 +50,7 @@ export function ChallengeCreateWizard({
       description: '',
       members_can_invite: false,
       start_date: '',
-      timezone: isTimeZone(deviceTimeZone) ? deviceTimeZone : '',
+      timezone: DEFAULT_TIME_ZONE,
     },
   });
   // Not `isDirty`: under StrictMode the double mount sets it for the radios
