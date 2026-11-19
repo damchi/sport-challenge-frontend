@@ -10,7 +10,8 @@ function SignInButton() {
 
   const signIn = () => {
     setFailed(false);
-    auth.signIn().catch((error: unknown) => {
+    // After a refused or failed sign-in, let the user pick the account.
+    auth.signIn(undefined, { chooseAccount: auth.hasError }).catch((error: unknown) => {
       // The redirect to Auth0 could not start (configuration, insecure
       // origin...): the detail is for the developer only.
       if (import.meta.env.DEV) console.error('Sign-in could not start', error);

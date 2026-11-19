@@ -58,6 +58,8 @@ describe('RequireAuth', () => {
     expect(auth.signIn).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
-    expect(auth.signIn).toHaveBeenCalledWith('/challenges/42?tab=ranking#me');
+    expect(auth.signIn).toHaveBeenCalledWith('/challenges/42?tab=ranking#me', {
+      chooseAccount: true,
+    });
   });
 });

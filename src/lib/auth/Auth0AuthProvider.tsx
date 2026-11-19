@@ -76,11 +76,14 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
       isAuthenticated,
       user: user?.sub ? { id: user.sub } : undefined,
       hasError: error !== undefined,
-      signIn: (returnTo) =>
+      signIn: (returnTo, { chooseAccount = false } = {}) =>
         loginWithRedirect({
           appState: { returnTo: safeReturnTo(returnTo, window.location.origin) },
-          // The sign-in page speaks the app's language.
-          authorizationParams: { ui_locales: i18n.language },
+          authorizationParams: {
+            // The sign-in page speaks the app's language.
+            ui_locales: i18n.language,
+            ...(chooseAccount && { prompt: 'login' as const }),
+          },
         }),
       signOut: async ({ local = false } = {}) => {
         // The logout redirect does not revoke the refresh token: revoke it first.

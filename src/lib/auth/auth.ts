@@ -16,8 +16,13 @@ export interface Auth {
   user: AuthUser | undefined;
   /** The last sign-in attempt failed (cancelled, expired code...). */
   hasError: boolean;
-  /** Redirects to the sign-in page, then back to `returnTo` (a path of the app). */
-  signIn: (returnTo?: string) => Promise<void>;
+  /**
+   * Redirects to the sign-in page, then back to `returnTo` (a path of the
+   * app). `chooseAccount` shows the sign-in form even when Auth0 still has a
+   * session, so another account can be used (after a refused or failed
+   * sign-in, the same account would come back otherwise).
+   */
+  signIn: (returnTo?: string, options?: { chooseAccount?: boolean }) => Promise<void>;
   /**
    * Revokes the session and leaves the app signed out. `local` stays in the
    * app (no redirect to the sign-out page), to show a message afterwards.

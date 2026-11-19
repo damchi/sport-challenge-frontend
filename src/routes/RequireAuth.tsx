@@ -34,7 +34,8 @@ export function RequireAuth() {
   const retry = () => {
     setFailed(false);
     setPending(true);
-    auth.signIn(returnTo).catch(() => {
+    // After a refused or failed sign-in, let the user pick the account.
+    auth.signIn(returnTo, { chooseAccount: auth.hasError }).catch(() => {
       setFailed(true);
       setPending(false);
     });
