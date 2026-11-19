@@ -61,6 +61,10 @@ beforeEach(() => {
   };
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe('Auth0AuthProvider', () => {
   it('asks for an API access token, kept in memory with refresh tokens', () => {
     render(
@@ -162,7 +166,6 @@ describe('Auth0AuthProvider', () => {
     await vi.advanceTimersByTimeAsync(15_000);
 
     await failed;
-    vi.useRealTimers();
   });
 
   it('throws a failure that is not a lost session', async () => {
