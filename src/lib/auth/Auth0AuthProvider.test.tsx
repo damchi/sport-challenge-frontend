@@ -79,6 +79,18 @@ describe('Auth0AuthProvider', () => {
     });
   });
 
+  it('handles the sign-in code only on /callback', () => {
+    window.history.pushState({}, '', '/callback?code=abc&state=xyz');
+    render(
+      <Auth0AuthProvider config={config} onRedirect={vi.fn()}>
+        {null}
+      </Auth0AuthProvider>,
+    );
+    window.history.pushState({}, '', '/');
+
+    expect(providerProps().skipRedirectCallback).toBe(false);
+  });
+
   it('exposes only the user identifier', () => {
     expect(renderAuth().current.user).toEqual({ id: 'auth0|123' });
   });

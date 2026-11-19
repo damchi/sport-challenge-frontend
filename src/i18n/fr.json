@@ -30,6 +30,7 @@
       "title": "Connexion",
       "loading": "Connexion en cours…",
       "error": "La connexion n'a pas abouti. Réessaie."
-    }
+    },
+    "signInRequired": "Connecte-toi pour continuer."
   }
 }

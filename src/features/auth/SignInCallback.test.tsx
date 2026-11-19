@@ -31,7 +31,17 @@ describe('SignInCallback', () => {
     const auth = createFakeAuth({ hasError: true });
     renderCallback(auth);
 
-    expect(screen.getByText("La connexion n'a pas abouti. Réessaie.")).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent("La connexion n'a pas abouti. Réessaie.");
+    fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
+
+    expect(auth.signIn).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks to sign in when opened directly while signed out', () => {
+    const auth = createFakeAuth();
+    renderCallback(auth);
+
+    expect(screen.getByText('Connecte-toi pour continuer.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(auth.signIn).toHaveBeenCalledTimes(1);
