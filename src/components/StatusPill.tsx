@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 
 // Tones of the statuses shown so far; each new status adds its own.
 const TONES = {
+  neutral: 'bg-segment text-muted',
   ok: 'bg-ok-bg text-ok-fg',
   out: 'bg-out-bg text-out-fg',
 } as const;

@@ -18,7 +18,10 @@ function renderCardIn(deviceTimeZone: string) {
     return { ...resolved.call(this), timeZone: deviceTimeZone };
   });
   const router = createMemoryRouter([
-    { path: '/', element: <ChallengeCard challenge={montreal as NonNullable<typeof montreal>} /> },
+    {
+      path: '/',
+      element: <ChallengeCard challenge={montreal as NonNullable<typeof montreal>} showStatus />,
+    },
   ]);
   render(
     <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>

@@ -117,10 +117,16 @@
     },
     "participants_one": "{{count}} participant",
     "participants_other": "{{count}} participants",
-    "my": {
-      "active": "Participant",
+    "showAll": "Show all challenges",
+    "role": {
+      "creator": "Creator",
+      "participant": "Participant",
       "abandoned": "Abandoned"
     },
-    "showAll": "Show all challenges"
+    "challengeStatus": {
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "finished": "Finished"
+    }
   }
 }

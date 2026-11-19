@@ -46,9 +46,16 @@ describe('ChallengeList', () => {
     const queries = answerWith({
       first: {
         items: [
-          challenge(0, { title: 'Défi 100 km', my_status: 'active' }),
-          challenge(1, { title: 'Les ruelles', my_status: 'abandoned' }),
-          challenge(2, { title: 'Hors de moi', my_status: null }),
+          challenge(0, { title: 'Défi 100 km', my_role: 'participant', status: 'ongoing' }),
+          challenge(1, { title: 'Les ruelles', my_role: 'abandoned', status: 'finished' }),
+          challenge(2, { title: 'Hors de moi', my_role: 'outsider', status: 'upcoming' }),
+          challenge(3, { title: 'Le mien', my_role: 'creator', status: 'ongoing' }),
+          challenge(4, {
+            title: 'Quitté',
+            my_role: 'creator',
+            my_status: 'abandoned',
+            status: 'ongoing',
+          }),
         ],
         next_cursor: null,
       },
@@ -58,7 +65,19 @@ describe('ChallengeList', () => {
     const card = (await screen.findByRole('heading', { name: 'Défi 100 km' })).closest('a');
     expect(card).toHaveAttribute('href', `/challenges/${mockChallenges[0]?.id}`);
     expect(within(card as HTMLElement).getByText('Participant')).toBeInTheDocument();
-    expect(screen.getByText('A abandonné')).toBeInTheDocument();
+    const left = screen.getByRole('heading', { name: 'Quitté' }).closest('a');
+    expect(within(left as HTMLElement).getByText('Créateur')).toBeInTheDocument();
+    expect(within(left as HTMLElement).getByText('A abandonné')).toBeInTheDocument();
+    const mine = (await screen.findByRole('heading', { name: 'Le mien' })).closest('a');
+    expect(within(mine as HTMLElement).getByText('Créateur')).toBeInTheDocument();
+    expect(within(mine as HTMLElement).queryByText('A abandonné')).toBeNull();
+    const outsider = screen.getByRole('heading', { name: 'Hors de moi' }).closest('a');
+    expect(
+      within(outsider as HTMLElement).queryByText(/Créateur|Participant|abandonné/),
+    ).toBeNull();
+    // Unfiltered list: each card says its status.
+    expect(within(card as HTMLElement).getByText('En cours')).toBeInTheDocument();
+    expect(within(outsider as HTMLElement).getByText('À venir')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publics' })).toHaveAttribute('aria-pressed', 'true');
     expect(queries[0]?.get('scope')).toBe('public');
     expect(queries[0]?.has('status')).toBe(false);
@@ -90,6 +109,11 @@ describe('ChallengeList', () => {
       'true',
     );
     expect(screen.getByRole('button', { name: 'Tous' })).toHaveAttribute('aria-pressed', 'false');
+    // Filtered list: the status is the filter, cards do not repeat it.
+    const card = (await screen.findByRole('heading', { name: mockChallenges[0]?.title })).closest(
+      'a',
+    );
+    expect(within(card as HTMLElement).queryByText('À venir')).toBeNull();
   });
 
   it('loads the next page with "Load more" until the last one', async () => {
