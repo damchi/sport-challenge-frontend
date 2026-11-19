@@ -26,12 +26,19 @@ function required(env: Record<string, unknown>, name: string): string {
 
 export function readConfig(env: Record<string, unknown>): Config {
   const apiUrl = required(env, 'VITE_API_URL');
-  if (!URL.canParse(apiUrl) || !['http:', 'https:'].includes(new URL(apiUrl).protocol)) {
+  // new URL rather than URL.canParse: older Safari versions lack the latter.
+  let url: URL | undefined;
+  try {
+    url = new URL(apiUrl);
+  } catch {
+    url = undefined;
+  }
+  if (!url || !['http:', 'https:'].includes(url.protocol)) {
     throw new Error(`VITE_API_URL is not an http(s) address: ${apiUrl}`);
   }
   // The access token travels to this address: plain http only in development
   // or to the local machine.
-  const { protocol, hostname } = new URL(apiUrl);
+  const { protocol, hostname } = url;
   if (protocol === 'http:' && env.DEV !== true && !LOCAL_HOSTS.includes(hostname)) {
     throw new Error(`VITE_API_URL must use https outside development: ${apiUrl}`);
   }

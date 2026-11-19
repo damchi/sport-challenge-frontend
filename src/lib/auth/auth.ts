@@ -40,7 +40,13 @@ export function useAuth(): Auth {
  */
 export function safeReturnTo(value: unknown, origin: string): string {
   if (typeof value !== 'string' || !value.startsWith('/')) return '/';
-  const url = URL.parse(value, origin);
-  if (!url || url.origin !== origin) return '/';
+  // new URL rather than URL.parse: older Safari versions lack the latter.
+  let url: URL;
+  try {
+    url = new URL(value, origin);
+  } catch {
+    return '/';
+  }
+  if (url.origin !== origin) return '/';
   return `${url.pathname}${url.search}${url.hash}`;
 }
