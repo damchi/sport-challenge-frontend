@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { getConfig } from './lib/config';
 import './styles/index.css';
 import i18n from 'i18next';
-import './i18n';
+import { startLanguage } from './lib/language';
 import { App } from './App';
 
 const rootElement = document.getElementById('root');
@@ -11,6 +11,8 @@ if (!rootElement) {
   throw new Error('Root element #root not found');
 }
 
+// Before anything renders: the error screen below is translated too.
+startLanguage();
 const root = createRoot(rootElement);
 
 // Development mocks, before the first request; the DEV guard removes them, and

@@ -47,6 +47,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Translation keys
+        run: pnpm i18n:check
+
       - name: Test
         run: pnpm test
 

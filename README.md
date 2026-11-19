@@ -184,7 +184,7 @@ frontend/
 
 ### 4.6 Langues, dates et unités
 
-- ✅ Français et anglais, avec la langue de l'appareil par défaut (i18next).
+- ✅ Français et anglais, avec la langue de l'appareil par défaut (i18next). ✅ Langue de repli : **anglais** (appareil ni en français ni en anglais). Les deux fichiers de traduction ont toujours les mêmes clés (`pnpm i18n:check`, dans `pnpm check` et la CI).
 - ✅ Distances en **km** uniquement.
 - Les dates d'un challenge s'affichent dans **son** fuseau (ex. Montréal), avec une indication claire si l'utilisateur est dans un autre fuseau.
 - Les erreurs de l'API sont traduites à partir de leurs codes stables.
