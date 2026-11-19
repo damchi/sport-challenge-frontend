@@ -1,44 +1,13 @@
 import { useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import {
-  addToDate,
-  challengeWindow,
-  isCalendarDate,
-  isStartDateInRange,
-  isTimeZone,
-  localDate,
-} from '../../../domain/challengeWindow';
-import { challengeWindowBounds, timeZoneName } from '../../../domain/format/challengeDates';
+import { addToDate, isTimeZone, localDate } from '../../../domain/challengeWindow';
+import { timeZoneName } from '../../../domain/format/challengeDates';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { groupTimeZones } from '../../../domain/timeZones';
 import { FieldError } from './FieldError';
 import { describedBy, inputClass } from './fields';
-
-// The window as it will run, once the three fields are valid: never one the
-// form would refuse.
-function windowPreview(
-  startDate: string,
-  weeks: number,
-  timeZone: string,
-  now: Date,
-  locale: string,
-) {
-  if (
-    !isCalendarDate(startDate) ||
-    !isStartDateInRange(startDate, timeZone, now) ||
-    !Number.isInteger(weeks) ||
-    weeks < 2 ||
-    weeks > 52
-  ) {
-    return undefined;
-  }
-  const { startsAt, endsAt } = challengeWindow(startDate, weeks, timeZone);
-  return {
-    ...challengeWindowBounds(startsAt, endsAt, timeZone, locale),
-    zone: timeZoneName(timeZone, locale),
-  };
-}
+import { windowPreview } from './windowPreview';
 
 /**
  * Step 2 of the creation: duration in weeks, the time zone of the place it is
@@ -97,7 +66,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           step={1}
           aria-invalid={weeksError ? true : undefined}
           aria-describedby={describedBy('weeks', weeksError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} block h-11 w-32`}
           {...register('weeks', { valueAsNumber: true })}
         />
         <p id="weeks-hint" className="mt-1 text-sm text-muted">
@@ -114,7 +83,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           id="timezone"
           aria-invalid={timeZoneError ? true : undefined}
           aria-describedby={describedBy('timezone', timeZoneError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} h-11 w-full`}
           {...register('timezone', {
             // "Today" moves with the time zone: a date already entered is
             // checked again against it.
@@ -152,7 +121,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           max={today && addToDate(today, { years: 1 })}
           aria-invalid={startDateError ? true : undefined}
           aria-describedby={describedBy('start_date', startDateError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} h-11 w-full`}
           {...register('start_date')}
         />
         <p id="start_date-hint" className="mt-1 text-sm text-muted">

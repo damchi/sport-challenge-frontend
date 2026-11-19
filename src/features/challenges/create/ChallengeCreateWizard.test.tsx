@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { StrictMode } from 'react';
-import { createMemoryRouter, Link, RouterProvider } from 'react-router';
+import { createMemoryRouter, Link, RouterProvider, useParams } from 'react-router';
+import type { ChallengeCreate } from '../../../api/hooks/useChallenges';
+import { server } from '../../../mocks/server';
 import { timeZoneName } from '../../../domain/format/challengeDates';
 import { AppProviders } from '../../../test/AppProviders';
 import { createFakeAuth } from '../../../test/fakeAuth';
@@ -9,6 +12,10 @@ import { ChallengeCreateWizard } from './ChallengeCreateWizard';
 // Wednesday 30 September 2026, 11:00 in Montréal.
 const NOW = new Date('2026-09-30T15:00:00Z');
 const ZONES = ['America/Toronto', 'Europe/Paris', 'Asia/Tokyo'];
+
+function ChallengePage() {
+  return <p>Défi {useParams().id}</p>;
+}
 
 function renderWizard({ timeZones = ZONES }: { timeZones?: readonly string[] } = {}) {
   const router = createMemoryRouter(
@@ -23,6 +30,7 @@ function renderWizard({ timeZones = ZONES }: { timeZones?: readonly string[] } =
         ),
       },
       { path: '/', element: <p>Page d'accueil</p> },
+      { path: '/challenges/:id', element: <ChallengePage /> },
     ],
     { initialEntries: ['/challenges/new'] },
   );
@@ -52,6 +60,41 @@ async function fillInfoStep() {
   await screen.findByRole('heading', { level: 2, name: 'Durée et fuseau' });
 }
 
+async function fillDurationStep() {
+  type(weeks(), '6');
+  type(startDate(), '2026-10-05');
+  next();
+  await screen.findByRole('heading', { level: 2, name: 'Catégories' });
+}
+
+const stepKm = () => screen.getByRole('spinbutton', { name: 'Incrément X (en km)' });
+const factor = (sport: string) => screen.getByRole('spinbutton', { name: sport });
+const send = () => fireEvent.click(screen.getByRole('button', { name: 'Créer le défi' }));
+
+async function reachRecap() {
+  renderWizard();
+  await fillInfoStep();
+  await fillDurationStep();
+  type(stepKm(), '2.5');
+  next();
+  await screen.findByRole('heading', { level: 2, name: 'Récapitulatif' });
+}
+
+/** Answers the creation and keeps each request body. */
+function answerCreation(
+  response: () => Response | Promise<Response> = () =>
+    HttpResponse.json({ id: 'c42' }, { status: 201 }),
+) {
+  const bodies: ChallengeCreate[] = [];
+  server.use(
+    http.post('*/api/v1/challenges', async ({ request }) => {
+      bodies.push((await request.json()) as ChallengeCreate);
+      return response();
+    }),
+  );
+  return bodies;
+}
+
 function type(field: HTMLElement, value: string) {
   fireEvent.change(field, { target: { value } });
   fireEvent.blur(field);
@@ -61,7 +104,7 @@ describe('ChallengeCreateWizard', () => {
   it('opens on the information step', () => {
     renderWizard();
 
-    expect(screen.getByText('Étape 1 sur 2')).toBeInTheDocument();
+    expect(screen.getByText('Étape 1 sur 4')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
     expect(title()).toHaveAccessibleDescription('Entre 3 et 80 caractères.');
     expect(screen.getByRole('radio', { name: 'Privé' })).toHaveAccessibleDescription(
@@ -129,7 +172,7 @@ describe('ChallengeCreateWizard', () => {
     expect(await screen.findByText('Choisis la visibilité du défi.')).toBeInTheDocument();
 
     await fillInfoStep();
-    expect(screen.getByText('Étape 2 sur 2')).toBeInTheDocument();
+    expect(screen.getByText('Étape 2 sur 4')).toBeInTheDocument();
     type(weeks(), '6');
 
     fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
@@ -154,8 +197,6 @@ describe('ChallengeCreateWizard', () => {
       expect(preview()).toHaveTextContent(
         "L'aperçu s'affiche une fois la durée, la date et le fuseau choisis.",
       );
-      // The last step: nothing comes after it yet.
-      expect(screen.queryByRole('button', { name: 'Suivant' })).not.toBeInTheDocument();
     });
 
     it.each(['1', '53', '2.5'])('refuses %s weeks', async (value) => {
@@ -340,5 +381,276 @@ describe('ChallengeCreateWizard', () => {
     expect(unload()).toBe(false);
     type(title(), 'Défi de printemps');
     await waitFor(() => expect(unload()).toBe(true));
+  });
+
+  describe('categories step', () => {
+    it('shows the 3 fixed categories with the suggested factors', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+
+      expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument();
+      for (const name of ['Temps cumulé', 'Distance cumulée', 'Course avec élimination']) {
+        expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
+      }
+      expect(await screen.findByRole('spinbutton', { name: 'Vélo' })).toHaveValue(0.3);
+      expect(factor('Aviron')).toHaveValue(0.5);
+      expect(factor('Vélo')).toHaveAccessibleDescription('Proposé : ×0,3');
+      // The run is the reference: no field.
+      expect(screen.queryByRole('spinbutton', { name: 'Course' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('spinbutton', { name: 'Yoga' })).not.toBeInTheDocument();
+      // By name, the free sport last.
+      expect(screen.getAllByRole('spinbutton').map((field) => field.getAttribute('id'))).toEqual([
+        'factor-rowing',
+        'factor-walk',
+        'factor-swim',
+        'factor-hike',
+        'factor-roller',
+        'factor-xc_ski',
+        'factor-ride',
+        'factor-other',
+        'elimination_step_km',
+      ]);
+    });
+
+    it('gives a worked example of X', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+
+      type(stepKm(), '2');
+
+      expect(
+        screen.getByText(
+          // Testing Library reads the narrow no-break spaces as spaces.
+          'Exemple avec X = 2 km : 5 km courus en semaine 1, il faut au moins 7 km en semaine 2 ; 10 km courus en semaine 2, au moins 12 km en semaine 3.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it.each(['0', '100.5', '2.25', ''])('refuses X = %j', async (value) => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+
+      type(stepKm(), value);
+      next();
+
+      expect(
+        await screen.findByText(
+          "L'incrément doit être entre 0,1 et 100 km, avec une décimale au plus.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument();
+    });
+
+    it('refuses a factor out of range', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      type(stepKm(), '2');
+
+      type(await screen.findByRole('spinbutton', { name: 'Vélo' }), '3');
+      next();
+
+      expect(
+        await screen.findByText(
+          'Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus.',
+        ),
+      ).toBeInTheDocument();
+      expect(factor('Vélo')).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('offers a retry when the sports do not load', async () => {
+      let fail = true;
+      server.use(
+        http.get('*/api/v1/sports', () =>
+          fail
+            ? HttpResponse.json({ error: { code: 'internal_error' } }, { status: 500 })
+            : HttpResponse.json({
+                sports: [{ code: 'ride', distance_mode: 'required', suggested_factor: 0.3 }],
+              }),
+        ),
+      );
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+
+      type(stepKm(), '2');
+      await screen.findByRole('button', { name: 'Réessayer' });
+      next();
+      // The factors must be seen first: the step stays, and says why.
+      expect(
+        await screen.findByText(
+          "Les coefficients doivent s'afficher avant de continuer : patiente ou réessaie.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Récapitulatif' })).not.toBeInTheDocument();
+
+      fail = false;
+      fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+      expect(await screen.findByRole('spinbutton', { name: 'Vélo' })).toHaveValue(0.3);
+      expect(
+        screen.queryByText(
+          "Les coefficients doivent s'afficher avant de continuer : patiente ou réessaie.",
+        ),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('summary and sending', () => {
+    it('sums everything up with the warning, then creates and opens the challenge', async () => {
+      const bodies = answerCreation();
+      await reachRecap();
+
+      expect(screen.getByText('Étape 4 sur 4')).toBeInTheDocument();
+      expect(screen.getByText('Défi de printemps')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Du lundi 5 octobre à 00 h au lundi 16 novembre à 00 h/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Incrément X : 2,5 km')).toBeInTheDocument();
+      expect(screen.getByText('Course ×1 (référence)')).toBeInTheDocument();
+      expect(screen.getByText('Autre ×1').previousElementSibling).toHaveTextContent('Vélo ×0,3');
+      expect(screen.getByText('Vélo ×0,3')).toBeInTheDocument();
+      expect(
+        screen.getByText('Les catégories ne pourront plus être modifiées après la création.'),
+      ).toBeInTheDocument();
+
+      send();
+
+      expect(await screen.findByText('Défi c42')).toBeInTheDocument();
+      expect(bodies).toEqual([
+        {
+          title: 'Défi de printemps',
+          description: '',
+          visibility: 'public',
+          members_can_invite: false,
+          timezone: 'America/Toronto',
+          start_date: '2026-10-05',
+          weeks: 6,
+          elimination_step_meters: 2500,
+        },
+      ]);
+    });
+
+    it('sends only the factors the creator changed', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      type(stepKm(), '2');
+      type(await screen.findByRole('spinbutton', { name: 'Vélo' }), '0.25');
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Récapitulatif' });
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.distance_factors).toEqual({ ride: 0.25 });
+    });
+
+    it('sends once on a double click, the button showing it is busy', async () => {
+      let answer: () => void = () => undefined;
+      const bodies = answerCreation(async () => {
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return HttpResponse.json({ id: 'c42' }, { status: 201 });
+      });
+      await reachRecap();
+
+      send();
+      send();
+      const busy = await screen.findByRole('button', { name: 'Création…' });
+      expect(busy).toBeDisabled();
+      fireEvent.click(busy);
+      answer();
+
+      expect(await screen.findByText('Défi c42')).toBeInTheDocument();
+      expect(bodies).toHaveLength(1);
+    });
+
+    it('shows the refused fields where they are entered', async () => {
+      answerCreation(() =>
+        HttpResponse.json(
+          {
+            error: { code: 'validation_failed', params: { fields: 'title,distance_factors.ride' } },
+          },
+          { status: 400 },
+        ),
+      );
+      await reachRecap();
+
+      send();
+
+      expect(
+        await screen.findByText(
+          'Certaines informations ont été refusées : Titre, Vélo. Corrige-les, puis réessaie.',
+        ),
+      ).toBeInTheDocument();
+      for (let step = 0; step < 3; step += 1) {
+        fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+      }
+      expect(await screen.findByRole('textbox', { name: 'Titre' })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
+      expect(
+        screen.getByText('Valeur refusée. Vérifie-la, puis renvoie le défi.'),
+      ).toBeInTheDocument();
+    });
+
+    it('shows a refused X on its field', async () => {
+      answerCreation(() =>
+        HttpResponse.json(
+          { error: { code: 'validation_failed', params: { fields: 'elimination_step_meters' } } },
+          { status: 400 },
+        ),
+      );
+      await reachRecap();
+
+      send();
+
+      expect(
+        await screen.findByText(
+          'Certaines informations ont été refusées : Incrément X (en km). Corrige-les, puis réessaie.',
+        ),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+      expect(
+        await screen.findByRole('spinbutton', { name: 'Incrément X (en km)' }),
+      ).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it.each([
+      [422, 'profile_incomplete', "Choisis d'abord ton pseudo dans ton profil."],
+      [
+        500,
+        'internal_error',
+        'Le service est momentanément indisponible. Réessaie dans un instant.',
+      ],
+    ])('translates a %d %s', async (status, code, message) => {
+      answerCreation(() => HttpResponse.json({ error: { code } }, { status }));
+      await reachRecap();
+
+      send();
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(message);
+      await waitFor(() => expect(alert).toHaveFocus());
+      expect(screen.getByRole('button', { name: 'Créer le défi' })).toBeEnabled();
+    });
+
+    it('leaves without asking once created', async () => {
+      answerCreation();
+      await reachRecap();
+
+      send();
+
+      expect(await screen.findByText('Défi c42')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });

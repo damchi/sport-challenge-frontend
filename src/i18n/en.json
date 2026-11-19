@@ -12,10 +12,12 @@
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
     "not_found": "This page doesn't exist or was removed.",
+    "profile_incomplete": "Choose your pseudo in your profile first.",
     "rate_limited": "Too many requests. Try again in a moment.",
     "rate_limited_delay": "Too many requests. Try again in {{retry_after}} s.",
     "unauthenticated": "Your session has ended. Sign in again.",
-    "unknown": "Something went wrong. Try again."
+    "unknown": "Something went wrong. Try again.",
+    "validation_failed": "Some details are invalid. Check them, then try again."
   },
   "errorPage": {
     "title": "Oops, this page couldn't be displayed",
@@ -138,7 +140,9 @@
     "title": "Create a challenge",
     "steps": {
       "info": "Details",
-      "duration": "Duration and time zone"
+      "duration": "Duration and time zone",
+      "categories": "Categories",
+      "recap": "Summary"
     },
     "fields": {
       "title": {
@@ -195,7 +199,20 @@
           "Pacific": "Pacific",
           "Other": "Other"
         }
-      }
+      },
+      "eliminationStep": {
+        "label": "Increment X (in km)",
+        "hint": "More than 0 km, 100 km at most, one decimal at most.",
+        "range": "The increment must be from 0.1 to 100 km, with one decimal at most."
+      },
+      "factors": {
+        "label": "Distance factors",
+        "hint": "Suggested by the app; you can change them, from 0.1 to 2. Running always counts {{run}}.",
+        "suggested": "Suggested: {{factor}}",
+        "range": "The factor must be from 0.1 to 2, with two decimals at most.",
+        "waiting": "The factors must show before you go on: wait or try again."
+      },
+      "serverInvalid": "Value refused. Check it, then send the challenge again."
     },
     "preview": {
       "title": "Preview",
@@ -204,11 +221,54 @@
       "weeks_one": "{{count}} week",
       "weeks_other": "{{count}} weeks"
     },
+    "categories": {
+      "fixed": "A challenge always has these 3 categories, each with its podium. You only set the distance factors and the increment X.",
+      "time": {
+        "name": "Total time",
+        "explanation": "The total time of all activities, every sport included."
+      },
+      "distance": {
+        "name": "Total distance",
+        "explanation": "The km of distance activities, brought back to a running distance: a km of cycling at ×0.3 counts for 0.3 km."
+      },
+      "elimination": {
+        "name": "Running with elimination",
+        "explanation": "Running only. Each week, you must run at least the previous week's distance plus X km, or you are eliminated from this category. No elimination in week 1.",
+        "example": "Example with X = {{step}}: {{week1}} run in week 1, at least {{week2}} needed in week 2; {{ran2}} run in week 2, at least {{week3}} in week 3."
+      }
+    },
+    "recap": {
+      "description": "Description",
+      "invitations": "Invitations",
+      "membersCanInvite": "Participants can invite",
+      "creatorsInvite": "Only creators invite",
+      "period": "Period",
+      "categories": "Categories",
+      "step": "Increment X: {{step}}",
+      "final": "The categories cannot be changed once the challenge is created.",
+      "runFactor": "Running {{factor}} (reference)"
+    },
+    "submit": {
+      "label": "Create the challenge",
+      "busy": "Creating…",
+      "invalid": "Some details were refused: {{fields}}. Fix them, then try again.",
+      "check": "Check these details: {{fields}}."
+    },
     "leave": {
       "title": "Leave the challenge creation?",
       "message": "What you entered is not saved: it will be lost.",
       "confirm": "Leave",
       "cancel": "Keep editing"
     }
+  },
+  "sports": {
+    "walk": "Walking",
+    "hike": "Hiking",
+    "swim": "Swimming",
+    "ride": "Cycling",
+    "rowing": "Rowing",
+    "roller": "Inline skating",
+    "xc_ski": "Cross-country skiing",
+    "other": "Other"
   }
 }

@@ -4,7 +4,9 @@
 
 export const queryKeys = {
   me: ['me'] as const,
+  sports: ['sports'] as const,
   challenges: {
+    all: ['challenges'] as const,
     list: (scope: string, status: string | undefined) =>
       ['challenges', 'list', scope, status ?? 'all'] as const,
     detail: (challengeId: string) => ['challenges', challengeId] as const,

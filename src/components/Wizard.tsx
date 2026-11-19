@@ -7,18 +7,29 @@ export interface WizardStep {
   content: ReactNode;
 }
 
+/** The last step's action: it sends the form. */
+export interface WizardFinish {
+  label: string;
+  /** Label while `busy`, when the button cannot be pressed again. */
+  busyLabel: string;
+  busy: boolean;
+  onFinish: () => void;
+}
+
 /**
- * A form in steps: progress, current step, Back and Next (none on the last
- * step). Next (or Enter)
- * moves on only once `validateStep` accepts the current step. The steps share
- * the caller's form state, so going back loses nothing.
+ * A form in steps: progress, current step, Back and Next, or the finishing
+ * action on the last step. Next (or Enter) moves on, and the last step
+ * finishes, only once `validateStep` accepts the current step. The steps
+ * share the caller's form state, so going back loses nothing.
  */
 export function Wizard({
   steps,
   validateStep,
+  finish,
 }: {
   steps: readonly WizardStep[];
   validateStep: (index: number) => Promise<boolean>;
+  finish: WizardFinish;
 }) {
   const { t } = useTranslation();
   const [index, setIndex] = useState(0);
@@ -41,7 +52,11 @@ export function Wizard({
   };
 
   const onSubmit = async () => {
-    if ((await validateStep(index)) && !isLast) {
+    if (isLast && finish.busy) return;
+    if (!(await validateStep(index))) return;
+    if (isLast) {
+      finish.onFinish();
+    } else {
       goTo(index + 1);
     }
   };
@@ -79,29 +94,28 @@ export function Wizard({
         {step.content}
       </div>
 
-      {(index > 0 || !isLast) && (
-        <div className="mt-8 flex gap-3">
-          {index > 0 && (
-            <button
-              type="button"
-              onClick={() => goTo(index - 1)}
-              className="inline-flex h-13 items-center gap-1 rounded-full border border-border bg-surface px-5 font-bold"
-            >
-              <ChevronLeft aria-hidden="true" size={20} />
-              {t('wizard.back')}
-            </button>
-          )}
-          {/* No Next on the last step: nothing comes after it. */}
-          {!isLast && (
-            <button
-              type="submit"
-              className="h-13 flex-1 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
-            >
-              {t('wizard.next')}
-            </button>
-          )}
-        </div>
-      )}
+      <div className="mt-8 flex gap-3">
+        {index > 0 && (
+          <button
+            type="button"
+            onClick={() => goTo(index - 1)}
+            disabled={isLast && finish.busy}
+            className="inline-flex h-13 items-center gap-1 rounded-full border border-border bg-surface px-5 font-bold disabled:opacity-60"
+          >
+            <ChevronLeft aria-hidden="true" size={20} />
+            {t('wizard.back')}
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={isLast && finish.busy}
+          aria-busy={isLast && finish.busy ? true : undefined}
+          // Whole line on a phone; its own width, on the right, from md.
+          className="ml-auto h-13 flex-1 rounded-full bg-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
+        >
+          {isLast ? (finish.busy ? finish.busyLabel : finish.label) : t('wizard.next')}
+        </button>
+      </div>
     </form>
   );
 }

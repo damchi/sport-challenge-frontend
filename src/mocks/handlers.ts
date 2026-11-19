@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import type { components } from '../api/generated/schema';
+import { challengeWindow } from '../domain/challengeWindow';
 
 // Mock handlers shared by the tests (src/mocks/server.ts) and the development
 // mocks (VITE_MOCKS=true). Each ticket adds the routes it uses, typed by the
@@ -8,6 +9,8 @@ import type { components } from '../api/generated/schema';
 // that test).
 
 type SportList = components['schemas']['SportList'];
+type Challenge = components['schemas']['Challenge'];
+type ChallengeCreate = components['schemas']['ChallengeCreate'];
 type Me = components['schemas']['Me'];
 type ChallengeSummary = components['schemas']['ChallengeSummary'];
 type ChallengePage = components['schemas']['ChallengePage'];
@@ -69,10 +72,50 @@ export const handlers = [
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({
       sports: [
-        { code: 'run', distance_mode: 'required', suggested_factor: 1 },
+        { code: 'climbing', distance_mode: 'none', suggested_factor: null },
+        { code: 'hike', distance_mode: 'required', suggested_factor: 1 },
+        { code: 'other', distance_mode: 'optional', suggested_factor: 1 },
         { code: 'ride', distance_mode: 'required', suggested_factor: 0.3 },
-        { code: 'other', distance_mode: 'optional', suggested_factor: null },
+        { code: 'roller', distance_mode: 'required', suggested_factor: 0.5 },
+        { code: 'rowing', distance_mode: 'required', suggested_factor: 0.5 },
+        { code: 'run', distance_mode: 'required', suggested_factor: 1 },
+        { code: 'strength', distance_mode: 'none', suggested_factor: null },
+        { code: 'swim', distance_mode: 'required', suggested_factor: 1 },
+        { code: 'walk', distance_mode: 'required', suggested_factor: 1 },
+        { code: 'xc_ski', distance_mode: 'required', suggested_factor: 0.5 },
+        { code: 'yoga', distance_mode: 'none', suggested_factor: null },
       ],
     }),
   ),
+  // The created challenge as the server answers it, from the request.
+  http.post('*/api/v1/challenges', async ({ request }) => {
+    const body = (await request.json()) as ChallengeCreate;
+    const { startsAt, endsAt } = challengeWindow(body.start_date, body.weeks, body.timezone);
+    return HttpResponse.json<Challenge>(
+      {
+        id: '00000000-0000-4000-8000-000000000001',
+        title: body.title.trim(),
+        description: body.description ?? '',
+        visibility: body.visibility,
+        members_can_invite: body.members_can_invite ?? false,
+        timezone: body.timezone,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        categories: [
+          { type: 'cumulative_time', position: 1, params: {} },
+          {
+            type: 'cumulative_distance',
+            position: 2,
+            params: { factors: { ride: 0.3, ...body.distance_factors } },
+          },
+          {
+            type: 'run_elimination',
+            position: 3,
+            params: { sport: 'run', step_meters: body.elimination_step_meters },
+          },
+        ],
+      },
+      { status: 201 },
+    );
+  }),
 ];

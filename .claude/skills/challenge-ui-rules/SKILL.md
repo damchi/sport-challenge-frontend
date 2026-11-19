@@ -21,7 +21,7 @@ Un participant apparaît dans les 3. Un onglet par catégorie, chacune avec son 
 
 ## Création et édition
 
-- Assistant en 3 étapes : infos (titre, description, visibilité publique ou privée, « les participants peuvent inviter ») → durée et **fuseau** (proposer celui du lieu de lancement, ex. Montréal) → paramètres des catégories (incrément X en km pour la catégorie 3, ex. 2 km) et récapitulatif.
+- Assistant en 4 étapes : infos (titre, description, visibilité publique ou privée, « les participants peuvent inviter ») → durée et **fuseau** (Montréal par défaut) → paramètres des catégories (incrément X en km pour la catégorie 3, ex. 2 km ; coefficients de distance de la catégorie 2, pré-remplis par les suggestions et modifiables, la course restant ×1) → récapitulatif et envoi.
 - Durée en **nombre de semaines** (2 à 52), jamais en dates libres ; les 3 catégories sont toujours présentes (non décochables).
 - Récapitulatif avant validation : dates affichées dans le fuseau choisi, avertissement que les catégories ne seront plus modifiables.
 - Après le début : seuls le titre et la description sont éditables ; les catégories sont affichées en lecture seule.
@@ -49,7 +49,7 @@ Un participant apparaît dans les 3. Un onglet par catégorie, chacune avec son 
 
 ## Saisie d'activité
 
-- Choix du sport dans le catalogue de l'API ; option « Autre (préciser) » avec un libellé libre (2 à 40 caractères, affiché comme du texte). Un sport « autre » n'a pas de champ distance (🟡).
+- Choix du sport dans le catalogue de l'API ; option « Autre (préciser) » avec un libellé libre (2 à 40 caractères, affiché comme du texte). Un sport « autre » a une distance facultative (✅) : saisie, elle compte aussi pour la distance cumulée (coefficient suggéré ×1, modifiable par le créateur).
 - Après l'enregistrement, indique dans combien de challenges l'activité compte (une seule saisie pour tous).
 - Statuts de la catégorie 3 : n'écris pas la règle côté client ; l'API fournit le statut (`reached`, `at_risk`, `in_progress`, `eliminated`), le minimum et la fin de semaine. La **durée** est toujours demandée ; la **distance** seulement si le sport produit des km (pas pour le yoga).
 - La date doit être dans la fenêtre du challenge (bornes dans le fuseau du challenge) ; après la fin, le bouton d'ajout disparaît avec une explication.

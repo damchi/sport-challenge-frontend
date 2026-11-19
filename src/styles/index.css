@@ -31,6 +31,30 @@
     outline-offset: 2px;
   }
 
+  /* Native date field (FD5): Safari draws its own box (centred value, extra
+     margins, its own height on iOS). It takes the look of the text fields;
+     the browser's picker stays. */
+  input[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    text-align: start;
+  }
+
+  input[type='date']::-webkit-date-and-time-value {
+    margin: 0;
+    text-align: start;
+  }
+
+  input[type='date']::-webkit-datetime-edit {
+    padding: 0;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+
   /* A page title focused after a navigation is not a control: no ring. */
   h1[tabindex='-1']:focus {
     outline: none;

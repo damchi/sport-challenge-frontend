@@ -14,6 +14,8 @@ const valid = {
   weeks: 4,
   start_date: '2026-11-23',
   timezone: 'America/Toronto',
+  elimination_step_km: 2,
+  factors: { ride: 0.3 },
 };
 
 function firstMessage(input: Record<string, unknown>): string | undefined {
@@ -38,6 +40,8 @@ describe('challengeCreateSchema', () => {
       weeks: 4,
       start_date: '2026-11-23',
       timezone: 'America/Toronto',
+      elimination_step_km: 2,
+      factors: { ride: 0.3 },
     });
   });
 
@@ -148,11 +152,37 @@ describe('challengeCreateSchema', () => {
     expect(firstMessage({ timezone })).toBe('challengeCreate.fields.timezone.required');
   });
 
+  describe('elimination increment', () => {
+    it.each([0.1, 2, 2.5, 100])('accepts %d km', (km) => {
+      expect(firstMessage({ elimination_step_km: km })).toBeUndefined();
+    });
+
+    it.each([0, -1, 100.1, 2.25, Number.NaN])('refuses %d km', (km) => {
+      expect(firstMessage({ elimination_step_km: km })).toBe(
+        'challengeCreate.fields.eliminationStep.range',
+      );
+    });
+  });
+
+  describe('distance factors', () => {
+    it.each([0.1, 0.25, 2])('accepts %d', (factor) => {
+      expect(firstMessage({ factors: { ride: factor } })).toBeUndefined();
+    });
+
+    it.each([0, 0.05, 2.01, 0.333, Number.NaN])('refuses %d, under its sport', (factor) => {
+      const result = schema.safeParse({ ...valid, factors: { ride: 0.3, rowing: factor } });
+      expect(result.error?.issues.map(({ message, path }) => [message, path])).toEqual([
+        ['challengeCreate.fields.factors.range', ['factors', 'rowing']],
+      ]);
+    });
+  });
+
   it('only gives messages that exist in French and English', () => {
     const wrong = [
       { title: 'ab', description: 'a'.repeat(2001), visibility: undefined, weeks: 1 },
       { title: 'a\nb\nc', description: '\u200b', start_date: '', timezone: '' },
       { start_date: '2020-01-01' },
+      { elimination_step_km: 0, factors: { ride: 3 } },
     ];
     const messages = wrong.flatMap(
       (input) =>
@@ -167,7 +197,7 @@ describe('challengeCreateSchema', () => {
           texts,
         );
 
-    expect(new Set(messages).size).toBe(9);
+    expect(new Set(messages).size).toBe(11);
     for (const message of messages) {
       expect(typeof lookup(fr, message), message).toBe('string');
       expect(typeof lookup(en, message), message).toBe('string');

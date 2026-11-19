@@ -40,6 +40,12 @@ function visibleCount(text: string): number {
   return [...text].filter((char) => !/\p{Cf}/u.test(char)).length;
 }
 
+// Whether `value` has at most `decimals` decimals (floating point aside).
+function hasDecimals(value: number, decimals: number): boolean {
+  const scaled = value * 10 ** decimals;
+  return Math.abs(scaled - Math.round(scaled)) < 1e-9;
+}
+
 const TITLE_MAX_LENGTH = 80;
 const DESCRIPTION_MAX_LENGTH = 2000;
 
@@ -81,6 +87,24 @@ export function challengeCreateSchema(now: Date) {
         .max(52, 'challengeCreate.fields.weeks.range'),
       start_date: z.string().refine(isCalendarDate, 'challengeCreate.fields.startDate.required'),
       timezone: z.string().refine(isTimeZone, 'challengeCreate.fields.timezone.required'),
+      // Increment X of the run elimination, in km with one decimal: sent in
+      // meters (1 to 100 000).
+      elimination_step_km: z
+        .number('challengeCreate.fields.eliminationStep.range')
+        .refine(
+          (km) => km > 0 && km <= 100 && hasDecimals(km, 1),
+          'challengeCreate.fields.eliminationStep.range',
+        ),
+      // Distance factor by sport code, 0.1 to 2 with two decimals at most.
+      factors: z.record(
+        z.string(),
+        z
+          .number('challengeCreate.fields.factors.range')
+          .refine(
+            (factor) => factor >= 0.1 && factor <= 2 && hasDecimals(factor, 2),
+            'challengeCreate.fields.factors.range',
+          ),
+      ),
     })
     .refine(({ start_date: startDate, timezone }) => isStartDateInRange(startDate, timezone, now), {
       path: ['start_date'],
