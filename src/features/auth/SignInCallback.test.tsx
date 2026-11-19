@@ -5,13 +5,13 @@ import { createFakeAuth } from '../../test/fakeAuth';
 import { FakeAuthProvider } from '../../test/FakeAuthProvider';
 import { SignInCallback } from './SignInCallback';
 
-function renderCallback(auth: Auth) {
+function renderCallback(auth: Auth, path = '/callback') {
   const router = createMemoryRouter(
     [
       { path: '/callback', element: <SignInCallback /> },
       { path: '/', element: <p>home</p> },
     ],
-    { initialEntries: ['/callback'] },
+    { initialEntries: [path] },
   );
   render(
     <FakeAuthProvider auth={auth}>
@@ -47,7 +47,17 @@ describe('SignInCallback', () => {
     expect(auth.signIn).toHaveBeenCalledTimes(1);
   });
 
-  it('opens the home page when already signed in', () => {
+  it('leaves the requested page to the provider when back from sign-in', () => {
+    renderCallback(
+      createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|123' } }),
+      '/callback?code=abc&state=xyz',
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('Connexion en cours…');
+    expect(screen.queryByText('home')).not.toBeInTheDocument();
+  });
+
+  it('opens the home page when opened directly while signed in', () => {
     renderCallback(createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|123' } }));
 
     expect(screen.getByText('home')).toBeInTheDocument();

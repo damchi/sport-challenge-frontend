@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Navigate } from 'react-router';
+import { Navigate, useSearchParams } from 'react-router';
 import { useAuth } from '../../lib/auth/auth';
 
 function SignInButton() {
@@ -23,6 +23,9 @@ function SignInButton() {
 export function SignInCallback() {
   const { t } = useTranslation();
   const auth = useAuth();
+  const [params] = useSearchParams();
+  // Back from Auth0: the provider opens the requested page itself.
+  const returningFromSignIn = params.has('code') && params.has('state');
 
   if (auth.hasError) {
     return (
@@ -34,14 +37,14 @@ export function SignInCallback() {
       </>
     );
   }
-  if (auth.isLoading) {
+  if (auth.isLoading || (auth.isAuthenticated && returningFromSignIn)) {
     return (
       <p role="status" className="mt-2 text-muted">
         {t('auth.callback.loading')}
       </p>
     );
   }
-  // Signed in without a pending redirect (the page opened directly).
+  // Signed in, page opened directly: nothing to finish.
   if (auth.isAuthenticated) return <Navigate to="/" replace />;
   // Opened directly while signed out: nothing to finish.
   return (
