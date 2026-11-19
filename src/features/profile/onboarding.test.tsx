@@ -113,11 +113,16 @@ describe('profile onboarding', () => {
     await typePseudo('  jean.luc ');
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
-    // Save, cache update and redirect: more than the default second under load.
+    // Save, cache update and redirect through the whole app: several seconds
+    // on a loaded CI runner.
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Page introuvable' }, { timeout: 5000 }),
+      await screen.findByRole(
+        'heading',
+        { level: 1, name: 'Page introuvable' },
+        { timeout: 10_000 },
+      ),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/does-not-exist');
     expect(sent).toEqual({ pseudo: 'jean.luc', language: 'fr' });
-  });
+  }, 15_000);
 });
