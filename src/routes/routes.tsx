@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router';
 import { ActivitiesPage } from '../pages/ActivitiesPage';
 import { CallbackPage } from '../pages/CallbackPage';
+import { ChallengeCreatePage } from '../pages/ChallengeCreatePage';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { OnboardingPage } from '../pages/OnboardingPage';
@@ -34,6 +35,11 @@ export const routes: RouteObject[] = [
                 element: <AppShell />,
                 children: [
                   { path: '/', element: <HomePage />, handle: title('nav.challenges') },
+                  {
+                    path: '/challenges/new',
+                    element: <ChallengeCreatePage />,
+                    handle: title('challengeCreate.title'),
+                  },
                   {
                     path: '/activities',
                     element: <ActivitiesPage />,
