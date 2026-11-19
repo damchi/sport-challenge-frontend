@@ -12,10 +12,12 @@
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
     "not_found": "Cette page n'existe pas ou plus.",
+    "profile_incomplete": "Choisis d'abord ton pseudo dans ton profil.",
     "rate_limited": "Trop de requêtes. Réessaie dans un instant.",
     "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s.",
     "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
-    "unknown": "Une erreur est survenue. Réessaie."
+    "unknown": "Une erreur est survenue. Réessaie.",
+    "validation_failed": "Certaines informations sont invalides. Vérifie-les, puis réessaie."
   },
   "errorPage": {
     "title": "Oups, cette page n'a pas pu s'afficher",
@@ -139,7 +141,9 @@
     "title": "Créer un défi",
     "steps": {
       "info": "Informations",
-      "duration": "Durée et fuseau"
+      "duration": "Durée et fuseau",
+      "categories": "Catégories",
+      "recap": "Récapitulatif"
     },
     "fields": {
       "title": {
@@ -196,7 +200,19 @@
           "Pacific": "Pacifique",
           "Other": "Autres"
         }
-      }
+      },
+      "eliminationStep": {
+        "label": "Incrément X (en km)",
+        "hint": "Plus de 0 km, 100 km au plus, une décimale au plus.",
+        "range": "L'incrément doit être entre 0,1 et 100 km, avec une décimale au plus."
+      },
+      "factors": {
+        "label": "Coefficients de distance",
+        "hint": "Proposés par l'application ; tu peux les changer, de 0,1 à 2. La course compte toujours {{run}}.",
+        "suggested": "Proposé : {{factor}}",
+        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus."
+      },
+      "serverInvalid": "Valeur refusée. Vérifie-la, puis renvoie le défi."
     },
     "preview": {
       "title": "Aperçu",
@@ -206,11 +222,57 @@
       "weeks_many": "{{count}} semaines",
       "weeks_other": "{{count}} semaines"
     },
+    "categories": {
+      "fixed": "Un défi a toujours ces 3 catégories, chacune avec son podium. Tu règles seulement les coefficients de distance et l'incrément X.",
+      "time": {
+        "name": "Temps cumulé",
+        "explanation": "Le temps total de toutes les activités, tous sports confondus."
+      },
+      "distance": {
+        "name": "Distance cumulée",
+        "explanation": "Les km des activités à distance, ramenés à une distance de course : un km de vélo à ×0,3 compte pour 0,3 km."
+      },
+      "elimination": {
+        "name": "Course avec élimination",
+        "explanation": "Course seule. Chaque semaine, il faut courir au moins la distance de la semaine précédente plus X km, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
+        "example": "Exemple avec X = {{step}} : {{week1}} courus en semaine 1, il faut au moins {{week2}} en semaine 2 ; {{ran2}} courus en semaine 2, au moins {{week3}} en semaine 3."
+      }
+    },
+    "recap": {
+      "description": "Description",
+      "invitations": "Invitations",
+      "membersCanInvite": "Les participants peuvent inviter",
+      "creatorsInvite": "Seuls les créateurs invitent",
+      "period": "Période",
+      "categories": "Catégories",
+      "step": "Incrément X : {{step}}",
+      "final": "Les catégories ne pourront plus être modifiées après la création.",
+      "runFactor": "Course {{factor}} (référence)"
+    },
+    "submit": {
+      "label": "Créer le défi",
+      "busy": "Création…",
+      "invalid": "Certaines informations ont été refusées : {{fields}}. Corrige-les, puis réessaie."
+    },
     "leave": {
       "title": "Quitter la création ?",
       "message": "Ta saisie n'est pas enregistrée : elle sera perdue.",
       "confirm": "Quitter",
       "cancel": "Continuer la saisie"
     }
+  },
+  "sports": {
+    "run": "Course",
+    "walk": "Marche",
+    "hike": "Randonnée",
+    "swim": "Natation",
+    "ride": "Vélo",
+    "rowing": "Aviron",
+    "roller": "Roller",
+    "xc_ski": "Ski de fond",
+    "yoga": "Yoga",
+    "climbing": "Escalade",
+    "strength": "Renforcement",
+    "other": "Autre"
   }
 }

@@ -5,7 +5,15 @@ import { Wizard } from './Wizard';
 
 // Three steps over one form, as a caller builds them; a step is valid once
 // its field is filled in.
-function ThreeSteps({ validate }: { validate?: (index: number) => Promise<boolean> }) {
+function ThreeSteps({
+  validate,
+  onFinish = () => undefined,
+  busy = false,
+}: {
+  validate?: (index: number) => Promise<boolean>;
+  onFinish?: () => void;
+  busy?: boolean;
+}) {
   const { register, getValues } = useForm({ defaultValues: { a: '', b: '', c: '' } });
   const names = ['a', 'b', 'c'] as const;
   return (
@@ -15,6 +23,7 @@ function ThreeSteps({ validate }: { validate?: (index: number) => Promise<boolea
         content: <input aria-label={`Field ${name}`} {...register(name)} />,
       }))}
       validateStep={validate ?? ((index) => Promise.resolve(getValues(names[index] ?? 'a') !== ''))}
+      finish={{ label: 'Send', busyLabel: 'Sending…', busy, onFinish }}
     />
   );
 }
@@ -69,19 +78,57 @@ describe('Wizard', () => {
     expect(await screen.findByLabelText('Field b')).toHaveValue('second');
   });
 
-  it('validates the step it is on, and has no Next on the last one', async () => {
+  it('validates the step it is on, and finishes on the last one', async () => {
     const validate = vi.fn<(index: number) => Promise<boolean>>(() => Promise.resolve(true));
-    renderWithProviders(<ThreeSteps validate={validate} />);
+    const onFinish = vi.fn();
+    renderWithProviders(<ThreeSteps validate={validate} onFinish={onFinish} />);
 
     next();
     await screen.findByRole('heading', { name: 'Step b' });
     next();
     await screen.findByRole('heading', { name: 'Step c' });
-
-    expect(validate.mock.calls.map(([index]) => index)).toEqual([0, 1]);
     expect(screen.getByText('Étape 3 sur 3')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Suivant' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retour' })).toBeInTheDocument();
+    expect(onFinish).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => expect(onFinish).toHaveBeenCalledTimes(1));
+    expect(validate.mock.calls.map(([index]) => index)).toEqual([0, 1, 2]);
+  });
+
+  it('does not finish a refused last step', async () => {
+    const onFinish = vi.fn();
+    renderWithProviders(<ThreeSteps onFinish={onFinish} />);
+    for (const name of ['a', 'b']) {
+      fireEvent.change(screen.getByLabelText(`Field ${name}`), { target: { value: 'x' } });
+      next();
+      await screen.findByLabelText(`Field ${name === 'a' ? 'b' : 'c'}`);
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => expect(screen.getByLabelText('Field c')).toBeInTheDocument());
+    expect(onFinish).not.toHaveBeenCalled();
+  });
+
+  it('cannot finish again, nor go back, while busy', async () => {
+    const onFinish = vi.fn();
+    renderWithProviders(
+      <ThreeSteps validate={() => Promise.resolve(true)} onFinish={onFinish} busy />,
+    );
+    next();
+    await screen.findByRole('heading', { name: 'Step b' });
+    next();
+    await screen.findByRole('heading', { name: 'Step c' });
+
+    const send = screen.getByRole('button', { name: 'Sending…' });
+    expect(send).toBeDisabled();
+    expect(send).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: 'Retour' })).toBeDisabled();
+    fireEvent.submit(screen.getByLabelText('Field c'));
+    await act(async () => undefined);
+    expect(onFinish).not.toHaveBeenCalled();
   });
 
   it('moves on with Enter in a field', async () => {

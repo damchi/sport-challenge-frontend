@@ -1,0 +1,24 @@
+import { formatFactor, formatKm } from './distance';
+
+describe('formatKm', () => {
+  it('writes km in the language, one decimal for short distances', () => {
+    // French puts a narrow no-break space before the unit and between thousands.
+    expect(formatKm(12.5, 'fr')).toBe('12,5 km');
+    expect(formatKm(12.5, 'en')).toBe('12.5 km');
+    expect(formatKm(7, 'fr')).toBe('7 km');
+    expect(formatKm(2.25, 'en')).toBe('2.3 km');
+  });
+
+  it('drops the decimals from 100 km', () => {
+    expect(formatKm(100.4, 'en')).toBe('100 km');
+    expect(formatKm(1234.5, 'fr')).toBe('1 235 km');
+  });
+});
+
+describe('formatFactor', () => {
+  it('writes the factor in the language', () => {
+    expect(formatFactor(0.3, 'fr')).toBe('×0,3');
+    expect(formatFactor(0.25, 'en')).toBe('×0.25');
+    expect(formatFactor(1, 'fr')).toBe('×1');
+  });
+});

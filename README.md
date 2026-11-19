@@ -21,7 +21,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 **Challenges**
 - ✅ Public (listé sur l'accueil) ou privé (sur invitation d'un créateur ou d'un participant).
 - ✅ Plusieurs créateurs possibles.
-- ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. Tout challenge a **toujours les 3 catégories** ; le créateur règle seulement l'incrément X (en km) de la catégorie 3.
+- ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. Tout challenge a **toujours les 3 catégories** ; le créateur règle l'incrément X (en km) de la catégorie 3 et peut changer les coefficients de distance de la catégorie 2 (voir Activités).
 - ✅ Début et fin selon le **fuseau du lieu de lancement** (ex. Montréal) : l'interface affiche les dates dans ce fuseau.
 - ✅ Après le début : titre et description modifiables, **catégories non modifiables**.
 
@@ -46,7 +46,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.
 - ✅ La vitesse (ou l'allure) n'est **jamais saisie** : l'interface affiche celle que l'API calcule à partir de la durée et de la distance.
 - 🟡 Les activités manuelles sont marquées « manuelle ».
-- ✅ Coefficients de distance : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API.
+- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; le créateur peut les changer à la création (0,1 à 2, deux décimales), la course restant ×1, puis ils sont figés.
 
 **Classement**
 - ✅ Mis à jour **au rafraîchissement** en V1 (pas de temps réel).
@@ -156,7 +156,7 @@ frontend/
 |---|---|
 | Entrée | Connexion / inscription, choix du pseudo et de l'avatar, langue |
 | Accueil | Challenges publics ouverts, mes challenges (en cours, à venir, terminés) |
-| Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → catégories et récapitulatif |
+| Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → catégories (incrément X, coefficients) → récapitulatif et envoi |
 | Challenge | Classement par catégorie (onglets), statut live (« objectif atteint », « à risque »), participants, activités, badges du challenge, infos, invitations |
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
 | Profil | Pseudo, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |

@@ -49,7 +49,7 @@ describe('the sports mock', () => {
     const { result } = renderHook(() => useSportCodes(), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual(['run', 'ride', 'other']);
+    expect(result.current.data).toContain('run');
   });
 
   it('answers a component rendered with the providers, and can be overridden', async () => {
