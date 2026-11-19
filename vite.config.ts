@@ -15,7 +15,12 @@ export default defineConfig(({ command }) => ({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/setupTests.ts'],
-    env: { VITE_API_URL: 'https://api.test' },
+    env: {
+      VITE_API_URL: 'https://api.test',
+      VITE_AUTH0_DOMAIN: 'auth.test',
+      VITE_AUTH0_CLIENT_ID: 'test-client-id',
+      VITE_AUTH0_AUDIENCE: 'https://api.test',
+    },
     // Without it, Vitest loads CSS as empty: tokens.test.ts reads the tokens.
     css: { include: [/tokens\.css/] },
   },
