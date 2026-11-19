@@ -125,6 +125,8 @@ export function ChallengeCreateWizard({
         .map(formFieldOf)
         .filter((field): field is string => field !== undefined);
       for (const field of fields) {
+        // formFieldOf only gives fields of this form (a factor of a listed
+        // sport at most): the cast names its type, it adds none.
         form.setError(field as FieldPath<ChallengeCreateInput>, {
           message: 'challengeCreate.fields.serverInvalid',
         });
