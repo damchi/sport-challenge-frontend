@@ -23,7 +23,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Plusieurs créateurs possibles.
 - ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. Tout challenge a **toujours les 3 catégories** ; le créateur règle l'incrément X (en km) de la catégorie 3 et peut changer les coefficients de distance de la catégorie 2 (voir Activités).
 - ✅ Début et fin selon le **fuseau du lieu de lancement** (ex. Montréal) : l'interface affiche les dates dans ce fuseau.
-- ✅ Après le début : titre et description modifiables, **catégories non modifiables**.
+- ✅ Catégories (incrément X et coefficients) **figées à la création** ; après le début, seuls le titre et la description restent modifiables.
 
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
@@ -32,15 +32,15 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ « Quitter » = **abandon** : éliminé de toutes les catégories, définitivement (affiché « a abandonné »). Un compte supprimé est traité de la même façon. Les créateurs peuvent supprimer le challenge, ajouter un créateur et exclure un participant.
 
 **Catégories** (3, un podium chacune)
-- **1. Temps cumulé** : toutes les activités, tous sports confondus ; plus de temps cumulé.
-- **2. Distance cumulée** : activités avec km, ramenées à une distance de course si le sport est plus rapide ; plus de distance équivalente.
-- **3. Course avec élimination** : course seule, en distance ; la distance d'une semaine doit être **au minimum** celle de la semaine précédente plus X km (incrément choisi à la création) ; si la personne court plus que le minimum, sa distance réelle devient la nouvelle base (X = 2 : 5 km, puis minimum 7 km ; 10 km courus, puis minimum 12 km). Éliminé de cette catégorie seulement ; pas d'élimination en semaine 1. Pendant la semaine, statut « objectif atteint », « en cours » ou « à risque ».
+- ✅ **1. Temps cumulé** : toutes les activités, tous sports confondus ; plus de temps cumulé.
+- ✅ **2. Distance cumulée** : activités avec km, ramenées à une distance de course si le sport est plus rapide ; plus de distance équivalente.
+- ✅ **3. Course avec élimination** : course seule, en distance ; la distance d'une semaine doit être **au minimum** celle de la semaine précédente plus X km (incrément choisi à la création) ; si la personne court plus que le minimum, sa distance réelle devient la nouvelle base (X = 2 : 5 km, puis minimum 7 km ; 10 km courus, puis minimum 12 km). Éliminé de cette catégorie seulement ; pas d'élimination en semaine 1. Pendant la semaine, statut « objectif atteint », « en cours » ou « à risque ».
 
 **Activités**
 - ✅ V1 : saisie manuelle uniquement.
 - ✅ La durée est toujours demandée ; la distance seulement pour les sports qui produisent des km (pas pour le yoga).
 - ✅ Une activité est saisie **une seule fois** et compte dans tous les challenges de l'utilisateur dont la fenêtre la contient (l'interface l'indique après l'enregistrement). Elle devient non modifiable dès que sa semaine est terminée dans l'un d'eux.
-- ✅ Si le sport n'est pas proposé, l'utilisateur choisit « Autre » et écrit un libellé libre (2 à 40 caractères). ✅ Ce sport compte pour le temps ; la distance est facultative et, si elle est saisie, il compte aussi pour la distance (🟡 coefficient ×1).
+- ✅ Si le sport n'est pas proposé, l'utilisateur choisit « Autre » et écrit un libellé libre (2 à 40 caractères). ✅ Ce sport compte pour le temps ; la distance est facultative et, si elle est saisie, il compte aussi pour la distance (✅ coefficient suggéré ×1, modifiable par le créateur comme les autres).
 - ✅ Impossible d'ajouter une activité après la fin du challenge.
 - ✅ Une semaine terminée est verrouillée : l'interface affiche l'échéance de la semaine (dans le fuseau du challenge), refuse une activité datée d'une semaine passée et ne permet plus de modifier ni de supprimer les activités de cette semaine.
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.

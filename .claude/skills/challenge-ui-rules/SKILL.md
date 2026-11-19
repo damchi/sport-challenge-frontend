@@ -49,7 +49,7 @@ Un participant apparaît dans les 3. Un onglet par catégorie, chacune avec son 
 
 ## Saisie d'activité
 
-- Choix du sport dans le catalogue de l'API ; option « Autre (préciser) » avec un libellé libre (2 à 40 caractères, affiché comme du texte). Un sport « autre » n'a pas de champ distance (🟡).
+- Choix du sport dans le catalogue de l'API ; option « Autre (préciser) » avec un libellé libre (2 à 40 caractères, affiché comme du texte). Un sport « autre » a une distance facultative (✅) : saisie, elle compte aussi pour la distance cumulée (coefficient suggéré ×1, modifiable par le créateur).
 - Après l'enregistrement, indique dans combien de challenges l'activité compte (une seule saisie pour tous).
 - Statuts de la catégorie 3 : n'écris pas la règle côté client ; l'API fournit le statut (`reached`, `at_risk`, `in_progress`, `eliminated`), le minimum et la fin de semaine. La **durée** est toujours demandée ; la **distance** seulement si le sport produit des km (pas pour le yoga).
 - La date doit être dans la fenêtre du challenge (bornes dans le fuseau du challenge) ; après la fin, le bouton d'ajout disparaît avec une explication.
