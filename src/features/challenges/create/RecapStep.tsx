@@ -3,7 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSports } from '../../../api/hooks/useSports';
-import { factorSports } from '../../../domain/challengeCreate';
+import { factorSports, sortSportsByName } from '../../../domain/challengeCreate';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { useSportName } from './useSportName';
@@ -30,10 +30,12 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
   // The steps before were checked: the values are valid.
   const values = useFormContext<ChallengeCreateInput>().getValues();
   const period = windowPreview(values.start_date, values.weeks, values.timezone, now, locale);
-  const factors = factorSports(sports.data ?? []).map(({ code, suggested_factor: suggested }) => ({
-    code,
-    text: `${sportName(code)} ${formatFactor(values.factors[code] ?? suggested, locale)}`,
-  }));
+  const factors = sortSportsByName(factorSports(sports.data ?? []), sportName, locale).map(
+    ({ code, suggested_factor: suggested }) => ({
+      code,
+      text: `${sportName(code)} ${formatFactor(values.factors[code] ?? suggested, locale)}`,
+    }),
+  );
   // A failed sending disables then frees the button: the focus goes to the
   // error, so the keyboard is not lost.
   const errorRef = useRef<HTMLParagraphElement>(null);

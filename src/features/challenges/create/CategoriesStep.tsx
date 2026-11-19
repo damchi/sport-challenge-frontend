@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSports } from '../../../api/hooks/useSports';
 import { ErrorState } from '../../../components/states/ErrorState';
 import { LoadingState } from '../../../components/states/LoadingState';
-import { factorSports } from '../../../domain/challengeCreate';
+import { factorSports, sortSportsByName } from '../../../domain/challengeCreate';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { FieldError } from './FieldError';
@@ -73,41 +73,43 @@ export function CategoriesStep({ factorsWaiting }: { factorsWaiting: boolean }) 
                 {t('challengeCreate.fields.factors.hint', { run: formatFactor(1, locale) })}
               </p>
               <ul className="mt-3 flex max-w-sm flex-col gap-3">
-                {factorSports(sports.data).map(({ code, suggested_factor: suggested }) => {
-                  const id = `factor-${code}`;
-                  const error = errors.factors?.[code]?.message;
-                  return (
-                    <li key={code}>
-                      <div className="flex items-center gap-3">
-                        <label htmlFor={id} className="min-w-0 flex-1">
-                          {sportName(code)}
-                        </label>
-                        <input
-                          id={id}
-                          type="number"
-                          inputMode="decimal"
-                          min={0.1}
-                          max={2}
-                          step={0.01}
-                          // Read by the form when the field first registers:
-                          // the catalogue's suggestion until the creator
-                          // changes it.
-                          defaultValue={suggested}
-                          aria-invalid={error ? true : undefined}
-                          aria-describedby={describedBy(id, error)}
-                          className={`${inputClass} mt-0 h-11 w-24 flex-none text-right`}
-                          {...register(`factors.${code}`, { valueAsNumber: true })}
-                        />
-                      </div>
-                      <p id={`${id}-hint`} className="mt-1 text-sm text-muted">
-                        {t('challengeCreate.fields.factors.suggested', {
-                          factor: formatFactor(suggested, locale),
-                        })}
-                      </p>
-                      <FieldError id={`${id}-error`} message={error} />
-                    </li>
-                  );
-                })}
+                {sortSportsByName(factorSports(sports.data), sportName, locale).map(
+                  ({ code, suggested_factor: suggested }) => {
+                    const id = `factor-${code}`;
+                    const error = errors.factors?.[code]?.message;
+                    return (
+                      <li key={code}>
+                        <div className="flex items-center gap-3">
+                          <label htmlFor={id} className="min-w-0 flex-1">
+                            {sportName(code)}
+                          </label>
+                          <input
+                            id={id}
+                            type="number"
+                            inputMode="decimal"
+                            min={0.1}
+                            max={2}
+                            step={0.01}
+                            // Read by the form when the field first registers:
+                            // the catalogue's suggestion until the creator
+                            // changes it.
+                            defaultValue={suggested}
+                            aria-invalid={error ? true : undefined}
+                            aria-describedby={describedBy(id, error)}
+                            className={`${inputClass} mt-0 h-11 w-24 flex-none text-right`}
+                            {...register(`factors.${code}`, { valueAsNumber: true })}
+                          />
+                        </div>
+                        <p id={`${id}-hint`} className="mt-1 text-sm text-muted">
+                          {t('challengeCreate.fields.factors.suggested', {
+                            factor: formatFactor(suggested, locale),
+                          })}
+                        </p>
+                        <FieldError id={`${id}-error`} message={error} />
+                      </li>
+                    );
+                  },
+                )}
               </ul>
             </fieldset>
           )}

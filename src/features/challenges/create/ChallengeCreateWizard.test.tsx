@@ -399,6 +399,18 @@ describe('ChallengeCreateWizard', () => {
       // The run is the reference: no field.
       expect(screen.queryByRole('spinbutton', { name: 'Course' })).not.toBeInTheDocument();
       expect(screen.queryByRole('spinbutton', { name: 'Yoga' })).not.toBeInTheDocument();
+      // By name, the free sport last.
+      expect(screen.getAllByRole('spinbutton').map((field) => field.getAttribute('id'))).toEqual([
+        'factor-rowing',
+        'factor-walk',
+        'factor-swim',
+        'factor-hike',
+        'factor-roller',
+        'factor-xc_ski',
+        'factor-ride',
+        'factor-other',
+        'elimination_step_km',
+      ]);
     });
 
     it('gives a worked example of X', async () => {
@@ -500,6 +512,7 @@ describe('ChallengeCreateWizard', () => {
       ).toBeInTheDocument();
       expect(screen.getByText('Incrément X : 2,5 km')).toBeInTheDocument();
       expect(screen.getByText('Course ×1 (référence)')).toBeInTheDocument();
+      expect(screen.getByText('Autre ×1').previousElementSibling).toHaveTextContent('Vélo ×0,3');
       expect(screen.getByText('Vélo ×0,3')).toBeInTheDocument();
       expect(
         screen.getByText('Les catégories ne pourront plus être modifiées après la création.'),

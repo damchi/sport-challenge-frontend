@@ -23,6 +23,21 @@ export function factorSports<S extends FactorSport>(
 }
 
 /**
+ * Sports in the order the user reads them: by name in their language, the
+ * free "other" sport last. `name` gives a sport's name.
+ */
+export function sortSportsByName<S extends { code: string }>(
+  sports: readonly S[],
+  name: (code: string) => string,
+  locale: string,
+): S[] {
+  const rank = (sport: S) => (sport.code === 'other' ? 1 : 0);
+  return [...sports].sort(
+    (a, b) => rank(a) - rank(b) || name(a.code).localeCompare(name(b.code), locale),
+  );
+}
+
+/**
  * The creation request. Only the factors the creator changed are sent: the
  * others keep the catalogue's suggestion. X goes in meters.
  */

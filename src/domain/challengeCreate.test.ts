@@ -1,4 +1,9 @@
-import { challengeCreateRequest, factorSports, formFieldOf } from './challengeCreate';
+import {
+  challengeCreateRequest,
+  factorSports,
+  formFieldOf,
+  sortSportsByName,
+} from './challengeCreate';
 
 const SPORTS = [
   { code: 'ride', suggested_factor: 0.3 },
@@ -23,6 +28,25 @@ const VALUES = {
 describe('factorSports', () => {
   it('keeps the distance sports but the run', () => {
     expect(factorSports(SPORTS).map(({ code }) => code)).toEqual(['ride', 'swim', 'other']);
+  });
+});
+
+describe('sortSportsByName', () => {
+  it('sorts by name in the language, the other sport last', () => {
+    const names: Record<string, string> = {
+      ride: 'Vélo',
+      swim: 'Natation',
+      other: 'Autre',
+      xc_ski: 'Ski de fond',
+      hike: 'Écrins',
+    };
+    const sorted = sortSportsByName(
+      ['ride', 'other', 'swim', 'xc_ski', 'hike'].map((code) => ({ code })),
+      (code) => names[code] ?? code,
+      'fr',
+    );
+    // "É" sorts with "E", before "N", in French.
+    expect(sorted.map(({ code }) => code)).toEqual(['hike', 'swim', 'xc_ski', 'ride', 'other']);
   });
 });
 
