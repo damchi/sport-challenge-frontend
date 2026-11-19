@@ -30,6 +30,15 @@ describe('routes', () => {
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 
+  it('shows no challenge to a signed-out visitor of the home page', () => {
+    const auth = createFakeAuth();
+    renderAt('/', auth);
+
+    expect(auth.signIn).toHaveBeenCalledWith('/');
+    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Publics' })).not.toBeInTheDocument();
+  });
+
   it('keeps /callback public', () => {
     const auth = createFakeAuth();
     renderAt('/callback', auth);
