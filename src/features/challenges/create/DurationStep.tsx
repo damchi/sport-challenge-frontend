@@ -66,7 +66,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           step={1}
           aria-invalid={weeksError ? true : undefined}
           aria-describedby={describedBy('weeks', weeksError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} h-11 w-full`}
           {...register('weeks', { valueAsNumber: true })}
         />
         <p id="weeks-hint" className="mt-1 text-sm text-muted">
@@ -83,7 +83,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           id="timezone"
           aria-invalid={timeZoneError ? true : undefined}
           aria-describedby={describedBy('timezone', timeZoneError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} h-11 w-full`}
           {...register('timezone', {
             // "Today" moves with the time zone: a date already entered is
             // checked again against it.
@@ -121,7 +121,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           max={today && addToDate(today, { years: 1 })}
           aria-invalid={startDateError ? true : undefined}
           aria-describedby={describedBy('start_date', startDateError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} h-11 w-full`}
           {...register('start_date')}
         />
         <p id="start_date-hint" className="mt-1 text-sm text-muted">

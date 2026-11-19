@@ -66,7 +66,7 @@ export function CategoriesStep() {
               <p id="factors-hint" className="mt-1 text-sm text-muted">
                 {t('challengeCreate.fields.factors.hint', { run: formatFactor(1, locale) })}
               </p>
-              <ul className="mt-3 flex flex-col gap-3">
+              <ul className="mt-3 flex max-w-sm flex-col gap-3">
                 {factorSports(sports.data).map(({ code, suggested_factor: suggested }) => {
                   const id = `factor-${code}`;
                   const error = errors.factors?.[code]?.message;
@@ -127,7 +127,7 @@ export function CategoriesStep() {
               step={0.1}
               aria-invalid={stepError ? true : undefined}
               aria-describedby={`${describedBy('elimination_step_km', stepError)} elimination-example`}
-              className={`${inputClass} h-11`}
+              className={`${inputClass} h-11 w-full`}
               {...register('elimination_step_km', { valueAsNumber: true })}
             />
             <p id="elimination_step_km-hint" className="mt-1 text-sm text-muted">

@@ -110,7 +110,8 @@ export function Wizard({
           type="submit"
           disabled={isLast && finish.busy}
           aria-busy={isLast && finish.busy ? true : undefined}
-          className="h-13 flex-1 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
+          // Whole line on a phone; its own width, on the right, from md.
+          className="ml-auto h-13 flex-1 rounded-full bg-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
         >
           {isLast ? (finish.busy ? finish.busyLabel : finish.label) : t('wizard.next')}
         </button>

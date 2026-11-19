@@ -26,7 +26,7 @@ export function InfoStep() {
           autoComplete="off"
           aria-invalid={titleError ? true : undefined}
           aria-describedby={describedBy('title', titleError)}
-          className={`${inputClass} h-11`}
+          className={`${inputClass} h-11 w-full`}
           {...register('title')}
         />
         <p id="title-hint" className="mt-1 text-sm text-muted">
@@ -44,7 +44,7 @@ export function InfoStep() {
           rows={4}
           aria-invalid={descriptionError ? true : undefined}
           aria-describedby={describedBy('description', descriptionError)}
-          className={`${inputClass} py-2`}
+          className={`${inputClass} w-full py-2`}
           {...register('description')}
         />
         <p id="description-hint" className="mt-1 text-sm text-muted">
