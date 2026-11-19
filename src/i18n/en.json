@@ -34,7 +34,7 @@
     "signInRequired": "Sign in to continue.",
     "accountDeleted": {
       "title": "Account deleted",
-      "message": "This account was deleted: you have been signed out. Your results in finished challenges stay listed under a neutral name.",
+      "message": "This account was deleted: you have been signed out.",
       "finish": "Finish"
     },
     "sessionUnavailable": {

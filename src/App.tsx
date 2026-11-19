@@ -4,8 +4,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import { createQueryClient } from './api/queryClient';
 import { useAuth } from './lib/auth/auth';
 import { Auth0AuthProvider } from './lib/auth/Auth0AuthProvider';
-import { createReauthGuard, resetReauthGuard } from './lib/auth/reauthGuard';
+import { createReauthGuard } from './lib/auth/reauthGuard';
 import {
+  sessionEndAction,
   useHandleLostSession,
   type AuthErrorEvent,
   type SessionEnd,
@@ -47,15 +48,6 @@ function AppContent() {
     onSessionEnd: setSessionEnd,
   });
 
-  const onSessionEndAction = () => {
-    if (sessionEnd === 'account_deleted') {
-      void auth.signOut();
-    } else {
-      resetReauthGuard();
-      window.location.assign('/');
-    }
-  };
-
   const dismiss = useCallback(() => setGlobalError(undefined), []);
   const globalErrorValue = useMemo(() => ({ error: globalError, dismiss }), [globalError, dismiss]);
 
@@ -63,7 +55,10 @@ function AppContent() {
     <QueryClientProvider client={queryClient}>
       <GlobalErrorContext.Provider value={globalErrorValue}>
         {sessionEnd ? (
-          <SessionEndPage reason={sessionEnd} onAction={onSessionEndAction} />
+          <SessionEndPage
+            reason={sessionEnd.reason}
+            onAction={() => sessionEndAction(sessionEnd, auth, reauth)}
+          />
         ) : (
           <RouterProvider router={router} />
         )}

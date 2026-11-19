@@ -34,7 +34,7 @@
     "signInRequired": "Connecte-toi pour continuer.",
     "accountDeleted": {
       "title": "Compte supprimé",
-      "message": "Ce compte a été supprimé : tu as été déconnecté. Tes résultats dans les défis terminés restent affichés sous un nom neutre.",
+      "message": "Ce compte a été supprimé : tu as été déconnecté.",
       "finish": "Terminer"
     },
     "sessionUnavailable": {

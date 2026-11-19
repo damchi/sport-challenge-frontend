@@ -2,7 +2,11 @@ import { act, renderHook } from '@testing-library/react';
 import { ApiError } from '../../api/errors';
 import { createFakeAuth } from '../../test/fakeAuth';
 import type { Auth } from './auth';
-import { useHandleLostSession, type AuthErrorEvent } from './useHandleLostSession';
+import {
+  sessionEndAction,
+  useHandleLostSession,
+  type AuthErrorEvent,
+} from './useHandleLostSession';
 
 const tokenExpired = new ApiError('token_expired', 401);
 
@@ -59,7 +63,10 @@ describe('useHandleLostSession', () => {
 
     expect(auth.signIn).not.toHaveBeenCalled();
     expect(auth.signOut).toHaveBeenCalledWith({ local: true });
-    expect(onSessionEnd).toHaveBeenCalledWith('unavailable');
+    expect(onSessionEnd).toHaveBeenCalledWith({
+      reason: 'unavailable',
+      returnTo: '/challenges/42',
+    });
   });
 
   it('signs out locally and reports a deleted account', () => {
@@ -69,7 +76,10 @@ describe('useHandleLostSession', () => {
     authError(new ApiError('account_deleted', 401));
 
     expect(clearCache).toHaveBeenCalledTimes(1);
-    expect(onSessionEnd).toHaveBeenCalledWith('account_deleted');
+    expect(onSessionEnd).toHaveBeenCalledWith({
+      reason: 'account_deleted',
+      returnTo: '/challenges/42',
+    });
     expect(auth.signOut).toHaveBeenCalledWith({ local: true });
     expect(auth.signIn).not.toHaveBeenCalled();
   });
@@ -108,5 +118,47 @@ describe('useHandleLostSession', () => {
     authError();
 
     expect(signIn).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets the next error try again when the local sign-out failed', async () => {
+    const signOut = vi.fn<Auth['signOut']>().mockRejectedValueOnce(new Error('failed'));
+    signOut.mockResolvedValue(undefined);
+    const { onSessionEnd, authError } = setup(createFakeAuth({ isAuthenticated: true, signOut }), {
+      reauthAllowed: false,
+    });
+
+    authError();
+    await act(() => Promise.resolve());
+    authError();
+
+    expect(onSessionEnd).toHaveBeenCalledTimes(2);
+    expect(signOut).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('sessionEndAction', () => {
+  const reauth = () => ({ allowed: vi.fn(() => true), record: vi.fn(), forget: vi.fn() });
+
+  it('ends the Auth0 session of a deleted account', async () => {
+    const auth = createFakeAuth();
+
+    await sessionEndAction(
+      { reason: 'account_deleted', returnTo: '/challenges/42' },
+      auth,
+      reauth(),
+    );
+
+    expect(auth.signOut).toHaveBeenCalledWith();
+    expect(auth.signIn).not.toHaveBeenCalled();
+  });
+
+  it('retries the sign-in back to the page in use, with the loop guard reset', async () => {
+    const auth = createFakeAuth();
+    const guard = reauth();
+
+    await sessionEndAction({ reason: 'unavailable', returnTo: '/challenges/42' }, auth, guard);
+
+    expect(guard.forget).toHaveBeenCalledTimes(1);
+    expect(auth.signIn).toHaveBeenCalledWith('/challenges/42');
   });
 });

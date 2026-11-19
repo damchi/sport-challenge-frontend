@@ -9,7 +9,11 @@ export interface AuthErrorEvent {
 }
 
 /** Why the session ended, when the app shows it instead of signing in again. */
-export type SessionEnd = 'account_deleted' | 'unavailable';
+export interface SessionEnd {
+  reason: 'account_deleted' | 'unavailable';
+  /** Page in use when it ended: a retry comes back to it. */
+  returnTo: string;
+}
 
 /** Remembers automatic re-sign-ins across page loads, to stop a loop. */
 export interface ReauthGuard {
@@ -26,7 +30,7 @@ interface LostSessionOptions {
   currentPath: () => string;
   reauth: ReauthGuard;
   /** The session ended for good: the app shows why instead of the pages. */
-  onSessionEnd: (reason: SessionEnd) => void;
+  onSessionEnd: (end: SessionEnd) => void;
 }
 
 /**
@@ -62,7 +66,10 @@ export function useHandleLostSession(
     const deleted =
       authError.error instanceof ApiError && authError.error.code === 'account_deleted';
     if (deleted || !reauth.allowed()) {
-      onSessionEnd(deleted ? 'account_deleted' : 'unavailable');
+      onSessionEnd({
+        reason: deleted ? 'account_deleted' : 'unavailable',
+        returnTo: currentPath(),
+      });
       auth.signOut({ local: true }).catch(allowNextAttempt);
     } else {
       reauth.record();
@@ -72,4 +79,15 @@ export function useHandleLostSession(
       });
     }
   }, [authError, auth, clearCache, currentPath, reauth, onSessionEnd]);
+}
+
+/**
+ * Action of the session-end screen: a deleted account ends the Auth0 session
+ * too; an unavailable session forgets the loop guard and signs in again,
+ * back to the page in use.
+ */
+export function sessionEndAction(end: SessionEnd, auth: Auth, reauth: ReauthGuard): Promise<void> {
+  if (end.reason === 'account_deleted') return auth.signOut();
+  reauth.forget();
+  return auth.signIn(end.returnTo);
 }
