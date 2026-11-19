@@ -153,6 +153,18 @@ describe('Auth0AuthProvider', () => {
     expect(await token).toBe('access-token');
   });
 
+  it('stops waiting for a session that never loads', async () => {
+    vi.useFakeTimers();
+    sdk.state = { ...sdk.state, isLoading: true, isAuthenticated: false, user: undefined };
+    const token = renderAuth().current.getAccessToken();
+    const failed = expect(token).rejects.toThrow('did not load in time');
+
+    await vi.advanceTimersByTimeAsync(15_000);
+
+    await failed;
+    vi.useRealTimers();
+  });
+
   it('throws a failure that is not a lost session', async () => {
     sdk.getAccessTokenSilently.mockRejectedValueOnce(
       Object.assign(new Error('Timeout'), { error: 'timeout' }),

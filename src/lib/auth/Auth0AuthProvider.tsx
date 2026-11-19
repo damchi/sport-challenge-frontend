@@ -23,6 +23,24 @@ function isSignedOutError(error: unknown): boolean {
   );
 }
 
+// Longest wait for the session to load before a token request fails (the
+// API client then reports network_error, which screens offer to retry).
+const SESSION_LOAD_TIMEOUT_MS = 15_000;
+
+function sessionLoaded(waiting: (() => void)[]): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      waiting.splice(waiting.indexOf(resume), 1);
+      reject(new Error('The session did not load in time'));
+    }, SESSION_LOAD_TIMEOUT_MS);
+    function resume() {
+      clearTimeout(timer);
+      resolve();
+    }
+    waiting.push(resume);
+  });
+}
+
 interface Auth0AuthProviderProps {
   config: Config['auth0'];
   /** Called after sign-in with the path to show (already checked). */
@@ -72,9 +90,7 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
       getAccessToken: async ({ forceRefresh = false } = {}) => {
         // While the session loads (silent sign-in after a reload), wait for it
         // rather than answer signed out.
-        if (session.current.isLoading) {
-          await new Promise<void>((resume) => waiting.current.push(resume));
-        }
+        if (session.current.isLoading) await sessionLoaded(waiting.current);
         if (!session.current.isAuthenticated) return undefined;
         try {
           return await getAccessTokenSilently({ cacheMode: forceRefresh ? 'off' : 'on' });
