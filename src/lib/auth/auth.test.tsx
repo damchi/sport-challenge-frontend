@@ -2,8 +2,12 @@ import { renderHook } from '@testing-library/react';
 import { safeReturnTo, useAuth } from './auth';
 
 describe('safeReturnTo', () => {
+  const origin = 'https://app.example';
+
   it('keeps a path of the app', () => {
-    expect(safeReturnTo('/challenges/42?tab=ranking')).toBe('/challenges/42?tab=ranking');
+    expect(safeReturnTo('/challenges/42?tab=ranking#top', origin)).toBe(
+      '/challenges/42?tab=ranking#top',
+    );
   });
 
   it.each([
@@ -13,8 +17,10 @@ describe('safeReturnTo', () => {
     'https://evil.example',
     '//evil.example',
     '/\\evil.example',
-  ])('falls back on the home page for %s', (value) => {
-    expect(safeReturnTo(value)).toBe('/');
+    '/\t/evil.example',
+    '/\n/evil.example',
+  ])('falls back on the home page for %j', (value) => {
+    expect(safeReturnTo(value, origin)).toBe('/');
   });
 });
 

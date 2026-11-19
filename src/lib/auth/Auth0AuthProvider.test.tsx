@@ -34,13 +34,17 @@ vi.mock('@auth0/auth0-react', () => ({
 
 const config = { domain: 'auth.test', clientId: 'client-id', audience: 'https://api.test' };
 
-function renderAuth(onRedirect = vi.fn()) {
+function renderAuthHook(onRedirect = vi.fn()) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <Auth0AuthProvider config={config} onRedirect={onRedirect}>
       {children}
     </Auth0AuthProvider>
   );
-  return renderHook(() => useAuth(), { wrapper }).result;
+  return renderHook(() => useAuth(), { wrapper });
+}
+
+function renderAuth(onRedirect = vi.fn()) {
+  return renderAuthHook(onRedirect).result;
 }
 
 function providerProps(): Auth0ProviderOptions {
@@ -131,6 +135,22 @@ describe('Auth0AuthProvider', () => {
       [{ cacheMode: 'on' }],
       [{ cacheMode: 'off' }],
     ]);
+  });
+
+  it('waits for the session to load before giving a token', async () => {
+    sdk.state = { ...sdk.state, isLoading: true, isAuthenticated: false, user: undefined };
+    const { result, rerender } = renderAuthHook();
+
+    const token = result.current.getAccessToken();
+    sdk.state = {
+      ...sdk.state,
+      isLoading: false,
+      isAuthenticated: true,
+      user: { sub: 'auth0|123' },
+    };
+    rerender();
+
+    expect(await token).toBe('access-token');
   });
 
   it('throws a failure that is not a lost session', async () => {

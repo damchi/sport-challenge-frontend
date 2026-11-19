@@ -33,11 +33,14 @@ export function useAuth(): Auth {
 }
 
 /**
- * Path to go back to after sign-in. Only a path of this app: an absolute or
- * protocol-relative address (`//evil.example`) would be an open redirect.
+ * Path to go back to after sign-in. Only a path of this app (`origin`): an
+ * absolute or protocol-relative address would be an open redirect. The value
+ * is resolved like the browser would (it drops tabs and newlines, reads `\\`
+ * as `/`), and kept only if it stays on the app's origin.
  */
-export function safeReturnTo(value: unknown): string {
-  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return '/';
-  if (value.includes('\\')) return '/';
-  return value;
+export function safeReturnTo(value: unknown, origin: string): string {
+  if (typeof value !== 'string' || !value.startsWith('/')) return '/';
+  const url = URL.parse(value, origin);
+  if (!url || url.origin !== origin) return '/';
+  return `${url.pathname}${url.search}${url.hash}`;
 }

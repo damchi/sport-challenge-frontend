@@ -1,6 +1,6 @@
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import i18n from 'i18next';
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { Config } from '../config';
 import { AuthContext, safeReturnTo, type Auth } from './auth';
 
@@ -42,6 +42,16 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
     revokeRefreshToken,
   } = useAuth0();
 
+  // Latest session state, read by getAccessToken whenever it is called (a
+  // client built once keeps the same function); callers waiting for the
+  // session to load resume when it does.
+  const session = useRef({ isLoading, isAuthenticated });
+  const waiting = useRef<(() => void)[]>([]);
+  useEffect(() => {
+    session.current = { isLoading, isAuthenticated };
+    if (!isLoading) waiting.current.splice(0).forEach((resume) => resume());
+  }, [isLoading, isAuthenticated]);
+
   const auth = useMemo<Auth>(
     () => ({
       isLoading,
@@ -50,7 +60,7 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
       hasError: error !== undefined,
       signIn: (returnTo) =>
         loginWithRedirect({
-          appState: { returnTo: safeReturnTo(returnTo) },
+          appState: { returnTo: safeReturnTo(returnTo, window.location.origin) },
           // The sign-in page speaks the app's language.
           authorizationParams: { ui_locales: i18n.language },
         }),
@@ -60,7 +70,12 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
         await logout({ logoutParams: { returnTo: window.location.origin } });
       },
       getAccessToken: async ({ forceRefresh = false } = {}) => {
-        if (!isAuthenticated) return undefined;
+        // While the session loads (silent sign-in after a reload), wait for it
+        // rather than answer signed out.
+        if (session.current.isLoading) {
+          await new Promise<void>((resume) => waiting.current.push(resume));
+        }
+        if (!session.current.isAuthenticated) return undefined;
         try {
           return await getAccessTokenSilently({ cacheMode: forceRefresh ? 'off' : 'on' });
         } catch (error) {
@@ -106,7 +121,9 @@ export function Auth0AuthProvider({ config, onRedirect, children }: Auth0AuthPro
       // Only /callback carries Auth0's code and state: another page may use a
       // `code` parameter of its own (an invitation...).
       skipRedirectCallback={window.location.pathname !== '/callback'}
-      onRedirectCallback={(appState) => onRedirect(safeReturnTo(appState?.returnTo))}
+      onRedirectCallback={(appState) =>
+        onRedirect(safeReturnTo(appState?.returnTo, window.location.origin))
+      }
     >
       <Auth0Bridge>{children}</Auth0Bridge>
     </Auth0Provider>
