@@ -23,4 +23,12 @@ describe('groupTimeZones', () => {
       { region: 'Other', zones: [{ id: 'UTC', city: 'UTC' }] },
     ]);
   });
+
+  it('puts the regions it does not name under Other', () => {
+    expect(
+      groupTimeZones(['US/Eastern', 'Etc/GMT+5', 'Europe/Paris', 'UTC']).map(
+        ({ region }) => region,
+      ),
+    ).toEqual(['Europe', 'Other']);
+  });
 });
