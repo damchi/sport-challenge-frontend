@@ -2,9 +2,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { msw } from 'msw/vite';
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
+export default defineConfig(({ command }) => ({
+  plugins: [
+    react(),
+    tailwindcss(),
+    // Serves the mock worker to the development server only: never in a build.
+    command === 'serve' && msw({ mode: 'worker-only' }),
+  ],
   test: {
     environment: 'jsdom',
     globals: true,
@@ -13,4 +19,4 @@ export default defineConfig({
     // Without it, Vitest loads CSS as empty: tokens.test.ts reads the tokens.
     css: { include: [/tokens\.css/] },
   },
-});
+}));

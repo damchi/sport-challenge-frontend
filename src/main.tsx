@@ -13,8 +13,18 @@ if (!rootElement) {
 
 const root = createRoot(rootElement);
 
+// Development mocks, before the first request; the DEV guard removes them, and
+// msw, from the production bundle.
+async function startMocks(): Promise<void> {
+  if (import.meta.env.DEV && import.meta.env.VITE_MOCKS === 'true') {
+    const mocks = await import('./mocks/browser');
+    await mocks.startMocks();
+  }
+}
+
 try {
   getConfig();
+  await startMocks();
   root.render(
     <StrictMode>
       <App />
