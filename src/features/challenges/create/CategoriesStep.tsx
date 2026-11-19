@@ -16,9 +16,10 @@ const EXAMPLE_STEP_KM = 2;
 /**
  * Step 3 of the creation: the 3 categories, always there. Only the increment
  * X of the run elimination and the distance factors (prefilled with the
- * catalogue's suggestions) are set here.
+ * catalogue's suggestions) are set here. `factorsWaiting`: Next was pressed
+ * before the factors could be shown, which the step explains.
  */
-export function CategoriesStep() {
+export function CategoriesStep({ factorsWaiting }: { factorsWaiting: boolean }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
@@ -50,6 +51,11 @@ export function CategoriesStep() {
           <p className="mt-1 text-sm text-muted">
             {t('challengeCreate.categories.distance.explanation')}
           </p>
+          {factorsWaiting && !sports.isSuccess && (
+            <p role="alert" className="mt-3 text-sm text-risk-fg">
+              {t('challengeCreate.fields.factors.waiting')}
+            </p>
+          )}
           {sports.isPending ? (
             <div className="mt-3">
               <LoadingState />

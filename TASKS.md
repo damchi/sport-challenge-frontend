@@ -379,7 +379,7 @@ Total : **147 points** (46 tickets), dont **134 pour la V1** ; les 13 points de 
 `F4` · Story · Phase 4 · Estimation 5 · Dépend de : 022 · Backend : `POST /challenges` (SC-API-029)
 
 **Critères d'acceptation**
-- [ ] Étape 3 : les **3 catégories** sont affichées comme fixes (temps cumulé, distance cumulée, course avec élimination) avec une explication courte de chacune ; l'**incrément X** (en km, supérieur à 0, 100 au plus ; ✅ une décimale au plus, décision du 2026-11-19) de la catégorie 3 est saisi, ainsi que les coefficients de la catégorie 2 (voir ci-dessous), avec un exemple chiffré (« X = 2 : 5 km en semaine 1, au moins 7 km en semaine 2… »).
+- [ ] Étape 3 : les **3 catégories** sont affichées comme fixes (temps cumulé, distance cumulée, course avec élimination) avec une explication courte de chacune ; l'**incrément X** (en km, supérieur à 0, 100 au plus ; ✅ une décimale au plus : choix d'interface du porteur du projet le 2026-11-19, plus strict que le contrat en mètres entiers) de la catégorie 3 est saisi, ainsi que les coefficients de la catégorie 2 (voir ci-dessous), avec un exemple chiffré (« X = 2 : 5 km en semaine 1, au moins 7 km en semaine 2… »).
 - [ ] Récapitulatif complet avec avertissement : « les catégories ne pourront plus être modifiées ».
 - [ ] Envoi : bouton désactivé pendant la requête ; succès : redirection vers le challenge ; erreurs traduites par champ (`validation_failed`, `profile_incomplete`).
 - [ ] Les coefficients de la catégorie 2 sont pré-remplis par les suggestions de l'API des sports et ✅ modifiables par le créateur (0,1 à 2, deux décimales ; course fixe à ×1) ; seuls ceux qu'il change sont envoyés (décision du 2026-11-19, alignée sur le README backend §2.4).

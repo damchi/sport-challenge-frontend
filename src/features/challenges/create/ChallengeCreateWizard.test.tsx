@@ -467,14 +467,24 @@ describe('ChallengeCreateWizard', () => {
       type(stepKm(), '2');
       await screen.findByRole('button', { name: 'Réessayer' });
       next();
-      // The factors must be seen first: the step stays.
-      await waitFor(() => expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument());
+      // The factors must be seen first: the step stays, and says why.
+      expect(
+        await screen.findByText(
+          "Les coefficients doivent s'afficher avant de continuer : patiente ou réessaie.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Étape 3 sur 4')).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'Récapitulatif' })).not.toBeInTheDocument();
 
       fail = false;
       fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
 
       expect(await screen.findByRole('spinbutton', { name: 'Vélo' })).toHaveValue(0.3);
+      expect(
+        screen.queryByText(
+          "Les coefficients doivent s'afficher avant de continuer : patiente ou réessaie.",
+        ),
+      ).not.toBeInTheDocument();
     });
   });
 

@@ -209,7 +209,8 @@
         "label": "Distance factors",
         "hint": "Suggested by the app; you can change them, from 0.1 to 2. Running always counts {{run}}.",
         "suggested": "Suggested: {{factor}}",
-        "range": "The factor must be from 0.1 to 2, with two decimals at most."
+        "range": "The factor must be from 0.1 to 2, with two decimals at most.",
+        "waiting": "The factors must show before you go on: wait or try again."
       },
       "serverInvalid": "Value refused. Check it, then send the challenge again."
     },

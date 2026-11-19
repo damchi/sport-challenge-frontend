@@ -65,6 +65,8 @@ export function ChallengeCreateWizard({
   const createChallenge = useCreateChallenge();
   const [createdId, setCreatedId] = useState<string>();
   const [submitError, setSubmitError] = useState<string>();
+  // Next was pressed before the factors could be shown.
+  const [factorsWaiting, setFactorsWaiting] = useState(false);
   // Set at once, unlike the mutation's state: a second click in the same
   // instant sends nothing.
   const sending = useRef(false);
@@ -157,12 +159,16 @@ export function ChallengeCreateWizard({
     }
   };
 
-  const validateStep = (index: number) => {
-    // The factors are seen before going on: not while the catalogue is
-    // loading or failed (the step shows it, with a retry).
-    if (index === 2 && !sports.isSuccess) return Promise.resolve(false);
+  const validateStep = async (index: number) => {
     const fields = STEP_FIELDS[index];
-    return fields ? form.trigger(fields, { shouldFocus: true }) : Promise.resolve(true);
+    const valid = fields ? await form.trigger(fields, { shouldFocus: true }) : true;
+    // The factors are seen before going on: not while the catalogue is
+    // loading or failed. The step then says why it stays.
+    if (fields?.some((field) => field === 'factors') && !sports.isSuccess) {
+      setFactorsWaiting(true);
+      return false;
+    }
+    return valid;
   };
 
   return (
@@ -174,7 +180,10 @@ export function ChallengeCreateWizard({
             title: t('challengeCreate.steps.duration'),
             content: <DurationStep now={now} timeZones={timeZones} />,
           },
-          { title: t('challengeCreate.steps.categories'), content: <CategoriesStep /> },
+          {
+            title: t('challengeCreate.steps.categories'),
+            content: <CategoriesStep factorsWaiting={factorsWaiting} />,
+          },
           {
             title: t('challengeCreate.steps.recap'),
             content: <RecapStep now={now} error={submitError} />,

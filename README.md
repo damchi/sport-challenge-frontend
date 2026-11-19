@@ -23,7 +23,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Plusieurs créateurs possibles.
 - ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. Tout challenge a **toujours les 3 catégories** ; le créateur règle l'incrément X (en km) de la catégorie 3 et peut changer les coefficients de distance de la catégorie 2 (voir Activités).
 - ✅ Début et fin selon le **fuseau du lieu de lancement** (ex. Montréal) : l'interface affiche les dates dans ce fuseau.
-- ✅ Catégories (incrément X et coefficients) **figées à la création** ; après le début, seuls le titre et la description restent modifiables.
+- ✅ Catégories (incrément X et coefficients) **figées à la création** (README backend §2.3, §2.4) ; après le début, seuls le titre et la description restent modifiables.
 
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
@@ -40,13 +40,13 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ V1 : saisie manuelle uniquement.
 - ✅ La durée est toujours demandée ; la distance seulement pour les sports qui produisent des km (pas pour le yoga).
 - ✅ Une activité est saisie **une seule fois** et compte dans tous les challenges de l'utilisateur dont la fenêtre la contient (l'interface l'indique après l'enregistrement). Elle devient non modifiable dès que sa semaine est terminée dans l'un d'eux.
-- ✅ Si le sport n'est pas proposé, l'utilisateur choisit « Autre » et écrit un libellé libre (2 à 40 caractères). ✅ Ce sport compte pour le temps ; la distance est facultative et, si elle est saisie, il compte aussi pour la distance (✅ coefficient suggéré ×1, modifiable par le créateur comme les autres).
+- ✅ Si le sport n'est pas proposé, l'utilisateur choisit « Autre » et écrit un libellé libre (2 à 40 caractères). ✅ Ce sport compte pour le temps ; la distance est facultative et, si elle est saisie, il compte aussi pour la distance (✅ coefficient suggéré ×1, modifiable par le créateur comme les autres ; README backend §2.5).
 - ✅ Impossible d'ajouter une activité après la fin du challenge.
 - ✅ Une semaine terminée est verrouillée : l'interface affiche l'échéance de la semaine (dans le fuseau du challenge), refuse une activité datée d'une semaine passée et ne permet plus de modifier ni de supprimer les activités de cette semaine.
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.
 - ✅ La vitesse (ou l'allure) n'est **jamais saisie** : l'interface affiche celle que l'API calcule à partir de la durée et de la distance.
 - 🟡 Les activités manuelles sont marquées « manuelle ».
-- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; le créateur peut les changer à la création (0,1 à 2, deux décimales), la course restant ×1, puis ils sont figés.
+- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; le créateur peut les changer à la création (0,1 à 2, deux décimales), la course restant ×1, puis ils sont figés (README backend §2.4).
 
 **Classement**
 - ✅ Mis à jour **au rafraîchissement** en V1 (pas de temps réel).

@@ -210,7 +210,8 @@
         "label": "Coefficients de distance",
         "hint": "Proposés par l'application ; tu peux les changer, de 0,1 à 2. La course compte toujours {{run}}.",
         "suggested": "Proposé : {{factor}}",
-        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus."
+        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus.",
+        "waiting": "Les coefficients doivent s'afficher avant de continuer : patiente ou réessaie."
       },
       "serverInvalid": "Valeur refusée. Vérifie-la, puis renvoie le défi."
     },
