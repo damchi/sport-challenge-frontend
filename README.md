@@ -156,7 +156,7 @@ frontend/
 |---|---|
 | Entrée | Connexion / inscription, choix du pseudo et de l'avatar, langue |
 | Accueil | Challenges publics ouverts, mes challenges (en cours, à venir, terminés) |
-| Création | Assistant en étapes : infos → durée et fuseau → catégories → visibilité et invitations |
+| Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → catégories et récapitulatif |
 | Challenge | Classement par catégorie (onglets), statut live (« objectif atteint », « à risque »), participants, activités, badges du challenge, infos, invitations |
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
 | Profil | Pseudo, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |

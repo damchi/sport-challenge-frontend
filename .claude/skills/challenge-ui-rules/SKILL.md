@@ -21,7 +21,7 @@ Un participant apparaît dans les 3. Un onglet par catégorie, chacune avec son 
 
 ## Création et édition
 
-- Assistant : infos → durée et **fuseau** (proposer celui du lieu de lancement, ex. Montréal) → paramètres des catégories (incrément X en km pour la catégorie 3, ex. 2 km) → visibilité (public ou privé) → « les invités peuvent inviter ».
+- Assistant en 3 étapes : infos (titre, description, visibilité publique ou privée, « les participants peuvent inviter ») → durée et **fuseau** (proposer celui du lieu de lancement, ex. Montréal) → paramètres des catégories (incrément X en km pour la catégorie 3, ex. 2 km) et récapitulatif.
 - Durée en **nombre de semaines** (2 à 52), jamais en dates libres ; les 3 catégories sont toujours présentes (non décochables).
 - Récapitulatif avant validation : dates affichées dans le fuseau choisi, avertissement que les catégories ne seront plus modifiables.
 - Après le début : seuls le titre et la description sont éditables ; les catégories sont affichées en lecture seule.
