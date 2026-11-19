@@ -8,6 +8,7 @@
   },
   "errors": {
     "app_unavailable": "The app is temporarily unavailable.",
+    "challenge_not_found": "This challenge doesn't exist or you don't have access to it.",
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
@@ -259,6 +260,31 @@
       "message": "What you entered is not saved: it will be lost.",
       "confirm": "Leave",
       "cancel": "Keep editing"
+    }
+  },
+  "challengeDetail": {
+    "title": "Challenge",
+    "back": "Challenges",
+    "timeZone": "Challenge time zone: {{zone}}",
+    "week": "Week {{week}}",
+    "weekEnds": "Week ends {{date}}",
+    "weekEnds_zone": "Week ends {{date}}, {{zone}}",
+    "registrationOpen": "Registration open until {{date}}.",
+    "registrationOpen_zone": "Registration open until {{date}}, {{zone}}.",
+    "categories": {
+      "title": "Categories",
+      "frozen": "Set at creation, they no longer change."
+    },
+    "tabs": {
+      "label": "Challenge sections",
+      "leaderboard": "Leaderboard",
+      "participants": "Participants",
+      "activities": "Activities",
+      "pending": "This section is coming soon."
+    },
+    "notFound": {
+      "title": "Challenge not found",
+      "message": "This challenge doesn't exist or you don't have access to it."
     }
   },
   "sports": {

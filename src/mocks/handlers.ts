@@ -14,6 +14,8 @@ type ChallengeCreate = components['schemas']['ChallengeCreate'];
 type Me = components['schemas']['Me'];
 type ChallengeSummary = components['schemas']['ChallengeSummary'];
 type ChallengePage = components['schemas']['ChallengePage'];
+type ChallengeDetail = components['schemas']['ChallengeDetail'];
+type ApiErrorBody = components['schemas']['Error'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
 export const mockMe: Me = {
@@ -51,6 +53,41 @@ export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_,
 
 const PAGE_SIZE = 20;
 
+/**
+ * A challenge of the list as the detail route answers it. The server fields
+ * are fixed values of November 2026 (week 3 of 4 when ongoing), not
+ * computed from the clock: tests that need others override the route.
+ */
+export function mockChallengeDetail(summary: ChallengeSummary): ChallengeDetail {
+  const ongoing = summary.status === 'ongoing';
+  return {
+    id: summary.id,
+    title: summary.title,
+    description: 'Un mois pour bouger ensemble.\nToutes les activités comptent.',
+    visibility: summary.visibility,
+    members_can_invite: true,
+    timezone: summary.timezone,
+    starts_at: summary.starts_at,
+    ends_at: summary.ends_at,
+    categories: [
+      { type: 'cumulative_time', position: 1, params: {} },
+      {
+        type: 'cumulative_distance',
+        position: 2,
+        params: { factors: { run: 1, ride: 0.3, rowing: 0.5, walk: 1 } },
+      },
+      { type: 'run_elimination', position: 3, params: { sport: 'run', step_meters: 2000 } },
+    ],
+    my_role: summary.my_role,
+    my_status: summary.my_status,
+    status: summary.status,
+    can_join: summary.my_role === 'outsider' && summary.status === 'upcoming',
+    registration_deadline: '2026-11-09T05:00:00Z',
+    current_week: ongoing ? 3 : null,
+    week_ends_at: ongoing ? '2026-11-23T05:00:00Z' : null,
+  };
+}
+
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   // The cursor is the index of the next item; `mine` keeps the challenges
@@ -67,6 +104,17 @@ export const handlers = [
     const items = filtered.slice(from, from + PAGE_SIZE);
     const next = from + PAGE_SIZE < filtered.length ? String(from + PAGE_SIZE) : null;
     return HttpResponse.json<ChallengePage>({ items, next_cursor: next });
+  }),
+  // An unknown id answers like a deleted or hidden challenge.
+  http.get('*/api/v1/challenges/:challengeId', ({ params }) => {
+    const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<ChallengeDetail>(mockChallengeDetail(summary));
   }),
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>

@@ -61,6 +61,20 @@ export function challengeWindowBounds(
   return { start: format.format(startsAt), end: format.format(endsAt) };
 }
 
+/**
+ * An instant of a challenge (end of a week, of the registrations) as written
+ * in its time zone, to the hour: "lundi 23 novembre à 00 h".
+ */
+export function challengeInstant(instant: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    hour: 'numeric',
+  }).format(new Date(instant));
+}
+
 /** Name of a time zone that holds all year ("heure de l'Est nord-américain"). */
 export function timeZoneName(timeZone: string, locale: string): string {
   const parts = new Intl.DateTimeFormat(locale, {

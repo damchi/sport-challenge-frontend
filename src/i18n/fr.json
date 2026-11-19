@@ -8,6 +8,7 @@
   },
   "errors": {
     "app_unavailable": "L'application est momentanément indisponible.",
+    "challenge_not_found": "Ce défi n'existe pas ou tu n'y as pas accès.",
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
@@ -261,6 +262,31 @@
       "message": "Ta saisie n'est pas enregistrée : elle sera perdue.",
       "confirm": "Quitter",
       "cancel": "Continuer la saisie"
+    }
+  },
+  "challengeDetail": {
+    "title": "Défi",
+    "back": "Défis",
+    "timeZone": "Fuseau du défi : {{zone}}",
+    "week": "Semaine {{week}}",
+    "weekEnds": "Fin de la semaine : {{date}}",
+    "weekEnds_zone": "Fin de la semaine : {{date}}, {{zone}}",
+    "registrationOpen": "Inscriptions ouvertes jusqu'au {{date}}.",
+    "registrationOpen_zone": "Inscriptions ouvertes jusqu'au {{date}}, {{zone}}.",
+    "categories": {
+      "title": "Catégories",
+      "frozen": "Fixées à la création, elles ne changent plus."
+    },
+    "tabs": {
+      "label": "Sections du défi",
+      "leaderboard": "Classement",
+      "participants": "Participants",
+      "activities": "Activités",
+      "pending": "Cette section arrive bientôt."
+    },
+    "notFound": {
+      "title": "Défi introuvable",
+      "message": "Ce défi n'existe pas ou tu n'y as pas accès."
     }
   },
   "sports": {
