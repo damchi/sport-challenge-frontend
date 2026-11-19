@@ -28,9 +28,15 @@ export function RequireAuth() {
     });
   }, [mustSignIn, auth, returnTo]);
 
+  // One redirect at a time: a double click must not start two sign-ins.
+  const [pending, setPending] = useState(false);
   const retry = () => {
     setFailed(false);
-    auth.signIn(returnTo).catch(() => setFailed(true));
+    setPending(true);
+    auth.signIn(returnTo).catch(() => {
+      setFailed(true);
+      setPending(false);
+    });
   };
 
   if (auth.isAuthenticated) return <Outlet />;
@@ -45,7 +51,8 @@ export function RequireAuth() {
           <button
             type="button"
             onClick={retry}
-            className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+            disabled={pending}
+            className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
           >
             {t('auth.signIn')}
           </button>

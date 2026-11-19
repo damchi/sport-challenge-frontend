@@ -12,6 +12,18 @@ describe('SessionEndPage', () => {
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
+  it('runs the action once, even on a double click', () => {
+    const onAction = vi.fn(() => new Promise<void>(() => undefined));
+    render(<SessionEndPage reason="account_deleted" onAction={onAction} />);
+
+    const button = screen.getByRole('button', { name: 'Terminer' });
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(button).toBeDisabled();
+  });
+
   it('keeps the button when the action cannot start', async () => {
     render(
       <SessionEndPage reason="unavailable" onAction={() => Promise.reject(new Error('offline'))} />,

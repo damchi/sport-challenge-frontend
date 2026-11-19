@@ -13,9 +13,15 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
   const { t } = useTranslation();
   // The action could not start (network...): the button stays to try again.
   const [failed, setFailed] = useState(false);
+  // One action at a time: a double click must not sign out or redirect twice.
+  const [pending, setPending] = useState(false);
   const act = () => {
     setFailed(false);
-    onAction().catch(() => setFailed(true));
+    setPending(true);
+    onAction().catch(() => {
+      setFailed(true);
+      setPending(false);
+    });
   };
   const texts =
     reason === 'account_deleted'
@@ -39,7 +45,8 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
       <button
         type="button"
         onClick={act}
-        className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+        disabled={pending}
+        className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
       >
         {texts.action}
       </button>
