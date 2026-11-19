@@ -1,35 +1,9 @@
-import {
-  Ban,
-  CalendarClock,
-  Check,
-  Crown,
-  Flag,
-  Globe,
-  Lock,
-  Play,
-  type LucideIcon,
-} from 'lucide-react';
+import { Globe, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { ChallengeSummary } from '../../api/hooks/useChallenges';
-import { StatusPill } from '../../components/StatusPill';
 import { challengePeriod, otherTimeZoneName } from '../../domain/format/challengeDates';
-
-type Role = ChallengeSummary['my_role'];
-type Status = ChallengeSummary['status'];
-
-// My role as the server gives it; invited and outsider show nothing.
-const ROLE_PILLS: Partial<Record<Role, { Icon: LucideIcon; tone: 'ok' | 'out' }>> = {
-  creator: { Icon: Crown, tone: 'ok' },
-  participant: { Icon: Check, tone: 'ok' },
-  abandoned: { Icon: Ban, tone: 'out' },
-};
-
-const STATUS_ICONS: Record<Status, LucideIcon> = {
-  upcoming: CalendarClock,
-  ongoing: Play,
-  finished: Flag,
-};
+import { ChallengeStatusPill, RolePills } from './ChallengePills';
 
 interface ChallengeCardProps {
   challenge: ChallengeSummary;
@@ -53,7 +27,6 @@ export function ChallengeCard({ challenge, showStatus }: ChallengeCardProps) {
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zone = otherTimeZoneName(challenge.timezone, userTimeZone, locale);
   const VisibilityIcon = challenge.visibility === 'public' ? Globe : Lock;
-  const role = ROLE_PILLS[challenge.my_role];
 
   return (
     <Link
@@ -63,26 +36,12 @@ export function ChallengeCard({ challenge, showStatus }: ChallengeCardProps) {
       <div className="flex items-start justify-between gap-3">
         <h2 className="font-display text-lg font-bold">{challenge.title}</h2>
         <div className="flex shrink-0 flex-wrap justify-end gap-1">
-          {role && (
-            <StatusPill
-              label={t(`challenges.role.${challenge.my_role}`)}
-              Icon={role.Icon}
-              tone={role.tone}
-            />
-          )}
-          {/* A creator who abandoned keeps the role but no longer competes. */}
-          {challenge.my_role === 'creator' && challenge.my_status === 'abandoned' && (
-            <StatusPill label={t('challenges.role.abandoned')} Icon={Ban} tone="out" />
-          )}
+          <RolePills role={challenge.my_role} status={challenge.my_status} />
         </div>
       </div>
       {showStatus && (
         <div className="mt-2">
-          <StatusPill
-            label={t(`challenges.challengeStatus.${challenge.status}`)}
-            Icon={STATUS_ICONS[challenge.status]}
-            tone="neutral"
-          />
+          <ChallengeStatusPill status={challenge.status} />
         </div>
       )}
       <p className="mt-2 text-sm text-muted">

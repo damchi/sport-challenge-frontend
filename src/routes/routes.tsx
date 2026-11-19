@@ -1,7 +1,9 @@
 import type { RouteObject } from 'react-router';
+import { TabPending } from '../features/challenges/detail/TabPending';
 import { ActivitiesPage } from '../pages/ActivitiesPage';
 import { CallbackPage } from '../pages/CallbackPage';
 import { ChallengeCreatePage } from '../pages/ChallengeCreatePage';
+import { ChallengePage } from '../pages/ChallengePage';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { OnboardingPage } from '../pages/OnboardingPage';
@@ -39,6 +41,17 @@ export const routes: RouteObject[] = [
                     path: '/challenges/new',
                     element: <ChallengeCreatePage />,
                     handle: title('challengeCreate.title'),
+                  },
+                  {
+                    // Sections of the challenge: the leaderboard is its first page.
+                    path: '/challenges/:challengeId',
+                    element: <ChallengePage />,
+                    handle: title('challengeDetail.title'),
+                    children: [
+                      { index: true, element: <TabPending /> },
+                      { path: 'participants', element: <TabPending /> },
+                      { path: 'activities', element: <TabPending /> },
+                    ],
                   },
                   {
                     path: '/activities',

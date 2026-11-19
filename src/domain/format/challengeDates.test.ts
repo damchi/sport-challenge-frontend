@@ -1,4 +1,5 @@
 import {
+  challengeInstant,
   challengePeriod,
   challengeWindowBounds,
   otherTimeZoneName,
@@ -91,5 +92,21 @@ describe('timeZoneName', () => {
   it('names the time zone without its summer or winter time', () => {
     expect(timeZoneName('America/Toronto', 'fr')).toBe('heure de l’Est nord-américain');
     expect(timeZoneName('America/Toronto', 'en')).toBe('Eastern Time');
+  });
+});
+
+describe('challengeInstant', () => {
+  // End of a week in Montréal: Monday 23 November 2026, local midnight.
+  const weekEnd = '2026-11-23T05:00:00Z';
+
+  it('writes the instant to the hour in the challenge time zone', () => {
+    expect(challengeInstant(weekEnd, 'America/Montreal', 'fr')).toBe('lundi 23 novembre à 00 h');
+    expect(challengeInstant(weekEnd, 'America/Montreal', 'en')).toBe(
+      'Monday, November 23 at 12 AM',
+    );
+  });
+
+  it('does not take the hour of another time zone', () => {
+    expect(challengeInstant(weekEnd, 'Europe/Paris', 'fr')).toBe('lundi 23 novembre à 06 h');
   });
 });

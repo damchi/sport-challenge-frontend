@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
 import { useApiClient } from '../ApiClientContext';
 import type { components } from '../generated/schema';
@@ -6,6 +6,7 @@ import { queryKeys } from '../queryKeys';
 
 export type ChallengeSummary = components['schemas']['ChallengeSummary'];
 export type ChallengeCreate = components['schemas']['ChallengeCreate'];
+export type ChallengeDetail = components['schemas']['ChallengeDetail'];
 
 /**
  * Challenges of a list, page by page (cursor): `fetchNextPage` loads the
@@ -25,6 +26,26 @@ export function useChallenges(scope: ChallengeScope, status: ChallengeStatus | u
       return data;
     },
     getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+}
+
+/**
+ * A challenge as the user sees it: its categories, my role and the fields the
+ * server computes from the current instant (can_join, current week). A
+ * missing, deleted or hidden challenge fails with the same 404.
+ */
+export function useChallenge(challengeId: string) {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.challenges.detail(challengeId),
+    queryFn: async ({ signal }) => {
+      const { data } = await client.GET('/api/v1/challenges/{challengeId}', {
+        params: { path: { challengeId } },
+        signal,
+      });
+      if (!data) throw new Error('Empty challenge response');
+      return data;
+    },
   });
 }
 
