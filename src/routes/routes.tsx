@@ -1,27 +1,48 @@
 import type { RouteObject } from 'react-router';
+import { ActivitiesPage } from '../pages/ActivitiesPage';
 import { CallbackPage } from '../pages/CallbackPage';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { OnboardingPage } from '../pages/OnboardingPage';
+import { ProfilePage } from '../pages/ProfilePage';
+import { AppShell } from './AppShell';
 import { ProfileGate } from './ProfileGate';
 import { RequireAuth } from './RequireAuth';
 import { RootLayout } from './RootLayout';
+import type { RouteHandle } from './routeHandle';
+
+const title = (titleKey: string): RouteHandle => ({ titleKey });
 
 export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
     children: [
       // Public: it finishes the sign-in.
-      { path: '/callback', element: <CallbackPage /> },
+      { path: '/callback', element: <CallbackPage />, handle: title('auth.callback.title') },
       {
         element: <RequireAuth />,
         children: [
           {
             element: <ProfileGate />,
             children: [
-              { path: '/', element: <HomePage /> },
-              { path: '/onboarding', element: <OnboardingPage /> },
-              { path: '*', element: <NotFoundPage /> },
+              {
+                path: '/onboarding',
+                element: <OnboardingPage />,
+                handle: title('onboarding.title'),
+              },
+              {
+                element: <AppShell />,
+                children: [
+                  { path: '/', element: <HomePage />, handle: title('nav.challenges') },
+                  {
+                    path: '/activities',
+                    element: <ActivitiesPage />,
+                    handle: title('activities.title'),
+                  },
+                  { path: '/me', element: <ProfilePage />, handle: title('nav.profile') },
+                  { path: '*', element: <NotFoundPage />, handle: title('notFound.title') },
+                ],
+              },
             ],
           },
         ],

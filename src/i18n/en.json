@@ -65,5 +65,24 @@
       "taken": "This nickname is already taken. Try another one.",
       "invalid": "This nickname is not accepted. Try another one."
     }
+  },
+  "nav": {
+    "label": "Main navigation",
+    "challenges": "Challenges",
+    "activities": "Activities",
+    "profile": "Profile"
+  },
+  "activities": {
+    "title": "My activities",
+    "empty": "Your activities will appear here."
+  },
+  "settings": {
+    "theme": {
+      "label": "Theme",
+      "system": "Like the device",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "signOut": "Sign out"
   }
 }

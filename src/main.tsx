@@ -4,6 +4,7 @@ import { getConfig } from './lib/config';
 import './styles/index.css';
 import i18n from 'i18next';
 import { startLanguage } from './lib/language';
+import { startTheme } from './lib/theme';
 import { App } from './App';
 
 const rootElement = document.getElementById('root');
@@ -13,6 +14,7 @@ if (!rootElement) {
 
 // Before anything renders: the error screen below is translated too.
 startLanguage();
+startTheme();
 const root = createRoot(rootElement);
 
 // Development mocks, before the first request; the DEV guard removes them, and
@@ -37,7 +39,7 @@ try {
   // developer, shown in development only; users get a generic message.
   // The error stays in the console either way.
   root.render(
-    <main className="mx-auto max-w-page px-5 py-8">
+    <main className="mx-auto w-full max-w-page px-5 py-8 lg:max-w-wide lg:px-8">
       {import.meta.env.DEV ? (
         <pre className="whitespace-pre-wrap text-ink">{String(error)}</pre>
       ) : (

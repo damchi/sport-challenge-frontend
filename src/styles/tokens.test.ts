@@ -11,8 +11,8 @@ function colorsIn(block: string): Palette {
   return palette;
 }
 
-// Light tokens live in the @theme block, dark ones in the :root of the dark
-// media query; a missing block fails the tests instead of an empty palette.
+// Light tokens live in the @theme block, dark ones in :root[data-theme='dark'];
+// a missing block fails the tests instead of an empty palette.
 function blockBody(pattern: RegExp): string {
   const body = pattern.exec(tokensCss)?.[1];
   if (!body) throw new Error(`No block matching ${pattern} in tokens.css`);
@@ -21,7 +21,7 @@ function blockBody(pattern: RegExp): string {
 
 const themes = {
   light: colorsIn(blockBody(/@theme\s*\{([^}]*)\}/)),
-  dark: colorsIn(blockBody(/@media \(prefers-color-scheme: dark\)\s*\{\s*:root\s*\{([^}]*)\}/)),
+  dark: colorsIn(blockBody(/:root\[data-theme='dark'\]\s*\{([^}]*)\}/)),
 };
 
 function channel(hex: string, offset: number): number {

@@ -316,8 +316,8 @@ Total : **147 points** (46 tickets), dont **134 pour la V1** ; les 13 points de 
 `F3` · Story · Phase 3 · Estimation 3 · Dépend de : 003, 017 · Backend : —
 
 **Critères d'acceptation**
-- [ ] Mise en page : barre de navigation basse sur téléphone, latérale ou haute sur grand écran (Accueil, Créer, Profil).
-- [ ] Sélecteur de langue et de thème (choix manuel du thème mémorisé).
+- [ ] Mise en page : barre de navigation basse sur téléphone, haute sur grand écran, avec les onglets de `docs/design/design.md` : **Défis, Activités, Profil** (✅ décision du propriétaire au ticket 019, à la place de « Accueil, Créer, Profil » ; créer un défi se fait depuis l'accueil). Icônes **Lucide** (`lucide-react`, ✅ validé au ticket 019). La page Activités reste une page d'attente jusqu'à son ticket.
+- [ ] Sélecteur de langue et de thème (choix manuel du thème mémorisé), avec le bouton « Se déconnecter » (`useSignOut` de SC-WEB-017), dans l'onglet Profil (✅ décision du propriétaire au ticket 019).
 - [ ] Pages 404 et d'erreur globale traduites.
 - [ ] Titres de page et focus gérés à chaque navigation (accessibilité).
 

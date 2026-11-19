@@ -34,7 +34,8 @@ describe('SignInCallback', () => {
     expect(screen.getByRole('alert')).toHaveTextContent("La connexion n'a pas abouti. Réessaie.");
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
-    expect(auth.signIn).toHaveBeenCalledTimes(1);
+    // A declined sign-in must not bring the same account back.
+    expect(auth.signIn).toHaveBeenCalledWith(undefined, { chooseAccount: true });
   });
 
   it('asks to sign in when opened directly while signed out', () => {

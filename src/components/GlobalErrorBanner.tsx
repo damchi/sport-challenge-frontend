@@ -17,7 +17,7 @@ export function GlobalErrorBanner({ error, onDismiss }: GlobalErrorBannerProps) 
   return (
     <div
       role="alert"
-      className="mx-auto mt-3 flex max-w-page items-center gap-2 rounded-row bg-surface-raised py-1 pr-1 pl-4 text-on-raised"
+      className="mx-auto mt-3 flex max-w-page items-center lg:max-w-wide gap-2 rounded-row bg-surface-raised py-1 pr-1 pl-4 text-on-raised"
     >
       <p className="flex-1 text-sm">{t(key, values)}</p>
       <button

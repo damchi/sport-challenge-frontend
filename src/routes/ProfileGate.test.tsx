@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { mockMe } from '../mocks/handlers';
@@ -31,6 +32,12 @@ function renderGate(entry: Entry = '/') {
 }
 
 describe('ProfileGate', () => {
+  // Unmount first: a mounted gate would apply its profile language again.
+  afterEach(async () => {
+    cleanup();
+    await i18n.changeLanguage('fr');
+  });
+
   it('announces the profile loading, then opens the page', async () => {
     renderGate();
 
@@ -72,4 +79,19 @@ describe('ProfileGate', () => {
       expect(router.state.location.pathname).toBe('/');
     },
   );
+
+  it('applies the language kept in the profile', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    renderGate();
+
+    await waitFor(() => expect(i18n.language).toBe('en'));
+  });
+
+  it('keeps the current language when the profile has none', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: null })));
+    renderGate();
+
+    expect(await screen.findByText('app page')).toBeInTheDocument();
+    expect(i18n.language).toBe('fr');
+  });
 });

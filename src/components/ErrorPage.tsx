@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { Page, PageTitle } from './Page';
 
 export function ErrorPage({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation();
   return (
-    <main className="mx-auto max-w-page px-5 py-8">
-      <h1 className="font-display text-title font-bold tracking-title">{t('errorPage.title')}</h1>
+    <Page>
+      <PageTitle>{t('errorPage.title')}</PageTitle>
       <p className="mt-2 text-muted">{t('errors.unknown')}</p>
       <button
         type="button"
@@ -13,6 +14,6 @@ export function ErrorPage({ onRetry }: { onRetry: () => void }) {
       >
         {t('errorPage.retry')}
       </button>
-    </main>
+    </Page>
   );
 }

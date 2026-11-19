@@ -112,6 +112,15 @@ describe('Auth0AuthProvider', () => {
     });
   });
 
+  it('can show the sign-in form to choose another account', async () => {
+    await renderAuth().current.signIn('/', { chooseAccount: true });
+
+    expect(sdk.loginWithRedirect).toHaveBeenCalledWith({
+      appState: { returnTo: '/' },
+      authorizationParams: { ui_locales: 'fr', prompt: 'login' },
+    });
+  });
+
   it('opens only a path of the app after sign-in', () => {
     const onRedirect = vi.fn();
     renderAuth(onRedirect);

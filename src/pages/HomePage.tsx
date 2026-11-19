@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { Page, PageTitle } from '../components/Page';
 
 export function HomePage() {
   const { t } = useTranslation();
   return (
-    <main className="mx-auto max-w-page px-5 py-8">
-      <h1 className="font-display text-title font-bold tracking-title">{t('home.title')}</h1>
-    </main>
+    <Page>
+      <PageTitle>{t('home.title')}</PageTitle>
+    </Page>
   );
 }
