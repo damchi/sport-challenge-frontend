@@ -52,6 +52,8 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
   const {
     register,
     control,
+    getValues,
+    trigger,
     formState: { errors },
   } = useFormContext<ChallengeCreateInput>();
   const [weeks, startDate, timeZone] = useWatch({
@@ -113,7 +115,13 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           aria-invalid={timeZoneError ? true : undefined}
           aria-describedby={describedBy('timezone', timeZoneError)}
           className={`${inputClass} h-11`}
-          {...register('timezone')}
+          {...register('timezone', {
+            // "Today" moves with the time zone: a date already entered is
+            // checked again against it.
+            onChange: () => {
+              if (getValues('start_date')) void trigger('start_date');
+            },
+          })}
         >
           <option value="">{t('challengeCreate.fields.timezone.placeholder')}</option>
           {groups.map(({ region, zones }) => (

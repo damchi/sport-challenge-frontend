@@ -198,6 +198,25 @@ describe('ChallengeCreateWizard', () => {
       ).toBeInTheDocument();
     });
 
+    it('checks the start date again when the time zone changes', async () => {
+      renderWizard();
+      await fillInfoStep();
+      // Today in Montréal, already yesterday in Tokyo.
+      type(startDate(), '2026-09-30');
+      await waitFor(() => expect(startDate()).not.toHaveAttribute('aria-invalid'));
+
+      fireEvent.change(timeZone(), { target: { value: 'Asia/Tokyo' } });
+
+      expect(
+        await screen.findByText(
+          "La date de début doit être entre aujourd'hui et la même date l'an prochain.",
+        ),
+      ).toBeInTheDocument();
+
+      fireEvent.change(timeZone(), { target: { value: 'America/Toronto' } });
+      await waitFor(() => expect(startDate()).not.toHaveAttribute('aria-invalid'));
+    });
+
     it('previews the window in the chosen time zone, across the change to winter time', async () => {
       renderWizard();
       await fillInfoStep();
