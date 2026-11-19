@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { createMemoryRouter, Link, RouterProvider } from 'react-router';
 import { AppProviders } from '../../../test/AppProviders';
 import { createFakeAuth } from '../../../test/fakeAuth';
@@ -20,10 +21,13 @@ function renderWizard() {
     ],
     { initialEntries: ['/challenges/new'] },
   );
+  // StrictMode, as in the app: its double mount must not count as input.
   render(
-    <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
-      <RouterProvider router={router} />
-    </AppProviders>,
+    <StrictMode>
+      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+        <RouterProvider router={router} />
+      </AppProviders>
+    </StrictMode>,
   );
   return router;
 }

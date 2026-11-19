@@ -27,7 +27,9 @@ export function ChallengeCreateWizard() {
     reValidateMode: 'onChange',
     defaultValues: { title: '', description: '', members_can_invite: false },
   });
-  const blocker = useLeaveWarning(form.formState.isDirty);
+  // Not `isDirty`: under StrictMode the double mount sets it for the radios
+  // without a default (null against undefined); the changed fields are exact.
+  const blocker = useLeaveWarning(Object.keys(form.formState.dirtyFields).length > 0);
 
   const validateStep = (index: number) => {
     const fields = STEP_FIELDS[index];
