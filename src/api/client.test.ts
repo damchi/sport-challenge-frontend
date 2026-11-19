@@ -1,18 +1,13 @@
 import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
 import { createApiClient, type Session } from './client';
+import { server } from '../mocks/server';
 import { ApiError, errorMessage } from './errors';
 
 const BASE_URL = 'https://api.test';
 const SPORTS = `${BASE_URL}/api/v1/sports`;
 
 const hasKey = (key: string) => i18n.exists(key);
-
-const server = setupServer();
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
 
 function fakeSession(tokens: (string | undefined)[], renewed = true) {
   let current = tokens.shift();
