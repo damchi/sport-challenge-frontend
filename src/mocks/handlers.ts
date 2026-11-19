@@ -8,8 +8,19 @@ import type { components } from '../api/generated/schema';
 // that test).
 
 type SportList = components['schemas']['SportList'];
+type Me = components['schemas']['Me'];
+
+/** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
+export const mockMe: Me = {
+  id: '6f1c2a8e-3b5d-4e7f-9a0b-1c2d3e4f5a6b',
+  pseudo: 'marie_92',
+  avatar: null,
+  language: 'fr',
+  profile_complete: true,
+};
 
 export const handlers = [
+  http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({

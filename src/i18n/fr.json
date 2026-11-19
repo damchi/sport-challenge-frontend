@@ -41,5 +41,28 @@
       "title": "Connexion impossible",
       "message": "La connexion n'a pas pu être rétablie. Réessaie dans un instant."
     }
+  },
+  "onboarding": {
+    "title": "Bienvenue",
+    "intro": "Choisis ton pseudo : c'est lui que verront les autres participants.",
+    "pseudo": {
+      "label": "Pseudo",
+      "hint": "3 à 20 caractères : lettres, chiffres, _, . ou -."
+    },
+    "language": {
+      "label": "Langue",
+      "fr": "Français",
+      "en": "English"
+    },
+    "submit": "Continuer",
+    "saving": "Enregistrement…"
+  },
+  "profile": {
+    "loading": "Chargement de ton profil…",
+    "pseudo": {
+      "length": "Le pseudo doit faire de 3 à 20 caractères.",
+      "characters": "Seulement des lettres, des chiffres, _, . ou -.",
+      "taken": "Ce pseudo est déjà pris. Essaie-en un autre."
+    }
   }
 }

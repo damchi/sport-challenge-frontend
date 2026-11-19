@@ -2,6 +2,8 @@ import type { RouteObject } from 'react-router';
 import { CallbackPage } from '../pages/CallbackPage';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
+import { OnboardingPage } from '../pages/OnboardingPage';
+import { ProfileGate } from './ProfileGate';
 import { RequireAuth } from './RequireAuth';
 import { RootLayout } from './RootLayout';
 
@@ -14,8 +16,14 @@ export const routes: RouteObject[] = [
       {
         element: <RequireAuth />,
         children: [
-          { path: '/', element: <HomePage /> },
-          { path: '*', element: <NotFoundPage /> },
+          {
+            element: <ProfileGate />,
+            children: [
+              { path: '/', element: <HomePage /> },
+              { path: '/onboarding', element: <OnboardingPage /> },
+              { path: '*', element: <NotFoundPage /> },
+            ],
+          },
         ],
       },
     ],

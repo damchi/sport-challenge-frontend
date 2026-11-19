@@ -41,5 +41,28 @@
       "title": "Unable to connect",
       "message": "The connection couldn't be restored. Try again in a moment."
     }
+  },
+  "onboarding": {
+    "title": "Welcome",
+    "intro": "Choose your nickname: it is what other participants will see.",
+    "pseudo": {
+      "label": "Nickname",
+      "hint": "3 to 20 characters: letters, digits, _, . or -."
+    },
+    "language": {
+      "label": "Language",
+      "fr": "Français",
+      "en": "English"
+    },
+    "submit": "Continue",
+    "saving": "Saving…"
+  },
+  "profile": {
+    "loading": "Loading your profile…",
+    "pseudo": {
+      "length": "The nickname must be 3 to 20 characters long.",
+      "characters": "Only letters, digits, _, . or -.",
+      "taken": "This nickname is already taken. Try another one."
+    }
   }
 }
