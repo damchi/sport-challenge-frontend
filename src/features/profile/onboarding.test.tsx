@@ -70,6 +70,38 @@ describe('profile onboarding', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
   });
 
+  it('shows a pseudo the server refuses as written under its field', async () => {
+    server.use(
+      http.patch('*/api/v1/me', () =>
+        HttpResponse.json(
+          { error: { code: 'validation_failed', message: 'bad', params: { fields: 'pseudo' } } },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderApp('/');
+
+    await typePseudo('marie_92');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Seulement des lettres, des chiffres, _, . ou -.',
+    );
+  });
+
+  it('shows any other failure above the button', async () => {
+    server.use(http.patch('*/api/v1/me', () => new HttpResponse(null, { status: 500 })));
+    renderApp('/');
+
+    await typePseudo('marie_92');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Le service est momentanément indisponible.',
+    );
+    expect(screen.getByLabelText('Pseudo')).not.toHaveAttribute('aria-invalid');
+  });
+
   it('saves the profile and opens the page first asked for', async () => {
     let sent: unknown;
     server.use(

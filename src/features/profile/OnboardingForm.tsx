@@ -7,12 +7,17 @@ import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
 import { profileSchema, type ProfileInput } from '../../domain/schemas/profile';
 
-function isPseudoConflict(error: unknown): boolean {
-  return (
-    error instanceof ApiError &&
-    error.code === 'validation_failed' &&
-    (error.params.fields ?? '').split(',').includes('pseudo')
-  );
+// A validation_failed answer about the pseudo: 409 means taken (contract),
+// 400 a pseudo the server refuses as written.
+function pseudoError(error: unknown): string | undefined {
+  if (
+    !(error instanceof ApiError) ||
+    error.code !== 'validation_failed' ||
+    !(error.params.fields ?? '').split(',').includes('pseudo')
+  ) {
+    return undefined;
+  }
+  return error.status === 409 ? 'profile.pseudo.taken' : 'profile.pseudo.characters';
 }
 
 /**
@@ -47,8 +52,9 @@ export function OnboardingForm({ me }: { me: Me }) {
       // The profile is saved: a failed language switch is not a form error.
       i18n.changeLanguage(profile.language).catch(() => undefined);
     } catch (error) {
-      if (isPseudoConflict(error)) {
-        setError('pseudo', { message: 'profile.pseudo.taken' }, { shouldFocus: true });
+      const message = pseudoError(error);
+      if (message) {
+        setError('pseudo', { message }, { shouldFocus: true });
       } else {
         const { key, values } =
           error instanceof ApiError
@@ -60,7 +66,7 @@ export function OnboardingForm({ me }: { me: Me }) {
   };
 
   const pseudo = useWatch({ control, name: 'pseudo' });
-  const pseudoError = errors.pseudo?.message;
+  const pseudoMessage = errors.pseudo?.message;
 
   return (
     <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="mt-6">
@@ -74,8 +80,8 @@ export function OnboardingForm({ me }: { me: Me }) {
           autoComplete="nickname"
           autoCapitalize="none"
           spellCheck={false}
-          aria-invalid={pseudoError ? true : undefined}
-          aria-describedby={pseudoError ? 'pseudo-hint pseudo-error' : 'pseudo-hint'}
+          aria-invalid={pseudoMessage ? true : undefined}
+          aria-describedby={pseudoMessage ? 'pseudo-hint pseudo-error' : 'pseudo-hint'}
           className="h-11 min-w-0 flex-1 rounded-row border border-border bg-surface px-3 text-ink"
           {...register('pseudo')}
         />
@@ -83,9 +89,9 @@ export function OnboardingForm({ me }: { me: Me }) {
       <p id="pseudo-hint" className="mt-1 text-sm text-muted">
         {t('onboarding.pseudo.hint')}
       </p>
-      {pseudoError && (
+      {pseudoMessage && (
         <p id="pseudo-error" role="alert" className="mt-1 text-sm text-risk-fg">
-          {t(pseudoError)}
+          {t(pseudoMessage)}
         </p>
       )}
 
