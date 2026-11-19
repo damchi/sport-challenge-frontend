@@ -11,8 +11,8 @@ import {
 import { ChallengeStatusPill, RolePills } from '../ChallengePills';
 
 /**
- * Head of a challenge's page. Every date is in the challenge's time zone,
- * named when the user's differs, next to each hour too. The week and the registration lines show
+ * Head of a challenge's page. Every date is in the challenge's time zone;
+ * when the user's differs, the zone is named, also after each hour. The week and the registration lines show
  * only when the server gives them (current_week, can_join): nothing is
  * worked out here.
  */
