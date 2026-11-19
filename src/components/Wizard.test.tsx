@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
 import { renderWithProviders } from '../test/render';
 import { Wizard } from './Wizard';
@@ -31,14 +31,24 @@ describe('Wizard', () => {
   });
 
   it('moves on only once the step is valid, then focuses the new step', async () => {
-    renderWithProviders(<ThreeSteps />);
+    let answer: (valid: boolean) => void = () => undefined;
+    const validate = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          answer = resolve;
+        }),
+    );
+    renderWithProviders(<ThreeSteps validate={validate} />);
 
     next();
-    await waitFor(() => expect(screen.getByText('Étape 1 sur 3')).toBeInTheDocument());
+    await waitFor(() => expect(validate).toHaveBeenCalledWith(0));
+    await act(async () => answer(false));
+    expect(screen.getByText('Étape 1 sur 3')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Step a' })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Field a'), { target: { value: 'x' } });
     next();
+    await waitFor(() => expect(validate).toHaveBeenCalledTimes(2));
+    await act(async () => answer(true));
 
     const heading = await screen.findByRole('heading', { name: 'Step b' });
     expect(screen.getByText('Étape 2 sur 3')).toBeInTheDocument();
