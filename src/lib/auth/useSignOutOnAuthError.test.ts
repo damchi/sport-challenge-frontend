@@ -27,13 +27,13 @@ describe('useSignOutOnAuthError', () => {
     expect(auth.signOut).toHaveBeenCalledTimes(1);
   });
 
-  it('only clears the cache when signed out', () => {
+  it('does nothing when signed out (no session, and no refetch loop)', () => {
     const auth = createFakeAuth();
     const { clearCache, authError } = setup(auth);
 
     authError();
 
-    expect(clearCache).toHaveBeenCalledTimes(1);
+    expect(clearCache).not.toHaveBeenCalled();
     expect(auth.signOut).not.toHaveBeenCalled();
   });
 

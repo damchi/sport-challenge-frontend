@@ -3,9 +3,10 @@ import type { Auth } from './auth';
 
 /**
  * Handles lost sessions (authentication errors after a renewal attempt),
- * counted by `authErrors`: each new one clears the user's data, and signs out
- * once if signed in (a signed-out request that gets a 401 has no session to
- * end). A failed sign-out lets the next error try again.
+ * counted by `authErrors`: while signed in, each new one clears the user's
+ * data and signs out once. Signed out, there is no session to end nor
+ * personal data cached, and clearing would refetch mounted screens into a
+ * 401 loop: nothing is done. A failed sign-out lets the next error try again.
  */
 export function useSignOutOnAuthError(
   auth: Auth,
@@ -18,8 +19,9 @@ export function useSignOutOnAuthError(
   useEffect(() => {
     if (authErrors === handledAuthErrors.current) return;
     handledAuthErrors.current = authErrors;
+    if (!auth.isAuthenticated) return;
     clearCache();
-    if (auth.isAuthenticated && !signingOut.current) {
+    if (!signingOut.current) {
       signingOut.current = true;
       auth.signOut().catch(() => {
         signingOut.current = false;
