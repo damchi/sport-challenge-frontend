@@ -253,7 +253,7 @@ Total : **147 points** (46 tickets), dont **134 pour la V1** ; les 13 points de 
 
 **Critères d'acceptation**
 - [ ] i18next avec `src/i18n/fr.json` et `src/i18n/en.json`, initialisé dans `main.tsx`.
-- [ ] Langue de l'appareil par défaut, choix mémorisé dans le profil (ticket 040) ; langue de repli : à confirmer (proposition : anglais).
+- [ ] Langue de l'appareil par défaut, choix mémorisé dans le profil (ticket 040) ; langue de repli : **anglais** (✅ validé au ticket 012).
 - [ ] Script de contrôle : mêmes clés dans les deux langues, intégré à `pnpm check`.
 - [ ] Clé de repli `errors.unknown`.
 - [ ] Pluriels et variables par i18next, jamais de concaténation de morceaux de phrase.

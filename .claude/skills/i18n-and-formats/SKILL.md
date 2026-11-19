@@ -12,8 +12,8 @@ Les fichiers vivent dans `src/i18n` (`fr.json`, `en.json`), portables pour être
 1. Ajoute la clé dans **les deux** fichiers, dans le même commit.
 2. Clés en anglais, hiérarchiques : `challenge.create.title`, `leaderboard.status.atRisk`, `errors.challenge_not_found`.
 3. Pluriels et variables via i18next (`{{count}}`), jamais de concaténation de morceaux de phrase.
-4. Aucune chaîne utilisateur en dur dans un composant.
-5. Vérifie que les deux langues ont exactement les mêmes clés (script de contrôle dans `pnpm check`, à créer en phase 2).
+4. Aucune chaîne utilisateur en dur dans un composant. En français, espace insécable (U+00A0) avant les unités et la ponctuation double (`30 s`, `:`, `?`, `!`).
+5. Vérifie que les deux langues ont exactement les mêmes clés : `pnpm i18n:check` (inclus dans `pnpm check`).
 
 ## Erreurs de l'API
 
@@ -21,7 +21,7 @@ Chaque code stable du backend a une clé `errors.<code>` (par exemple `errors.ch
 
 ## Langue
 
-Langue de l'appareil par défaut, choix possible dans le profil. Langue de repli : ❓ à confirmer (proposition : anglais).
+Langue de l'appareil par défaut, choix possible dans le profil. ✅ Langue de repli : anglais (`FALLBACK_LANGUAGE` dans `src/i18n/index.ts`).
 
 ## Dates et fuseaux
 
