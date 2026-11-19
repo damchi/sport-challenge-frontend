@@ -129,6 +129,13 @@ describe('Auth0AuthProvider', () => {
     expect(sdk.logout).toHaveBeenCalledWith({ logoutParams: { returnTo: window.location.origin } });
   });
 
+  it('can sign out locally, without leaving the app', async () => {
+    await renderAuth().current.signOut({ local: true });
+
+    expect(sdk.revokeRefreshToken).toHaveBeenCalledBefore(sdk.logout);
+    expect(sdk.logout).toHaveBeenCalledWith({ openUrl: false });
+  });
+
   it('gives the cached access token, or renews it on demand', async () => {
     const auth = renderAuth();
 

@@ -23,8 +23,8 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
 }
 
 export interface QueryClientHandlers {
-  /** Authentication lost: sign out and clear the cache. */
-  onAuthError: () => void;
+  /** Authentication lost (401 after a renewal attempt): the session is handled by the app. */
+  onAuthError: (error: unknown) => void;
   /** Error no screen shows by itself: a failed action, or a failed background refresh. */
   onError: (error: unknown) => void;
 }
@@ -35,7 +35,7 @@ export interface QueryClientHandlers {
  */
 export function createQueryClient({ onAuthError, onError }: QueryClientHandlers): QueryClient {
   function report(error: unknown, shownByScreen: boolean): void {
-    if (isAuthError(error)) onAuthError();
+    if (isAuthError(error)) onAuthError(error);
     else if (!shownByScreen) onError(error);
   }
 
