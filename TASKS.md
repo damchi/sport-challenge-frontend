@@ -366,7 +366,7 @@ Total : **147 points** (46 tickets), dont **134 pour la V1** ; les 13 points de 
 
 **Critères d'acceptation**
 - [ ] Durée en **nombre de semaines** (2 à 52), jamais en dates libres ; date de début (champ natif, aujourd'hui ou plus tard, FD5).
-- [ ] Sélecteur de fuseau (créé ici) : fuseau du lieu de lancement (liste IANA, valeur par défaut : celui de l'appareil, par exemple Montréal).
+- [ ] Sélecteur de fuseau (créé ici) : fuseau du lieu de lancement (liste IANA, valeur par défaut : ✅ Montréal, `America/Toronto`, quel que soit le fuseau de l'appareil ; décision du 2026-11-19).
 - [ ] Aperçu clair : « Du lundi 5 octobre à 0 h au lundi 16 novembre à 0 h, heure de Montréal », calculé avec `Intl` dans le fuseau choisi, avec le nombre de semaines.
 - [ ] Les changements d'heure pendant la période sont correctement affichés (test de novembre).
 
