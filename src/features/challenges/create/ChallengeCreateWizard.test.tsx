@@ -264,13 +264,38 @@ describe('ChallengeCreateWizard', () => {
       expect(preview()).not.toHaveTextContent('6 semaines');
     });
 
-    it('names every region of the time zones the browser knows', async () => {
-      renderWizard({ timeZones: Intl.supportedValuesOf('timeZone') });
+    it('names every region of the picker in French', async () => {
+      renderWizard({
+        timeZones: [
+          'Africa/Cairo',
+          'America/Toronto',
+          'Antarctica/Troll',
+          'Arctic/Longyearbyen',
+          'Asia/Tokyo',
+          'Atlantic/Azores',
+          'Australia/Sydney',
+          'Europe/Paris',
+          'Indian/Maldives',
+          'Pacific/Auckland',
+          'Etc/GMT+5',
+          'UTC',
+        ],
+      });
       await fillInfoStep();
 
-      const regions = [...timeZone().querySelectorAll('optgroup')].map((group) => group.label);
-      expect(regions).toContain('Amérique');
-      expect(regions.filter((label) => label.startsWith('challengeCreate.'))).toEqual([]);
+      expect([...timeZone().querySelectorAll('optgroup')].map((group) => group.label)).toEqual([
+        'Afrique',
+        'Amérique',
+        'Antarctique',
+        'Arctique',
+        'Asie',
+        'Atlantique',
+        'Australie',
+        'Europe',
+        'Océan Indien',
+        'Pacifique',
+        'Autres',
+      ]);
     });
   });
 
