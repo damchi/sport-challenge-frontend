@@ -17,7 +17,8 @@ export function useSignOutOnAuthError(
   const signingOut = useRef(false);
 
   useEffect(() => {
-    if (authErrors === handledAuthErrors.current) return;
+    // While the session loads, keep the error for when it is known.
+    if (authErrors === handledAuthErrors.current || auth.isLoading) return;
     handledAuthErrors.current = authErrors;
     if (!auth.isAuthenticated) return;
     clearCache();

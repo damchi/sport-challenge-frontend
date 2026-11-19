@@ -3,15 +3,20 @@ import { createFakeAuth } from '../../test/fakeAuth';
 import type { Auth } from './auth';
 import { useSignOutOnAuthError } from './useSignOutOnAuthError';
 
-function setup(auth: Auth) {
+function setup(initialAuth: Auth) {
   const clearCache = vi.fn();
   let authErrors = 0;
+  let auth = initialAuth;
   const { rerender } = renderHook(() => useSignOutOnAuthError(auth, authErrors, clearCache));
+  const loaded = (next: Auth) => {
+    auth = next;
+    rerender();
+  };
   const authError = () => {
     authErrors += 1;
     rerender();
   };
-  return { clearCache, authError, rerender };
+  return { clearCache, authError, rerender, loaded };
 }
 
 describe('useSignOutOnAuthError', () => {
@@ -35,6 +40,19 @@ describe('useSignOutOnAuthError', () => {
 
     expect(clearCache).not.toHaveBeenCalled();
     expect(auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('handles an error received while the session loads once it is known', () => {
+    const { clearCache, authError, loaded } = setup(createFakeAuth({ isLoading: true }));
+
+    authError();
+    expect(clearCache).not.toHaveBeenCalled();
+
+    const signedIn = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
+    loaded(signedIn);
+
+    expect(clearCache).toHaveBeenCalledTimes(1);
+    expect(signedIn.signOut).toHaveBeenCalledTimes(1);
   });
 
   it('tries to sign out again after a failed sign-out', async () => {
