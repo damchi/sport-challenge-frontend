@@ -1,3 +1,5 @@
+import en from '../../i18n/en.json';
+import fr from '../../i18n/fr.json';
 import { challengeCreateSchema } from './challenge';
 
 const valid = {
@@ -91,5 +93,32 @@ describe('challengeCreateSchema', () => {
     expect(firstMessage({ visibility: 'friends' })).toBe(
       'challengeCreate.fields.visibility.required',
     );
+  });
+
+  it('only gives messages that exist in French and English', () => {
+    const wrong = [
+      { title: 'ab', description: 'a'.repeat(2001), visibility: undefined },
+      { title: 'a\nb\nc', description: '\u200b', visibility: 'friends' },
+    ];
+    const messages = wrong.flatMap(
+      (input) =>
+        challengeCreateSchema
+          .safeParse({ ...valid, ...input })
+          .error?.issues.map((issue) => issue.message) ?? [],
+    );
+    const lookup = (texts: unknown, key: string) =>
+      key
+        .split('.')
+        .reduce<unknown>(
+          (node, part) =>
+            typeof node === 'object' && node !== null ? Reflect.get(node, part) : undefined,
+          texts,
+        );
+
+    expect(new Set(messages).size).toBe(5);
+    for (const message of messages) {
+      expect(typeof lookup(fr, message), message).toBe('string');
+      expect(typeof lookup(en, message), message).toBe('string');
+    }
   });
 });
