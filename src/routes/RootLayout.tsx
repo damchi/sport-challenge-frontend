@@ -47,7 +47,7 @@ export function RootLayout() {
   return (
     <>
       {error !== undefined && (
-        <div className="px-5">
+        <div className="px-5 lg:px-8">
           <GlobalErrorBanner error={error} onDismiss={dismiss} />
         </div>
       )}

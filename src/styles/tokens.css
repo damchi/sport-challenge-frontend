@@ -55,11 +55,13 @@
      gutter); in rem, so spacing follows the user's font size. */
   --spacing: 0.25rem;
 
-  /* App pages stay in a centered column on large screens. */
-  --container-page: 30rem;
+  /* Page container: 720 px on a tablet, 1120 px from `lg` (design.md). */
+  --container-page: 45rem;
+  --container-wide: 70rem;
 
-  /* Page title (h1). */
+  /* Page title (h1): 28 px, 36 px from `lg`. */
   --text-title: 1.75rem;
+  --text-title-lg: 2.25rem;
   --tracking-title: -0.5px;
 
   /* Text of the buttons. */

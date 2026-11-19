@@ -4,6 +4,7 @@ import { Navigate, Outlet, useLocation } from 'react-router';
 import { ApiError, errorMessage } from '../api/errors';
 import { useMe } from '../api/hooks/useMe';
 import { safeReturnTo } from '../lib/auth/auth';
+import { Page } from '../components/Page';
 
 const ONBOARDING = '/onboarding';
 
@@ -27,11 +28,11 @@ export function ProfileGate() {
 
   if (me.isPending) {
     return (
-      <main className="mx-auto max-w-page px-5 py-8">
+      <Page>
         <p role="status" className="text-muted">
           {t('profile.loading')}
         </p>
-      </main>
+      </Page>
     );
   }
   if (me.isError) {
@@ -40,7 +41,7 @@ export function ProfileGate() {
         ? errorMessage(me.error, (candidate) => i18n.exists(candidate))
         : { key: 'errors.unknown', values: {} };
     return (
-      <main className="mx-auto max-w-page px-5 py-8">
+      <Page>
         <p role="alert" className="text-muted">
           {t(key, values)}
         </p>
@@ -51,7 +52,7 @@ export function ProfileGate() {
         >
           {t('errorPage.retry')}
         </button>
-      </main>
+      </Page>
     );
   }
 

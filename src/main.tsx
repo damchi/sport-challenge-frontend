@@ -39,7 +39,7 @@ try {
   // developer, shown in development only; users get a generic message.
   // The error stays in the console either way.
   root.render(
-    <main className="mx-auto max-w-page px-5 py-8">
+    <main className="mx-auto w-full max-w-page px-5 py-8 lg:max-w-wide lg:px-8">
       {import.meta.env.DEV ? (
         <pre className="whitespace-pre-wrap text-ink">{String(error)}</pre>
       ) : (

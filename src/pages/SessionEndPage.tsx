@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SessionEnd } from '../lib/auth/useHandleLostSession';
+import { Page, PageTitle } from '../components/Page';
 
 interface SessionEndPageProps {
   reason: SessionEnd['reason'];
@@ -37,8 +38,8 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
         };
 
   return (
-    <main className="mx-auto max-w-page px-5 py-8">
-      <h1 className="font-display text-title font-bold tracking-title">{texts.title}</h1>
+    <Page>
+      <PageTitle>{texts.title}</PageTitle>
       <p role="alert" className="mt-2 text-muted">
         {failed ? t('auth.callback.error') : texts.message}
       </p>
@@ -50,6 +51,6 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
       >
         {texts.action}
       </button>
-    </main>
+    </Page>
   );
 }

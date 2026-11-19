@@ -1,14 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { SignInCallback } from '../features/auth/SignInCallback';
+import { Page, PageTitle } from '../components/Page';
 
 export function CallbackPage() {
   const { t } = useTranslation();
   return (
-    <main className="mx-auto max-w-page px-5 py-8">
-      <h1 className="font-display text-title font-bold tracking-title">
-        {t('auth.callback.title')}
-      </h1>
+    <Page>
+      <PageTitle>{t('auth.callback.title')}</PageTitle>
       <SignInCallback />
-    </main>
+    </Page>
   );
 }

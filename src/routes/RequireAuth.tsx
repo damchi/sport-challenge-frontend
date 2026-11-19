@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router';
 import { useAuth } from '../lib/auth/auth';
+import { Page } from '../components/Page';
 
 /**
  * Every page below it requires a signed-in user. Signed out, the user goes
@@ -42,7 +43,7 @@ export function RequireAuth() {
   if (auth.isAuthenticated) return <Outlet />;
 
   return (
-    <main className="mx-auto max-w-page px-5 py-8">
+    <Page>
       {auth.hasError || failed ? (
         <>
           <p role="alert" className="text-muted">
@@ -62,6 +63,6 @@ export function RequireAuth() {
           {t('auth.callback.loading')}
         </p>
       )}
-    </main>
+    </Page>
   );
 }
