@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router';
 import { useAuth } from '../../lib/auth/auth';
@@ -5,14 +6,33 @@ import { useAuth } from '../../lib/auth/auth';
 function SignInButton() {
   const { t } = useTranslation();
   const auth = useAuth();
+  const [failed, setFailed] = useState(false);
+
+  const signIn = () => {
+    setFailed(false);
+    auth.signIn().catch((error: unknown) => {
+      // The redirect to Auth0 could not start (configuration, insecure
+      // origin...): the detail is for the developer only.
+      if (import.meta.env.DEV) console.error('Sign-in could not start', error);
+      setFailed(true);
+    });
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => void auth.signIn()}
-      className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
-    >
-      {t('auth.signIn')}
-    </button>
+    <>
+      {failed && (
+        <p role="alert" className="mt-2 text-muted">
+          {t('auth.callback.error')}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={signIn}
+        className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+      >
+        {t('auth.signIn')}
+      </button>
+    </>
   );
 }
 

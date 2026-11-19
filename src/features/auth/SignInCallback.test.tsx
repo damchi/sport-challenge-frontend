@@ -57,6 +57,20 @@ describe('SignInCallback', () => {
     expect(screen.queryByText('home')).not.toBeInTheDocument();
   });
 
+  it('shows a failure when the redirect to Auth0 cannot start', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const auth = createFakeAuth({
+      signIn: vi.fn(() => Promise.reject(new Error('insecure origin'))),
+    });
+    renderCallback(auth);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "La connexion n'a pas abouti. Réessaie.",
+    );
+  });
+
   it('opens the home page when opened directly while signed in', () => {
     renderCallback(createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|123' } }));
 
