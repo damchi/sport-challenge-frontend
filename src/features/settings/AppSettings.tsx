@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe } from '../../api/hooks/useMe';
@@ -19,6 +20,12 @@ export function AppSettings() {
   const updateMe = useUpdateMe();
   const theme = useThemeChoice();
   const signOut = useSignOut();
+  // Sign-out could not start (network...): it can be tried again.
+  const [signOutFailed, setSignOutFailed] = useState(false);
+  const trySignOut = () => {
+    setSignOutFailed(false);
+    signOut().catch(() => setSignOutFailed(true));
+  };
 
   const chooseLanguage = (language: Language) => {
     void i18n.changeLanguage(language);
@@ -60,7 +67,7 @@ export function AppSettings() {
             </p>
             <button
               type="button"
-              onClick={() => current && chooseLanguage(current === 'en' ? 'en' : 'fr')}
+              onClick={() => updateMe.variables && updateMe.mutate(updateMe.variables)}
               className="h-11 rounded-full border border-border bg-surface px-4 text-sm font-bold"
             >
               {t('errorPage.retry')}
@@ -89,11 +96,16 @@ export function AppSettings() {
 
       <button
         type="button"
-        onClick={() => void signOut()}
+        onClick={trySignOut}
         className="h-11 rounded-full border border-border bg-surface px-6 text-button font-bold"
       >
         {t('settings.signOut')}
       </button>
+      {signOutFailed && (
+        <p role="alert" className="-mt-4 text-sm text-risk-fg">
+          {t('errors.unknown')}
+        </p>
+      )}
     </div>
   );
 }

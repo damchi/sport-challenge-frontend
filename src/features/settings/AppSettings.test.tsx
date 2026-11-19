@@ -3,12 +3,13 @@ import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { mockMe } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
+import type { Auth } from '../../lib/auth/auth';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
 import { AppSettings } from './AppSettings';
 
-function renderSettings() {
-  const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
+function renderSettings(overrides: Partial<Auth> = {}) {
+  const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' }, ...overrides });
   render(
     <AppProviders auth={auth}>
       <AppSettings />
@@ -78,5 +79,18 @@ describe('AppSettings', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
 
     await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1));
+  });
+
+  it('says when the sign-out could not start, and lets it be tried again', async () => {
+    const signOut = vi.fn<Auth['signOut']>().mockRejectedValueOnce(new Error('offline'));
+    signOut.mockResolvedValue(undefined);
+    renderSettings({ signOut });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Une erreur est survenue.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    expect(signOut).toHaveBeenCalledTimes(2);
   });
 });
