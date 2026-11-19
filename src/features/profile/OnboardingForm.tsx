@@ -7,8 +7,8 @@ import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
 import { profileSchema, type ProfileInput } from '../../domain/schemas/profile';
 
-// A validation_failed answer about the pseudo: 409 means taken (contract),
-// 400 a pseudo the server refuses as written.
+// A validation_failed answer about the pseudo: 409 means taken (contract);
+// a 400 gives no reason, so the message stays generic.
 function pseudoError(error: unknown): string | undefined {
   if (
     !(error instanceof ApiError) ||
@@ -17,7 +17,7 @@ function pseudoError(error: unknown): string | undefined {
   ) {
     return undefined;
   }
-  return error.status === 409 ? 'profile.pseudo.taken' : 'profile.pseudo.characters';
+  return error.status === 409 ? 'profile.pseudo.taken' : 'profile.pseudo.invalid';
 }
 
 /**

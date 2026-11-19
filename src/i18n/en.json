@@ -62,7 +62,8 @@
     "pseudo": {
       "length": "The nickname must be 3 to 20 characters long.",
       "characters": "Only letters, digits, _, . or -.",
-      "taken": "This nickname is already taken. Try another one."
+      "taken": "This nickname is already taken. Try another one.",
+      "invalid": "This nickname is not accepted. Try another one."
     }
   }
 }

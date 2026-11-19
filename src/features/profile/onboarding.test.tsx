@@ -84,9 +84,7 @@ describe('profile onboarding', () => {
     await typePseudo('marie_92');
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Seulement des lettres, des chiffres, _, . ou -.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent("Ce pseudo n'est pas accepté.");
   });
 
   it('shows any other failure above the button', async () => {

@@ -7,16 +7,27 @@ import { AppProviders } from '../test/AppProviders';
 import { createFakeAuth } from '../test/fakeAuth';
 import { ProfileGate } from './ProfileGate';
 
-function renderGate() {
+type Entry = string | { pathname: string; state: unknown };
+
+function renderGate(entry: Entry = '/') {
   const router = createMemoryRouter(
-    [{ element: <ProfileGate />, children: [{ path: '*', element: <p>app page</p> }] }],
-    { initialEntries: ['/'] },
+    [
+      {
+        element: <ProfileGate />,
+        children: [
+          { path: '/onboarding', element: <p>onboarding page</p> },
+          { path: '*', element: <p>app page</p> },
+        ],
+      },
+    ],
+    { initialEntries: [entry] },
   );
   render(
     <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
       <RouterProvider router={router} />
     </AppProviders>,
   );
+  return router;
 }
 
 describe('ProfileGate', () => {
@@ -44,4 +55,21 @@ describe('ProfileGate', () => {
 
     expect(await screen.findByText('app page')).toBeInTheDocument();
   });
+
+  it('sends a complete profile away from /onboarding, to the page first asked for', async () => {
+    const router = renderGate({ pathname: '/onboarding', state: { returnTo: '/challenges/42' } });
+
+    expect(await screen.findByText('app page')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/challenges/42');
+  });
+
+  it.each([{ returnTo: 'https://evil.example' }, { returnTo: 42 }, null])(
+    'falls back on the home page for the state %j',
+    async (state) => {
+      const router = renderGate({ pathname: '/onboarding', state });
+
+      expect(await screen.findByText('app page')).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe('/');
+    },
+  );
 });

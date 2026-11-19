@@ -62,7 +62,8 @@
     "pseudo": {
       "length": "Le pseudo doit faire de 3 à 20 caractères.",
       "characters": "Seulement des lettres, des chiffres, _, . ou -.",
-      "taken": "Ce pseudo est déjà pris. Essaie-en un autre."
+      "taken": "Ce pseudo est déjà pris. Essaie-en un autre.",
+      "invalid": "Ce pseudo n'est pas accepté. Essaie-en un autre."
     }
   }
 }
