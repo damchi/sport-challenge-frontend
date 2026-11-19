@@ -68,6 +68,19 @@ describe('createApiClient', () => {
     expect(seen).toEqual([null]);
   });
 
+  it('fails as network_error without sending when the token cannot be read', async () => {
+    const sent = vi.fn(() => HttpResponse.json({ sports: [] }));
+    server.use(http.get(SPORTS, sent));
+    const session = fakeSession(['token']);
+    session.getAccessToken.mockRejectedValueOnce(new Error('timeout'));
+    const client = createApiClient({ baseUrl: BASE_URL, session });
+
+    const error = await failure(client.GET('/api/v1/sports'));
+
+    expect(error).toMatchObject({ code: 'network_error', status: 0 });
+    expect(sent).not.toHaveBeenCalled();
+  });
+
   it('normalizes a 4xx error body', async () => {
     server.use(
       http.get(SPORTS, () =>

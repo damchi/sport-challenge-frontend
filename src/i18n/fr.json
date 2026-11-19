@@ -23,5 +23,14 @@
   },
   "globalError": {
     "dismiss": "Fermer le message"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "callback": {
+      "title": "Connexion",
+      "loading": "Connexion en cours…",
+      "error": "La connexion n'a pas abouti. Réessaie."
+    },
+    "signInRequired": "Connecte-toi pour continuer."
   }
 }

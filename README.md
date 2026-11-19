@@ -181,6 +181,10 @@ frontend/
 - SDK Auth0, flux Authorization Code avec PKCE ; l'app demande un **access token** pour l'API du backend (audience), pas seulement l'ID token.
 - Mobile : jetons dans le Keychain / Keystore (`expo-secure-store`).
 - Un intercepteur du client API ajoute le jeton et renouvelle la session au besoin.
+- ✅ Web (SC-WEB-016) : `@auth0/auth0-react` derrière l'interface `Auth` (`src/lib/auth`), avec un double de test. Connexion par la page Auth0 (Universal Login, dans la langue de l'app) ; en V1, code à usage unique par e-mail. Jetons **en mémoire** avec refresh token tournant (`cacheLocation: 'memory'`, jamais `localStorage`) ; le refresh token est révoqué à la déconnexion. Retour après connexion par `/callback`, vers un chemin de l'app seulement.
+- ✅ Limite acceptée : après un rechargement de la page, le refresh token gardé en mémoire est perdu ; la session revient par la connexion silencieuse d'Auth0 (iframe, `useRefreshTokensFallback`) quand le navigateur l'autorise ; Safari et les navigateurs qui bloquent les cookies tiers redemandent la connexion. Un domaine personnalisé Auth0 (au déploiement) la lèvera.
+- Une erreur 401 après tentative de renouvellement vide le cache et déconnecte (seulement si l'utilisateur était connecté).
+- Configuration : `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID` (identifiant public de l'application « Sport Challenge Web », à reporter depuis le dashboard Auth0) et `VITE_AUTH0_AUDIENCE` ; l'app ne démarre pas tant qu'elles manquent.
 
 ### 4.6 Langues, dates et unités
 

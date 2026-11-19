@@ -7,7 +7,10 @@ import type { paths } from './generated/schema';
  * (Auth0 on the web): the client stays independent of the SDK.
  */
 export interface Session {
-  /** Current access token, or undefined when signed out. */
+  /**
+   * Current access token, or undefined when signed out. Rejects when it cannot
+   * tell (network failure): the request then fails as network_error.
+   */
   getAccessToken: () => Promise<string | undefined>;
   /** Tries to get a new access token; resolves to false when it cannot. */
   renew: () => Promise<boolean>;
@@ -59,11 +62,19 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
     session.expire();
   }
 
+  async function accessToken(): Promise<string | undefined> {
+    try {
+      return await session.getAccessToken();
+    } catch (error) {
+      throw networkError(error);
+    }
+  }
+
   async function replay(
     request: Request,
     fetchRequest: typeof globalThis.fetch,
   ): Promise<{ response: Response; token: string | undefined }> {
-    const token = await session.getAccessToken();
+    const token = await accessToken();
     try {
       return { response: await fetchRequest(withToken(request, token)), token };
     } catch (error) {
@@ -74,7 +85,7 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
 
   const middleware: Middleware = {
     async onRequest({ request, id }) {
-      const token = await session.getAccessToken();
+      const token = await accessToken();
       const authorized = withToken(request, token);
       sent.set(id, { request: authorized.clone(), token });
       return authorized;
@@ -90,7 +101,7 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
       const sentToken = original?.token;
       if (final.status === 401 && original && sentToken && !expiredTokens.has(sentToken)) {
         // A request sent before a renewal that already ended only needs a replay.
-        const current = await session.getAccessToken();
+        const current = await accessToken();
         if (current !== sentToken || (await renewOnce())) {
           const replayed = await replay(original.request, options.fetch);
           final = replayed.response;

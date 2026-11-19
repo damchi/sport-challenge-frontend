@@ -23,5 +23,14 @@
   },
   "globalError": {
     "dismiss": "Close the message"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "callback": {
+      "title": "Sign in",
+      "loading": "Signing you in…",
+      "error": "Signing in didn't work. Try again."
+    },
+    "signInRequired": "Sign in to continue."
   }
 }

@@ -275,7 +275,7 @@ Total : **147 points** (46 tickets), dont **134 pour la V1** ; les 13 points de 
 - [ ] Variables `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID` et `VITE_AUTH0_AUDIENCE` ajoutées à `src/lib/config.ts` et à `.env.example`.
 - [ ] Interface `AuthProvider` (connecté, utilisateur, connexion, déconnexion, jeton d'accès) avec un double de test ; implémentation `@auth0/auth0-react` (flux Authorization Code avec PKCE).
 - [ ] L'application demande l'**access token de l'API** (audience `VITE_AUTH0_AUDIENCE`), pas seulement l'ID token.
-- [ ] Connexion par Google, Apple et lien magique selon la configuration Auth0.
+- [ ] Connexion par la page de connexion Auth0 (Universal Login), avec les méthodes activées dans Auth0 : en V1, code à usage unique par e-mail seulement (✅ décision du backend, `docs/auth0-setup.md`) ; Google et Apple s'ajouteront dans Auth0 sans changement du frontend.
 - [ ] Jetons gardés en mémoire (recommandation du SDK), jamais dans l'URL ni dans les logs.
 - [ ] Route `/callback` qui termine la connexion et renvoie vers la page demandée.
 
