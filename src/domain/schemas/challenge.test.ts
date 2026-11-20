@@ -1,6 +1,6 @@
 import en from '../../i18n/en.json';
 import fr from '../../i18n/fr.json';
-import { challengeCreateSchema } from './challenge';
+import { challengeCreateSchema, challengeUpdateSchema } from './challenge';
 
 // Thursday 19 November 2026, 22:00 in Montréal, already the 20th in Paris.
 const NOW = new Date('2026-11-20T03:00:00Z');
@@ -202,5 +202,33 @@ describe('challengeCreateSchema', () => {
       expect(typeof lookup(fr, message), message).toBe('string');
       expect(typeof lookup(en, message), message).toBe('string');
     }
+  });
+});
+
+describe('challengeUpdateSchema', () => {
+  it('keeps the title without surrounding spaces, and an empty description', () => {
+    expect(challengeUpdateSchema.parse({ title: '  Spring run ', description: '' })).toEqual({
+      title: 'Spring run',
+      description: '',
+    });
+  });
+
+  it('applies the creation rules to the title and the description', () => {
+    const messages = (input: { title: string; description: string }) =>
+      challengeUpdateSchema.safeParse(input).error?.issues.map((issue) => issue.message);
+
+    expect(messages({ title: 'ab', description: '' })).toEqual([
+      'challengeCreate.fields.title.length',
+    ]);
+    expect(messages({ title: 'a\tbc', description: 'a'.repeat(2001) })).toEqual([
+      'challengeCreate.fields.title.characters',
+      'challengeCreate.fields.description.length',
+    ]);
+  });
+
+  it('takes no other field: they are frozen at creation', () => {
+    expect(
+      challengeUpdateSchema.parse({ title: 'Spring run', description: '', visibility: 'public' }),
+    ).toEqual({ title: 'Spring run', description: '' });
   });
 });

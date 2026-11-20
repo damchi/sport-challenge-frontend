@@ -7,6 +7,7 @@ import { queryKeys } from '../queryKeys';
 export type ChallengeSummary = components['schemas']['ChallengeSummary'];
 export type ChallengeCreate = components['schemas']['ChallengeCreate'];
 export type ChallengeDetail = components['schemas']['ChallengeDetail'];
+export type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
 
 /**
  * Challenges of a list, page by page (cursor): `fetchNextPage` loads the
@@ -64,6 +65,31 @@ export function useCreateChallenge() {
       return data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+  });
+}
+
+/**
+ * Edits the title and the description of a challenge (creators only): its
+ * page shows the answer, and the lists reload with the new title. Its errors
+ * are shown by the edit form (by field), not the global banner.
+ */
+export function useUpdateChallenge(challengeId: string) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async (update: ChallengeUpdate) => {
+      const { data } = await client.PATCH('/api/v1/challenges/{challengeId}', {
+        params: { path: { challengeId } },
+        body: update,
+      });
+      if (!data) throw new Error('Empty challenge response');
+      return data;
+    },
+    onSuccess: (challenge) => {
+      queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+    },
   });
 }
 

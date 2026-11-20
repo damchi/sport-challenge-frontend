@@ -411,8 +411,14 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
 
-      expect(await screen.findByRole('status')).toHaveTextContent(
-        "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+      // A creator's page has a second status line, the edit form's: the
+      // outcome is found by its text, then becomes a status once answered.
+      await vi.waitFor(() =>
+        expect(
+          screen.getByText(
+            "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+          ),
+        ).toHaveAttribute('role', 'status'),
       );
       expect(screen.getByText('Créateur')).toBeInTheDocument();
       expect(screen.getByText('A abandonné')).toBeInTheDocument();

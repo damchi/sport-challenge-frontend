@@ -15,6 +15,7 @@ type Me = components['schemas']['Me'];
 type ChallengeSummary = components['schemas']['ChallengeSummary'];
 type ChallengePage = components['schemas']['ChallengePage'];
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
+type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
 type ApiErrorBody = components['schemas']['Error'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
@@ -118,6 +119,25 @@ export const handlers = [
       return HttpResponse.json(body, { status: 404 });
     }
     return HttpResponse.json<ChallengeDetail>(mockChallengeDetail(summary));
+  }),
+  // The challenge with its new title and description; an empty description
+  // removes it.
+  http.patch('*/api/v1/challenges/:challengeId', async ({ params, request }) => {
+    const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    const update = (await request.json()) as ChallengeUpdate;
+    const detail = mockChallengeDetail(summary);
+    return HttpResponse.json<ChallengeDetail>({
+      ...detail,
+      title: update.title?.trim() ?? detail.title,
+      description:
+        update.description === undefined ? detail.description : update.description || null,
+    });
   }),
   // The challenge as the new participant sees it.
   http.post('*/api/v1/challenges/:challengeId/join', ({ params }) => {

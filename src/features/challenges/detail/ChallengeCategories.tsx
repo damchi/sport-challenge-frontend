@@ -3,14 +3,9 @@ import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
 import { sortSportsByName } from '../../../domain/challengeCreate';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import { useSportName } from '../create/useSportName';
+import { CATEGORY_NAMES } from './categoryNames';
 
 type Category = ChallengeDetail['categories'][number];
-
-const NAMES: Record<Category['type'], string> = {
-  cumulative_time: 'challengeCreate.categories.time.name',
-  cumulative_distance: 'challengeCreate.categories.distance.name',
-  run_elimination: 'challengeCreate.categories.elimination.name',
-};
 
 /** Settings of a category, frozen at creation, as the server sends them. */
 function CategoryParams({ category }: { category: Category }) {
@@ -70,7 +65,7 @@ export function ChallengeCategories({
       <ol className="mt-3 flex flex-col gap-3">
         {ordered.map((category) => (
           <li key={category.type}>
-            <span className="font-semibold">{t(NAMES[category.type])}</span>
+            <span className="font-semibold">{t(CATEGORY_NAMES[category.type])}</span>
             <CategoryParams category={category} />
           </li>
         ))}

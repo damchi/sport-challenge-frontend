@@ -11,6 +11,7 @@
     "app_unavailable": "The app is temporarily unavailable.",
     "challenge_ended": "This challenge is over.",
     "challenge_not_found": "This challenge doesn't exist or you don't have access to it.",
+    "field_not_editable": "Only the title and description of a challenge can be edited.",
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
@@ -330,6 +331,20 @@
       "message": "This is final: you are eliminated from all 3 categories and shown as “Abandoned” in the leaderboards, off the podium. You won't be able to join this challenge again.",
       "confirm": "Abandon",
       "cancel": "Cancel"
+    },
+    "edit": {
+      "button": "Edit the title and description",
+      "heading": "Edit the challenge",
+      "frozen": "Dates, visibility and categories are set at creation: they no longer change. Only the title and description can be edited.",
+      "dates": "Dates",
+      "visibility": "Visibility",
+      "categories": "Categories",
+      "descriptionHint": "2000 characters at most. Left empty, it is removed from the challenge.",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "saved": "Title and description saved.",
+      "serverInvalid": "Value refused. Check it, then try again."
     }
   },
   "sports": {
