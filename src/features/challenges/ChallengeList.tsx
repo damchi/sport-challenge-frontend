@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import { useChallenges } from '../../api/hooks/useChallenges';
@@ -24,7 +25,8 @@ const CHIP_OFF = 'border-border bg-surface text-muted';
 /**
  * Challenges of the home page: public ones or mine (tabs), filtered by the
  * status the server computes, page by page. The choices live in the address
- * (?scope=&status=), so going back keeps them.
+ * (?scope=&status=), so going back keeps them. A tile to create a challenge
+ * ends the list.
  */
 export function ChallengeList() {
   const { t } = useTranslation();
@@ -119,6 +121,16 @@ export function ChallengeList() {
                   <ChallengeCard challenge={challenge} showStatus={!status} />
                 </li>
               ))}
+              {/* Creating stays at hand once the list is not empty. */}
+              <li>
+                <Link
+                  to="/challenges/new"
+                  className="flex h-full min-h-30 items-center justify-center gap-2 rounded-card border-2 border-dashed border-border-dashed p-4 font-bold text-accent"
+                >
+                  <Plus aria-hidden="true" size={22} strokeWidth={2} />
+                  {t('challenges.create')}
+                </Link>
+              </li>
             </ul>
             <LoadMore
               hasMore={challenges.hasNextPage}

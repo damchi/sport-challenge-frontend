@@ -225,7 +225,7 @@ barre → ligne méta (ce qui manque avant la clôture, ou les sports) et rang
 
 Disposition : une carte par ligne en mobile ; en web, grille
 `repeat(auto-fill, minmax(300px, 1fr))`, gap 16 px (deux cartes par ligne à
-1280 px). 🟡 La grille se termine par une tuile « Créer un défi » (bordure
+1280 px). ✅ La grille se termine par une tuile « Créer un défi » (bordure
 pointillée `--color-border-dashed`, icône `plus` et texte en accent, hauteur
 minimale 120 px) ; en mobile, la même tuile termine la liste.
 
