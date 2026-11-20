@@ -44,7 +44,7 @@ describe('error messages', () => {
   });
 
   it('falls back on errors.unknown for a code without text', () => {
-    const error = new ApiError('week_locked', 409, { week: '3' });
+    const error = new ApiError('last_creator', 409, { week: '3' });
 
     expect(errorMessage(error, (key) => i18n.exists(key))).toEqual({
       key: 'errors.unknown',

@@ -7,10 +7,14 @@
     "backHome": "Retour à l'accueil"
   },
   "errors": {
+    "activity_not_found": "Cette activité n'existe plus : elle a été supprimée.",
+    "activity_overlap": "Cette activité chevauche une autre de tes activités. Vérifie le début et la durée.",
     "already_participant": "Tu participes déjà à ce défi.",
     "app_unavailable": "L'application est momentanément indisponible.",
     "challenge_ended": "Ce défi est terminé.",
     "challenge_not_found": "Ce défi n'existe pas ou tu n'y as pas accès.",
+    "distance_not_allowed": "Ce sport ne prend pas de distance.",
+    "distance_required": "Ce sport demande une distance.",
     "field_not_editable": "Seuls le titre et la description d'un défi peuvent être modifiés.",
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
@@ -23,7 +27,8 @@
     "registration_closed": "Les inscriptions à ce défi sont closes depuis la fin de la semaine 1.",
     "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
     "unknown": "Une erreur est survenue. Réessaie.",
-    "validation_failed": "Certaines informations sont invalides. Vérifie-les, puis réessaie."
+    "validation_failed": "Certaines informations sont invalides. Vérifie-les, puis réessaie.",
+    "week_locked": "La semaine de cette activité est terminée dans un de tes défis : elle ne peut plus être ajoutée. Vérifie la date de début."
   },
   "errorPage": {
     "title": "Oups, cette page n'a pas pu s'afficher",
@@ -104,6 +109,53 @@
   "activities": {
     "title": "Mes activités",
     "empty": "Tes activités apparaîtront ici."
+  },
+  "activityForm": {
+    "title": "Ajouter une activité",
+    "fields": {
+      "sport": {
+        "label": "Sport",
+        "placeholder": "Choisis un sport",
+        "other": "Autre (préciser)",
+        "required": "Choisis un sport."
+      },
+      "sportLabel": {
+        "label": "Quel sport ?",
+        "hint": "Entre 2 et 40 caractères.",
+        "length": "Écris entre 2 et 40 caractères.",
+        "characters": "Ce nom contient des caractères invisibles ou de contrôle. Retire-les."
+      },
+      "startedAt": {
+        "label": "Début",
+        "hint": "Date et heure de début, à l'heure de ton appareil.",
+        "required": "Indique la date et l'heure de début.",
+        "range": "Le début ne peut pas être dans le futur, ni avant l'an 2000."
+      },
+      "duration": {
+        "label": "Durée",
+        "hours": "Heures",
+        "minutes": "Minutes",
+        "seconds": "Secondes",
+        "hint": "Obligatoire, 24 h au plus. La vitesse est calculée à partir de la durée et de la distance.",
+        "invalid": "Indique des nombres entiers : 24 heures au plus, minutes et secondes de 0 à 59.",
+        "range": "Indique une durée entre 1 seconde et 24 heures.",
+        "future": "L'activité doit être terminée : son début plus sa durée dépasse l'heure actuelle."
+      },
+      "distance": {
+        "label": "Distance (km)",
+        "hintRequired": "Obligatoire pour ce sport.",
+        "hintOptional": "Facultative : si tu l'indiques, l'activité compte aussi pour la distance.",
+        "required": "Indique la distance.",
+        "range": "Indique une distance en km, de 0,001 à 1000, avec 3 décimales au plus."
+      },
+      "serverInvalid": "Valeur refusée. Vérifie-la."
+    },
+    "submit": {
+      "label": "Enregistrer l'activité",
+      "busy": "Enregistrement…"
+    },
+    "saved": "Activité enregistrée.",
+    "back": "Retour à mes défis"
   },
   "settings": {
     "theme": {
@@ -367,7 +419,11 @@
     "rowing": "Aviron",
     "roller": "Roller",
     "xc_ski": "Ski de fond",
-    "other": "Autre"
+    "other": "Autre",
+    "run": "Course",
+    "yoga": "Yoga",
+    "climbing": "Escalade",
+    "strength": "Renforcement musculaire"
   },
   "leaderboard": {
     "label": "Classement du défi",

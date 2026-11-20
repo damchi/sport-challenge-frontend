@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
@@ -28,6 +28,18 @@ describe('routes', () => {
       await screen.findByRole('heading', { level: 1, name: 'Créer un défi' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
+  });
+
+  it('opens the activity entry from the home page', async () => {
+    renderAt('/');
+    const add = await screen.findByRole('link', { name: 'Ajouter une activité' });
+    expect(add).toHaveAttribute('href', '/activities/new');
+    fireEvent.click(add);
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Ajouter une activité' }),
+    ).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: 'Sport' })).toBeInTheDocument();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {

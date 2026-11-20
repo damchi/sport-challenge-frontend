@@ -7,10 +7,14 @@
     "backHome": "Back to home"
   },
   "errors": {
+    "activity_not_found": "This activity no longer exists: it was deleted.",
+    "activity_overlap": "This activity overlaps another of your activities. Check the start and the duration.",
     "already_participant": "You are already taking part in this challenge.",
     "app_unavailable": "The app is temporarily unavailable.",
     "challenge_ended": "This challenge is over.",
     "challenge_not_found": "This challenge doesn't exist or you don't have access to it.",
+    "distance_not_allowed": "This sport takes no distance.",
+    "distance_required": "This sport needs a distance.",
     "field_not_editable": "Only the title and description of a challenge can be edited.",
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
@@ -23,7 +27,8 @@
     "registration_closed": "Registration for this challenge closed at the end of week 1.",
     "unauthenticated": "Your session has ended. Sign in again.",
     "unknown": "Something went wrong. Try again.",
-    "validation_failed": "Some details are invalid. Check them, then try again."
+    "validation_failed": "Some details are invalid. Check them, then try again.",
+    "week_locked": "The week of this activity has ended in one of your challenges: it can no longer be added. Check the start date."
   },
   "errorPage": {
     "title": "Oops, this page couldn't be displayed",
@@ -104,6 +109,53 @@
   "activities": {
     "title": "My activities",
     "empty": "Your activities will appear here."
+  },
+  "activityForm": {
+    "title": "Add an activity",
+    "fields": {
+      "sport": {
+        "label": "Sport",
+        "placeholder": "Choose a sport",
+        "other": "Other (specify)",
+        "required": "Choose a sport."
+      },
+      "sportLabel": {
+        "label": "Which sport?",
+        "hint": "2 to 40 characters.",
+        "length": "Write 2 to 40 characters.",
+        "characters": "This name has invisible or control characters. Remove them."
+      },
+      "startedAt": {
+        "label": "Start",
+        "hint": "Start date and time, on your device's clock.",
+        "required": "Enter the start date and time.",
+        "range": "The start cannot be in the future, nor before 2000."
+      },
+      "duration": {
+        "label": "Duration",
+        "hours": "Hours",
+        "minutes": "Minutes",
+        "seconds": "Seconds",
+        "hint": "Required, 24 h at most. The speed is computed from the duration and the distance.",
+        "invalid": "Enter whole numbers: 24 hours at most, minutes and seconds from 0 to 59.",
+        "range": "Enter a duration between 1 second and 24 hours.",
+        "future": "The activity must be over: its start plus its duration is past the current time."
+      },
+      "distance": {
+        "label": "Distance (km)",
+        "hintRequired": "Required for this sport.",
+        "hintOptional": "Optional: if you enter it, the activity also counts for distance.",
+        "required": "Enter the distance.",
+        "range": "Enter a distance in km, from 0.001 to 1000, with 3 decimals at most."
+      },
+      "serverInvalid": "Value refused. Check it."
+    },
+    "submit": {
+      "label": "Save the activity",
+      "busy": "Saving…"
+    },
+    "saved": "Activity saved.",
+    "back": "Back to my challenges"
   },
   "settings": {
     "theme": {
@@ -365,7 +417,11 @@
     "rowing": "Rowing",
     "roller": "Inline skating",
     "xc_ski": "Cross-country skiing",
-    "other": "Other"
+    "other": "Other",
+    "run": "Running",
+    "yoga": "Yoga",
+    "climbing": "Climbing",
+    "strength": "Strength training"
   },
   "leaderboard": {
     "label": "Challenge leaderboard",
