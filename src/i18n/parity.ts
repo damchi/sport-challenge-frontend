@@ -1,8 +1,11 @@
 // Checks of the translation files: the same keys in every language, and every
 // plural form a language needs. Plural keys are compared by their base key,
 // since languages need different forms (French has `many`, English not).
+// Ordinal keys (`rank_ordinal_one`, i18next's `ordinal: true`) need the
+// language's ordinal forms (English has `two` and `few`, French not).
 
-const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
+const PLURAL_SUFFIX = /_(?:ordinal_)?(zero|one|two|few|many|other)$/;
+const ORDINAL_SUFFIX = /_ordinal_(zero|one|two|few|many|other)$/;
 
 function keyPaths(messages: unknown, prefix = ''): string[] {
   if (typeof messages !== 'object' || messages === null) return [prefix];
@@ -24,13 +27,16 @@ export function missingKeys(reference: unknown, other: unknown): string[] {
 /** Plural forms the language needs (Intl.PluralRules) that a plural key lacks. */
 export function missingPluralForms(messages: unknown, language: string): string[] {
   const paths = keyPaths(messages);
-  const pluralBases = new Set(
-    paths.filter((path) => PLURAL_SUFFIX.test(path)).map((path) => path.replace(PLURAL_SUFFIX, '')),
-  );
-  const needed = new Intl.PluralRules(language).resolvedOptions().pluralCategories;
   const present = new Set(paths);
-  return [...pluralBases]
-    .flatMap((base) => needed.map((form) => `${base}_${form}`))
+  const forms = (type: Intl.PluralRuleType, keys: string[], infix: string) => {
+    const bases = new Set(keys.map((path) => path.replace(PLURAL_SUFFIX, '')));
+    const needed = new Intl.PluralRules(language, { type }).resolvedOptions().pluralCategories;
+    return [...bases].flatMap((base) => needed.map((form) => `${base}${infix}${form}`));
+  };
+  const plural = paths.filter((path) => PLURAL_SUFFIX.test(path));
+  const ordinal = plural.filter((path) => ORDINAL_SUFFIX.test(path));
+  const cardinal = plural.filter((path) => !ORDINAL_SUFFIX.test(path));
+  return [...forms('ordinal', ordinal, '_ordinal_'), ...forms('cardinal', cardinal, '_')]
     .filter((path) => !present.has(path))
     .sort();
 }

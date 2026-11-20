@@ -47,7 +47,7 @@ export function ChallengeLeaderboard() {
   };
   const ranked = category.entries.filter((entry) => !entry.abandoned);
   const abandoned = category.entries.filter((entry) => entry.abandoned);
-  const podium = ranked.filter((entry) => (entry.rank ?? 0) <= 3);
+  const podium = ranked.filter((entry) => entry.rank !== null && entry.rank <= 3);
   const ties = sharedRanks(ranked.map((entry) => entry.rank));
   const linked = canSeeParticipantActivities(challenge.data.my_role);
   const rowProps = (userId: string) => ({

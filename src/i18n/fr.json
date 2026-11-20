@@ -374,6 +374,8 @@
     "categories": "Catégorie du classement",
     "podium": "Podium",
     "ranking": "Classement complet",
+    "rank_ordinal_one": "{{count}}er",
+    "rank_ordinal_other": "{{count}}e",
     "out": "Éliminés",
     "abandoned": "A abandonné",
     "you": "Toi",

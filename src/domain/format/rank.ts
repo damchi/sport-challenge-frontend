@@ -1,13 +1,5 @@
-// Ranks of a leaderboard as ordinals of the language: 1er, 2e / 1st, 2nd.
-
-const ENGLISH_SUFFIXES: Record<string, string> = { one: 'st', two: 'nd', few: 'rd', other: 'th' };
-
-/** A rank as an ordinal: "1er", "2e" in French, "1st", "22nd", "13th" otherwise. */
-export function formatRank(rank: number, locale: string): string {
-  if (locale.startsWith('fr')) return rank === 1 ? '1er' : `${rank}e`;
-  const category = new Intl.PluralRules('en', { type: 'ordinal' }).select(rank);
-  return `${rank}${ENGLISH_SUFFIXES[category] ?? 'th'}`;
-}
+// Ranks of a leaderboard, as the server gives them. Their ordinals (1er,
+// 1st) are translations: leaderboard.rank_ordinal_* in src/i18n.
 
 /** Ranks held by more than one participant (ties: 1, 1, 3). */
 export function sharedRanks(ranks: readonly (number | null)[]): Set<number> {

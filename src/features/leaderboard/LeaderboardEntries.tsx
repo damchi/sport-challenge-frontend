@@ -6,7 +6,6 @@ import { Avatar } from '../../components/Avatar';
 import { displayName } from '../../domain/displayName';
 import { formatKm } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
-import { formatRank } from '../../domain/format/rank';
 
 type CategoryType = Leaderboard['categories'][number]['type'];
 
@@ -65,7 +64,7 @@ function useEntryValue(type: CategoryType, value: number | null): string {
 
 /** A card of the podium: the rank as an ordinal ("1er"), noted when shared. */
 export function PodiumCard({ entry, type, me, href, tied }: RankedProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const value = useEntryValue(type, entry.value);
   return (
@@ -74,7 +73,7 @@ export function PodiumCard({ entry, type, me, href, tied }: RankedProps) {
       className={`flex w-full flex-col items-center gap-1 p-3 text-center ${BOX} ${me ? BOX_ON : BOX_OFF}`}
     >
       <span className="font-display text-lg font-bold">
-        {formatRank(entry.rank ?? 0, i18n.resolvedLanguage ?? 'fr')}
+        {t('leaderboard.rank', { count: entry.rank ?? 0, ordinal: true })}
         {tied && (
           <span className="block text-xs font-semibold text-muted">{t('leaderboard.tied')}</span>
         )}

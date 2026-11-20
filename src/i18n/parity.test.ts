@@ -27,6 +27,16 @@ describe('missingKeys', () => {
     expect(missingPluralForms({ title: 'x' }, 'fr')).toEqual([]);
   });
 
+  it('lists the ordinal forms a language needs and a key lacks', () => {
+    const english = { rank_ordinal_one: 'a', rank_ordinal_other: 'b' };
+    const french = { rank_ordinal_one: 'a', rank_ordinal_other: 'b' };
+
+    expect(missingPluralForms(english, 'en')).toEqual(['rank_ordinal_few', 'rank_ordinal_two']);
+    // French ordinals have no `many`, unlike its cardinals.
+    expect(missingPluralForms(french, 'fr')).toEqual([]);
+    expect(missingKeys(english, { rank: 'x' })).toEqual([]);
+  });
+
   it('finds the same keys and every plural form in fr.json and en.json', () => {
     expect(missingPluralForms(fr, 'fr')).toEqual([]);
     expect(missingPluralForms(en, 'en')).toEqual([]);
