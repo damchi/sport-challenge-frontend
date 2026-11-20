@@ -184,7 +184,7 @@ ticket SC-WEB-019 ; réservée au web, le mobile en V2 aura son équivalent).
 Correspondances : défis `trophy`, activités `activity`, badges `award`, profil
 `user`, notifications `bell`, à risque `triangle-alert`, atteint `check`,
 retour `chevron-left`, suite `chevron-right`, inviter `user-plus`, compte à
-rebours `timer`, ajouter `plus`.
+rebours `timer`, ajouter `plus`, résultats définitifs `flag`.
 
 Une icône décorative porte `aria-hidden="true"` ; un bouton qui n'a qu'une
 icône porte un `aria-label`.

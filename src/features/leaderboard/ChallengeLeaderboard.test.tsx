@@ -306,21 +306,21 @@ describe('ChallengeLeaderboard', () => {
   });
 });
 
+/** The device in a time zone: the challenge's one, unless said otherwise. */
+function deviceIn(timeZone: string) {
+  const resolved = Intl.DateTimeFormat.prototype.resolvedOptions;
+  vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (
+    this: Intl.DateTimeFormat,
+  ) {
+    return { ...resolved.call(this), timeZone };
+  });
+}
+
 describe('ChallengeLeaderboard, refresh', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
-
-  /** The device in a time zone: the challenge's one, unless said otherwise. */
-  function deviceIn(timeZone: string) {
-    const resolved = Intl.DateTimeFormat.prototype.resolvedOptions;
-    vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (
-      this: Intl.DateTimeFormat,
-    ) {
-      return { ...resolved.call(this), timeZone };
-    });
-  }
 
   it('says when the server computed the leaderboard, in the challenge time zone', async () => {
     deviceIn(summary.timezone);
@@ -376,6 +376,65 @@ describe('ChallengeLeaderboard, refresh', () => {
     comeBack();
     expect(await screen.findByText('Mis à jour : 18 nov., 10:20')).toBeInTheDocument();
     expect(calls).toBe(2);
+  });
+});
+
+describe('ChallengeLeaderboard, finished challenge', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const finished = { status: 'finished', current_week: null, week_ends_at: null } as const;
+
+  it('says the results are final, with the last day in the challenge time zone', async () => {
+    deviceIn(summary.timezone);
+    answer(finished);
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}`);
+
+    expect(
+      await screen.findByText("Résultats définitifs : le défi s'est terminé le 29 nov."),
+    ).toBeInTheDocument();
+    // Frozen: no update time to follow.
+    expect(screen.queryByText(/Mis à jour/)).not.toBeInTheDocument();
+    expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  it('names the challenge time zone when the device is elsewhere', async () => {
+    deviceIn('Europe/Paris');
+    answer(finished);
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}`);
+
+    expect(
+      await screen.findByText(
+        "Résultats définitifs : le défi s'est terminé le 29 nov., heure de l’Est nord-américain",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  // The whole page is rendered: the participation block is under test too.
+  it.each([
+    ['an active participant', { my_role: 'participant', my_status: 'active' }],
+    ['a visitor', { my_role: 'outsider', my_status: null }],
+  ] as const)('offers neither joining nor abandoning to %s, read only', async (_, detail) => {
+    deviceIn(summary.timezone);
+    answer({ ...finished, ...detail, can_join: false });
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}`);
+
+    expect(await screen.findByText(/Résultats définitifs/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rejoindre le défi' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
+  });
+
+  it('shows no final mention while the challenge is ongoing', async () => {
+    answer({ status: 'ongoing' });
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}`);
+
+    expect(await screen.findByText(/Mis à jour/)).toBeInTheDocument();
+    expect(screen.queryByText(/Résultats définitifs/)).not.toBeInTheDocument();
   });
 });
 

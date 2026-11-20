@@ -1,3 +1,4 @@
+import { Flag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
 import { useChallenge, useLeaderboard, type LeaderboardEntry } from '../../api/hooks/useChallenges';
@@ -6,7 +7,11 @@ import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../domain/challenge';
-import { challengeTime, otherTimeZoneName } from '../../domain/format/challengeDates';
+import {
+  challengePeriod,
+  challengeTime,
+  otherTimeZoneName,
+} from '../../domain/format/challengeDates';
 import { sharedRanks } from '../../domain/format/rank';
 import { CATEGORY_NAMES } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
@@ -22,7 +27,8 @@ const SEGMENT_OFF = 'text-muted';
  * its full ranking and, apart, the participants who abandoned or, in the run
  * elimination, were eliminated. Ranks, order and statuses are the server's.
  * The user's row stands out and stays on screen. No live update in V1: it
- * says when the server computed it.
+ * says when the server computed it. Once the challenge is finished (the
+ * server's status), its results are final: it says so, with its last day.
  * Rendered under the challenge page, which has already loaded the challenge.
  */
 export function ChallengeLeaderboard() {
@@ -91,13 +97,29 @@ export function ChallengeLeaderboard() {
         ))}
       </div>
 
-      <p className="mt-2 text-xs text-muted">
-        {t('leaderboard.updated', {
-          date: challengeTime(computedAt, timezone, locale),
-          zone,
-          context: zone && 'zone',
-        })}
-      </p>
+      {challenge.data.status === 'finished' ? (
+        <p className="mt-3 flex items-start gap-2 text-sm font-semibold text-ink">
+          <Flag aria-hidden="true" size={16} strokeWidth={2} className="mt-0.5 flex-none" />
+          {t('leaderboard.final', {
+            date: challengePeriod(
+              challenge.data.starts_at,
+              challenge.data.ends_at,
+              timezone,
+              locale,
+            ).end,
+            zone,
+            context: zone && 'zone',
+          })}
+        </p>
+      ) : (
+        <p className="mt-2 text-xs text-muted">
+          {t('leaderboard.updated', {
+            date: challengeTime(computedAt, timezone, locale),
+            zone,
+            context: zone && 'zone',
+          })}
+        </p>
+      )}
 
       {/* Only during the weeks of the challenge: the minimum then applies. */}
       {category.type === 'run_elimination' && challenge.data.current_week !== null && (

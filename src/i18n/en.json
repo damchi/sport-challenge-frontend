@@ -383,6 +383,8 @@
     "tied": "tied",
     "equivalent": "{{distance}} run equiv.",
     "empty": "No one is ranked in this challenge yet.",
+    "final": "Final results: the challenge ended on {{date}}",
+    "final_zone": "Final results: the challenge ended on {{date}}, {{zone}}",
     "updated": "Updated {{date}}",
     "updated_zone": "Updated {{date}}, {{zone}}",
     "elimination": {

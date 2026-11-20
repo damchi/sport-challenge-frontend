@@ -453,8 +453,9 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 - [ ] « Ajouter un créateur » : choix parmi les participants actifs.
 - [ ] « Exclure » sur un participant : confirmation ; l'exclu apparaît ensuite comme « a abandonné » ; un créateur ne peut pas être exclu (`cannot_exclude_creator` traduit).
 - [ ] Ces actions n'apparaissent que pour les créateurs, d'après les champs du serveur.
+- [ ] « Supprimer le challenge » reste proposé aux créateurs d'un challenge terminé (critère transféré de SC-WEB-033).
 
-**Tests** : chaque action, confirmation renforcée, erreurs.
+**Tests** : chaque action, confirmation renforcée, erreurs, suppression sur un challenge terminé.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`, `spec-guardian`.
 **Commit** : `feat(challenges): add creator actions to delete, add creator and exclude`
 **Statut** : À faire
@@ -527,7 +528,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Critères d'acceptation**
 - [ ] Un challenge terminé affiche ses résultats figés en lecture seule : podiums, classements, aucune action de saisie ni d'abandon.
 - [ ] Mention « Résultats définitifs » avec la date de fin dans le fuseau du challenge.
-- [ ] Les créateurs gardent « Supprimer le challenge ».
+- [ ] Les créateurs gardent « Supprimer le challenge » : transféré à SC-WEB-028, qui crée l'action (décision du 2026-11-20).
 
 **Tests** : challenge terminé, actions absentes.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.

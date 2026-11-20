@@ -383,6 +383,8 @@
     "tied": "ex æquo",
     "equivalent": "{{distance}} éq. course",
     "empty": "Personne n'est encore classé dans ce défi.",
+    "final": "Résultats définitifs : le défi s'est terminé le {{date}}",
+    "final_zone": "Résultats définitifs : le défi s'est terminé le {{date}}, {{zone}}",
     "updated": "Mis à jour : {{date}}",
     "updated_zone": "Mis à jour : {{date}}, {{zone}}",
     "elimination": {
