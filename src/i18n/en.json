@@ -378,9 +378,18 @@
     "rank_ordinal_other": "{{count}}th",
     "out": "Eliminated",
     "abandoned": "Abandoned",
+    "eliminated": "Eliminated in week {{week}}",
     "you": "You",
     "tied": "tied",
     "equivalent": "{{distance}} run equiv.",
-    "empty": "No one is ranked in this challenge yet."
+    "empty": "No one is ranked in this challenge yet.",
+    "elimination": {
+      "reached": "Goal reached",
+      "in_progress": "In progress",
+      "at_risk": "At risk",
+      "progress": "{{run}} of {{minimum}} this week",
+      "firstWeek": "No elimination in week 1: the first minimum applies in week 2.",
+      "rule": "Next week's minimum = your distance this week + {{step}}. Run more than the minimum and your distance becomes the new base."
+    }
   }
 }

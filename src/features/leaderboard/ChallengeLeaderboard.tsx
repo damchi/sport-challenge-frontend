@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
-import { useChallenge, useLeaderboard } from '../../api/hooks/useChallenges';
+import { useChallenge, useLeaderboard, type LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { useMe } from '../../api/hooks/useMe';
 import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
@@ -8,7 +8,8 @@ import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../domain/challenge';
 import { sharedRanks } from '../../domain/format/rank';
 import { CATEGORY_NAMES } from '../challenges/detail/categoryNames';
-import { AbandonedRow, LeaderboardRow, PodiumCard } from './LeaderboardEntries';
+import { EliminationContext } from './EliminationProgress';
+import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
 
 const SEGMENT = 'min-h-11 flex-1 rounded-tab px-2 py-1 text-sm leading-tight font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
@@ -17,8 +18,9 @@ const SEGMENT_OFF = 'text-muted';
 /**
  * Leaderboard tab of a challenge: one category at a time (its choice lives in
  * the address, ?category=), with its podium (ranks 1 to 3, ties included),
- * its full ranking and, apart, the participants who abandoned. Ranks and
- * order are the server's. The user's row stands out and stays on screen.
+ * its full ranking and, apart, the participants who abandoned or, in the run
+ * elimination, were eliminated. Ranks, order and statuses are the server's.
+ * The user's row stands out and stays on screen.
  * Rendered under the challenge page, which has already loaded the challenge.
  */
 export function ChallengeLeaderboard() {
@@ -45,8 +47,11 @@ export function ChallengeLeaderboard() {
     next.set('category', type);
     setParams(next, { replace: true });
   };
-  const ranked = category.entries.filter((entry) => !entry.abandoned);
-  const abandoned = category.entries.filter((entry) => entry.abandoned);
+  // Eliminated ones follow the survivors, abandoned ones come last (server's order).
+  const isOut = (entry: LeaderboardEntry) =>
+    entry.abandoned || (entry.elimination?.eliminated_week ?? null) !== null;
+  const ranked = category.entries.filter((entry) => !isOut(entry));
+  const out = category.entries.filter(isOut);
   const podium = ranked.filter((entry) => entry.rank !== null && entry.rank <= 3);
   const ties = sharedRanks(ranked.map((entry) => entry.rank));
   const linked = canSeeParticipantActivities(challenge.data.my_role);
@@ -75,6 +80,11 @@ export function ChallengeLeaderboard() {
           </button>
         ))}
       </div>
+
+      {/* Only during the weeks of the challenge: the minimum then applies. */}
+      {category.type === 'run_elimination' && challenge.data.current_week !== null && (
+        <EliminationContext challenge={challenge.data} weekEndsAt={challenge.data.week_ends_at} />
+      )}
 
       {category.entries.length === 0 ? (
         <div className="mt-4">
@@ -131,15 +141,15 @@ export function ChallengeLeaderboard() {
             </section>
           )}
 
-          {abandoned.length > 0 && (
+          {out.length > 0 && (
             <section aria-labelledby="leaderboard-out" className="mt-6">
               <h2 id="leaderboard-out" className="text-sm font-bold text-muted uppercase">
                 {t('leaderboard.out')}
               </h2>
               <ul className="mt-2 grid gap-2">
-                {abandoned.map((entry) => (
+                {out.map((entry) => (
                   <li key={entry.user.id}>
-                    <AbandonedRow entry={entry} {...rowProps(entry.user.id)} />
+                    <OutRow entry={entry} {...rowProps(entry.user.id)} />
                   </li>
                 ))}
               </ul>

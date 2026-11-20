@@ -67,6 +67,23 @@ function leaderboard(categories: Leaderboard['categories']) {
   );
 }
 
+type Elimination = NonNullable<LeaderboardEntry['elimination']>;
+
+/** A survivor or an eliminated one of the run elimination, in week 3 by default. */
+function runner(pseudo: string, rank: number, value: number, elimination: Partial<Elimination>) {
+  return {
+    ...entry(pseudo, rank, value),
+    elimination: {
+      status: null,
+      eliminated_week: null,
+      minimum_meters: null,
+      run_meters: 0,
+      week_ends_at: '2026-11-23T05:00:00Z',
+      ...elimination,
+    },
+  };
+}
+
 const threeCategories: Leaderboard['categories'] = [
   { type: 'cumulative_time', entries: time },
   { type: 'cumulative_distance', entries: [entry('nina', 1, 12_500)] },
@@ -286,5 +303,198 @@ describe('ChallengeLeaderboard', () => {
     leaderboard(threeCategories);
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(await section('Podium')).toBeInTheDocument();
+  });
+});
+
+describe('ChallengeLeaderboard, run elimination', () => {
+  const at = `/challenges/${id}?category=run_elimination`;
+  const board = () => screen.findByRole('region', { name: 'Classement du défi' });
+
+  it('shows each live status with its icon, the minimum, the distance run and the week end', async () => {
+    answer({ current_week: 3 });
+    leaderboard([
+      {
+        type: 'run_elimination',
+        entries: [
+          runner('julie', 1, 30_000, {
+            status: 'reached',
+            minimum_meters: 10_000,
+            run_meters: 12_000,
+          }),
+          runner('marc', 2, 25_000, {
+            status: 'in_progress',
+            minimum_meters: 10_000,
+            run_meters: 4_500,
+          }),
+          runner('sofia', 3, 20_000, {
+            status: 'at_risk',
+            minimum_meters: 9_000,
+            run_meters: 2_000,
+          }),
+        ],
+      },
+    ]);
+    renderAt(at);
+
+    const rows = within(await section('Classement complet')).getAllByRole('listitem');
+    const [reached, running, risk] = rows as [HTMLElement, HTMLElement, HTMLElement];
+    for (const [row, label, progress] of [
+      [reached, 'Objectif atteint', '12 km sur 10 km cette semaine'],
+      [running, 'En cours', '4,5 km sur 10 km cette semaine'],
+      [risk, 'À risque', '2 km sur 9 km cette semaine'],
+    ] as const) {
+      // Never the colour alone: a label with its icon.
+      const pill = within(row).getByText(label);
+      expect(pill.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+      expect(within(row).getByText(progress)).toBeInTheDocument();
+    }
+    expect(risk.firstElementChild).toHaveClass('border-risk-border');
+    expect(reached.firstElementChild).not.toHaveClass('border-risk-border');
+    expect(
+      // The hour of the challenge's time zone, whatever the device's.
+      within(await board()).getByText(/^Fin de la semaine : lundi 23 novembre à 00 h/),
+    ).toBeInTheDocument();
+  });
+
+  it('explains how the minimum moves, with the X of the challenge', async () => {
+    answer({ current_week: 3 });
+    leaderboard([
+      {
+        type: 'run_elimination',
+        entries: [runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 })],
+      },
+    ]);
+    renderAt(at);
+
+    expect(
+      await screen.findByText(
+        'Le minimum de la semaine suivante = ta distance de cette semaine + 2 km. Si tu cours plus que le minimum, ta distance devient la nouvelle base.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows no minimum nor status in week 1, and says so', async () => {
+    answer({ current_week: 1 });
+    leaderboard([
+      {
+        type: 'run_elimination',
+        entries: [runner('julie', 1, 6_000, { run_meters: 6_000 })],
+      },
+    ]);
+    renderAt(at);
+
+    expect(
+      await screen.findByText(
+        "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
+      ),
+    ).toBeInTheDocument();
+    const ranking = await section('Classement complet');
+    expect(within(ranking).queryByText(/cette semaine/)).not.toBeInTheDocument();
+    expect(
+      within(ranking).queryByText(/Objectif atteint|En cours|À risque/),
+    ).not.toBeInTheDocument();
+  });
+
+  it('lists the eliminated apart with their week, still ranked in the other categories', async () => {
+    answer({ current_week: 3 });
+    const hugo = '10000000-0000-4000-8000-000000000999';
+    leaderboard([
+      { type: 'cumulative_time', entries: [entry('hugo', 1, 9_000, hugo)] },
+      {
+        type: 'run_elimination',
+        entries: [
+          runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 }),
+          {
+            ...runner('hugo', 2, 8_000, {
+              status: 'eliminated',
+              eliminated_week: 2,
+              week_ends_at: null,
+            }),
+            user: { ...entry('hugo', 2, 0).user, id: hugo },
+          },
+          entry('leo', null, null),
+        ],
+      },
+    ]);
+    renderAt(at);
+
+    const out = within(await section('Éliminés')).getAllByRole('listitem');
+    expect(out.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Éliminé en semaine 2'),
+      expect.stringContaining('A abandonné'),
+    ]);
+    expect(out[0]).toHaveTextContent('hugo');
+    expect(within(await section('Classement complet')).queryByText('hugo')).not.toBeInTheDocument();
+    expect(within(await section('Podium')).queryByText('hugo')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Temps cumulé' }));
+    expect(within(await section('Classement complet')).getByText('hugo')).toBeInTheDocument();
+  });
+
+  it('keeps the at risk status of the user, whose row is highlighted', async () => {
+    answer({ current_week: 3 });
+    leaderboard([
+      {
+        type: 'run_elimination',
+        entries: [
+          {
+            ...runner('marie_92', 1, 9_000, {
+              status: 'at_risk',
+              minimum_meters: 9_000,
+              run_meters: 3_000,
+            }),
+            user: { ...entry('marie_92', 1, 0).user, id: mockMe.id },
+          },
+        ],
+      },
+    ]);
+    renderAt(at);
+
+    const [mine] = within(await section('Classement complet')).getAllByRole('listitem');
+    expect(mine).toHaveTextContent('Toi');
+    expect(within(mine as HTMLElement).getByText('À risque')).toBeInTheDocument();
+  });
+
+  it('shows the eliminated user apart, named Toi, with the week', async () => {
+    answer({ current_week: 3 });
+    leaderboard([
+      {
+        type: 'run_elimination',
+        entries: [
+          runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 }),
+          {
+            ...runner('marie_92', 2, 8_000, {
+              status: 'eliminated',
+              eliminated_week: 2,
+              week_ends_at: null,
+            }),
+            user: { ...entry('marie_92', 2, 0).user, id: mockMe.id },
+          },
+        ],
+      },
+    ]);
+    renderAt(at);
+
+    const [mine] = within(await section('Éliminés')).getAllByRole('listitem');
+    expect(mine).toHaveTextContent('Toi');
+    expect(mine).toHaveTextContent('Éliminé en semaine 2');
+    expect(mine).not.toHaveClass('sticky');
+    expect(within(await section('Classement complet')).queryByText('Toi')).not.toBeInTheDocument();
+  });
+
+  it('shows neither status nor week end outside the weeks of the challenge', async () => {
+    answer({ status: 'finished', current_week: null, week_ends_at: null });
+    leaderboard([
+      {
+        type: 'run_elimination',
+        entries: [runner('julie', 1, 30_000, { week_ends_at: null })],
+      },
+    ]);
+    renderAt(at);
+
+    const ranking = await section('Classement complet');
+    expect(within(ranking).queryByText(/cette semaine/)).not.toBeInTheDocument();
+    expect(within(await board()).queryByText(/Fin de la semaine/)).not.toBeInTheDocument();
+    expect(within(await board()).queryByText(/Le minimum de la semaine/)).not.toBeInTheDocument();
   });
 });
