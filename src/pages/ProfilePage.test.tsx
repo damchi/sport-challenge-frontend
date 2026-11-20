@@ -42,6 +42,23 @@ describe('ProfilePage', () => {
       name: 'Enregistrer',
     });
 
+  it('heads the profile with the initials avatar and the name others see', async () => {
+    server.use(
+      http.get('*/api/v1/me', () =>
+        HttpResponse.json({
+          ...mockMe,
+          pseudo: null,
+          first_name: 'Damien Paul-Louis',
+          last_name: 'Raffi',
+        }),
+      ),
+    );
+    renderProfile();
+
+    expect(await screen.findByText('Damien Paul-Louis Raffi')).toBeInTheDocument();
+    expect(screen.getByText('DR')).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('shows the names to change and the e-mail read-only', async () => {
     renderProfile();
     const section = await identity();

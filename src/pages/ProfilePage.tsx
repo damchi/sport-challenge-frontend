@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useMe } from '../api/hooks/useMe';
 import { Page, PageTitle } from '../components/Page';
+import { ProfileHeader } from '../features/profile/ProfileHeader';
 import { ProfileIdentity } from '../features/profile/ProfileIdentity';
 import { PseudoForm } from '../features/profile/PseudoForm';
 import { AppSettings } from '../features/settings/AppSettings';
@@ -15,6 +16,7 @@ export function ProfilePage() {
       <PageTitle>{t('nav.profile')}</PageTitle>
       {me && (
         <>
+          <ProfileHeader me={me} />
           <ProfileIdentity me={me} />
           <PseudoForm me={me} />
         </>

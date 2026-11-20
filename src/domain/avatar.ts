@@ -1,6 +1,8 @@
 // Initials avatar (V1: no uploaded picture). Pure, so it can be shared with
 // the mobile app.
 
+import type { NamedUser } from './displayName';
+
 /**
  * Up to two characters of the name shown (pseudo, else first and last name):
  * the first letters of the first two words when the second starts with a
@@ -22,6 +24,18 @@ export function initials(name: string): string {
       : [...first].slice(0, 2).join('');
   // Not locale-aware: the same initials on every device, never more than two.
   return [...letters.toUpperCase()].slice(0, 2).join('');
+}
+
+const firstLetter = (name: string | null) => [...(name ?? '').trim()][0] ?? '';
+
+/**
+ * Initials of a user, from the name shown: the pseudo's when there is one
+ * (marie_92 → MA), else the first letter of the first name and of the last
+ * name (Damien Paul-Louis Raffi → DR); empty without any name.
+ */
+export function avatarInitials({ pseudo, first_name, last_name }: NamedUser): string {
+  if (pseudo?.trim()) return initials(pseudo);
+  return `${firstLetter(first_name)}${firstLetter(last_name)}`.toUpperCase();
 }
 
 export const AVATAR_COLORS = 6;

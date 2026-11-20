@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
-import { displayName } from '../../domain/displayName';
 import { profileSchema, profileUpdate, type ProfileInput } from '../../domain/schemas/profile';
 import { NameInput } from './NameInput';
 import { fieldErrors } from './profileErrors';
@@ -67,7 +66,6 @@ export function OnboardingForm({ me }: { me: Me }) {
     control,
     name: ['pseudo', 'first_name', 'last_name'],
   });
-  const shownName = displayName({ pseudo, first_name: firstName, last_name: lastName });
   const pseudoMessage = errors.pseudo?.message;
 
   return (
@@ -93,7 +91,7 @@ export function OnboardingForm({ me }: { me: Me }) {
             {t('onboarding.pseudo.label')}
           </label>
           <div className="mt-2 flex items-center gap-3">
-            <Avatar userId={me.id} name={shownName ?? '?'} />
+            <Avatar userId={me.id} user={{ pseudo, first_name: firstName, last_name: lastName }} />
             <input
               id="pseudo"
               autoComplete="nickname"
