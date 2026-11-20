@@ -646,21 +646,23 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Statut** : À faire
 
 ### SC-WEB-053 · Nom, prénom et e-mail : onboarding et profil
-`F8` · Story · Phase 8 · Estimation 3 · Dépend de : 018, 040 · Backend : `GET` et `PATCH /me` : prénom, nom et e-mail (champs à ajouter au contrat, ticket backend à venir)
+`F8` · Story · Phase 8 · Estimation 3 · Dépend de : 018, 040 · Backend : `GET` et `PATCH /me` : prénom, nom et e-mail (SC-API-116) ; pseudo facultatif (mise à jour backend à venir : `profile_complete` dès le prénom et le nom)
 
 **Origine des données**
-- **E-mail** : vient du claim `email` du jeton Auth0 ; le backend le lit et le renvoie dans `GET /me`. Il n'est ni saisi ni modifiable dans l'app.
+- **E-mail** : vient du claim `email` du jeton Auth0 ; le backend le lit et le renvoie dans `GET /me`. Il n'est ni saisi ni modifiable dans l'app, et reste **privé** : seul son titulaire le voit.
 - **Prénom et nom** : saisis par l'utilisateur à l'onboarding ; **obligatoires**. Le serveur décide si le profil est complet (`profile_complete`) ; l'app ne recalcule pas cette règle.
+- **Pseudo** : **facultatif** ; une fois choisi, il peut être changé (onboarding ou `/me`) mais pas retiré. Nom affiché aux autres : le pseudo s'il est renseigné, sinon le prénom et le nom.
 
 **Critères d'acceptation**
-- [ ] Onboarding (`/onboarding`) : champs **Prénom** et **Nom** obligatoires à côté du pseudo, envoyés par `PATCH /me` ; validation en ligne avec un schéma de `src/domain/schemas` reprenant les règles du contrat (longueurs, caractères), messages traduits ; erreurs de l'API traduites par leur code.
+- [ ] Onboarding (`/onboarding`) : champs **Prénom** et **Nom** obligatoires, **Pseudo** facultatif (non envoyé s'il est vide), envoyés par `PATCH /me` ; validation en ligne avec un schéma de `src/domain/schemas` reprenant les règles du contrat (longueurs, caractères), messages traduits ; erreurs de l'API traduites par leur code.
 - [ ] Un utilisateur déjà inscrit sans prénom ni nom repasse par l'onboarding si `profile_complete` est faux (garde existante `ProfileGate`), avec son pseudo pré-rempli.
 - [ ] Page `/me` : prénom, nom et e-mail affichés en lecture seule, tels que `GET /me` les renvoie ; une valeur absente affiche une mention traduite (« non renseigné »), jamais un champ vide ni une valeur inventée.
-- [ ] Ces informations ne sont visibles que par l'utilisateur lui-même : jamais sur les écrans d'un challenge (participants, classement, activités), où seul le pseudo apparaît.
+- [ ] Page `/me` : pseudo modifiable (mêmes règles et mêmes erreurs que l'onboarding), facultatif tant qu'il n'existe pas, jamais retiré une fois choisi.
+- [ ] Nom affiché d'un utilisateur : le pseudo s'il existe, sinon le prénom et le nom (fonction pure de `src/domain`, initiales de l'avatar comprises) ; l'e-mail n'apparaît que sur la page `/me` de son titulaire.
 - [ ] Ni le nom, ni le prénom, ni l'e-mail ne partent dans les journaux, les analytics ou Sentry.
-- [ ] Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) dès que le backend expose les champs ; d'ici là, mocks MSW.
+- [ ] Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`).
 
-**Tests** : onboarding (champs vides refusés, valeurs valides envoyées, erreur de l'API), utilisateur existant sans nom renvoyé à l'onboarding, profil (valeurs présentes et absentes), aucun affichage hors du profil.
+**Tests** : onboarding (noms vides refusés, pseudo vide non envoyé, valeurs valides envoyées, erreur de l'API), utilisateur existant sans nom renvoyé à l'onboarding, profil (valeurs présentes et absentes, pseudo modifié, pris, non retirable), nom affiché (pseudo, sinon prénom et nom).
 **Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`, `spec-guardian`.
 **Commit** : `feat(profile): collect name at onboarding and show it with the email`
 **Statut** : À faire

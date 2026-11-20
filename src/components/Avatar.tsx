@@ -12,17 +12,18 @@ const COLORS: Record<number, string> = {
 
 interface AvatarProps {
   userId: string;
-  pseudo: string;
+  /** The name shown next to it (see displayName). */
+  name: string;
 }
 
-/** Round initials avatar. Decorative: the pseudo is always written next to it. */
-export function Avatar({ userId, pseudo }: AvatarProps) {
+/** Round initials avatar. Decorative: the name is always written next to it. */
+export function Avatar({ userId, name }: AvatarProps) {
   return (
     <span
       aria-hidden="true"
       className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${COLORS[avatarColor(userId)]}`}
     >
-      {initials(pseudo)}
+      {initials(name)}
     </span>
   );
 }

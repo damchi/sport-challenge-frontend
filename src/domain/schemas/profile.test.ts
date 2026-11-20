@@ -1,4 +1,6 @@
-import { profileSchema } from './profile';
+import { profileSchema as schemaFor, profileUpdate, pseudoSchema } from './profile';
+
+const profileSchema = schemaFor(false);
 
 const valid = {
   pseudo: 'marie_92',
@@ -70,6 +72,28 @@ describe('profileSchema', () => {
     ])('refuses %j (%s)', (name) => {
       expect(firstMessage({ [field]: name })).toBe('profile.name.characters');
     });
+  });
+
+  it('accepts an empty pseudo, left out of the update', () => {
+    const profile = profileSchema.parse({ ...valid, pseudo: '  ' });
+
+    expect(profile.pseudo).toBe('');
+    expect(profileUpdate(profile)).toEqual({
+      first_name: 'Marie',
+      last_name: 'Tremblay',
+      language: 'fr',
+    });
+    expect(profileUpdate(profileSchema.parse(valid))).toEqual(valid);
+  });
+
+  it('keeps a pseudo once set: it can be changed, not removed', () => {
+    const result = schemaFor(true).safeParse({ ...valid, pseudo: ' ' });
+    expect(result.error?.issues[0]?.message).toBe('profile.pseudo.required');
+    expect(pseudoSchema(true).safeParse({ pseudo: '' }).error?.issues[0]?.message).toBe(
+      'profile.pseudo.required',
+    );
+    expect(pseudoSchema(false).parse({ pseudo: '' })).toEqual({ pseudo: '' });
+    expect(pseudoSchema(true).parse({ pseudo: ' jean.luc ' })).toEqual({ pseudo: 'jean.luc' });
   });
 
   it('only knows French and English', () => {

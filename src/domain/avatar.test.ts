@@ -8,8 +8,12 @@ describe('initials', () => {
     ['x', 'X'],
     ['__a', 'A'],
     ['  jean.luc ', 'JL'],
-  ])('%s gives %s', (pseudo, expected) => {
-    expect(initials(pseudo)).toBe(expected);
+    ['Marie Tremblay', 'MT'],
+    ['Marie-Ève Tremblay', 'MT'],
+    ['Jean-Paul', 'JP'],
+    ['Éloïse N’Diaye', 'ÉN'],
+  ])('%s gives %s', (name, expected) => {
+    expect(initials(name)).toBe(expected);
   });
 });
 

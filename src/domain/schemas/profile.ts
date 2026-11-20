@@ -19,16 +19,41 @@ const personName = z
   .refine((name) => [...name].length <= PERSON_NAME_MAX, 'profile.name.length')
   .refine((name) => PERSON_NAME_PATTERN.test(name), 'profile.name.characters');
 
-export const profileSchema = z.object({
-  pseudo: z
+// Optional until set: once given, the API keeps it (it can be changed, not
+// removed). Left empty, it is not sent.
+function pseudoField(required: boolean) {
+  return z
     .string()
     .trim()
-    .min(3, 'profile.pseudo.length')
-    .max(20, 'profile.pseudo.length')
-    .regex(PSEUDO_PATTERN, 'profile.pseudo.characters'),
-  first_name: personName,
-  last_name: personName,
-  language: z.enum(['fr', 'en']),
-});
+    .refine((pseudo) => pseudo !== '' || !required, { message: 'profile.pseudo.required' })
+    .refine((pseudo) => pseudo === '' || (pseudo.length >= 3 && pseudo.length <= 20), {
+      message: 'profile.pseudo.length',
+    })
+    .refine((pseudo) => pseudo === '' || PSEUDO_PATTERN.test(pseudo), {
+      message: 'profile.pseudo.characters',
+    });
+}
 
-export type ProfileInput = z.infer<typeof profileSchema>;
+/** The onboarding: `hasPseudo` when the profile already has one. */
+export function profileSchema(hasPseudo: boolean) {
+  return z.object({
+    pseudo: pseudoField(hasPseudo),
+    first_name: personName,
+    last_name: personName,
+    language: z.enum(['fr', 'en']),
+  });
+}
+
+export type ProfileInput = z.infer<ReturnType<typeof profileSchema>>;
+
+/** The PATCH /me body: an empty pseudo is left out (the API refuses null). */
+export function profileUpdate({ pseudo, ...rest }: ProfileInput) {
+  return pseudo === '' ? rest : { pseudo, ...rest };
+}
+
+/** The pseudo alone, changed from the profile page. */
+export function pseudoSchema(hasPseudo: boolean) {
+  return z.object({ pseudo: pseudoField(hasPseudo) });
+}
+
+export type PseudoInput = z.infer<ReturnType<typeof pseudoSchema>>;

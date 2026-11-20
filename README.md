@@ -54,7 +54,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Résultats figés à la fin du challenge, sans délai de grâce.
 
 **Profil et divers**
-- ✅ Pseudo (unique sans tenir compte de la casse, 3 à 20 caractères : lettres, chiffres, `_`, `.`, `-`) et avatar ; français et anglais ; distances en km uniquement.
+- ✅ Prénom et nom **obligatoires** (1 à 50 lettres de tout alphabet, en mots séparés par une espace, `-`, `'` ou `’`) ; pseudo **facultatif** (unique sans tenir compte de la casse, 3 à 20 caractères : lettres, chiffres, `_`, `.`, `-` ; une fois choisi, modifiable mais pas retirable) ; nom affiché aux autres : le pseudo s'il existe, sinon le prénom et le nom ; e-mail venu de la connexion, **privé** (seul son titulaire le voit, sur son profil) ; avatar ; français et anglais ; distances en km uniquement.
 - ✅ **Badges (V1.1, reportés après la V1)** : le créateur d'un challenge en crée autant qu'il veut, chacun avec une condition (mesure, portée, filtre de sport, seuil) ; un participant le gagne dès qu'il l'atteint. 🟡 Un badge gagné est conservé ; 50 badges maximum par challenge.
 - ✅ Application gratuite ; pas de contestation d'activité pour l'instant.
 
@@ -112,7 +112,7 @@ frontend/
     │   ├── leaderboard/             tableau par catégorie, podium, statut « à risque »
     │   ├── activities/              formulaire de saisie, liste des activités
     │   ├── invitations/             partage de lien, acceptation
-    │   ├── profile/                 pseudo, langue (avatar en V1.1)
+    │   ├── profile/                 prénom, nom, pseudo, e-mail, langue (avatar en V1.1)
     │   └── badges/                  V1.1
     ├── components/                  interface réutilisable (boutons, champs, mise en page, modales)
     ├── api/                         portable : aucun import de react-dom ni du navigateur
@@ -154,12 +154,12 @@ frontend/
 
 | Zone | Écrans |
 |---|---|
-| Entrée | Connexion / inscription, choix du pseudo et de l'avatar, langue |
+| Entrée | Connexion / inscription, prénom et nom, pseudo facultatif, avatar, langue |
 | Accueil | Challenges publics ouverts, mes challenges (en cours, à venir, terminés) |
 | Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → catégories (incrément X, coefficients) → récapitulatif et envoi |
 | Challenge | Classement par catégorie (onglets), statut live (« objectif atteint », « à risque »), participants, activités, badges du challenge, infos, invitations |
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
-| Profil | Pseudo, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
+| Profil | Prénom, nom et e-mail (lecture seule), pseudo modifiable, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
 | Badges (créateur) | Création et gestion des badges d'un challenge : nom, description, assistant de condition |
 | V2 | Connexion aux marques sportives (Strava, Polar, Garmin, Coros) |
 

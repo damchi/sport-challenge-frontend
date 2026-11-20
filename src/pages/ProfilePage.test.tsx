@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { mockMe } from '../mocks/handlers';
@@ -43,5 +43,72 @@ describe('ProfilePage', () => {
 
     expect(section.getByText('E-mail').nextElementSibling).toHaveTextContent('Non renseigné');
     expect(section.getByText('Prénom').nextElementSibling).toHaveTextContent('Marie');
+  });
+
+  describe('pseudo', () => {
+    async function changePseudo(label: string, value: string) {
+      const input = await screen.findByLabelText(label);
+      fireEvent.change(input, { target: { value } });
+      fireEvent.blur(input);
+    }
+
+    it('changes the pseudo', async () => {
+      let sent: unknown;
+      server.use(
+        http.patch('*/api/v1/me', async ({ request }) => {
+          sent = await request.json();
+          return HttpResponse.json({ ...mockMe, pseudo: 'jean.luc' });
+        }),
+      );
+      renderProfile();
+
+      expect(await screen.findByLabelText('Pseudo')).toHaveValue('marie_92');
+      expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+      await changePseudo('Pseudo', ' jean.luc ');
+      fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+      expect(await screen.findByText('Pseudo enregistré.')).toHaveAttribute('role', 'status');
+      expect(sent).toEqual({ pseudo: 'jean.luc' });
+    });
+
+    it('can be changed, not removed', async () => {
+      renderProfile();
+
+      await changePseudo('Pseudo', '');
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Ton pseudo peut être changé, pas retiré.',
+      );
+    });
+
+    it('shows a taken pseudo under its field', async () => {
+      server.use(
+        http.patch('*/api/v1/me', () =>
+          HttpResponse.json(
+            {
+              error: { code: 'validation_failed', message: 'taken', params: { fields: 'pseudo' } },
+            },
+            { status: 409 },
+          ),
+        ),
+      );
+      renderProfile();
+
+      await changePseudo('Pseudo', 'jean.luc');
+      fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
+      expect(screen.getByLabelText('Pseudo')).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('is optional while there is none', async () => {
+      server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, pseudo: null })));
+      renderProfile();
+
+      await changePseudo('Pseudo (facultatif)', '');
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+    });
   });
 });

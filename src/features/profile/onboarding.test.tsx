@@ -46,7 +46,7 @@ async function type(label: string, value: string) {
   fireEvent.blur(input);
 }
 
-const typePseudo = (value: string) => type('Pseudo', value);
+const typePseudo = (value: string) => type('Pseudo (facultatif)', value);
 
 async function fillProfile(pseudo = 'marie_92') {
   await typePseudo(pseudo);
@@ -78,7 +78,7 @@ describe('profile onboarding', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Seulement des lettres, des chiffres, _, . ou -.',
     );
-    expect(screen.getByLabelText('Pseudo')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Pseudo (facultatif)')).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('shows a taken pseudo under its field', async () => {
@@ -125,7 +125,7 @@ describe('profile onboarding', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Le service est momentanément indisponible.',
     );
-    expect(screen.getByLabelText('Pseudo')).not.toHaveAttribute('aria-invalid');
+    expect(screen.getByLabelText('Pseudo (facultatif)')).not.toHaveAttribute('aria-invalid');
   });
 
   it('saves the profile and opens the page first asked for', async () => {
@@ -158,6 +158,30 @@ describe('profile onboarding', () => {
       last_name: 'N’Diaye',
       language: 'fr',
     });
+  });
+
+  it('sends the names alone when the pseudo is left empty', async () => {
+    let sent: unknown;
+    let saved: typeof mockMe | undefined;
+    server.use(
+      http.patch('*/api/v1/me', async ({ request }) => {
+        sent = await request.json();
+        saved = { ...mockMe, pseudo: null };
+        return HttpResponse.json(saved);
+      }),
+      http.get('*/api/v1/me', () => HttpResponse.json(saved ?? newProfile)),
+    );
+    renderApp('/');
+
+    await type('Prénom', 'Marie');
+    await type('Nom', 'Tremblay');
+    await typePseudo('   ');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'asked page' }),
+    ).toBeInTheDocument();
+    expect(sent).toEqual({ first_name: 'Marie', last_name: 'Tremblay', language: 'fr' });
   });
 
   it('asks for the first and last name before sending', async () => {
@@ -250,9 +274,15 @@ describe('profile onboarding', () => {
     );
     const router = renderApp('/me');
 
-    expect(await screen.findByLabelText('Pseudo')).toHaveValue('marie_92');
+    expect(await screen.findByLabelText('Pseudo (facultatif)')).toHaveValue('marie_92');
     expect(router.state.location.pathname).toBe('/onboarding');
     expect(screen.getByLabelText('Prénom')).toHaveValue('');
     expect(screen.getByLabelText('Nom')).toHaveValue('');
+
+    // Once set, the pseudo can be changed, not removed.
+    await typePseudo('');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Ton pseudo peut être changé, pas retiré.',
+    );
   });
 });
