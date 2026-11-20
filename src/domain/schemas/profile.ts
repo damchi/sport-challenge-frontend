@@ -11,10 +11,22 @@ export const PERSON_NAME_PATTERN = /^\p{L}[\p{L}\p{M}]*(?:[ '’-]\p{L}[\p{L}\p{
 
 const PERSON_NAME_MAX = 50;
 
+/**
+ * A name as the contract writes it, from what was typed: any run of spaces
+ * (non-breaking ones too) becomes one space, and spaces around -, ' or ’
+ * go ("Jean  -  Paul" → "Jean-Paul").
+ */
+export function normalizeName(name: string): string {
+  return name
+    .replace(/\s+/gu, ' ')
+    .replace(/ ?([-'’]) ?/g, '$1')
+    .trim();
+}
+
 // Counted in characters like the contract's maxLength, not UTF-16 units.
 const personName = z
   .string()
-  .trim()
+  .overwrite(normalizeName)
   .min(1, 'profile.name.required')
   .refine((name) => [...name].length <= PERSON_NAME_MAX, 'profile.name.length')
   .refine((name) => PERSON_NAME_PATTERN.test(name), 'profile.name.characters');

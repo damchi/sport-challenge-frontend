@@ -51,6 +51,17 @@ describe('profileSchema', () => {
       expect(firstMessage({ [field]: name })).toBeUndefined();
     });
 
+    it.each([
+      ['Jean  Paul', 'Jean Paul'],
+      ['Jean\u00a0Paul', 'Jean Paul'],
+      [' Jean - Paul ', 'Jean-Paul'],
+      ["O ' Brien", "O'Brien"],
+      ['De  La\tFontaine', 'De La Fontaine'],
+    ])('tidies the spaces of %j into %j', (typed, sent) => {
+      const result = profileSchema.parse({ ...valid, [field]: typed });
+      expect(result[field as 'first_name' | 'last_name']).toBe(sent);
+    });
+
     it.each(['', '   '])('asks for %j', (name) => {
       expect(firstMessage({ [field]: name })).toBe('profile.name.required');
     });
@@ -61,7 +72,6 @@ describe('profileSchema', () => {
 
     it.each([
       ['Marie2', 'a digit'],
-      ['Jean  Paul', 'two spaces'],
       ['Jean--Paul', 'two hyphens'],
       ['-Marie', 'a leading hyphen'],
       ['Marie-', 'a trailing hyphen'],
