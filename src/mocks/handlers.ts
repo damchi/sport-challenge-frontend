@@ -24,6 +24,7 @@ type ApiErrorBody = components['schemas']['Error'];
 type Activity = components['schemas']['Activity'];
 type ActivityCreate = components['schemas']['ActivityCreate'];
 type ActivityPage = components['schemas']['ActivityPage'];
+type InvitationCreated = components['schemas']['InvitationCreated'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
 export const mockMe: Me = {
@@ -347,6 +348,23 @@ export const handlers = [
       my_status: 'abandoned',
       can_join: false,
     });
+  }),
+  // A link valid until the end of week 1 of the challenge.
+  http.post('*/api/v1/challenges/:challengeId/invitations', ({ params }) => {
+    const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<InvitationCreated>(
+      {
+        token: 'mock-invitation-token',
+        expires_at: mockChallengeDetail(summary).registration_deadline,
+      },
+      { status: 201 },
+    );
   }),
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>

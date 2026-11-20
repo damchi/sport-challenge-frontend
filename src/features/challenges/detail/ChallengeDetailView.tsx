@@ -5,6 +5,7 @@ import { useChallenge } from '../../../api/hooks/useChallenges';
 import { ErrorState } from '../../../components/states/ErrorState';
 import { LoadingState } from '../../../components/states/LoadingState';
 import { isChallengeId } from '../../../domain/challenge';
+import { ChallengeInvite } from '../../invitations/ChallengeInvite';
 import { ChallengeCategories } from './ChallengeCategories';
 import { ChallengeEdit } from './ChallengeEdit';
 import { ChallengeHeader } from './ChallengeHeader';
@@ -51,6 +52,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
   return (
     <>
       <ChallengeHeader challenge={challenge.data} />
+      <ChallengeInvite challenge={challenge.data} />
       <ChallengeEdit challenge={challenge.data} />
       <ChallengeParticipation challenge={challenge.data} />
       <div className="mt-6 flex flex-wrap items-start gap-6">

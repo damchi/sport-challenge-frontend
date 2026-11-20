@@ -176,6 +176,8 @@ frontend/
 
 - Web : React Router. Mobile : Expo Router.
 - **Liens profonds** (universal links et app links) pour les invitations : un lien d'invitation ouvre l'app au bon challenge, ou la page web si l'app n'est pas installée.
+- ✅ Lien d'invitation (SC-WEB-038) : `<origine de l'app>/invite#<jeton>`. Le jeton est dans le **fragment**, que le navigateur n'envoie jamais à l'hébergeur (journaux d'accès) ni dans l'en-tête Referer ; le lien ne porte rien d'autre (décision du 2026-11-20).
+- ✅ « Inviter des amis » s'affiche pour les créateurs, et pour les participants actifs si `members_can_invite` est vrai, **jusqu'à `registration_deadline`** (fin de la semaine 1) ; au-delà, le bouton est masqué, et le refus du serveur (`registration_closed`) reste traduit si l'horloge de l'appareil est décalée (décision du 2026-11-20).
 
 ### 4.5 Authentification côté client
 
