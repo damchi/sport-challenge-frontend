@@ -318,6 +318,17 @@ describe('ActivityForm', () => {
     expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
   });
 
+  it('says so at once, without waiting for the challenges to reload', async () => {
+    recordWith(() => recorded([contribution('c1', 'Novembre en mouvement')]));
+    renderForm();
+    await fill();
+    // The reload never answers.
+    server.use(http.get('*/api/v1/challenges', () => new Promise<Response>(() => undefined)));
+    fireEvent.click(save());
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Elle compte dans 1 défi :');
+  });
+
   it('asks for the distance of a sport with km', async () => {
     const sent = recordWith(() => recorded());
     renderForm();

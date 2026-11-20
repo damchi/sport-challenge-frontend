@@ -32,10 +32,10 @@ export function useCreateActivity() {
       if (!data) throw new Error('Empty activity response');
       return data;
     },
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.activities.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
-      ]),
+    // Not awaited: the outcome shows at once, however slow the reloads.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.activities.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+    },
   });
 }
