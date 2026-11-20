@@ -307,6 +307,10 @@ describe('ChallengeLeaderboard', () => {
 });
 
 describe('ChallengeLeaderboard, run elimination', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   const at = `/challenges/${id}?category=run_elimination`;
   const board = () => screen.findByRole('region', { name: 'Classement du défi' });
 
@@ -355,6 +359,31 @@ describe('ChallengeLeaderboard, run elimination', () => {
       within(await board()).getByText(/^Fin de la semaine : lundi 23 novembre à 00 h/),
     ).toBeInTheDocument();
   });
+
+  it.each([
+    ['America/Montreal', /^Fin de la semaine : lundi 23 novembre à 00 h$/],
+    ['Europe/Paris', /^Fin de la semaine : lundi 23 novembre à 00 h, \S/],
+  ])(
+    'names the time zone of the week end only when the device is elsewhere (%s)',
+    async (device, text) => {
+      const resolved = Intl.DateTimeFormat.prototype.resolvedOptions;
+      vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (
+        this: Intl.DateTimeFormat,
+      ) {
+        return { ...resolved.call(this), timeZone: device };
+      });
+      answer({ current_week: 3 });
+      leaderboard([
+        {
+          type: 'run_elimination',
+          entries: [runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 })],
+        },
+      ]);
+      renderAt(at);
+
+      expect(within(await board()).getByText(text)).toBeInTheDocument();
+    },
+  );
 
   it('explains how the minimum moves, with the X of the challenge', async () => {
     answer({ current_week: 3 });
