@@ -97,7 +97,7 @@ export function LeaderboardRow({ entry, type, me, href, tied }: RankedProps) {
       href={href}
       className={`flex min-h-14 items-center gap-3 px-3 py-2 ${BOX} ${me ? BOX_ON : BOX_OFF}`}
     >
-      <span className="w-[22px] shrink-0 text-center font-bold text-muted tabular-nums">
+      <span className="min-w-[22px] shrink-0 text-center font-bold text-muted tabular-nums">
         {entry.rank}
         {tied && <span className="sr-only"> {t('leaderboard.tied')}</span>}
       </span>

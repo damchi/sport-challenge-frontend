@@ -246,6 +246,33 @@ describe('ChallengeLeaderboard', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows the loading state until the leaderboard arrives', async () => {
+    answer();
+    let release: () => void = () => undefined;
+    const sent = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', async () => {
+        await sent;
+        return HttpResponse.json<Leaderboard>({
+          computed_at: '2026-11-18T15:00:00Z',
+          categories: threeCategories,
+        });
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    // The challenge is shown; its leaderboard is still on the way.
+    expect(
+      await screen.findByRole('heading', { level: 1, name: summary.title }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+    release();
+    expect(await section('Podium')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('offers a retry when the leaderboard cannot load', async () => {
     answer();
     server.use(
