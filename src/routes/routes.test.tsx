@@ -46,6 +46,12 @@ describe('routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Ajouter une activité' }),
     ).toBeInTheDocument();
+
+    // Back goes to the activities, not to the challenges.
+    fireEvent.click(screen.getByRole('link', { name: 'Mes activités' }));
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Mes activités' }),
+    ).toBeInTheDocument();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {

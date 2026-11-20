@@ -9,11 +9,11 @@ export function ActivityCreatePage() {
   return (
     <Page>
       <Link
-        to="/"
+        to="/activities"
         className="-ml-3 inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-full font-semibold text-muted md:justify-start md:px-2"
       >
         <ChevronLeft aria-hidden="true" size={22} strokeWidth={2} />
-        <span className="sr-only md:not-sr-only">{t('activityForm.back')}</span>
+        <span className="sr-only md:not-sr-only">{t('activities.title')}</span>
       </Link>
       <div className="mt-2">
         <PageTitle>{t('activityForm.title')}</PageTitle>
