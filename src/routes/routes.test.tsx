@@ -20,6 +20,8 @@ describe('routes', () => {
   it('renders the home page title on /', async () => {
     renderAt('/');
     expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
+    // Adding an activity belongs to the activities page.
+    expect(screen.queryByRole('link', { name: 'Ajouter une activité' })).not.toBeInTheDocument();
   });
 
   it('opens the challenge creation on /challenges/new', async () => {
@@ -28,18 +30,6 @@ describe('routes', () => {
       await screen.findByRole('heading', { level: 1, name: 'Créer un défi' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
-  });
-
-  it('opens the activity entry from the home page', async () => {
-    renderAt('/');
-    const add = await screen.findByRole('link', { name: 'Ajouter une activité' });
-    expect(add).toHaveAttribute('href', '/activities/new');
-    fireEvent.click(add);
-
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Ajouter une activité' }),
-    ).toBeInTheDocument();
-    expect(await screen.findByRole('combobox', { name: 'Sport' })).toBeInTheDocument();
   });
 
   it('opens the activity entry from the activities page', async () => {

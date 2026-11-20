@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 /**
- * The main action of the home and activities pages: floating at the bottom
- * right of a phone, above the navigation bar; beside the page title from `md`.
+ * The main action of the activities page: floating at the bottom right of a
+ * phone, above the navigation bar; beside the page title from `md`.
  */
 export function AddActivityLink() {
   const { t } = useTranslation();
