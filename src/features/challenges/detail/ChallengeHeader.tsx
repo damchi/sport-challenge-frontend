@@ -12,9 +12,9 @@ import { ChallengeStatusPill, RolePills } from '../ChallengePills';
 
 /**
  * Head of a challenge's page. Every date is in the challenge's time zone;
- * when the user's differs, the zone is named, also after each hour. The week and the registration lines show
- * only when the server gives them (current_week, can_join): nothing is
- * worked out here.
+ * when the user's differs, the zone is named, also after each hour. The week
+ * line shows only when the server gives it (current_week): nothing is worked
+ * out here.
  */
 export function ChallengeHeader({ challenge }: { challenge: ChallengeDetail }) {
   const { t, i18n } = useTranslation();
@@ -70,16 +70,6 @@ export function ChallengeHeader({ challenge }: { challenge: ChallengeDetail }) {
               })}
             </span>
           </span>
-        </p>
-      )}
-
-      {challenge.can_join && (
-        <p className="mt-4">
-          {t('challengeDetail.registrationOpen', {
-            date: challengeInstant(challenge.registration_deadline, timeZone, locale),
-            zone,
-            context: zone && 'zone',
-          })}
         </p>
       )}
 

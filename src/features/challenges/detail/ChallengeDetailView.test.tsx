@@ -127,15 +127,138 @@ describe('ChallengeDetailView', () => {
     expect(
       screen.getByText("Inscriptions ouvertes jusqu'au lundi 9 novembre à 00 h."),
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rejoindre le défi' })).toBeInTheDocument();
   });
 
-  it('follows can_join, not the dates', async () => {
-    // Week 1 still running, but the server says no (already in, abandoned...).
-    answer({ my_role: 'outsider', my_status: null, can_join: false, current_week: 1 });
+  it.each([
+    ['participant', 'active', 'Tu participes à ce défi.'],
+    ['creator', 'active', 'Tu participes à ce défi.'],
+    [
+      'abandoned',
+      'abandoned',
+      "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+    ],
+    [
+      'creator',
+      'abandoned',
+      "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+    ],
+    [
+      'outsider',
+      null,
+      'Les inscriptions sont closes depuis la fin de la semaine 1, le lundi 9 novembre à 00 h.',
+    ],
+    [
+      'invited',
+      null,
+      'Les inscriptions sont closes depuis la fin de la semaine 1, le lundi 9 novembre à 00 h.',
+    ],
+  ] as const)('explains why a %s (%s) cannot join', async (role, status, reason) => {
+    // can_join decides, not the dates: week 1 is still running here.
+    answer({ my_role: role, my_status: status, can_join: false, current_week: 1 });
     renderAt(`/challenges/${id}`);
 
     expect(await title()).toBeInTheDocument();
+    expect(screen.getByText(reason)).toBeInTheDocument();
     expect(screen.queryByText(/Inscriptions ouvertes/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rejoindre le défi' })).not.toBeInTheDocument();
+  });
+
+  describe('joining', () => {
+    let joins = 0;
+
+    beforeEach(() => {
+      joins = 0;
+      answer({ my_role: 'outsider', my_status: null, can_join: true });
+    });
+
+    function joinAnswers(response: () => Response) {
+      server.use(
+        http.post('*/api/v1/challenges/:challengeId/join', () => {
+          joins += 1;
+          return response();
+        }),
+      );
+    }
+
+    // An arrow, not a hoisted function, so that `summary` stays narrowed.
+    const openConfirmation = async () => {
+      renderAt(`/challenges/${id}`);
+      fireEvent.click(await screen.findByRole('button', { name: 'Rejoindre le défi' }));
+      return screen.getByRole('dialog', { name: `Rejoindre « ${summary.title} » ?` });
+    };
+
+    it('asks for a confirmation that says the activities will be visible', async () => {
+      joinAnswers(() => HttpResponse.json({ ...base }, { status: 201 }));
+      const dialog = await openConfirmation();
+
+      expect(dialog).toHaveAccessibleDescription(
+        'Tes activités (date, sport, durée, distance) seront visibles par les autres participants du défi.',
+      );
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(joins).toBe(0);
+    });
+
+    it('joins on confirmation and reloads the challenge, its lists and leaderboards', async () => {
+      const joined: ChallengeDetail = {
+        ...base,
+        my_role: 'participant',
+        my_status: 'active',
+        can_join: false,
+      };
+      joinAnswers(() => HttpResponse.json(joined, { status: 201 }));
+      const dialog = await openConfirmation();
+      const before = requests;
+      answer(joined);
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
+
+      expect(await screen.findByText('Tu participes à ce défi.')).toBeInTheDocument();
+      expect(screen.getByText('Participant')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Rejoindre le défi' })).not.toBeInTheDocument();
+      expect(joins).toBe(1);
+      // Every challenge query is invalidated: the page's, so the lists and
+      // the leaderboards (same root key) reload too.
+      await vi.waitFor(() => expect(requests).toBeGreaterThan(before));
+    });
+
+    it.each([
+      [409, 'already_participant', 'Tu participes déjà à ce défi.'],
+      [
+        422,
+        'registration_closed',
+        'Les inscriptions à ce défi sont closes depuis la fin de la semaine 1.',
+      ],
+      [422, 'participation_abandoned', 'Tu as abandonné ce défi : tu ne peux plus le rejoindre.'],
+      [422, 'profile_incomplete', "Indique d'abord ton prénom et ton nom dans ton profil."],
+    ] as const)('translates a refusal %i %s', async (status, code, message) => {
+      joinAnswers(() => HttpResponse.json({ error: { code, message: 'Raw' } }, { status }));
+      const dialog = await openConfirmation();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(message);
+      expect(screen.queryByText('Raw')).not.toBeInTheDocument();
+    });
+
+    it('shows why once the reloaded challenge refuses joining', async () => {
+      joinAnswers(() =>
+        HttpResponse.json(
+          { error: { code: 'registration_closed', message: 'Closed' } },
+          { status: 422 },
+        ),
+      );
+      const dialog = await openConfirmation();
+      answer({ my_role: 'outsider', my_status: null, can_join: false });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Les inscriptions sont closes depuis la fin de la semaine 1, le lundi 9 novembre à 00 h.',
+      );
+      expect(screen.queryByRole('button', { name: 'Rejoindre le défi' })).not.toBeInTheDocument();
+    });
   });
 
   it('shows the categories read only, with their frozen settings', async () => {

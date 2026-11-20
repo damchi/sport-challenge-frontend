@@ -66,3 +66,31 @@ export function useCreateChallenge() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
   });
 }
+
+/**
+ * Joins a challenge: its page shows the answer, and the lists and the
+ * leaderboards reload with the new participant. Its errors (registration
+ * closed, already in, abandoned, incomplete profile) are shown by the page,
+ * not the global banner; the challenge then reloads, so the page also says
+ * why joining is no longer possible.
+ */
+export function useJoinChallenge(challengeId: string) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async () => {
+      const { data } = await client.POST('/api/v1/challenges/{challengeId}/join', {
+        params: { path: { challengeId } },
+      });
+      if (!data) throw new Error('Empty challenge response');
+      return data;
+    },
+    onSuccess: (challenge) => {
+      queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+    },
+    onError: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
+  });
+}

@@ -7,6 +7,7 @@ import { LoadingState } from '../../../components/states/LoadingState';
 import { isChallengeId } from '../../../domain/challenge';
 import { ChallengeCategories } from './ChallengeCategories';
 import { ChallengeHeader } from './ChallengeHeader';
+import { ChallengeJoin } from './ChallengeJoin';
 import { ChallengeNotFound } from './ChallengeNotFound';
 import { ChallengeTabs } from './ChallengeTabs';
 
@@ -49,6 +50,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
   return (
     <>
       <ChallengeHeader challenge={challenge.data} />
+      <ChallengeJoin challenge={challenge.data} />
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <div className="min-w-0 flex-[999_1_560px]">
           <ChallengeTabs challengeId={challengeId} />
