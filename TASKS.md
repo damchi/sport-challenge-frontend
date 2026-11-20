@@ -63,7 +63,9 @@ L'arborescence du README §4.1 est la **cible**. Un ticket ne crée un dossier, 
 
 Une clé `errors.<code>` est ajoutée, en français **et** en anglais, par le ticket qui rencontre le code ; `errors.unknown` sert de repli. Catalogue prévu :
 
-`unauthenticated`, `invalid_token`, `token_expired`, `forbidden`, `not_found`, `validation_failed`, `rate_limited`, `internal_error`, `profile_incomplete`, `account_deleted`, `challenge_not_found`, `field_not_editable`, `registration_closed`, `already_participant`, `participation_abandoned`, `challenge_ended`, `cannot_exclude_creator`, `activity_not_found`, `activity_outside_window`, `week_locked`, `distance_not_allowed`, `distance_required`, `invitation_invalid`.
+`unauthenticated`, `invalid_token`, `token_expired`, `forbidden`, `not_found`, `validation_failed`, `rate_limited`, `internal_error`, `profile_incomplete`, `account_deleted`, `challenge_not_found`, `field_not_editable`, `registration_closed`, `already_participant`, `participation_abandoned`, `challenge_ended`, `cannot_exclude_creator`, `not_active_participant`, `last_creator`, `activity_not_found`, `activity_overlap`, `week_locked`, `distance_not_allowed`, `distance_required`, `invitation_invalid`.
+
+Il n'y a pas de code `activity_outside_window` : une activité hors de la fenêtre de tout challenge est enregistrée et ne compte nulle part pour l'instant ; elle comptera dans un challenge rejoint plus tard dont la fenêtre la contient (ADR 0001 de l'API).
 
 ## Tickets fusionnés (anciens tickets de préparation)
 
@@ -549,7 +551,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 - [ ] **Distance** : champ affiché et obligatoire seulement si le sport produit des km ; absent pour le yoga ; **facultatif** pour le sport « autre » (D9).
 - [ ] **Jamais de champ vitesse ni allure** : l'interface affiche celle que l'API calcule.
 - [ ] Clé d'idempotence générée à l'ouverture du formulaire et renvoyée à chaque tentative.
-- [ ] Bouton désactivé pendant l'envoi ; erreurs traduites : `week_locked`, `activity_outside_window`, `distance_required`, `distance_not_allowed`, `profile_incomplete`.
+- [ ] Bouton désactivé pendant l'envoi ; erreurs traduites : `week_locked`, `activity_overlap`, `distance_required`, `distance_not_allowed`, `profile_incomplete`.
 
 **Tests** : chaque règle de champ, sport « autre », double envoi, chaque erreur.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
@@ -561,6 +563,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 
 **Critères d'acceptation**
 - [ ] Message de succès : « Cette activité compte dans N challenge(s) », avec la liste (champ du serveur).
+- [ ] Si `contributions` est vide (aucun challenge en cours ne contient l'activité), succès quand même : « Activité enregistrée ; elle ne compte encore dans aucun challenge » (elle comptera dans un challenge rejoint plus tard dont la fenêtre la contient). Jamais présenté comme une erreur.
 - [ ] Invalidation des classements, des activités et des challenges concernés.
 - [ ] Lien direct vers le classement du challenge concerné.
 
