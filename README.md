@@ -23,7 +23,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Plusieurs créateurs possibles.
 - ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. Tout challenge a **toujours les 3 catégories** ; le créateur règle l'incrément X (en km) de la catégorie 3 et peut changer les coefficients de distance de la catégorie 2 (voir Activités).
 - ✅ Début et fin selon le **fuseau du lieu de lancement** (ex. Montréal) : l'interface affiche les dates dans ce fuseau.
-- ✅ Catégories (incrément X et coefficients) **figées à la création** (README backend §2.3, §2.4) ; après le début, seuls le titre et la description restent modifiables.
+- ✅ Catégories (incrément X et coefficients) **figées à la création** (README backend §2.3, §2.4) ; ✅ à tout moment (avant comme après le début), seuls le titre et la description sont modifiables : dates, fuseau, visibilité, « les participants peuvent inviter » et catégories sont figés à la création (décision du 2026-11-20, alignée sur le contrat `PATCH /challenges/{id}`).
 
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
