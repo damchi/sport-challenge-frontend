@@ -1,14 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useCreateActivity, type Activity } from '../../api/hooks/useActivities';
-import { useChallenges } from '../../api/hooks/useChallenges';
-import { useSports, type Sport } from '../../api/hooks/useSports';
-import { ErrorState } from '../../components/states/ErrorState';
-import { LoadingState } from '../../components/states/LoadingState';
-import { activityTimeZone } from '../../domain/activity';
+import type { Sport } from '../../api/hooks/useSports';
 import { sortSportsByName } from '../../domain/challengeCreate';
 import { toZonedDateTime } from '../../domain/challengeWindow';
 import { timeZoneName } from '../../domain/format/challengeDates';
@@ -22,10 +18,21 @@ import { FieldError } from '../challenges/create/FieldError';
 import { describedBy, inputClass } from '../challenges/create/fields';
 import { useSportName } from '../challenges/create/useSportName';
 import { ActivitySaved } from './ActivitySaved';
+import { useActivityFormData } from './useActivityFormData';
 
 const DURATION_PARTS = ['hours', 'minutes', 'seconds'] as const;
 // Statuses of POST /activities that record nothing.
 const REFUSED_FOR_GOOD = new Set([400, 404, 422]);
+
+const EMPTY: ActivityCreateInput = {
+  sport_code: '',
+  sport_label: '',
+  started_at: '',
+  hours: '',
+  minutes: '',
+  seconds: '',
+  distance_km: '',
+};
 
 /**
  * Entry of an activity, once the catalogue of sports and the user's ongoing
@@ -43,40 +50,45 @@ export function ActivityForm({
   deviceTimeZone?: string;
   newIdempotencyKey?: () => string;
 }) {
-  const sports = useSports();
-  const ongoing = useChallenges('mine', 'ongoing');
+  const { t } = useTranslation();
+  const makeKey = newIdempotencyKey ?? (() => crypto.randomUUID());
+  const createActivity = useCreateActivity();
+  // Chosen once per entry; it goes with every attempt that may have been
+  // recorded.
+  const [idempotencyKey, setIdempotencyKey] = useState(makeKey);
   const [saved, setSaved] = useState<Activity>();
-  // Every page: a zone missed would read the start in the wrong one.
-  const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = ongoing;
-  useEffect(() => {
-    if (!saved && hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
-  }, [saved, hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
-  if (saved) return <ActivitySaved contributions={saved.contributions} />;
-  if (sports.isPending || ongoing.isPending || (hasNextPage && !isError)) {
-    return <LoadingState />;
-  }
-  if (!sports.data || !ongoing.data || ongoing.isError) {
+  const loaded = useActivityFormData(deviceTimeZone, saved !== undefined);
+  if (saved) {
     return (
-      <ErrorState
-        error={sports.error ?? ongoing.error}
-        onRetry={() => {
-          if (sports.isError) void sports.refetch();
-          if (ongoing.isError) void ongoing.refetch();
-        }}
-      />
+      <ActivitySaved title={t('activityForm.saved.title')} contributions={saved.contributions} />
     );
   }
-  const timeZone = activityTimeZone(
-    ongoing.data.pages.flatMap((page) => page.items),
-    deviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
+  if (loaded.state !== 'ready') return loaded.view;
+
+  const record = async (activity: ActivityCreateValues) => {
+    try {
+      setSaved(await createActivity.mutateAsync({ activity, idempotencyKey }));
+    } catch (error) {
+      // Refused for good by the contract (400, 404, 422): nothing was
+      // recorded, the corrected entry goes with a new key. Otherwise (no
+      // answer, server error, timeout) it may have been: the same key comes
+      // again, so nothing is recorded twice.
+      if (error instanceof ApiError && REFUSED_FOR_GOOD.has(error.status)) {
+        setIdempotencyKey(makeKey());
+      }
+      throw error;
+    }
+  };
+
   return (
     <ActivityFormFields
-      sports={sports.data}
-      timeZone={timeZone}
+      sports={loaded.sports}
+      timeZone={loaded.timeZone}
       now={now ?? (() => new Date())}
-      newIdempotencyKey={newIdempotencyKey ?? (() => crypto.randomUUID())}
-      onSaved={setSaved}
+      initialValues={EMPTY}
+      submitKey="activityForm.submit"
+      busy={createActivity.isPending}
+      save={record}
     />
   );
 }
@@ -84,29 +96,33 @@ export function ActivityForm({
 /**
  * The fields: a sport of the catalogue (or "other", with a free label), the
  * start, read in `timeZone` and said so, the duration (always) and the
- * distance, shown only when the sport
- * has one: required, or optional for "other". No speed: the API computes it.
- * The idempotency key is chosen when the form opens and goes with every
- * attempt that may have been recorded; a refused one gets a new key. Once
- * recorded, `onSaved` gets the activity as the server answers it.
+ * distance, shown only when the sport has one: required, or optional for
+ * "other". No speed: the API computes it. They open with `initialValues`;
+ * `save` sends the request and throws the API's refusal, shown here: on the
+ * refused fields, or above the button (`weekLockedKey` words a week that
+ * has ended). `submitKey` holds the button's label and busy label.
  */
-function ActivityFormFields({
+export function ActivityFormFields({
   sports,
   timeZone,
   now,
-  newIdempotencyKey,
-  onSaved,
+  initialValues,
+  submitKey,
+  busy,
+  save,
+  weekLockedKey,
 }: {
   sports: readonly Sport[];
   timeZone: string;
   now: () => Date;
-  newIdempotencyKey: () => string;
-  onSaved: (activity: Activity) => void;
+  initialValues: ActivityCreateInput;
+  submitKey: 'activityForm.submit' | 'activityEdit.submit';
+  busy: boolean;
+  save: (activity: ActivityCreateValues) => Promise<void>;
+  weekLockedKey?: 'activityEdit.weekLocked';
 }) {
   const { t, i18n } = useTranslation();
   const sportName = useSportName();
-  const createActivity = useCreateActivity();
-  const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
   const [submitError, setSubmitError] = useState<string>();
   // Set at once, unlike the mutation's state: a second click in the same
   // instant sends nothing.
@@ -120,15 +136,7 @@ function ActivityFormFields({
     // Checked once the field is left, then at each keystroke.
     mode: 'onTouched',
     reValidateMode: 'onChange',
-    defaultValues: {
-      sport_code: '',
-      sport_label: '',
-      started_at: '',
-      hours: '',
-      minutes: '',
-      seconds: '',
-      distance_km: '',
-    },
+    defaultValues: initialValues,
   });
   const {
     register,
@@ -160,27 +168,22 @@ function ActivityFormFields({
     }
     const { key, values } =
       error instanceof ApiError
-        ? errorMessage(error, (candidate) => i18n.exists(candidate))
+        ? weekLockedKey && error.code === 'week_locked'
+          ? { key: weekLockedKey, values: {} }
+          : errorMessage(error, (candidate) => i18n.exists(candidate))
         : { key: 'errors.unknown', values: {} };
     setSubmitError(t(key, values));
     // Said where the eye is: the message may be off screen on a phone.
     focusError.current = true;
   };
 
-  const record = async (activity: ActivityCreateValues) => {
+  const submit = async (activity: ActivityCreateValues) => {
     if (sending.current) return;
     sending.current = true;
     setSubmitError(undefined);
     try {
-      onSaved(await createActivity.mutateAsync({ activity, idempotencyKey }));
+      await save(activity);
     } catch (error) {
-      // Refused for good by the contract (400, 404, 422): nothing was
-      // recorded, the corrected entry goes with a new key. Otherwise (no
-      // answer, server error, timeout) it may have been: the same key comes
-      // again, so nothing is recorded twice.
-      if (error instanceof ApiError && REFUSED_FOR_GOOD.has(error.status)) {
-        setIdempotencyKey(newIdempotencyKey());
-      }
       showError(error);
       sending.current = false;
     }
@@ -191,12 +194,11 @@ function ActivityFormFields({
   const startError = errors.started_at?.message;
   const durationError = errors.hours?.message;
   const distanceError = errors.distance_km?.message;
-  const busy = createActivity.isPending;
 
   return (
     <form
       noValidate
-      onSubmit={(event) => void form.handleSubmit(record)(event)}
+      onSubmit={(event) => void form.handleSubmit(submit)(event)}
       className="mt-6 flex max-w-md flex-col gap-6"
     >
       <div>
@@ -336,7 +338,7 @@ function ActivityFormFields({
         disabled={busy}
         className="h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
       >
-        {busy ? t('activityForm.submit.busy') : t('activityForm.submit.label')}
+        {busy ? t(`${submitKey}.busy`) : t(`${submitKey}.label`)}
       </button>
     </form>
   );

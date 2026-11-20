@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Page, PageTitle } from '../components/Page';
+import { ActivityList } from '../features/activities/ActivityList';
 import { AddActivityLink } from '../features/activities/AddActivityLink';
 
 export function ActivitiesPage() {
@@ -11,7 +12,9 @@ export function ActivitiesPage() {
       <div className="mt-6">
         <AddActivityLink />
       </div>
-      <p className="mt-4 text-muted">{t('activities.empty')}</p>
+      <div className="mt-4">
+        <ActivityList />
+      </div>
     </Page>
   );
 }

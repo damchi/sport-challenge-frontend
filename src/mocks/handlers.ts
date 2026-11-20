@@ -23,6 +23,7 @@ type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
 type ApiErrorBody = components['schemas']['Error'];
 type Activity = components['schemas']['Activity'];
 type ActivityCreate = components['schemas']['ActivityCreate'];
+type ActivityPage = components['schemas']['ActivityPage'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
 export const mockMe: Me = {
@@ -178,6 +179,50 @@ const mockLeaderboard: Leaderboard = {
   ],
 };
 
+const MOCK_SPORTS = [
+  { sport_code: 'run', sport_label: null, distance_meters: 8200 },
+  { sport_code: 'yoga', sport_label: null, distance_meters: null },
+  { sport_code: 'other', sport_label: 'Padel', distance_meters: null },
+  { sport_code: 'ride', sport_label: null, distance_meters: 31_500 },
+] as const;
+
+/**
+ * Activities of the user, one a day back from 19 November 2026, enough for
+ * two pages: the five most recent are in the current week, the others in
+ * weeks that have ended (locked).
+ */
+export const mockActivities: Activity[] = Array.from({ length: 24 }, (_, index) => {
+  const sport = MOCK_SPORTS[index % MOCK_SPORTS.length] ?? MOCK_SPORTS[0];
+  const duration = 2700 + index * 60;
+  const distance = sport.distance_meters;
+  const locked = index >= 5;
+  return {
+    id: `00000000-0000-4000-8000-${String(index + 1).padStart(10, '0')}a1`,
+    ...sport,
+    started_at: new Date(Date.UTC(2026, 10, 19 - index, 12, 30)).toISOString(),
+    duration_seconds: duration,
+    source: 'manual',
+    speed_mps: distance === null ? null : distance / duration,
+    pace_seconds_per_km: distance === null ? null : duration / (distance / 1000),
+    contributions: [
+      {
+        challenge_id: '00000000-0000-4000-8000-000000000002',
+        challenge_title: 'Défi 2',
+        distance_meters: distance,
+        duration_seconds: duration,
+      },
+    ],
+    locked,
+  };
+});
+
+function activityNotFound() {
+  const body: ApiErrorBody = {
+    error: { code: 'activity_not_found', message: 'Activity not found' },
+  };
+  return HttpResponse.json(body, { status: 404 });
+}
+
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   // The cursor is the index of the next item; `mine` keeps the challenges
@@ -323,6 +368,35 @@ export const handlers = [
       { status: 201 },
     );
   }),
+  // The cursor is the index of the next activity.
+  http.get('*/api/v1/me/activities', ({ request }) => {
+    const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
+    const items = mockActivities.slice(from, from + PAGE_SIZE);
+    const next = from + PAGE_SIZE < mockActivities.length ? String(from + PAGE_SIZE) : null;
+    return HttpResponse.json<ActivityPage>({ items, next_cursor: next });
+  }),
+  // The activity as replaced, from the request; the list stays as it was.
+  http.patch('*/api/v1/activities/:activityId', async ({ params, request }) => {
+    const activity = mockActivities.find((candidate) => candidate.id === params.activityId);
+    if (!activity) return activityNotFound();
+    const body = (await request.json()) as ActivityCreate;
+    const distance = body.distance_meters ?? null;
+    return HttpResponse.json<Activity>({
+      ...activity,
+      sport_code: body.sport_code,
+      sport_label: body.sport_label ?? null,
+      started_at: body.started_at,
+      duration_seconds: body.duration_seconds,
+      distance_meters: distance,
+      speed_mps: distance === null ? null : distance / body.duration_seconds,
+      pace_seconds_per_km: distance === null ? null : body.duration_seconds / (distance / 1000),
+    });
+  }),
+  http.delete('*/api/v1/activities/:activityId', ({ params }) =>
+    mockActivities.some((activity) => activity.id === params.activityId)
+      ? new HttpResponse(null, { status: 204 })
+      : activityNotFound(),
+  ),
   // The created challenge as the server answers it, from the request.
   http.post('*/api/v1/challenges', async ({ request }) => {
     const body = (await request.json()) as ChallengeCreate;

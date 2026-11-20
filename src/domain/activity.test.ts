@@ -1,4 +1,4 @@
-import { activityTimeZone } from './activity';
+import { activityTimeZone, isActivityId } from './activity';
 
 describe('activityTimeZone', () => {
   it("takes the device's time zone without an ongoing challenge", () => {
@@ -35,5 +35,14 @@ describe('activityTimeZone', () => {
     expect(
       activityTimeZone([{ timezone: 'America/Toronto', my_status: 'abandoned' }], 'Europe/Paris'),
     ).toBe('Europe/Paris');
+  });
+});
+
+describe('isActivityId', () => {
+  it('accepts a UUID and nothing else', () => {
+    expect(isActivityId('00000000-0000-4000-8000-0000000000A1')).toBe(true);
+    expect(isActivityId('new')).toBe(false);
+    expect(isActivityId('00000000-0000-4000-8000-0000000000a1/x')).toBe(false);
+    expect(isActivityId(undefined)).toBe(false);
   });
 });

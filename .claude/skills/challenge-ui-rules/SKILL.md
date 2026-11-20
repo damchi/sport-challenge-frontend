@@ -53,9 +53,9 @@ Un participant apparaît dans les 3. Un onglet par catégorie, chacune avec son 
 - Après l'enregistrement, indique dans combien de challenges l'activité compte (une seule saisie pour tous).
 - Statuts de la catégorie 3 : n'écris pas la règle côté client ; l'API fournit le statut (`reached`, `at_risk`, `in_progress`, `eliminated`), le minimum et la fin de semaine. La **durée** est toujours demandée ; la **distance** seulement si le sport produit des km (pas pour le yoga).
 - La date doit être dans la fenêtre du challenge (bornes dans le fuseau du challenge) ; après la fin, le bouton d'ajout disparaît avec une explication.
-- ✅ Une semaine terminée est verrouillée : le sélecteur de date n'accepte que la semaine en cours (début de semaine dans le fuseau du challenge), et les activités d'une semaine terminée n'ont plus de bouton « modifier » ni « supprimer » (affichage en lecture seule). Affiche l'échéance de la semaine (par exemple « fin de la semaine : lundi 12 octobre à 0 h, heure de Montréal »). 🟡 Pendant la semaine en cours, modification et suppression de ses propres activités autorisées.
+- ✅ Une semaine terminée est verrouillée : le sélecteur de date n'accepte que la semaine en cours (début de semaine dans le fuseau du challenge), et les activités d'une semaine terminée n'ont plus de bouton « modifier » ni « supprimer » (affichage en lecture seule). Affiche l'échéance de la semaine (par exemple « fin de la semaine : lundi 12 octobre à 0 h, heure de Montréal »). ✅ Pendant la semaine en cours, modification et suppression de ses propres activités autorisées, d'après le champ `locked` du serveur.
 - Ne demande jamais la vitesse ni l'allure : affiche celle que l'API calcule à partir de la durée et de la distance.
-- Les activités saisies à la main portent la mention « manuelle ».
+- ✅ Les activités saisies à la main portent la mention « manuelle ».
 - Création avec clé d'idempotence ; bouton désactivé pendant l'envoi.
 - Catégorie 2 : montrer, si le contrat le fournit, la distance réelle et la distance équivalente course.
 

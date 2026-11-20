@@ -5,13 +5,16 @@ import { Link } from 'react-router';
 import type { ActivityContribution } from '../../api/hooks/useActivities';
 
 /**
- * Outcome of a recorded activity: the challenges it counts in, as the server
- * says, each leading to its leaderboard. Counting in none is a success too:
- * it will count in a challenge joined later whose dates contain it.
+ * Outcome of a recorded or changed activity (`title` says which): the
+ * challenges it counts in, as the server says, each leading to its
+ * leaderboard. Counting in none is a success too: it will count in a
+ * challenge joined later whose dates contain it.
  */
 export function ActivitySaved({
+  title,
   contributions,
 }: {
+  title: string;
   contributions: readonly ActivityContribution[];
 }) {
   const { t } = useTranslation();
@@ -22,7 +25,7 @@ export function ActivitySaved({
   return (
     <div className="mt-6 flex max-w-md flex-col items-start gap-4">
       <div ref={status} tabIndex={-1} role="status">
-        <p className="font-bold">{t('activityForm.saved.title')}</p>
+        <p className="font-bold">{title}</p>
         <p className="mt-1">
           {count > 0 ? t('activityForm.saved.counts', { count }) : t('activityForm.saved.none')}
         </p>

@@ -7,6 +7,7 @@
     "backHome": "Retour à l'accueil"
   },
   "errors": {
+    "activity_not_found": "Cette activité n'existe pas ou plus.",
     "activity_overlap": "Cette activité chevauche une autre de tes activités. Vérifie le début et la durée.",
     "already_participant": "Tu participes déjà à ce défi.",
     "app_unavailable": "L'application est momentanément indisponible.",
@@ -107,7 +108,26 @@
   },
   "activities": {
     "title": "Mes activités",
-    "empty": "Tes activités apparaîtront ici."
+    "listLabel": "Mes activités enregistrées",
+    "empty": "Aucune activité pour le moment. Ajoute ta première : elle comptera dans les défis dont les dates la contiennent.",
+    "timeZone": "Heures affichées : {{zone}}.",
+    "manual": "Manuelle",
+    "otherSport": "Autre sport",
+    "duration": "Durée",
+    "distance": "Distance",
+    "speed": "Vitesse",
+    "locked": "La semaine de cette activité est terminée dans un de tes défis : elle ne peut plus être modifiée ni supprimée.",
+    "lockedRefused": "La semaine de cette activité vient de se terminer dans un de tes défis : elle ne peut plus être modifiée ni supprimée.",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleting": "Suppression…",
+    "deleted": "Activité supprimée.",
+    "deleteConfirm": {
+      "title": "Supprimer cette activité ?",
+      "message": "Elle ne comptera plus dans tes défis. Cette action est définitive.",
+      "confirm": "Supprimer l'activité",
+      "cancel": "Annuler"
+    }
   },
   "activityForm": {
     "title": "Ajouter une activité",
@@ -162,6 +182,15 @@
       "leaderboard": "Voir le classement"
     },
     "back": "Retour à mes activités"
+  },
+  "activityEdit": {
+    "title": "Modifier l'activité",
+    "submit": {
+      "label": "Enregistrer les modifications",
+      "busy": "Enregistrement…"
+    },
+    "saved": "Activité modifiée.",
+    "weekLocked": "Une semaine terminée dans un de tes défis bloque ce changement : la nouvelle date est dans une semaine terminée, ou la semaine de cette activité vient de se terminer. Vérifie la date de début."
   },
   "settings": {
     "theme": {

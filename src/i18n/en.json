@@ -7,6 +7,7 @@
     "backHome": "Back to home"
   },
   "errors": {
+    "activity_not_found": "This activity does not exist or was deleted.",
     "activity_overlap": "This activity overlaps another of your activities. Check the start and the duration.",
     "already_participant": "You are already taking part in this challenge.",
     "app_unavailable": "The app is temporarily unavailable.",
@@ -107,7 +108,26 @@
   },
   "activities": {
     "title": "My activities",
-    "empty": "Your activities will appear here."
+    "listLabel": "My recorded activities",
+    "empty": "No activities yet. Add your first one: it will count in the challenges whose dates it falls within.",
+    "timeZone": "Times shown: {{zone}}.",
+    "manual": "Manual",
+    "otherSport": "Other sport",
+    "duration": "Duration",
+    "distance": "Distance",
+    "speed": "Speed",
+    "locked": "The week of this activity has ended in one of your challenges: it can no longer be changed or deleted.",
+    "lockedRefused": "The week of this activity has just ended in one of your challenges: it can no longer be changed or deleted.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting…",
+    "deleted": "Activity deleted.",
+    "deleteConfirm": {
+      "title": "Delete this activity?",
+      "message": "It will no longer count in any challenge. This cannot be undone.",
+      "confirm": "Delete activity",
+      "cancel": "Cancel"
+    }
   },
   "activityForm": {
     "title": "Add an activity",
@@ -162,6 +182,15 @@
     },
     "back": "Back to my activities"
   },
+  "activityEdit": {
+    "title": "Edit activity",
+    "submit": {
+      "label": "Save changes",
+      "busy": "Saving…"
+    },
+    "saved": "Activity updated.",
+    "weekLocked": "A week that has ended in one of your challenges blocks this change: the new date is in an ended week, or this activity's week has just ended. Check the start date."
+  },
   "settings": {
     "theme": {
       "label": "Theme",
@@ -174,7 +203,7 @@
   "states": {
     "loading": "Loading…",
     "loadMore": "Load more",
-    "loadMoreFailed": "The next challenges couldn't be loaded."
+    "loadMoreFailed": "The rest couldn't be loaded."
   },
   "challenges": {
     "title": "Challenges",

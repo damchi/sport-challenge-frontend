@@ -46,7 +46,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Une semaine terminée est verrouillée : l'interface affiche l'échéance de la semaine (dans le fuseau du challenge), refuse une activité datée d'une semaine passée et ne permet plus de modifier ni de supprimer les activités de cette semaine.
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.
 - ✅ La vitesse (ou l'allure) n'est **jamais saisie** : l'interface affiche celle que l'API calcule à partir de la durée et de la distance.
-- 🟡 Les activités manuelles sont marquées « manuelle ».
+- ✅ Les activités manuelles sont marquées « manuelle » (décision du propriétaire du 2026-11-20, consignée dans la PR #89).
 - ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; le créateur peut les changer à la création (0,1 à 2, deux décimales), la course restant ×1, puis ils sont figés (README backend §2.4).
 
 **Classement**

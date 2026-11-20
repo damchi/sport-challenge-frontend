@@ -1,6 +1,7 @@
 import {
   activityCreateSchema,
   activityFormFieldOf,
+  activityFormValues,
   cleanSportLabel,
   type ActivityCreateInput,
   type ActivitySport,
@@ -196,5 +197,66 @@ describe('activityFormFieldOf', () => {
     expect(activityFormFieldOf('distance_meters')).toBe('distance_km');
     expect(activityFormFieldOf('started_at')).toBe('started_at');
     expect(activityFormFieldOf('constructor')).toBeUndefined();
+  });
+});
+
+describe('activityFormValues', () => {
+  it('gives the form an activity as entered, in the time zone and the language', () => {
+    const values = activityFormValues(
+      {
+        sport_code: 'run',
+        sport_label: null,
+        started_at: STARTED_AT,
+        duration_seconds: 3723,
+        distance_meters: 12_500,
+      },
+      'America/Toronto',
+      'fr',
+    );
+
+    expect(values).toEqual({ ...valid, minutes: '2' });
+    // Sent again, it gives the same activity.
+    expect(schema.parse(values)).toEqual({
+      sport_code: 'run',
+      started_at: STARTED_AT,
+      duration_seconds: 3723,
+      distance_meters: 12_500,
+    });
+  });
+
+  it('leaves empty what the activity lacks', () => {
+    expect(
+      activityFormValues(
+        {
+          sport_code: 'other',
+          sport_label: 'Padel',
+          started_at: STARTED_AT,
+          duration_seconds: 3600,
+          distance_meters: null,
+        },
+        'America/Toronto',
+        'en',
+      ),
+    ).toEqual({
+      sport_code: 'other',
+      sport_label: 'Padel',
+      started_at: '2026-11-20T07:30',
+      hours: '1',
+      minutes: '',
+      seconds: '',
+      distance_km: '',
+    });
+  });
+
+  it('writes the distance with the decimal point of the language', () => {
+    const run = {
+      sport_code: 'run',
+      sport_label: null,
+      started_at: STARTED_AT,
+      duration_seconds: 60,
+      distance_meters: 1_234_567,
+    };
+    expect(activityFormValues(run, 'America/Toronto', 'en').distance_km).toBe('1234.567');
+    expect(activityFormValues(run, 'America/Toronto', 'fr').distance_km).toBe('1234,567');
   });
 });

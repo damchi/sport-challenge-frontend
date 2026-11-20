@@ -1,4 +1,5 @@
 import {
+  activityTime,
   challengeDay,
   challengeInstant,
   challengeLastDay,
@@ -144,5 +145,16 @@ describe('challengeDay', () => {
 
   it('does not take the day of another time zone', () => {
     expect(challengeDay(joinedAt, 'Europe/Paris', 'fr')).toBe('2 nov.');
+  });
+});
+
+describe('activityTime', () => {
+  it('writes the start with its year, in the time zone and the language', () => {
+    expect(activityTime('2026-11-19T12:30:00Z', 'America/Montreal', 'fr')).toBe(
+      '19 nov. 2026, 7:30',
+    );
+    expect(activityTime('2026-11-19T12:30:00Z', 'America/Montreal', 'en')).toBe(
+      'Nov 19, 2026, 7:30 AM',
+    );
   });
 });

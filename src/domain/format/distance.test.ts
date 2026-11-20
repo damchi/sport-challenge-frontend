@@ -1,4 +1,4 @@
-import { formatFactor, formatKm } from './distance';
+import { formatFactor, formatKm, formatSpeed } from './distance';
 
 describe('formatKm', () => {
   it('writes km in the language, one decimal for short distances', () => {
@@ -20,5 +20,13 @@ describe('formatFactor', () => {
     expect(formatFactor(0.3, 'fr')).toBe('×0,3');
     expect(formatFactor(0.25, 'en')).toBe('×0.25');
     expect(formatFactor(1, 'fr')).toBe('×1');
+  });
+});
+
+describe('formatSpeed', () => {
+  it('writes meters per second as km/h in the language', () => {
+    expect(formatSpeed(3, 'fr')).toBe('10,8\u202fkm/h');
+    expect(formatSpeed(3, 'en')).toBe('10.8 km/h');
+    expect(formatSpeed(2.5, 'en')).toBe('9 km/h');
   });
 });
