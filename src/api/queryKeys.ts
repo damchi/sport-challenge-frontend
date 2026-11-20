@@ -17,5 +17,8 @@ export const queryKeys = {
     detail: (challengeId: string) => ['challenges', challengeId] as const,
     participants: (challengeId: string) => ['challenges', challengeId, 'participants'] as const,
     leaderboard: (challengeId: string) => ['challenges', challengeId, 'leaderboard'] as const,
+    // Under the challenge: it reloads with the challenges once an activity changes.
+    participantActivities: (challengeId: string, userId: string) =>
+      ['challenges', challengeId, 'participants', userId, 'activities'] as const,
   },
 };

@@ -1,4 +1,4 @@
-import { canSeeParticipantActivities, isChallengeId } from './challenge';
+import { canSeeParticipantActivities, isChallengeId, isUserId } from './challenge';
 
 describe('isChallengeId', () => {
   it('accepts a UUID', () => {
@@ -12,6 +12,15 @@ describe('isChallengeId', () => {
     expect(isChallengeId('new')).toBe(false);
     expect(isChallengeId('00000000-0000-4000-8000-00000000000')).toBe(false);
     expect(isChallengeId('00000000-0000-4000-8000-000000000001/../x')).toBe(false);
+  });
+});
+
+describe('isUserId', () => {
+  it('accepts a UUID and refuses anything else', () => {
+    expect(isUserId('10000000-0000-4000-8000-000000000001')).toBe(true);
+    expect(isUserId(undefined)).toBe(false);
+    expect(isUserId('me')).toBe(false);
+    expect(isUserId('10000000-0000-4000-8000-000000000001/../x')).toBe(false);
   });
 });
 
