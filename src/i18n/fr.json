@@ -109,7 +109,7 @@
   "activities": {
     "title": "Mes activités",
     "listLabel": "Mes activités enregistrées",
-    "empty": "Aucune activité pour le moment. Ajoute ta première : elle comptera dans les défis dont elle est pendant les dates.",
+    "empty": "Aucune activité pour le moment. Ajoute ta première : elle comptera dans les défis dont les dates la contiennent.",
     "timeZone": "Heures affichées : {{zone}}.",
     "manual": "Manuelle",
     "otherSport": "Autre sport",

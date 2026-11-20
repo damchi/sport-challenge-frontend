@@ -155,7 +155,7 @@ describe('ActivityList', () => {
 
     expect(
       await screen.findByText(
-        'Aucune activité pour le moment. Ajoute ta première : elle comptera dans les défis dont elle est pendant les dates.',
+        'Aucune activité pour le moment. Ajoute ta première : elle comptera dans les défis dont les dates la contiennent.',
       ),
     ).toBeInTheDocument();
   });
