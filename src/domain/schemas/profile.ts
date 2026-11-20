@@ -56,6 +56,17 @@ export const namesSchema = z.object({ first_name: personName, last_name: personN
 
 export type NamesInput = z.infer<typeof namesSchema>;
 
+/** Whether the names typed, once tidied, are the ones the profile has. */
+export function sameNames(
+  typed: NamesInput,
+  saved: { first_name: string | null; last_name: string | null },
+): boolean {
+  return (
+    normalizeName(typed.first_name) === (saved.first_name ?? '') &&
+    normalizeName(typed.last_name) === (saved.last_name ?? '')
+  );
+}
+
 /** The pseudo alone, changed or removed from the profile page. */
 export const pseudoSchema = z.object({ pseudo });
 

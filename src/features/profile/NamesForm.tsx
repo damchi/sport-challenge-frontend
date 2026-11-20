@@ -4,7 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
-import { namesSchema, type NamesInput } from '../../domain/schemas/profile';
+import { namesSchema, sameNames, type NamesInput } from '../../domain/schemas/profile';
 import { NameInput } from './NameInput';
 import { fieldErrors, type NAME_FIELDS } from './profileErrors';
 
@@ -31,8 +31,7 @@ export function NamesForm({ me }: { me: Me }) {
     defaultValues: { first_name: me.first_name ?? '', last_name: me.last_name ?? '' },
   });
   const [firstName, lastName] = useWatch({ control, name: ['first_name', 'last_name'] });
-  const unchanged =
-    firstName.trim() === (me.first_name ?? '') && lastName.trim() === (me.last_name ?? '');
+  const unchanged = sameNames({ first_name: firstName, last_name: lastName }, me);
 
   const onSubmit = async (names: NamesInput) => {
     setFormError(undefined);

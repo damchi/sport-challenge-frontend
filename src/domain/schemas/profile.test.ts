@@ -1,4 +1,4 @@
-import { profileSchema, profileUpdate, pseudoUpdate } from './profile';
+import { profileSchema, profileUpdate, pseudoUpdate, sameNames } from './profile';
 
 const valid = {
   pseudo: 'marie_92',
@@ -107,6 +107,15 @@ describe('profileSchema', () => {
       language: 'fr',
     });
     expect(profileUpdate(valid, null)).toEqual(valid);
+  });
+
+  it('compares the names typed as they would be sent', () => {
+    const saved = { first_name: 'Jean-Paul', last_name: 'Tremblay' };
+    expect(sameNames({ first_name: ' Jean - Paul ', last_name: 'Tremblay ' }, saved)).toBe(true);
+    expect(sameNames({ first_name: 'Jean Paul', last_name: 'Tremblay' }, saved)).toBe(false);
+    expect(
+      sameNames({ first_name: '', last_name: '' }, { first_name: null, last_name: null }),
+    ).toBe(true);
   });
 
   it('only knows French and English', () => {

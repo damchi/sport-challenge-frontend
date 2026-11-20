@@ -27,19 +27,20 @@ async function identity() {
 
 describe('ProfilePage', () => {
   async function change(label: string, value: string) {
-    const input = await screen.findByLabelText(label);
+    const input = await screen.findByRole('textbox', { name: label });
     fireEvent.change(input, { target: { value } });
     fireEvent.blur(input);
   }
 
-  // The names, then the pseudo, each have their own save button.
-  function saveButton(index: number): HTMLElement {
-    const button = screen.getAllByRole('button', { name: 'Enregistrer' })[index];
-    if (!button) throw new Error(`No save button ${index}`);
-    return button;
-  }
-  const saveNames = () => saveButton(0);
-  const savePseudo = () => saveButton(1);
+  // The names and the pseudo each have their own save button.
+  const saveNames = () =>
+    within(screen.getByRole('region', { name: 'Identité' })).getByRole('button', {
+      name: 'Enregistrer',
+    });
+  const savePseudo = () =>
+    within(screen.getByRole('form', { name: 'Pseudo (facultatif)' })).getByRole('button', {
+      name: 'Enregistrer',
+    });
 
   it('shows the names to change and the e-mail read-only', async () => {
     renderProfile();
@@ -128,7 +129,9 @@ describe('ProfilePage', () => {
       );
       renderProfile();
 
-      expect(await screen.findByLabelText('Pseudo (facultatif)')).toHaveValue('marie_92');
+      expect(await screen.findByRole('textbox', { name: 'Pseudo (facultatif)' })).toHaveValue(
+        'marie_92',
+      );
       expect(savePseudo()).toBeDisabled();
       await change('Pseudo (facultatif)', ' jean.luc ');
       fireEvent.click(savePseudo());
@@ -173,7 +176,10 @@ describe('ProfilePage', () => {
       fireEvent.click(savePseudo());
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
-      expect(screen.getByLabelText('Pseudo (facultatif)')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByRole('textbox', { name: 'Pseudo (facultatif)' })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
     });
 
     it('is optional while there is none', async () => {

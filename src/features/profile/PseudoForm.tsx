@@ -59,8 +59,17 @@ export function PseudoForm({ me }: { me: Me }) {
     .join(' ');
 
   return (
-    <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="mt-6">
-      <label htmlFor="profile-pseudo" className="block text-sm font-semibold">
+    <form
+      onSubmit={(event) => void handleSubmit(onSubmit)(event)}
+      noValidate
+      className="mt-6"
+      aria-labelledby="profile-pseudo-label"
+    >
+      <label
+        id="profile-pseudo-label"
+        htmlFor="profile-pseudo"
+        className="block text-sm font-semibold"
+      >
         {t('onboarding.pseudo.label')}
       </label>
       <div className="mt-2 flex gap-3">
