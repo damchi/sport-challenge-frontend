@@ -1,4 +1,4 @@
-import { formatDuration } from './duration';
+import { formatActivityDuration, formatDuration } from './duration';
 
 describe('formatDuration', () => {
   it('writes hours and minutes', () => {
@@ -13,5 +13,13 @@ describe('formatDuration', () => {
 
   it('keeps counting hours past a day', () => {
     expect(formatDuration(99_000)).toBe('27:30');
+  });
+});
+
+describe('formatActivityDuration', () => {
+  it('writes hours, minutes and seconds', () => {
+    expect(formatActivityDuration(3930)).toBe('1:05:30');
+    expect(formatActivityDuration(2700)).toBe('0:45:00');
+    expect(formatActivityDuration(86_400)).toBe('24:00:00');
   });
 });

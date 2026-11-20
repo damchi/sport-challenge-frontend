@@ -36,11 +36,10 @@ describe('routes', () => {
     renderAt('/activities');
     const add = await screen.findByRole('link', { name: 'Ajouter une activité' });
     expect(add).toHaveAttribute('href', '/activities/new');
-    // Before the rest of the page.
-    expect(
-      add.compareDocumentPosition(screen.getByText('Tes activités apparaîtront ici.')) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    // Before the activities.
+    const [first] = await screen.findAllByRole('article');
+    if (!first) throw new Error('No activity listed');
+    expect(add.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(add);
 
     expect(
@@ -52,6 +51,18 @@ describe('routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Mes activités' }),
     ).toBeInTheDocument();
+  });
+
+  it('opens the change of an activity from the activities page', async () => {
+    renderAt('/activities');
+    const [first] = await screen.findAllByRole('link', { name: 'Modifier' });
+    if (!first) throw new Error('No activity to change');
+    fireEvent.click(first);
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: "Modifier l'activité" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByRole('combobox', { name: 'Sport' })).toHaveValue('run');
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {

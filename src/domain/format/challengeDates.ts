@@ -97,6 +97,22 @@ export function challengeTime(instant: string, timeZone: string, locale: string)
   }).format(new Date(instant));
 }
 
+/**
+ * The start of an activity to the minute, in the time zone it is read in,
+ * with its year: the list goes back through the whole history
+ * ("19 nov. 2026, 7:30").
+ */
+export function activityTime(instant: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(instant));
+}
+
 /** Name of a time zone that holds all year ("heure de l'Est nord-américain"). */
 export function timeZoneName(timeZone: string, locale: string): string {
   const parts = new Intl.DateTimeFormat(locale, {

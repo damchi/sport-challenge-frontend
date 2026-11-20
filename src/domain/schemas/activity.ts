@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { zonedDateTime } from '../challengeWindow';
+import { toZonedDateTime, zonedDateTime } from '../challengeWindow';
 import { characterCount, hasOnlyAllowedCharacters, visibleCount } from './text';
 
 // Activity entry rules of the API contract (ActivityCreate). The form holds
@@ -136,6 +136,43 @@ export function activityCreateSchema(
 export type ActivityCreateInput = z.input<ReturnType<typeof activityCreateSchema>>;
 /** The request, once the form is valid. */
 export type ActivityCreateValues = z.output<ReturnType<typeof activityCreateSchema>>;
+
+/** A recorded activity, as far as its entry goes. */
+export interface RecordedActivity {
+  sport_code: string;
+  sport_label: string | null;
+  started_at: string;
+  duration_seconds: number;
+  distance_meters: number | null;
+}
+
+/**
+ * What the form holds to change a recorded activity: its start read in
+ * `timeZone` (to the minute, as entered), its duration in parts, its distance
+ * in km written in the user's language.
+ */
+export function activityFormValues(
+  activity: RecordedActivity,
+  timeZone: string,
+  locale: string,
+): ActivityCreateInput {
+  const { duration_seconds: duration, distance_meters: meters } = activity;
+  const part = (value: number) => (value === 0 ? '' : String(value));
+  return {
+    sport_code: activity.sport_code,
+    sport_label: activity.sport_label ?? '',
+    started_at: toZonedDateTime(new Date(activity.started_at), timeZone),
+    hours: part(Math.floor(duration / 3600)),
+    minutes: part(Math.floor(duration / 60) % 60),
+    seconds: part(duration % 60),
+    distance_km:
+      meters === null
+        ? ''
+        : new Intl.NumberFormat(locale, { maximumFractionDigits: 3, useGrouping: false }).format(
+            meters / 1000,
+          ),
+  };
+}
 
 // Form field of each request field: the duration is three fields, whose
 // error goes on the first one; the distance is typed in km.

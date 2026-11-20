@@ -16,3 +16,12 @@ export function formatKm(km: number, locale: string): string {
 export function formatFactor(factor: number, locale: string): string {
   return `×${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(factor)}`;
 }
+
+/** A speed the API gives in meters per second, written in km/h with one decimal. */
+export function formatSpeed(metersPerSecond: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: 'kilometer-per-hour',
+    maximumFractionDigits: 1,
+  }).format(metersPerSecond * 3.6);
+}

@@ -4,6 +4,7 @@ import { ChallengeLeaderboard } from '../features/leaderboard/ChallengeLeaderboa
 import { TabPending } from '../features/challenges/detail/TabPending';
 import { ActivitiesPage } from '../pages/ActivitiesPage';
 import { ActivityCreatePage } from '../pages/ActivityCreatePage';
+import { ActivityEditPage } from '../pages/ActivityEditPage';
 import { CallbackPage } from '../pages/CallbackPage';
 import { ChallengeCreatePage } from '../pages/ChallengeCreatePage';
 import { ChallengePage } from '../pages/ChallengePage';
@@ -67,6 +68,11 @@ export const routes: RouteObject[] = [
                     path: '/activities/new',
                     element: <ActivityCreatePage />,
                     handle: title('activityForm.title'),
+                  },
+                  {
+                    path: '/activities/:activityId/edit',
+                    element: <ActivityEditPage />,
+                    handle: title('activityEdit.title'),
                   },
                   { path: '/me', element: <ProfilePage />, handle: title('nav.profile') },
                   { path: '*', element: <NotFoundPage />, handle: title('notFound.title') },
