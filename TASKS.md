@@ -552,7 +552,6 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 - [ ] **Jamais de champ vitesse ni allure** : l'interface affiche celle que l'API calcule.
 - [ ] Clé d'idempotence générée à l'ouverture du formulaire et renvoyée à chaque tentative.
 - [ ] Bouton désactivé pendant l'envoi ; erreurs traduites : `week_locked`, `activity_overlap`, `distance_required`, `distance_not_allowed`, `profile_incomplete`.
-- [ ] Accueil : bouton « Ajouter une activité » (flottant en mobile, à droite du titre à partir de `md`, design.md) vers `/activities/new` (ajouté le 2026-11-20).
 
 **Tests** : chaque règle de champ, sport « autre », double envoi, chaque erreur.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
