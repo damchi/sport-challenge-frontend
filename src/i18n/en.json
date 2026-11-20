@@ -383,6 +383,8 @@
     "tied": "tied",
     "equivalent": "{{distance}} run equiv.",
     "empty": "No one is ranked in this challenge yet.",
+    "updated": "Updated {{date}}",
+    "updated_zone": "Updated {{date}}, {{zone}}",
     "elimination": {
       "reached": "Goal reached",
       "in_progress": "In progress",

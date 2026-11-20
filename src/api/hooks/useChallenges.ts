@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
 import { useApiClient } from '../ApiClientContext';
 import type { components } from '../generated/schema';
+import { staleTimes } from '../queryClient';
 import { queryKeys } from '../queryKeys';
 
 export type ChallengeSummary = components['schemas']['ChallengeSummary'];
@@ -86,6 +87,9 @@ export function useLeaderboard(challengeId: string) {
   const client = useApiClient();
   return useQuery({
     queryKey: queryKeys.challenges.leaderboard(challengeId),
+    // V1, no live update: reloaded when the tab opens or the page comes back
+    // into view (refetch on mount and on visibility, once stale).
+    staleTime: staleTimes.leaderboard,
     queryFn: async ({ signal }) => {
       const { data } = await client.GET('/api/v1/challenges/{challengeId}/leaderboard', {
         params: { path: { challengeId } },

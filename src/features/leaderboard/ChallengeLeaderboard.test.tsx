@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
@@ -303,6 +303,79 @@ describe('ChallengeLeaderboard', () => {
     leaderboard(threeCategories);
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(await section('Podium')).toBeInTheDocument();
+  });
+});
+
+describe('ChallengeLeaderboard, refresh', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  /** The device in a time zone: the challenge's one, unless said otherwise. */
+  function deviceIn(timeZone: string) {
+    const resolved = Intl.DateTimeFormat.prototype.resolvedOptions;
+    vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (
+      this: Intl.DateTimeFormat,
+    ) {
+      return { ...resolved.call(this), timeZone };
+    });
+  }
+
+  it('says when the server computed the leaderboard, in the challenge time zone', async () => {
+    deviceIn(summary.timezone);
+    answer();
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}`);
+
+    expect(await screen.findByText('Mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+  });
+
+  it('names the challenge time zone when the device is elsewhere', async () => {
+    deviceIn('Europe/Paris');
+    answer();
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}`);
+
+    expect(
+      await screen.findByText('Mis à jour : 18 nov., 10:00, heure de l’Est nord-américain'),
+    ).toBeInTheDocument();
+  });
+
+  it('reloads when the page comes back into view, not before it is stale', async () => {
+    deviceIn(summary.timezone);
+    // Only the clock is faked: the requests and the rendering keep their timers.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-18T15:00:30Z'));
+    answer();
+    let computedAt = '2026-11-18T15:00:00Z';
+    let calls = 0;
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', () => {
+        calls += 1;
+        return HttpResponse.json<Leaderboard>({
+          computed_at: computedAt,
+          categories: threeCategories,
+        });
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+    expect(await screen.findByText('Mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+    expect(calls).toBe(1);
+
+    const comeBack = () =>
+      act(() => void document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
+    computedAt = '2026-11-18T15:20:00Z';
+    comeBack();
+    // Still fresh: no request, the time stays.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls).toBe(1);
+    expect(screen.getByText('Mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+
+    vi.setSystemTime(new Date('2026-11-18T15:20:30Z'));
+    comeBack();
+    expect(await screen.findByText('Mis à jour : 18 nov., 10:20')).toBeInTheDocument();
+    expect(calls).toBe(2);
   });
 });
 

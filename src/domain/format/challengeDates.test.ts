@@ -1,6 +1,7 @@
 import {
   challengeDay,
   challengeInstant,
+  challengeTime,
   challengePeriod,
   challengeWindowBounds,
   otherTimeZoneName,
@@ -40,6 +41,16 @@ describe('challengePeriod', () => {
       'fr',
     );
     expect(period).toEqual({ start: '14 déc. 2026', end: '10 janv. 2027' });
+  });
+});
+
+describe('challengeTime', () => {
+  it('gives the day and the minute in the challenge time zone', () => {
+    const instant = '2026-11-18T15:00:00Z';
+    expect(challengeTime(instant, 'America/Montreal', 'fr')).toBe('18 nov., 10:00');
+    // ICU versions differ on the space before AM.
+    expect(challengeTime(instant, 'America/Montreal', 'en')).toMatch(/^Nov 18, 10:00\sAM$/);
+    expect(challengeTime(instant, 'Europe/Paris', 'fr')).toBe('18 nov., 16:00');
   });
 });
 
