@@ -11,6 +11,7 @@
     "app_unavailable": "L'application est momentanément indisponible.",
     "challenge_ended": "Ce défi est terminé.",
     "challenge_not_found": "Ce défi n'existe pas ou tu n'y as pas accès.",
+    "field_not_editable": "Seuls le titre et la description d'un défi peuvent être modifiés.",
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
@@ -332,6 +333,19 @@
       "message": "C'est définitif : tu es éliminé des 3 catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
       "confirm": "Abandonner",
       "cancel": "Annuler"
+    },
+    "edit": {
+      "button": "Modifier le titre et la description",
+      "heading": "Modifier le défi",
+      "frozen": "Les dates, la visibilité et les catégories sont fixées à la création : elles ne changent plus. Seuls le titre et la description peuvent être modifiés.",
+      "dates": "Dates",
+      "visibility": "Visibilité",
+      "descriptionHint": "2000 caractères au plus. Vide, elle est retirée du défi.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "saved": "Titre et description enregistrés.",
+      "serverInvalid": "Valeur refusée. Vérifie-la, puis réessaie."
     }
   },
   "sports": {

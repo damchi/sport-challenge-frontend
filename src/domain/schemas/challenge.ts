@@ -49,6 +49,30 @@ function hasDecimals(value: number, decimals: number): boolean {
 const TITLE_MAX_LENGTH = 80;
 const DESCRIPTION_MAX_LENGTH = 2000;
 
+// Title and description: the same rules at creation and when edited.
+const titleField = z
+  .string()
+  .trim()
+  .refine(
+    (title) => characterCount(title) <= TITLE_MAX_LENGTH && visibleCount(title) >= 3,
+    'challengeCreate.fields.title.length',
+  )
+  .refine(
+    (title) => hasOnlyAllowedCharacters(title, new Set()),
+    'challengeCreate.fields.title.characters',
+  );
+
+const descriptionField = z
+  .string()
+  .refine(
+    (description) => characterCount(description) <= DESCRIPTION_MAX_LENGTH,
+    'challengeCreate.fields.description.length',
+  )
+  .refine(
+    (description) => hasOnlyAllowedCharacters(description, LINE_BREAKS_AND_TAB),
+    'challengeCreate.fields.description.characters',
+  );
+
 /**
  * Challenge creation input. `now` dates "today" for the start date, which
  * must be between today and the same day next year in the chosen time zone.
@@ -56,27 +80,8 @@ const DESCRIPTION_MAX_LENGTH = 2000;
 export function challengeCreateSchema(now: Date) {
   return z
     .object({
-      title: z
-        .string()
-        .trim()
-        .refine(
-          (title) => characterCount(title) <= TITLE_MAX_LENGTH && visibleCount(title) >= 3,
-          'challengeCreate.fields.title.length',
-        )
-        .refine(
-          (title) => hasOnlyAllowedCharacters(title, new Set()),
-          'challengeCreate.fields.title.characters',
-        ),
-      description: z
-        .string()
-        .refine(
-          (description) => characterCount(description) <= DESCRIPTION_MAX_LENGTH,
-          'challengeCreate.fields.description.length',
-        )
-        .refine(
-          (description) => hasOnlyAllowedCharacters(description, LINE_BREAKS_AND_TAB),
-          'challengeCreate.fields.description.characters',
-        ),
+      title: titleField,
+      description: descriptionField,
       // No default: the creator chooses it.
       visibility: z.enum(['public', 'private'], 'challengeCreate.fields.visibility.required'),
       members_can_invite: z.boolean(),
@@ -120,3 +125,16 @@ export function challengeCreateSchema(now: Date) {
 export type ChallengeCreateInput = z.input<ReturnType<typeof challengeCreateSchema>>;
 /** What the form gives once valid. */
 export type ChallengeCreateValues = z.output<ReturnType<typeof challengeCreateSchema>>;
+
+/**
+ * Edition of a challenge (ChallengeUpdate): only the title and the
+ * description change, everything else is frozen at creation. An empty
+ * description removes it.
+ */
+export const challengeUpdateSchema = z.object({
+  title: titleField,
+  description: descriptionField,
+});
+
+/** What the edit form holds. */
+export type ChallengeUpdateInput = z.input<typeof challengeUpdateSchema>;
