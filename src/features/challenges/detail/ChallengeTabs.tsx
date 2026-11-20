@@ -21,7 +21,8 @@ export function ChallengeTabs({ challengeId }: { challengeId: string }) {
           <li key={key} className="flex flex-1">
             <NavLink
               to={`/challenges/${challengeId}${path}`}
-              end
+              // A participant's page stays under the Participants tab.
+              end={path === ''}
               className={({ isActive }) => `${TAB} ${isActive ? TAB_ON : TAB_OFF}`}
             >
               {t(`challengeDetail.tabs.${key}`)}

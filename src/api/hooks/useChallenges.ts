@@ -8,6 +8,7 @@ export type ChallengeSummary = components['schemas']['ChallengeSummary'];
 export type ChallengeCreate = components['schemas']['ChallengeCreate'];
 export type ChallengeDetail = components['schemas']['ChallengeDetail'];
 export type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
+export type Participant = components['schemas']['Participant'];
 
 /**
  * Challenges of a list, page by page (cursor): `fetchNextPage` loads the
@@ -47,6 +48,29 @@ export function useChallenge(challengeId: string) {
       if (!data) throw new Error('Empty challenge response');
       return data;
     },
+  });
+}
+
+/**
+ * Participants of a challenge, in order of registration, page by page
+ * (cursor). Those who abandoned or were excluded are listed as abandoned; a
+ * deleted account is not listed. Joining or abandoning reloads it (its key
+ * starts with the challenge's).
+ */
+export function useParticipants(challengeId: string) {
+  const client = useApiClient();
+  return useInfiniteQuery({
+    queryKey: queryKeys.challenges.participants(challengeId),
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data } = await client.GET('/api/v1/challenges/{challengeId}/participants', {
+        params: { path: { challengeId }, query: { cursor: pageParam } },
+        signal,
+      });
+      if (!data) throw new Error('Empty participant page');
+      return data;
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
   });
 }
 

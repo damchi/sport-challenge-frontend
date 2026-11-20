@@ -1,4 +1,4 @@
-import { isChallengeId } from './challenge';
+import { canSeeParticipantActivities, isChallengeId } from './challenge';
 
 describe('isChallengeId', () => {
   it('accepts a UUID', () => {
@@ -12,5 +12,18 @@ describe('isChallengeId', () => {
     expect(isChallengeId('new')).toBe(false);
     expect(isChallengeId('00000000-0000-4000-8000-00000000000')).toBe(false);
     expect(isChallengeId('00000000-0000-4000-8000-000000000001/../x')).toBe(false);
+  });
+});
+
+describe('canSeeParticipantActivities', () => {
+  it('lets the creators and the participants in, abandoned ones included', () => {
+    expect(canSeeParticipantActivities('creator')).toBe(true);
+    expect(canSeeParticipantActivities('participant')).toBe(true);
+    expect(canSeeParticipantActivities('abandoned')).toBe(true);
+  });
+
+  it('keeps the others out', () => {
+    expect(canSeeParticipantActivities('invited')).toBe(false);
+    expect(canSeeParticipantActivities('outsider')).toBe(false);
   });
 });

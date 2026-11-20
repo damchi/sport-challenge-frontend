@@ -10,6 +10,7 @@ export const queryKeys = {
     list: (scope: string, status: string | undefined) =>
       ['challenges', 'list', scope, status ?? 'all'] as const,
     detail: (challengeId: string) => ['challenges', challengeId] as const,
+    participants: (challengeId: string) => ['challenges', challengeId, 'participants'] as const,
     leaderboard: (challengeId: string, categoryId: string) =>
       ['challenges', challengeId, 'leaderboard', categoryId] as const,
   },

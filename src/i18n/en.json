@@ -345,6 +345,16 @@
       "cancel": "Cancel",
       "saved": "Title and description saved.",
       "serverInvalid": "Value refused. Check it, then try again."
+    },
+    "participants": {
+      "label": "Challenge participants",
+      "empty": "No one has joined this challenge yet.",
+      "unnamed": "Unnamed member",
+      "joined": "Joined {{date}}",
+      "status": {
+        "active": "Active",
+        "abandoned": "Abandoned"
+      }
     }
   },
   "sports": {

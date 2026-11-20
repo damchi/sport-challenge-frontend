@@ -23,3 +23,18 @@ const CHALLENGE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 export function isChallengeId(value: unknown): value is string {
   return typeof value === 'string' && CHALLENGE_ID.test(value);
 }
+
+/**
+ * The user's role in a challenge, as the server gives it (my_role); the
+ * contract's enum is the reference (src/domain does not import src/api).
+ */
+export type ChallengeRole = 'creator' | 'participant' | 'abandoned' | 'invited' | 'outsider';
+
+/**
+ * Whether the user may open the activities of a participant: the creators and
+ * the participants, abandoned ones included, as the contract says
+ * (listParticipantActivities); anyone else gets a 404 there.
+ */
+export function canSeeParticipantActivities(role: ChallengeRole): boolean {
+  return role === 'creator' || role === 'participant' || role === 'abandoned';
+}

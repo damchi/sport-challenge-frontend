@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router';
+import { ChallengeParticipants } from '../features/challenges/detail/ChallengeParticipants';
 import { TabPending } from '../features/challenges/detail/TabPending';
 import { ActivitiesPage } from '../pages/ActivitiesPage';
 import { CallbackPage } from '../pages/CallbackPage';
@@ -49,7 +50,9 @@ export const routes: RouteObject[] = [
                     handle: title('challengeDetail.title'),
                     children: [
                       { index: true, element: <TabPending /> },
-                      { path: 'participants', element: <TabPending /> },
+                      { path: 'participants', element: <ChallengeParticipants /> },
+                      // Activities of a participant: ticket SC-WEB-037.
+                      { path: 'participants/:userId', element: <TabPending /> },
                       { path: 'activities', element: <TabPending /> },
                     ],
                   },
