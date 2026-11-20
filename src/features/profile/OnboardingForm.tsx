@@ -1,28 +1,40 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, type UseFormRegister } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
 import { profileSchema, type ProfileInput } from '../../domain/schemas/profile';
 
-// A validation_failed answer about the pseudo: 409 means taken (contract);
-// a 400 gives no reason, so the message stays generic.
-function pseudoError(error: unknown): string | undefined {
-  if (
-    !(error instanceof ApiError) ||
-    error.code !== 'validation_failed' ||
-    !(error.params.fields ?? '').split(',').includes('pseudo')
-  ) {
-    return undefined;
+type ProfileField = 'pseudo' | 'first_name' | 'last_name';
+
+const NAME_FIELDS = ['first_name', 'last_name'] as const;
+
+// Fields a validation_failed answer names, with their message. For the
+// pseudo, 409 means taken (contract); a 400 gives no reason, so the message
+// stays generic.
+function fieldErrors(error: unknown): [ProfileField, string][] {
+  if (!(error instanceof ApiError) || error.code !== 'validation_failed') return [];
+  const fields = (error.params.fields ?? '').split(',');
+  const errors: [ProfileField, string][] = [];
+  if (fields.includes('pseudo')) {
+    errors.push([
+      'pseudo',
+      error.status === 409 ? 'profile.pseudo.taken' : 'profile.pseudo.invalid',
+    ]);
   }
-  return error.status === 409 ? 'profile.pseudo.taken' : 'profile.pseudo.invalid';
+  for (const field of NAME_FIELDS) {
+    if (fields.includes(field)) errors.push([field, 'profile.name.invalid']);
+  }
+  return errors;
 }
 
 /**
- * First profile: pseudo (checked as typed) and language. On success the
- * cached profile becomes complete and the profile gate opens the app.
+ * First profile: pseudo, first and last name (checked as typed) and
+ * language. Also shown to a profile made before the names were asked, with
+ * what it already has. On success the server says whether the profile is
+ * complete, and the profile gate opens the app.
  */
 export function OnboardingForm({ me }: { me: Me }) {
   const { t, i18n } = useTranslation();
@@ -41,6 +53,8 @@ export function OnboardingForm({ me }: { me: Me }) {
     reValidateMode: 'onChange',
     defaultValues: {
       pseudo: me.pseudo ?? '',
+      first_name: me.first_name ?? '',
+      last_name: me.last_name ?? '',
       language: me.language ?? (i18n.language === 'en' ? 'en' : 'fr'),
     },
   });
@@ -52,9 +66,11 @@ export function OnboardingForm({ me }: { me: Me }) {
       // The profile is saved: a failed language switch is not a form error.
       i18n.changeLanguage(profile.language).catch(() => undefined);
     } catch (error) {
-      const message = pseudoError(error);
-      if (message) {
-        setError('pseudo', { message }, { shouldFocus: true });
+      const invalid = fieldErrors(error);
+      if (invalid.length > 0) {
+        invalid.forEach(([field, message], index) =>
+          setError(field, { message }, { shouldFocus: index === 0 }),
+        );
       } else {
         const { key, values } =
           error instanceof ApiError
@@ -95,6 +111,21 @@ export function OnboardingForm({ me }: { me: Me }) {
         </p>
       )}
 
+      <NameInput
+        name="first_name"
+        label={t('onboarding.firstName')}
+        autoComplete="given-name"
+        message={errors.first_name?.message}
+        register={register}
+      />
+      <NameInput
+        name="last_name"
+        label={t('onboarding.lastName')}
+        autoComplete="family-name"
+        message={errors.last_name?.message}
+        register={register}
+      />
+
       <fieldset className="mt-6">
         <legend className="text-sm font-semibold">{t('onboarding.language.label')}</legend>
         <div className="mt-2 flex gap-3">
@@ -125,5 +156,44 @@ export function OnboardingForm({ me }: { me: Me }) {
         {isSubmitting ? t('onboarding.saving') : t('onboarding.submit')}
       </button>
     </form>
+  );
+}
+
+/** A required first or last name, its error read with the field. */
+function NameInput({
+  name,
+  label,
+  autoComplete,
+  message,
+  register,
+}: {
+  name: (typeof NAME_FIELDS)[number];
+  label: string;
+  autoComplete: string;
+  message: string | undefined;
+  register: UseFormRegister<ProfileInput>;
+}) {
+  const { t } = useTranslation();
+  const errorId = `${name}-error`;
+  return (
+    <div className="mt-6">
+      <label htmlFor={name} className="block text-sm font-semibold">
+        {label}
+      </label>
+      <input
+        id={name}
+        autoComplete={autoComplete}
+        aria-required="true"
+        aria-invalid={message ? true : undefined}
+        aria-describedby={message ? errorId : undefined}
+        className="mt-2 h-11 w-full rounded-row border border-border bg-surface px-3 text-ink"
+        {...register(name)}
+      />
+      {message && (
+        <p id={errorId} role="alert" className="mt-1 text-sm text-risk-fg">
+          {t(message)}
+        </p>
+      )}
+    </div>
   );
 }

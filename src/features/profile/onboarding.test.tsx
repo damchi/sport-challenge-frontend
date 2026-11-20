@@ -8,7 +8,14 @@ import { ProfileGate } from '../../routes/ProfileGate';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
 
-const newProfile = { ...mockMe, pseudo: null, language: null, profile_complete: false };
+const newProfile = {
+  ...mockMe,
+  pseudo: null,
+  first_name: null,
+  last_name: null,
+  language: null,
+  profile_complete: false,
+};
 
 // The profile gate and onboarding only, with a stand-in for any other page:
 // the round trip is tested without the whole app.
@@ -33,10 +40,18 @@ function renderApp(path: string) {
   return router;
 }
 
-async function typePseudo(value: string) {
-  const input = await screen.findByLabelText('Pseudo');
+async function type(label: string, value: string) {
+  const input = await screen.findByLabelText(label);
   fireEvent.change(input, { target: { value } });
   fireEvent.blur(input);
+}
+
+const typePseudo = (value: string) => type('Pseudo', value);
+
+async function fillProfile(pseudo = 'marie_92') {
+  await typePseudo(pseudo);
+  await type('Prénom', 'Marie');
+  await type('Nom', 'Tremblay');
 }
 
 describe('profile onboarding', () => {
@@ -77,7 +92,7 @@ describe('profile onboarding', () => {
     );
     renderApp('/');
 
-    await typePseudo('marie_92');
+    await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
@@ -94,7 +109,7 @@ describe('profile onboarding', () => {
     );
     renderApp('/');
 
-    await typePseudo('marie_92');
+    await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Ce pseudo n'est pas accepté.");
@@ -104,7 +119,7 @@ describe('profile onboarding', () => {
     server.use(http.patch('*/api/v1/me', () => new HttpResponse(null, { status: 500 })));
     renderApp('/');
 
-    await typePseudo('marie_92');
+    await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -121,7 +136,7 @@ describe('profile onboarding', () => {
     server.use(
       http.patch('*/api/v1/me', async ({ request }) => {
         sent = await request.json();
-        saved = { ...mockMe, pseudo: 'jean.luc', language: 'fr' };
+        saved = { ...mockMe, pseudo: 'jean.luc', first_name: 'Marie-Ève', last_name: 'N’Diaye' };
         return HttpResponse.json(saved);
       }),
       http.get('*/api/v1/me', () => HttpResponse.json(saved ?? newProfile)),
@@ -129,12 +144,115 @@ describe('profile onboarding', () => {
     const router = renderApp('/challenges/42');
 
     await typePseudo('  jean.luc ');
+    await type('Prénom', ' Marie-Ève ');
+    await type('Nom', 'N’Diaye');
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'asked page' }),
     ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/challenges/42');
-    expect(sent).toEqual({ pseudo: 'jean.luc', language: 'fr' });
+    expect(sent).toEqual({
+      pseudo: 'jean.luc',
+      first_name: 'Marie-Ève',
+      last_name: 'N’Diaye',
+      language: 'fr',
+    });
+  });
+
+  it('asks for the first and last name before sending', async () => {
+    let sent = false;
+    server.use(
+      http.patch('*/api/v1/me', () => {
+        sent = true;
+        return HttpResponse.json(mockMe);
+      }),
+    );
+    renderApp('/');
+
+    await typePseudo('marie_92');
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    const alerts = await screen.findAllByRole('alert');
+    expect(alerts.map((alert) => alert.textContent)).toEqual([
+      'Ce champ est obligatoire.',
+      'Ce champ est obligatoire.',
+    ]);
+    expect(screen.getByLabelText('Prénom')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Nom')).toHaveAttribute('aria-invalid', 'true');
+    expect(sent).toBe(false);
+  });
+
+  it('explains a name with other characters than letters', async () => {
+    renderApp('/');
+
+    await type('Prénom', 'Marie2');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Seulement des lettres, avec une espace, - ou ' entre les mots.",
+    );
+  });
+
+  it('shows a name the server refuses under its field', async () => {
+    server.use(
+      http.patch('*/api/v1/me', () =>
+        HttpResponse.json(
+          { error: { code: 'validation_failed', message: 'bad', params: { fields: 'last_name' } } },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderApp('/');
+
+    await fillProfile();
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Ce nom n'est pas accepté.");
+    expect(screen.getByLabelText('Nom')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Prénom')).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('marks every name the server refuses, the focus on the first', async () => {
+    server.use(
+      http.patch('*/api/v1/me', () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 'validation_failed',
+              message: 'bad',
+              params: { fields: 'first_name,last_name' },
+            },
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    renderApp('/');
+
+    await fillProfile();
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+
+    expect(await screen.findAllByRole('alert')).toHaveLength(2);
+    expect(screen.getByLabelText('Nom')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Prénom')).toHaveFocus();
+  });
+
+  it('sends a profile made before the names back to onboarding, its pseudo kept', async () => {
+    server.use(
+      http.get('*/api/v1/me', () =>
+        HttpResponse.json({
+          ...mockMe,
+          first_name: null,
+          last_name: null,
+          profile_complete: false,
+        }),
+      ),
+    );
+    const router = renderApp('/me');
+
+    expect(await screen.findByLabelText('Pseudo')).toHaveValue('marie_92');
+    expect(router.state.location.pathname).toBe('/onboarding');
+    expect(screen.getByLabelText('Prénom')).toHaveValue('');
+    expect(screen.getByLabelText('Nom')).toHaveValue('');
   });
 });

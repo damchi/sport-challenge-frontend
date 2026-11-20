@@ -89,8 +89,10 @@ paths:
       summary: Read my profile
       description: |
         Profile of the authenticated user, created empty on first login. The
-        profile is complete once the pseudo is set: creating or joining a
-        challenge requires it (`profile_incomplete`).
+        profile is complete once the pseudo, the first name and the last name
+        are set: creating or joining a challenge requires it
+        (`profile_incomplete`). The e-mail comes from the access token and is
+        only ever returned here, to its owner.
       tags: [me]
       responses:
         "200":
@@ -109,8 +111,10 @@ paths:
       operationId: patchMe
       summary: Update my profile
       description: |
-        Changes the pseudo and the language. An absent field is left
-        unchanged; `null` is refused (a pseudo cannot be removed).
+        Changes the pseudo, the first name, the last name and the language.
+        An absent field is left unchanged; `null` is refused (none of them
+        can be removed). The e-mail is not editable: it comes from the auth
+        provider.
       tags: [me]
       requestBody:
         required: true
@@ -145,7 +149,8 @@ paths:
       operationId: deleteMe
       summary: Delete my account
       description: |
-        Final: the account is anonymized (pseudo and avatar erased) and
+        Final: the account is anonymized (pseudo, first name, last name,
+        e-mail and avatar erased) and
         abandons every challenge not finished; a finished challenge keeps its
         results under a neutral name. The user is also deleted at the auth
         provider. Every later request with a token of this account, even
@@ -334,7 +339,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
-          description: The profile is incomplete (`profile_incomplete`); choose a pseudo first.
+          description: The profile is incomplete (`profile_incomplete`); set the pseudo, first name and last name first.
           content:
             application/json:
               schema:
@@ -720,12 +725,13 @@ paths:
         may not see answers 404 `challenge_not_found`; a visible one the
         user never joined (a public challenge shows them its leaderboard
         only), or a `userId` who never joined it, answers 404 `not_found`.
-        `challenge_ids` and `locked` are read from this challenge only, never
-        from the other challenges of the participant: `challenge_ids` holds
+        `contributions` and `locked` are read from this challenge only, never
+        from the other challenges of the participant: `contributions` holds
         it when the activity counts in it (never for a participant who
         abandoned: empty), and `locked` is true once its week has ended in
-        it, where it counts (never for a participant who abandoned). The author's own listing (`/me/activities`) may still show an
-        activity locked by another challenge.
+        it, where it counts (never for a participant who abandoned). The
+        author's own listing (`/me/activities`) may still show an activity
+        locked by another challenge.
       tags: [activities]
       parameters:
         - name: challengeId
@@ -965,7 +971,7 @@ paths:
         complete profile (`profile_incomplete`). It belongs to the user, not
         to a challenge: it counts in every challenge, not deleted, where the
         user is an active participant and whose window holds `started_at`
-        (`challenge_ids`, possibly empty). An activity outside every window
+        (`contributions`, possibly empty). An activity outside every window
         is recorded all the same. It is refused (`week_locked`) when its week
         has ended in one of those challenges, finished ones included. Its end
         (`started_at` plus `duration_seconds`) is never in the future (5
@@ -1282,12 +1288,21 @@ components:
       type: string
       pattern: "^[A-Za-z0-9_.-]{3,20}$"
       example: marie_92
+    PersonName:
+      description: |
+        A first or last name: 1 to 50 letters (any alphabet, accents
+        included), words separated by one space, `-`, `'` or `’`, each
+        starting with a letter; no space at either end.
+      type: string
+      maxLength: 50
+      pattern: "^\\p{L}[\\p{L}\\p{M}]*(?:[ '’-]\\p{L}[\\p{L}\\p{M}]*)*$"
+      example: Marie-Ève
     Language:
       type: string
       enum: [fr, en]
     Me:
       type: object
-      required: [id, pseudo, avatar, language, profile_complete]
+      required: [id, pseudo, first_name, last_name, email, avatar, language, profile_complete]
       additionalProperties: false
       properties:
         id:
@@ -1299,6 +1314,25 @@ components:
           allOf:
             - $ref: "#/components/schemas/Pseudo"
           description: Null until the user chooses one.
+        first_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null until the user sets it.
+        last_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null until the user sets it.
+        email:
+          type: string
+          nullable: true
+          maxLength: 254
+          description: |
+            From the access token (claim set by the auth provider); null until
+            a token carries it. Only returned to its owner.
         avatar:
           type: string
           nullable: true
@@ -1311,13 +1345,17 @@ components:
           description: Null until the user chooses one.
         profile_complete:
           type: boolean
-          description: True once the pseudo is set.
+          description: True once the pseudo, the first name and the last name are set.
     MeUpdate:
       type: object
       additionalProperties: false
       properties:
         pseudo:
           $ref: "#/components/schemas/Pseudo"
+        first_name:
+          $ref: "#/components/schemas/PersonName"
+        last_name:
+          $ref: "#/components/schemas/PersonName"
         language:
           $ref: "#/components/schemas/Language"
     SportList:
@@ -1508,7 +1546,7 @@ components:
           description: Pass it as `cursor` for the next page; null on the last page.
     Participant:
       type: object
-      required: [user_id, pseudo, avatar, status, joined_at]
+      required: [user_id, pseudo, first_name, last_name, avatar, status, joined_at]
       additionalProperties: false
       properties:
         user_id:
@@ -1520,6 +1558,18 @@ components:
           allOf:
             - $ref: "#/components/schemas/Pseudo"
           description: Null for a deleted (anonymized) account; the apps show a neutral name.
+        first_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for a deleted (anonymized) account, or one that has not set it.
+        last_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for a deleted (anonymized) account, or one that has not set it.
         avatar:
           type: string
           nullable: true
@@ -1588,7 +1638,7 @@ components:
           description: Only in `run_elimination`, and null for a participant who abandoned.
     LeaderboardUser:
       type: object
-      required: [id, pseudo, avatar]
+      required: [id, pseudo, first_name, last_name, avatar]
       additionalProperties: false
       properties:
         id:
@@ -1600,6 +1650,18 @@ components:
           allOf:
             - $ref: "#/components/schemas/Pseudo"
           description: Null for a deleted (anonymized) account; the apps show a neutral name.
+        first_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for a deleted (anonymized) account, or one that has not set it.
+        last_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for a deleted (anonymized) account, or one that has not set it.
         avatar:
           type: string
           nullable: true
@@ -1868,7 +1930,7 @@ components:
           description: Required or refused according to the sport's `distance_mode`.
     Activity:
       type: object
-      required: [id, sport_code, sport_label, started_at, duration_seconds, distance_meters, source, speed_mps, pace_seconds_per_km, challenge_ids, locked]
+      required: [id, sport_code, sport_label, started_at, duration_seconds, distance_meters, source, speed_mps, pace_seconds_per_km, contributions, locked]
       additionalProperties: false
       properties:
         id:
@@ -1901,17 +1963,41 @@ components:
           format: double
           nullable: true
           description: Pace in seconds per kilometer, computed; null without distance.
-        challenge_ids:
+        contributions:
           type: array
-          description: Challenges where the activity counts, now; possibly empty.
+          description: |
+            What the activity brings, now, to each challenge where it counts;
+            possibly empty. A deleted challenge never appears.
           items:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/ActivityContribution"
         locked:
           type: boolean
           description: |
             True once the week of the activity has ended in a challenge where
             it counts: it can no longer be changed nor deleted.
+    ActivityContribution:
+      type: object
+      required: [challenge_id, challenge_title, distance_meters, duration_seconds]
+      additionalProperties: false
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        challenge_title:
+          type: string
+        distance_meters:
+          type: integer
+          nullable: true
+          description: |
+            The distance brought to the cumulative distance category: the
+            distance times the factor of the sport in this challenge, rounded
+            to the meter (half up) as the ranking rounds a total. Null when
+            the sport has no factor in this challenge or the activity no
+            distance. The ranking rounds the total once, so it may differ by
+            a meter or so from the sum of these values.
+        duration_seconds:
+          type: integer
+          description: The duration brought to the cumulative time category.
     ActivityPage:
       type: object
       required: [items, next_cursor]

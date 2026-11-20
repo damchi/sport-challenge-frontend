@@ -52,6 +52,8 @@
       "label": "Nickname",
       "hint": "3 to 20 characters: letters, digits, _, . or -."
     },
+    "firstName": "First name",
+    "lastName": "Last name",
     "language": {
       "label": "Language",
       "fr": "Français",
@@ -67,6 +69,17 @@
       "characters": "Only letters, digits, _, . or -.",
       "taken": "This nickname is already taken. Try another one.",
       "invalid": "This nickname is not accepted. Try another one."
+    },
+    "name": {
+      "required": "This field is required.",
+      "length": "50 characters at most.",
+      "characters": "Letters only, in words separated by a space, - or '.",
+      "invalid": "This name isn't accepted. Check its spelling."
+    },
+    "identity": {
+      "title": "Identity",
+      "email": "Email",
+      "missing": "Not provided"
     }
   },
   "nav": {

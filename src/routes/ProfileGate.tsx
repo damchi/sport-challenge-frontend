@@ -9,9 +9,11 @@ import { Page } from '../components/Page';
 const ONBOARDING = '/onboarding';
 
 /**
- * The app needs a complete profile (a pseudo): until then every page leads
- * to /onboarding, which then opens the page first asked for. Creating or
- * joining a challenge is thus out of reach while the profile is incomplete.
+ * The app needs a complete profile, as the server says (pseudo, first and
+ * last name): until then every page leads to /onboarding, which then opens
+ * the page first asked for. A profile made before the names were asked goes
+ * back there too. Creating or joining a challenge is thus out of reach while
+ * the profile is incomplete.
  */
 export function ProfileGate() {
   const { t, i18n } = useTranslation();

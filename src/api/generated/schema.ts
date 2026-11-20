@@ -57,15 +57,18 @@ export interface paths {
         /**
          * Read my profile
          * @description Profile of the authenticated user, created empty on first login. The
-         *     profile is complete once the pseudo is set: creating or joining a
-         *     challenge requires it (`profile_incomplete`).
+         *     profile is complete once the pseudo, the first name and the last name
+         *     are set: creating or joining a challenge requires it
+         *     (`profile_incomplete`). The e-mail comes from the access token and is
+         *     only ever returned here, to its owner.
          */
         get: operations["getMe"];
         put?: never;
         post?: never;
         /**
          * Delete my account
-         * @description Final: the account is anonymized (pseudo and avatar erased) and
+         * @description Final: the account is anonymized (pseudo, first name, last name,
+         *     e-mail and avatar erased) and
          *     abandons every challenge not finished; a finished challenge keeps its
          *     results under a neutral name. The user is also deleted at the auth
          *     provider. Every later request with a token of this account, even
@@ -83,8 +86,10 @@ export interface paths {
         head?: never;
         /**
          * Update my profile
-         * @description Changes the pseudo and the language. An absent field is left
-         *     unchanged; `null` is refused (a pseudo cannot be removed).
+         * @description Changes the pseudo, the first name, the last name and the language.
+         *     An absent field is left unchanged; `null` is refused (none of them
+         *     can be removed). The e-mail is not editable: it comes from the auth
+         *     provider.
          */
         patch: operations["patchMe"];
         trace?: never;
@@ -363,12 +368,13 @@ export interface paths {
          *     may not see answers 404 `challenge_not_found`; a visible one the
          *     user never joined (a public challenge shows them its leaderboard
          *     only), or a `userId` who never joined it, answers 404 `not_found`.
-         *     `challenge_ids` and `locked` are read from this challenge only, never
-         *     from the other challenges of the participant: `challenge_ids` holds
+         *     `contributions` and `locked` are read from this challenge only, never
+         *     from the other challenges of the participant: `contributions` holds
          *     it when the activity counts in it (never for a participant who
          *     abandoned: empty), and `locked` is true once its week has ended in
-         *     it, where it counts (never for a participant who abandoned). The author's own listing (`/me/activities`) may still show an
-         *     activity locked by another challenge.
+         *     it, where it counts (never for a participant who abandoned). The
+         *     author's own listing (`/me/activities`) may still show an activity
+         *     locked by another challenge.
          */
         get: operations["listParticipantActivities"];
         put?: never;
@@ -495,7 +501,7 @@ export interface paths {
          *     complete profile (`profile_incomplete`). It belongs to the user, not
          *     to a challenge: it counts in every challenge, not deleted, where the
          *     user is an active participant and whose window holds `started_at`
-         *     (`challenge_ids`, possibly empty). An activity outside every window
+         *     (`contributions`, possibly empty). An activity outside every window
          *     is recorded all the same. It is refused (`week_locked`) when its week
          *     has ended in one of those challenges, finished ones included. Its end
          *     (`started_at` plus `duration_seconds`) is never in the future (5
@@ -601,6 +607,13 @@ export interface components {
          * @example marie_92
          */
         Pseudo: string;
+        /**
+         * @description A first or last name: 1 to 50 letters (any alphabet, accents
+         *     included), words separated by one space, `-`, `'` or `’`, each
+         *     starting with a letter; no space at either end.
+         * @example Marie-Ève
+         */
+        PersonName: string;
         /** @enum {string} */
         Language: "fr" | "en";
         Me: {
@@ -608,15 +621,26 @@ export interface components {
             id: string;
             /** @description Null until the user chooses one. */
             pseudo: (string & components["schemas"]["Pseudo"]) | null;
+            /** @description Null until the user sets it. */
+            first_name: (string & components["schemas"]["PersonName"]) | null;
+            /** @description Null until the user sets it. */
+            last_name: (string & components["schemas"]["PersonName"]) | null;
+            /**
+             * @description From the access token (claim set by the auth provider); null until
+             *     a token carries it. Only returned to its owner.
+             */
+            email: string | null;
             /** @description Avatar image; always null in V1, where the apps show the pseudo's initials. */
             avatar: string | null;
             /** @description Null until the user chooses one. */
             language: (string & components["schemas"]["Language"]) | null;
-            /** @description True once the pseudo is set. */
+            /** @description True once the pseudo, the first name and the last name are set. */
             profile_complete: boolean;
         };
         MeUpdate: {
             pseudo?: components["schemas"]["Pseudo"];
+            first_name?: components["schemas"]["PersonName"];
+            last_name?: components["schemas"]["PersonName"];
             language?: components["schemas"]["Language"];
         };
         SportList: {
@@ -750,6 +774,10 @@ export interface components {
             user_id: string;
             /** @description Null for a deleted (anonymized) account; the apps show a neutral name. */
             pseudo: (string & components["schemas"]["Pseudo"]) | null;
+            /** @description Null for a deleted (anonymized) account, or one that has not set it. */
+            first_name: (string & components["schemas"]["PersonName"]) | null;
+            /** @description Null for a deleted (anonymized) account, or one that has not set it. */
+            last_name: (string & components["schemas"]["PersonName"]) | null;
             /** @description Avatar image; always null in V1, where the apps show the pseudo's initials. */
             avatar: string | null;
             /**
@@ -794,6 +822,10 @@ export interface components {
             id: string;
             /** @description Null for a deleted (anonymized) account; the apps show a neutral name. */
             pseudo: (string & components["schemas"]["Pseudo"]) | null;
+            /** @description Null for a deleted (anonymized) account, or one that has not set it. */
+            first_name: (string & components["schemas"]["PersonName"]) | null;
+            /** @description Null for a deleted (anonymized) account, or one that has not set it. */
+            last_name: (string & components["schemas"]["PersonName"]) | null;
             /** @description Avatar image; always null in V1, where the apps show the pseudo's initials. */
             avatar: string | null;
         };
@@ -1013,13 +1045,32 @@ export interface components {
              * @description Pace in seconds per kilometer, computed; null without distance.
              */
             pace_seconds_per_km: number | null;
-            /** @description Challenges where the activity counts, now; possibly empty. */
-            challenge_ids: string[];
+            /**
+             * @description What the activity brings, now, to each challenge where it counts;
+             *     possibly empty. A deleted challenge never appears.
+             */
+            contributions: components["schemas"]["ActivityContribution"][];
             /**
              * @description True once the week of the activity has ended in a challenge where
              *     it counts: it can no longer be changed nor deleted.
              */
             locked: boolean;
+        };
+        ActivityContribution: {
+            /** Format: uuid */
+            challenge_id: string;
+            challenge_title: string;
+            /**
+             * @description The distance brought to the cumulative distance category: the
+             *     distance times the factor of the sport in this challenge, rounded
+             *     to the meter (half up) as the ranking rounds a total. Null when
+             *     the sport has no factor in this challenge or the activity no
+             *     distance. The ranking rounds the total once, so it may differ by
+             *     a meter or so from the sum of these values.
+             */
+            distance_meters: number | null;
+            /** @description The duration brought to the cumulative time category. */
+            duration_seconds: number;
         };
         ActivityPage: {
             items: components["schemas"]["Activity"][];
@@ -1403,7 +1454,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
-            /** @description The profile is incomplete (`profile_incomplete`); choose a pseudo first. */
+            /** @description The profile is incomplete (`profile_incomplete`); set the pseudo, first name and last name first. */
             422: {
                 headers: {
                     [name: string]: unknown;

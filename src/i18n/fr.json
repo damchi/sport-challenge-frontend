@@ -52,6 +52,8 @@
       "label": "Pseudo",
       "hint": "3 à 20 caractères : lettres, chiffres, _, . ou -."
     },
+    "firstName": "Prénom",
+    "lastName": "Nom",
     "language": {
       "label": "Langue",
       "fr": "Français",
@@ -67,6 +69,17 @@
       "characters": "Seulement des lettres, des chiffres, _, . ou -.",
       "taken": "Ce pseudo est déjà pris. Essaie-en un autre.",
       "invalid": "Ce pseudo n'est pas accepté. Essaie-en un autre."
+    },
+    "name": {
+      "required": "Ce champ est obligatoire.",
+      "length": "50 caractères au plus.",
+      "characters": "Seulement des lettres, avec une espace, - ou ' entre les mots.",
+      "invalid": "Ce nom n'est pas accepté. Vérifie son orthographe."
+    },
+    "identity": {
+      "title": "Identité",
+      "email": "E-mail",
+      "missing": "Non renseigné"
     }
   },
   "nav": {
