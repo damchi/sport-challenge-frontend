@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isTimeZone, zonedDateTime } from '../challengeWindow';
+import { zonedDateTime } from '../challengeWindow';
 import { characterCount, hasOnlyAllowedCharacters, visibleCount } from './text';
 
 // Activity entry rules of the API contract (ActivityCreate). The form holds
@@ -57,9 +57,13 @@ function distanceMeters(value: string): number | undefined {
  * activity is entered once done, so neither its start nor its end is in the
  * future. `sports` is the catalogue, whose distance mode tells whether the
  * distance is required, optional (the "other" sport) or absent. The start,
- * as a native field gives it, is read in the chosen `time_zone`.
+ * as a native field gives it, is read in `timeZone`.
  */
-export function activityCreateSchema(now: () => Date, sports: readonly ActivitySport[]) {
+export function activityCreateSchema(
+  now: () => Date,
+  sports: readonly ActivitySport[],
+  timeZone: string,
+) {
   const modeOf = (code: string) => sports.find((sport) => sport.code === code)?.distance_mode;
 
   return z
@@ -67,7 +71,6 @@ export function activityCreateSchema(now: () => Date, sports: readonly ActivityS
       sport_code: z.string(),
       sport_label: z.string(),
       started_at: z.string(),
-      time_zone: z.string(),
       hours: z.string(),
       minutes: z.string(),
       seconds: z.string(),
@@ -89,9 +92,7 @@ export function activityCreateSchema(now: () => Date, sports: readonly ActivityS
         }
       }
 
-      const start = isTimeZone(input.time_zone)
-        ? zonedDateTime(input.started_at, input.time_zone)
-        : undefined;
+      const start = zonedDateTime(input.started_at, timeZone);
       const current = now().getTime();
       if (!start) issue('started_at', 'activityForm.fields.startedAt.required');
       else if (start.getTime() < EARLIEST_START || start.getTime() > current) {
@@ -120,7 +121,7 @@ export function activityCreateSchema(now: () => Date, sports: readonly ActivityS
       const mode = modeOf(input.sport_code);
       const meters = mode === 'none' ? undefined : distanceMeters(input.distance_km);
       // Valid by now: the refinement above passed.
-      const start = zonedDateTime(input.started_at, input.time_zone) ?? new Date(Number.NaN);
+      const start = zonedDateTime(input.started_at, timeZone) ?? new Date(Number.NaN);
       return {
         sport_code: input.sport_code,
         ...(input.sport_code === 'other' && { sport_label: cleanSportLabel(input.sport_label) }),

@@ -16,13 +16,12 @@ const sports: ActivitySport[] = [
 const now = new Date('2026-11-20T17:00:00Z');
 // 7:30 in Montréal.
 const STARTED_AT = '2026-11-20T12:30:00.000Z';
-const schema = activityCreateSchema(() => now, sports);
+const schema = activityCreateSchema(() => now, sports, 'America/Toronto');
 
 const valid: ActivityCreateInput = {
   sport_code: 'run',
   sport_label: '',
   started_at: '2026-11-20T07:30',
-  time_zone: 'America/Toronto',
   hours: '1',
   minutes: '02',
   seconds: '3',
@@ -97,13 +96,9 @@ describe('activityCreateSchema', () => {
   });
 
   describe('start', () => {
-    it('is read in the chosen time zone', () => {
-      expect(schema.parse({ ...valid, time_zone: 'Europe/Paris' }).started_at).toBe(
-        '2026-11-20T06:30:00.000Z',
-      );
-      expect(errorsOf({ time_zone: 'Nowhere/Land' }).started_at).toBe(
-        'activityForm.fields.startedAt.required',
-      );
+    it('is read in the given time zone', () => {
+      const paris = activityCreateSchema(() => now, sports, 'Europe/Paris');
+      expect(paris.parse(valid).started_at).toBe('2026-11-20T06:30:00.000Z');
     });
 
     it.each(['', '2026-11-20', 'yesterday'])('wants a date and a time, not %j', (startedAt) => {
@@ -124,7 +119,7 @@ describe('activityCreateSchema', () => {
 
     it('reads the current instant at each check', () => {
       let current = new Date('2026-11-20T12:00:00Z');
-      const live = activityCreateSchema(() => current, sports);
+      const live = activityCreateSchema(() => current, sports, 'America/Toronto');
       expect(live.safeParse(valid).success).toBe(false);
       current = new Date('2026-11-20T14:00:00Z');
       expect(live.safeParse(valid).success).toBe(true);

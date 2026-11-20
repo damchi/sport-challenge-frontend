@@ -1,28 +1,39 @@
-import { activityTimeZones } from './activity';
+import { activityTimeZone } from './activity';
 
-describe('activityTimeZones', () => {
+describe('activityTimeZone', () => {
   it("takes the device's time zone without an ongoing challenge", () => {
-    expect(activityTimeZones([], 'Europe/Paris')).toEqual(['Europe/Paris']);
+    expect(activityTimeZone([], 'Europe/Paris')).toBe('Europe/Paris');
   });
 
-  it('takes the time zones of the challenges where the user takes part, once each', () => {
+  it('takes the time zone the challenges where the user takes part share', () => {
     expect(
-      activityTimeZones(
+      activityTimeZone(
         [
           { timezone: 'America/Toronto', my_status: 'active' },
           { timezone: 'America/Vancouver', my_status: 'abandoned' },
-          { timezone: 'Europe/Paris', my_status: null },
+          { timezone: 'Asia/Tokyo', my_status: null },
           { timezone: 'America/Toronto', my_status: 'active' },
-          { timezone: 'Asia/Tokyo', my_status: 'active' },
         ],
         'Europe/Paris',
       ),
-    ).toEqual(['America/Toronto', 'Asia/Tokyo']);
+    ).toBe('America/Toronto');
   });
 
-  it("falls back on the device's when the user takes part in none of them", () => {
+  it("takes the device's when those challenges are in several time zones", () => {
     expect(
-      activityTimeZones([{ timezone: 'America/Toronto', my_status: 'abandoned' }], 'Europe/Paris'),
-    ).toEqual(['Europe/Paris']);
+      activityTimeZone(
+        [
+          { timezone: 'America/Toronto', my_status: 'active' },
+          { timezone: 'Europe/Paris', my_status: 'active' },
+        ],
+        'Asia/Tokyo',
+      ),
+    ).toBe('Asia/Tokyo');
+  });
+
+  it("takes the device's when the user takes part in none of them", () => {
+    expect(
+      activityTimeZone([{ timezone: 'America/Toronto', my_status: 'abandoned' }], 'Europe/Paris'),
+    ).toBe('Europe/Paris');
   });
 });

@@ -146,6 +146,22 @@ describe('ActivityForm', () => {
     expect(sent[0]?.body.started_at).toBe('2026-11-20T06:30:00.000Z');
   });
 
+  it("reads the start in the device's time zone when the challenges are in several", async () => {
+    // A run in Montréal while taking part in a challenge there and one in Paris.
+    ongoingIn('America/Toronto', 'Europe/Paris');
+    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    renderForm({ deviceTimeZone: 'America/Toronto' });
+    expect(
+      await screen.findByText('Date et heure de début, heure de l’Est nord-américain.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /fuseau/i })).not.toBeInTheDocument();
+    await fill();
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.body.started_at).toBe(STARTED_AT);
+  });
+
   it('reads every page of the ongoing challenges for their time zones', async () => {
     server.use(
       http.get('*/api/v1/challenges', ({ request }) => {
@@ -167,29 +183,12 @@ describe('ActivityForm', () => {
         });
       }),
     );
-    renderForm();
+    renderForm({ deviceTimeZone: 'Europe/Paris' });
 
-    const zone = await screen.findByRole('combobox', { name: 'Fuseau horaire' });
-    expect(within(zone).getAllByRole('option')).toHaveLength(2);
-  });
-
-  it('offers the time zones of the challenges when they have several', async () => {
-    // Zones whose offsets the time zone data will not move.
-    ongoingIn('America/Toronto', 'Europe/Paris');
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
-    renderForm();
-    const zone = await screen.findByRole('combobox', { name: 'Fuseau horaire' });
+    // Montréal on the first page, Paris on the second: the device's zone.
     expect(
-      within(zone)
-        .getAllByRole('option')
-        .map((option) => option.textContent),
-    ).toEqual(['heure de l’Est nord-américain', 'heure normale d’Europe centrale']);
-    await fill();
-    type(zone, 'Europe/Paris');
-    fireEvent.click(save());
-
-    await waitFor(() => expect(sent).toHaveLength(1));
-    expect(sent[0]?.body.started_at).toBe('2026-11-20T06:30:00.000Z');
+      await screen.findByText('Date et heure de début, heure normale d’Europe centrale.'),
+    ).toBeInTheDocument();
   });
 
   it('records the activity with its idempotency key, then says so', async () => {

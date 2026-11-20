@@ -125,10 +125,6 @@
         "length": "Écris entre 2 et 40 caractères.",
         "characters": "Ce nom contient des caractères invisibles ou de contrôle. Retire-les."
       },
-      "timeZone": {
-        "label": "Fuseau horaire",
-        "hint": "Tes défis en cours sont dans plusieurs fuseaux : choisis celui de l'heure de début."
-      },
       "startedAt": {
         "label": "Début",
         "hint": "Date et heure de début, {{zone}}.",
