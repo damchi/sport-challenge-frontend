@@ -51,8 +51,10 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
 
   return (
     <>
-      <ChallengeHeader challenge={challenge.data} />
-      <ChallengeInvite challenge={challenge.data} />
+      <ChallengeHeader
+        challenge={challenge.data}
+        action={<ChallengeInvite challenge={challenge.data} />}
+      />
       <ChallengeEdit challenge={challenge.data} />
       <ChallengeParticipation challenge={challenge.data} />
       <div className="mt-6 flex flex-wrap items-start gap-6">

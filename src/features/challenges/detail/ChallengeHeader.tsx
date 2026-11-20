@@ -1,4 +1,5 @@
 import { ChevronLeft, Globe, Lock, Timer } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
@@ -14,9 +15,16 @@ import { ChallengeStatusPill, RolePills } from '../ChallengePills';
  * Head of a challenge's page. Every date is in the challenge's time zone;
  * when the user's differs, the zone is named, also after each hour. The week
  * line shows only when the server gives it (current_week): nothing is worked
- * out here.
+ * out here. `action` sits next to the title, on its right; what it adds on
+ * a line of its own (basis-full) goes below the title.
  */
-export function ChallengeHeader({ challenge }: { challenge: ChallengeDetail }) {
+export function ChallengeHeader({
+  challenge,
+  action,
+}: {
+  challenge: ChallengeDetail;
+  action?: ReactNode;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const timeZone = challenge.timezone;
@@ -35,8 +43,11 @@ export function ChallengeHeader({ challenge }: { challenge: ChallengeDetail }) {
         <span className="sr-only md:not-sr-only">{t('challengeDetail.back')}</span>
       </Link>
 
-      <div className="mt-2">
-        <PageTitle>{challenge.title}</PageTitle>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-x-3 gap-y-4">
+        <div className="min-w-0 flex-1 break-words">
+          <PageTitle>{challenge.title}</PageTitle>
+        </div>
+        {action}
       </div>
       <div className="mt-3 flex flex-wrap gap-1">
         <ChallengeStatusPill status={challenge.status} />

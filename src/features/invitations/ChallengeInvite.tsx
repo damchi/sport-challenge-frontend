@@ -17,7 +17,9 @@ const BUTTON =
  * Invitation to a challenge, for those who may invite (canInvite). The button
  * creates a link, valid until the end of week 1: the user copies it, or
  * shares it with the system's share sheet where the browser has one. When
- * the copy fails, the link is selected for a copy by hand. Tests give `now`.
+ * the copy fails, the link is selected for a copy by hand. Made for the
+ * header's wrapping row: the button sits next to the title, the link below
+ * it, on a line of its own. Tests give `now`.
  */
 export function ChallengeInvite({
   challenge,
@@ -54,7 +56,7 @@ export function ChallengeInvite({
 
   if (!created) {
     return (
-      <div className="mt-4">
+      <div className="flex-none">
         <button
           type="button"
           // Not `disabled`: a disabled button would drop the focus while sending.
@@ -68,7 +70,7 @@ export function ChallengeInvite({
           {create.isPending ? t('invitations.busy') : t('invitations.button')}
         </button>
         {errorKey && (
-          <p role="alert" className="mt-2 font-semibold">
+          <p role="alert" className="mt-2 max-w-xs font-semibold">
             {t(errorKey.key, errorKey.values)}
           </p>
         )}
@@ -119,7 +121,7 @@ export function ChallengeInvite({
   return (
     <section
       aria-labelledby={headingId}
-      className="mt-4 rounded-card border border-border bg-surface p-4 md:max-w-xl"
+      className="basis-full rounded-card border border-border bg-surface p-4"
     >
       <h2 id={headingId} className="font-display text-lg font-bold">
         {t('invitations.heading')}
