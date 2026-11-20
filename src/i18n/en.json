@@ -9,6 +9,7 @@
   "errors": {
     "already_participant": "You are already taking part in this challenge.",
     "app_unavailable": "The app is temporarily unavailable.",
+    "challenge_ended": "This challenge is over.",
     "challenge_not_found": "This challenge doesn't exist or you don't have access to it.",
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
@@ -321,6 +322,14 @@
       "closed_zone": "Registration closed at the end of week 1, on {{date}}, {{zone}}.",
       "participant": "You are taking part in this challenge.",
       "abandoned": "You abandoned this challenge: it's final, you can't join it again."
+    },
+    "abandon": {
+      "button": "Abandon the challenge",
+      "busy": "Abandoning…",
+      "title": "Abandon “{{title}}”?",
+      "message": "This is final: you are eliminated from all 3 categories and shown as “Abandoned” in the leaderboards, off the podium. You won't be able to join this challenge again.",
+      "confirm": "Abandon",
+      "cancel": "Cancel"
     }
   },
   "sports": {
