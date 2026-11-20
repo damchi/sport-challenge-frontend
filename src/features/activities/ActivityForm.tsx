@@ -119,7 +119,7 @@ export function ActivityFormFields({
   submitKey: 'activityForm.submit' | 'activityEdit.submit';
   busy: boolean;
   save: (activity: ActivityCreateValues) => Promise<void>;
-  weekLockedKey?: string;
+  weekLockedKey?: 'activityEdit.weekLocked';
 }) {
   const { t, i18n } = useTranslation();
   const sportName = useSportName();
