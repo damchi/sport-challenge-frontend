@@ -386,14 +386,14 @@ describe('ChallengeLeaderboard, finished challenge', () => {
 
   const finished = { status: 'finished', current_week: null, week_ends_at: null } as const;
 
-  it('says the results are final, with the last day in the challenge time zone', async () => {
+  it('says the results are final, with the last day and its year in the challenge time zone', async () => {
     deviceIn(summary.timezone);
     answer(finished);
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
     expect(
-      await screen.findByText("Résultats définitifs : le défi s'est terminé le 29 nov."),
+      await screen.findByText("Résultats définitifs : le défi s'est terminé le 29 nov. 2026"),
     ).toBeInTheDocument();
     // Frozen: no update time to follow.
     expect(screen.queryByText(/Mis à jour/)).not.toBeInTheDocument();
@@ -408,7 +408,7 @@ describe('ChallengeLeaderboard, finished challenge', () => {
 
     expect(
       await screen.findByText(
-        "Résultats définitifs : le défi s'est terminé le 29 nov., heure de l’Est nord-américain",
+        "Résultats définitifs : le défi s'est terminé le 29 nov. 2026, heure de l’Est nord-américain",
       ),
     ).toBeInTheDocument();
   });

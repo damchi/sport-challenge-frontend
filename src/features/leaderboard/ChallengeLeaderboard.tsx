@@ -8,7 +8,7 @@ import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../domain/challenge';
 import {
-  challengePeriod,
+  challengeLastDay,
   challengeTime,
   otherTimeZoneName,
 } from '../../domain/format/challengeDates';
@@ -28,7 +28,7 @@ const SEGMENT_OFF = 'text-muted';
  * elimination, were eliminated. Ranks, order and statuses are the server's.
  * The user's row stands out and stays on screen. No live update in V1: it
  * says when the server computed it. Once the challenge is finished (the
- * server's status), its results are final: it says so, with its last day.
+ * server's status), its results are final: it says so, with its last day and year.
  * Rendered under the challenge page, which has already loaded the challenge.
  */
 export function ChallengeLeaderboard() {
@@ -101,12 +101,7 @@ export function ChallengeLeaderboard() {
         <p className="mt-3 flex items-start gap-2 text-sm font-semibold text-ink">
           <Flag aria-hidden="true" size={16} strokeWidth={2} className="mt-0.5 flex-none" />
           {t('leaderboard.final', {
-            date: challengePeriod(
-              challenge.data.starts_at,
-              challenge.data.ends_at,
-              timezone,
-              locale,
-            ).end,
+            date: challengeLastDay(challenge.data.ends_at, timezone, locale),
             zone,
             context: zone && 'zone',
           })}
