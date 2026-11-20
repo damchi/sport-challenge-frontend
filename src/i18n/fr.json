@@ -492,5 +492,20 @@
       "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
       "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu cours plus que le minimum, ta distance devient la nouvelle base."
     }
+  },
+  "invitations": {
+    "button": "Inviter des amis",
+    "busy": "Création du lien…",
+    "heading": "Lien d'invitation",
+    "link": "Lien à partager",
+    "expires": "Valable pour plusieurs personnes jusqu'à la fin de la semaine 1, le {{date}}.",
+    "expires_zone": "Valable pour plusieurs personnes jusqu'à la fin de la semaine 1, le {{date}}, {{zone}}.",
+    "copy": "Copier le lien",
+    "share": "Partager",
+    "copied": "Lien copié.",
+    "copyFailed": "Copie impossible : le lien est sélectionné, copie-le à la main.",
+    "shareFailed": "Partage impossible. Copie le lien à la place.",
+    "shareText": "Rejoins-moi dans le défi « {{title}} »",
+    "forbidden": "Tu ne peux pas inviter d'amis à ce défi."
   }
 }

@@ -491,5 +491,20 @@
       "firstWeek": "No elimination in week 1: the first minimum applies in week 2.",
       "rule": "Next week's minimum = your distance this week + {{step}}. Run more than the minimum and your distance becomes the new base."
     }
+  },
+  "invitations": {
+    "button": "Invite friends",
+    "busy": "Creating the link…",
+    "heading": "Invitation link",
+    "link": "Link to share",
+    "expires": "Works for several people until the end of week 1, on {{date}}.",
+    "expires_zone": "Works for several people until the end of week 1, on {{date}}, {{zone}}.",
+    "copy": "Copy link",
+    "share": "Share",
+    "copied": "Link copied.",
+    "copyFailed": "Could not copy. The link is selected: copy it by hand.",
+    "shareFailed": "Could not share. Copy the link instead.",
+    "shareText": "Join me in the challenge “{{title}}”",
+    "forbidden": "You cannot invite friends to this challenge."
   }
 }

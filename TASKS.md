@@ -621,7 +621,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 `F7` · Story · Phase 7 · Estimation 5 · Dépend de : 017, 025, 038 · Backend : `GET /invitations/{token}` et `POST /invitations/{token}/accept` (SC-API-066)
 
 **Critères d'acceptation**
-- [ ] `/invite/:token` : si l'utilisateur n'est pas connecté, connexion puis **retour automatique** sur l'invitation.
+- [ ] `/invite#<jeton>` (jeton dans le fragment, décision du 2026-11-20, README §4.4) : si l'utilisateur n'est pas connecté, connexion puis **retour automatique** sur l'invitation.
 - [ ] Aperçu : titre, dates dans le fuseau du challenge, nombre de participants, avertissement de visibilité des activités.
 - [ ] « Accepter » rejoint le challenge privé ; erreurs traduites : `invitation_invalid` (inconnue, expirée, révoquée), `registration_closed`, `participation_abandoned`, `profile_incomplete` (puis onboarding et retour).
 - [ ] Le jeton est validé (forme) avant tout appel ; aucune action sensible sans confirmation.
