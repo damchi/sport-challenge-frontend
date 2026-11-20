@@ -146,6 +146,33 @@ describe('ActivityForm', () => {
     expect(sent[0]?.body.started_at).toBe('2026-11-20T06:30:00.000Z');
   });
 
+  it('reads every page of the ongoing challenges for their time zones', async () => {
+    server.use(
+      http.get('*/api/v1/challenges', ({ request }) => {
+        const second = new URL(request.url).searchParams.get('cursor') === 'next';
+        return HttpResponse.json<ChallengePage>({
+          items: [
+            {
+              ...challenge,
+              id: second
+                ? '00000000-0000-4000-8000-000000000202'
+                : '00000000-0000-4000-8000-000000000201',
+              timezone: second ? 'Europe/Paris' : 'America/Toronto',
+              my_role: 'participant',
+              my_status: 'active',
+              status: 'ongoing',
+            },
+          ],
+          next_cursor: second ? null : 'next',
+        });
+      }),
+    );
+    renderForm();
+
+    const zone = await screen.findByRole('combobox', { name: 'Fuseau horaire' });
+    expect(within(zone).getAllByRole('option')).toHaveLength(2);
+  });
+
   it('offers the time zones of the challenges when they have several', async () => {
     // Zones whose offsets the time zone data will not move.
     ongoingIn('America/Toronto', 'Europe/Paris');

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -41,10 +41,16 @@ export function ActivityForm({
   idempotencyKey?: string;
 }) {
   const sports = useSports();
-  // The first page is enough: a user takes part in few challenges at once.
   const ongoing = useChallenges('mine', 'ongoing');
-  if (sports.isPending || ongoing.isPending) return <LoadingState />;
-  if (!sports.data || !ongoing.data) {
+  // Every page: a zone missed would read the start in the wrong one.
+  const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = ongoing;
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
+  if (sports.isPending || ongoing.isPending || (hasNextPage && !isError)) {
+    return <LoadingState />;
+  }
+  if (!sports.data || !ongoing.data || ongoing.isError) {
     return (
       <ErrorState
         error={sports.error ?? ongoing.error}
