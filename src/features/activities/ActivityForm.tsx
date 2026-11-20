@@ -24,6 +24,8 @@ import { describedBy, inputClass } from '../challenges/create/fields';
 import { useSportName } from '../challenges/create/useSportName';
 
 const DURATION_PARTS = ['hours', 'minutes', 'seconds'] as const;
+// Statuses of POST /activities that record nothing.
+const REFUSED_FOR_GOOD = new Set([400, 404, 422]);
 
 /**
  * Entry of an activity, once the catalogue of sports and the user's ongoing
@@ -168,10 +170,11 @@ function ActivityFormFields({
       await createActivity.mutateAsync({ activity, idempotencyKey });
       setSaved(true);
     } catch (error) {
-      // Refused for good (4xx): nothing was recorded, the corrected entry
-      // goes with a new key. Otherwise (no answer, server error) it may have
-      // been: the same key comes again, so nothing is recorded twice.
-      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+      // Refused for good by the contract (400, 404, 422): nothing was
+      // recorded, the corrected entry goes with a new key. Otherwise (no
+      // answer, server error, timeout) it may have been: the same key comes
+      // again, so nothing is recorded twice.
+      if (error instanceof ApiError && REFUSED_FOR_GOOD.has(error.status)) {
         setIdempotencyKey(newIdempotencyKey());
       }
       showError(error);
