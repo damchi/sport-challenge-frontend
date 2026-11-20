@@ -42,6 +42,17 @@ describe('routes', () => {
     expect(await screen.findByRole('combobox', { name: 'Sport' })).toBeInTheDocument();
   });
 
+  it('opens the activity entry from the activities page', async () => {
+    renderAt('/activities');
+    const add = await screen.findByRole('link', { name: 'Ajouter une activité' });
+    expect(add).toHaveAttribute('href', '/activities/new');
+    fireEvent.click(add);
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Ajouter une activité' }),
+    ).toBeInTheDocument();
+  });
+
   it('sends a signed-out visitor to sign in, back to the requested page', () => {
     const auth = createFakeAuth();
     renderAt('/does-not-exist?tab=ranking', auth);
