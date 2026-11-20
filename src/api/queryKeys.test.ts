@@ -3,12 +3,7 @@ import { queryKeys } from './queryKeys';
 
 describe('queryKeys', () => {
   it('nests a leaderboard under its challenge', () => {
-    expect(queryKeys.challenges.leaderboard('c1', 'distance')).toEqual([
-      'challenges',
-      'c1',
-      'leaderboard',
-      'distance',
-    ]);
+    expect(queryKeys.challenges.leaderboard('c1')).toEqual(['challenges', 'c1', 'leaderboard']);
     expect(queryKeys.challenges.detail('c1')).toEqual(['challenges', 'c1']);
   });
 
@@ -16,8 +11,8 @@ describe('queryKeys', () => {
     const client = new QueryClient();
     const keys = {
       detail: queryKeys.challenges.detail('c1'),
-      leaderboard: queryKeys.challenges.leaderboard('c1', 'distance'),
-      other: queryKeys.challenges.leaderboard('c2', 'distance'),
+      leaderboard: queryKeys.challenges.leaderboard('c1'),
+      other: queryKeys.challenges.leaderboard('c2'),
     };
     for (const key of Object.values(keys)) client.setQueryData(key, { items: [] });
 

@@ -9,6 +9,8 @@ export type ChallengeCreate = components['schemas']['ChallengeCreate'];
 export type ChallengeDetail = components['schemas']['ChallengeDetail'];
 export type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
 export type Participant = components['schemas']['Participant'];
+export type Leaderboard = components['schemas']['Leaderboard'];
+export type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
 
 /**
  * Challenges of a list, page by page (cursor): `fetchNextPage` loads the
@@ -71,6 +73,27 @@ export function useParticipants(challengeId: string) {
       return data;
     },
     getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+}
+
+/**
+ * The ranking of the 3 categories of a challenge, as the server computes it:
+ * ranks with their ties (1, 1, 3), then the participants who abandoned,
+ * without a rank. Joining or abandoning reloads it (its key starts with the
+ * challenge's).
+ */
+export function useLeaderboard(challengeId: string) {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.challenges.leaderboard(challengeId),
+    queryFn: async ({ signal }) => {
+      const { data } = await client.GET('/api/v1/challenges/{challengeId}/leaderboard', {
+        params: { path: { challengeId } },
+        signal,
+      });
+      if (!data) throw new Error('Empty leaderboard response');
+      return data;
+    },
   });
 }
 

@@ -183,7 +183,9 @@ describe('ChallengeDetailView', () => {
 
     // An arrow, not a hoisted function, so that `summary` stays narrowed.
     const openConfirmation = async () => {
-      renderAt(`/challenges/${id}`);
+      // A section without statuses of its own (the leaderboard and the
+      // participants show theirs), so the outcome is the only one.
+      renderAt(`/challenges/${id}/activities`);
       fireEvent.click(await screen.findByRole('button', { name: 'Rejoindre le défi' }));
       return screen.getByRole('dialog', { name: `Rejoindre « ${summary.title} » ?` });
     };
@@ -315,7 +317,9 @@ describe('ChallengeDetailView', () => {
 
     // An arrow, not a hoisted function, so that `summary` stays narrowed.
     const openConfirmation = async () => {
-      renderAt(`/challenges/${id}`);
+      // A section without statuses of its own (the leaderboard and the
+      // participants show theirs), so the outcome is the only one.
+      renderAt(`/challenges/${id}/activities`);
       fireEvent.click(await screen.findByRole('button', { name: 'Abandonner le défi' }));
       return screen.getByRole('dialog', { name: `Abandonner « ${summary.title} » ?` });
     };

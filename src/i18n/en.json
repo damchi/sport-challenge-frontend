@@ -366,5 +366,17 @@
     "roller": "Inline skating",
     "xc_ski": "Cross-country skiing",
     "other": "Other"
+  },
+  "leaderboard": {
+    "label": "Challenge leaderboard",
+    "categories": "Leaderboard category",
+    "podium": "Podium",
+    "ranking": "Full ranking",
+    "out": "Eliminated",
+    "abandoned": "Abandoned",
+    "you": "You",
+    "tied": "tied",
+    "equivalent": "{{distance}} run equiv.",
+    "empty": "No one is ranked in this challenge yet."
   }
 }

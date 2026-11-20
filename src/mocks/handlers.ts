@@ -18,6 +18,8 @@ type ChallengeDetail = components['schemas']['ChallengeDetail'];
 type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
 type Participant = components['schemas']['Participant'];
 type ParticipantPage = components['schemas']['ParticipantPage'];
+type Leaderboard = components['schemas']['Leaderboard'];
+type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
 type ApiErrorBody = components['schemas']['Error'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
@@ -111,6 +113,69 @@ export const mockParticipants: Participant[] = Array.from({ length: 25 }, (_, in
   joined_at: new Date(Date.UTC(2026, 10, 2, 14 + index)).toISOString(),
 }));
 
+/**
+ * The ranking of a category from values given in participant order: best
+ * first, equal values sharing a rank (1, 1, 3), the participants who
+ * abandoned last, without a rank nor a value.
+ */
+type CategoryRanking = Leaderboard['categories'][number];
+
+function mockRanking(
+  type: CategoryRanking['type'],
+  value: (index: number) => number,
+): CategoryRanking {
+  const user = ({ user_id, pseudo, first_name, last_name, avatar }: Participant) => ({
+    id: user_id,
+    pseudo,
+    first_name,
+    last_name,
+    avatar,
+  });
+  const ranked = mockParticipants
+    .map((participant, index) => ({ participant, value: value(index) }))
+    .filter(({ participant }) => participant.status === 'active')
+    .sort((a, b) => b.value - a.value);
+  const entries: LeaderboardEntry[] = ranked.map((entry) => ({
+    rank: ranked.findIndex((other) => other.value === entry.value) + 1,
+    user: user(entry.participant),
+    value: entry.value,
+    abandoned: false,
+    // In run_elimination only; outside the weeks of the challenge here.
+    elimination:
+      type === 'run_elimination'
+        ? {
+            status: null,
+            eliminated_week: null,
+            minimum_meters: null,
+            run_meters: 0,
+            week_ends_at: null,
+          }
+        : null,
+  }));
+  for (const participant of mockParticipants.filter((p) => p.status === 'abandoned')) {
+    entries.push({
+      rank: null,
+      user: user(participant),
+      value: null,
+      abandoned: true,
+      elimination: null,
+    });
+  }
+  return { type, entries };
+}
+
+/** The leaderboard of every mock challenge, with ties in each category. */
+const mockLeaderboard: Leaderboard = {
+  computed_at: '2026-11-18T15:00:00Z',
+  categories: [
+    // Seconds; the first two are tied.
+    mockRanking('cumulative_time', (index) => (index < 2 ? 36_000 : 30_000 - index * 600)),
+    // Meters; the second and third are tied.
+    mockRanking('cumulative_distance', (index) => 52_300 - Math.max(index, 2) * 1_000),
+    mockRanking('run_elimination', (index) => 30_000 - index * 750),
+  ],
+};
+
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   // The cursor is the index of the next item; `mine` keeps the challenges
@@ -151,6 +216,15 @@ export const handlers = [
     const items = mockParticipants.slice(from, from + PAGE_SIZE);
     const next = from + PAGE_SIZE < mockParticipants.length ? String(from + PAGE_SIZE) : null;
     return HttpResponse.json<ParticipantPage>({ items, next_cursor: next });
+  }),
+  http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ params }) => {
+    if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<Leaderboard>(mockLeaderboard);
   }),
   // The challenge with its new title and description; an empty description
   // removes it.
