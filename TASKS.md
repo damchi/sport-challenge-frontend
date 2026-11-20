@@ -646,12 +646,12 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Statut** : À faire
 
 ### SC-WEB-053 · Nom, prénom et e-mail : onboarding et profil
-`F8` · Story · Phase 8 · Estimation 3 · Dépend de : 018, 040 · Backend : `GET` et `PATCH /me` : prénom, nom et e-mail (SC-API-116) ; pseudo facultatif (mise à jour backend en cours : `profile_complete` dès le prénom et le nom, `pseudo: null` accepté par `PATCH /me`)
+`F8` · Story · Phase 8 · Estimation 3 · Dépend de : 018, 040 · Backend : `GET` et `PATCH /me` : prénom, nom et e-mail (SC-API-116) ; pseudo facultatif, retiré par `pseudo: null` (SC-API-118)
 
 **Origine des données**
 - **E-mail** : vient du claim `email` du jeton Auth0 ; le backend le lit et le renvoie dans `GET /me`. Il n'est ni saisi ni modifiable dans l'app, et reste **privé** : seul son titulaire le voit.
 - **Prénom et nom** : saisis par l'utilisateur à l'onboarding ; **obligatoires**. Le serveur décide si le profil est complet (`profile_complete`) ; l'app ne recalcule pas cette règle.
-- **Pseudo** : **facultatif** ; il peut être choisi, changé ou retiré (onboarding ou `/me`) ; retiré, il est envoyé à `null` (mise à jour backend en cours). Nom affiché aux autres : le pseudo s'il est renseigné, sinon le prénom et le nom.
+- **Pseudo** : **facultatif** ; il peut être choisi, changé ou retiré (onboarding ou `/me`) ; retiré, il est envoyé à `null`. Nom affiché aux autres : le pseudo s'il est renseigné, sinon le prénom et le nom.
 
 **Critères d'acceptation**
 - [ ] Onboarding (`/onboarding`) : champs **Prénom** et **Nom** obligatoires, **Pseudo** facultatif (non envoyé s'il est vide), envoyés par `PATCH /me` ; validation en ligne avec un schéma de `src/domain/schemas` reprenant les règles du contrat (longueurs, caractères), messages traduits ; erreurs de l'API traduites par leur code.
