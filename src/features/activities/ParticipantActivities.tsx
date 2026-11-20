@@ -7,34 +7,45 @@ import { LoadMore } from '../../components/LoadMore';
 import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
-import { isUserId } from '../../domain/challenge';
+import { canSeeParticipantActivities, isUserId } from '../../domain/challenge';
 import { otherTimeZoneName } from '../../domain/format/challengeDates';
 import { ActivityCard } from './ActivityCard';
 
 /**
  * Activities of a participant in a challenge, read only, most recent first,
  * page by page, their starts in the challenge's time zone (named when it is
- * not the device's). An id that cannot be one is not sent to the API. Rendered
+ * not the device's). Neither an id that cannot be one nor a user whose role
+ * keeps them out (the API would answer 404) is sent to the API. Rendered
  * under the challenge page, which has already loaded the challenge.
  */
 export function ParticipantActivities() {
   const { challengeId = '', userId } = useParams();
-  if (!isUserId(userId)) return <ParticipantActivitiesNotFound challengeId={challengeId} />;
-  return <ParticipantActivitiesContent challengeId={challengeId} userId={userId} />;
+  const challenge = useChallenge(challengeId);
+  if (!challenge.data) return null;
+  if (!isUserId(userId) || !canSeeParticipantActivities(challenge.data.my_role)) {
+    return <ParticipantActivitiesNotFound challengeId={challengeId} />;
+  }
+  return (
+    <ParticipantActivitiesContent
+      challengeId={challengeId}
+      userId={userId}
+      timeZone={challenge.data.timezone}
+    />
+  );
 }
 
 function ParticipantActivitiesContent({
   challengeId,
   userId,
+  timeZone,
 }: {
   challengeId: string;
   userId: string;
+  timeZone: string;
 }) {
   const { t, i18n } = useTranslation();
-  const challenge = useChallenge(challengeId);
   const activities = useParticipantActivities(challengeId, userId);
 
-  if (!challenge.data) return null;
   if (activities.isPending) return <LoadingState />;
   // Not a participant, or not one the user may see: the API answers the same
   // 404, and so does the page, even when a refresh finds it so after a first load.
@@ -49,9 +60,8 @@ function ParticipantActivitiesContent({
   const items = activities.data.pages.flatMap((page) => page.items);
   if (items.length === 0) return <EmptyState message={t('participantActivities.empty')} />;
 
-  const { timezone } = challenge.data;
   const zone = otherTimeZoneName(
-    timezone,
+    timeZone,
     Intl.DateTimeFormat().resolvedOptions().timeZone,
     i18n.resolvedLanguage ?? 'fr',
   );
@@ -61,7 +71,7 @@ function ParticipantActivitiesContent({
       <ul className="grid gap-3">
         {items.map((activity) => (
           <li key={activity.id}>
-            <ActivityCard activity={activity} timeZone={timezone} />
+            <ActivityCard activity={activity} timeZone={timeZone} />
           </li>
         ))}
       </ul>

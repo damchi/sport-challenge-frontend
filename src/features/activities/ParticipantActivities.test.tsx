@@ -182,12 +182,7 @@ describe('ParticipantActivities', () => {
   });
 
   it.each([
-    [
-      'a visitor of a public challenge',
-      'not_found',
-      { my_role: 'outsider' as const, my_status: null },
-    ],
-    ['a user who never joined', 'not_found', {}],
+    ['a participant the user never saw join', 'not_found', {}],
     ['a challenge the user may not see', 'challenge_not_found', {}],
   ])('says the same, never the server text, for %s', async (_case, code, detail) => {
     answer(detail);
@@ -201,6 +196,18 @@ describe('ParticipantActivities', () => {
       `/challenges/${id}/participants`,
     );
   });
+
+  it.each(['outsider', 'invited'] as const)(
+    'says the same to an %s, without asking the API',
+    async (role) => {
+      answer({ my_role: role, my_status: null });
+      const requests = listing([run]);
+      renderAt(path);
+
+      expect(await screen.findByText('Ces activités ne sont pas disponibles.')).toBeInTheDocument();
+      expect(requests).toHaveLength(0);
+    },
+  );
 
   it('does not ask the API for an id that cannot be one', async () => {
     answer();
