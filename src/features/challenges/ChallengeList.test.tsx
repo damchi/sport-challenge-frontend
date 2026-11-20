@@ -131,15 +131,32 @@ describe('ChallengeList', () => {
     expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
   });
 
+  it('ends the list with a tile to create a challenge', async () => {
+    answerWith({
+      first: {
+        items: [challenge(0, { title: 'Quitté', my_status: 'abandoned' })],
+        next_cursor: null,
+      },
+    });
+    renderList();
+
+    expect(await screen.findByRole('heading', { name: 'Quitté' })).toBeInTheDocument();
+    const items = screen.getAllByRole('listitem');
+    const create = screen.getByRole('link', { name: 'Créer un défi' });
+    expect(items).toHaveLength(2);
+    expect(items.at(-1)).toContainElement(create);
+    expect(create).toHaveAttribute('href', '/challenges/new');
+  });
+
   it('suggests creating a challenge when the list is empty', async () => {
     answerWith({ first: { items: [], next_cursor: null } });
     renderList();
 
     expect(await screen.findByText(/Aucun défi public/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Créer un défi' })).toHaveAttribute(
-      'href',
-      '/challenges/new',
-    );
+    // The empty state's button only, not the tile as well.
+    const links = screen.getAllByRole('link', { name: 'Créer un défi' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/challenges/new');
   });
 
   it('keeps the loaded challenges when "Load more" fails, and retries', async () => {
