@@ -223,6 +223,32 @@ describe('ChallengeDetailView', () => {
       await vi.waitFor(() => expect(requests).toBeGreaterThan(before));
     });
 
+    it('keeps the button focusable but inert while the join is sent', async () => {
+      let release: () => void = () => undefined;
+      const sent = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      server.use(
+        http.post('*/api/v1/challenges/:challengeId/join', async () => {
+          joins += 1;
+          await sent;
+          return HttpResponse.json({ ...base }, { status: 201 });
+        }),
+      );
+      const dialog = await openConfirmation();
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
+
+      const busy = await screen.findByRole('button', { name: 'Inscription…' });
+      expect(busy).toHaveAttribute('aria-disabled', 'true');
+      expect(busy).toBeEnabled();
+      fireEvent.click(busy);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(joins).toBe(1);
+      answer({});
+      release();
+      expect(await screen.findByText('Tu participes à ce défi.')).toBeInTheDocument();
+    });
+
     it.each([
       [409, 'already_participant', 'Tu participes déjà à ce défi.'],
       [
