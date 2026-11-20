@@ -147,7 +147,8 @@ describe('ActivityForm', () => {
   });
 
   it('offers the time zones of the challenges when they have several', async () => {
-    ongoingIn('America/Toronto', 'America/Vancouver');
+    // Zones whose offsets the time zone data will not move.
+    ongoingIn('America/Toronto', 'Europe/Paris');
     const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
     renderForm();
     const zone = await screen.findByRole('combobox', { name: 'Fuseau horaire' });
@@ -155,13 +156,13 @@ describe('ActivityForm', () => {
       within(zone)
         .getAllByRole('option')
         .map((option) => option.textContent),
-    ).toEqual(['heure de l’Est nord-américain', 'heure du Pacifique nord-américain']);
+    ).toEqual(['heure de l’Est nord-américain', 'heure normale d’Europe centrale']);
     await fill();
-    type(zone, 'America/Vancouver');
+    type(zone, 'Europe/Paris');
     fireEvent.click(save());
 
     await waitFor(() => expect(sent).toHaveLength(1));
-    expect(sent[0]?.body.started_at).toBe('2026-11-20T15:30:00.000Z');
+    expect(sent[0]?.body.started_at).toBe('2026-11-20T06:30:00.000Z');
   });
 
   it('records the activity with its idempotency key, then says so', async () => {
