@@ -4,20 +4,20 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
-import { pseudoSchema, type PseudoInput } from '../../domain/schemas/profile';
+import { pseudoSchema, pseudoUpdate, type PseudoInput } from '../../domain/schemas/profile';
 import { fieldErrors } from './profileErrors';
 
 /**
- * The pseudo, changed from the profile page with the onboarding's rules and
- * errors. Without one, the field is optional; once set, it can be changed,
- * not removed.
+ * The pseudo, set, changed or removed (emptied) from the profile page, with
+ * the onboarding's rules and errors. Without it, others see the first and
+ * last name.
  */
 export function PseudoForm({ me }: { me: Me }) {
   const { t, i18n } = useTranslation();
   const updateMe = useUpdateMe();
-  const hasPseudo = me.pseudo !== null;
   const [formError, setFormError] = useState<string>();
-  const [saved, setSaved] = useState(false);
+  // What the last save did, said in the status line.
+  const [saved, setSaved] = useState<'saved' | 'removed'>();
   const {
     register,
     handleSubmit,
@@ -25,7 +25,7 @@ export function PseudoForm({ me }: { me: Me }) {
     control,
     formState: { errors, isSubmitting },
   } = useForm<PseudoInput>({
-    resolver: zodResolver(pseudoSchema(hasPseudo)),
+    resolver: zodResolver(pseudoSchema),
     mode: 'onTouched',
     reValidateMode: 'onChange',
     defaultValues: { pseudo: me.pseudo ?? '' },
@@ -35,10 +35,10 @@ export function PseudoForm({ me }: { me: Me }) {
 
   const onSubmit = async ({ pseudo: value }: PseudoInput) => {
     setFormError(undefined);
-    setSaved(false);
+    setSaved(undefined);
     try {
-      await updateMe.mutateAsync({ pseudo: value });
-      setSaved(true);
+      await updateMe.mutateAsync(pseudoUpdate(value, me.pseudo));
+      setSaved(value === '' ? 'removed' : 'saved');
     } catch (error) {
       const invalid = fieldErrors(error).find(([field]) => field === 'pseudo');
       if (invalid) {
@@ -61,7 +61,7 @@ export function PseudoForm({ me }: { me: Me }) {
   return (
     <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="mt-6">
       <label htmlFor="profile-pseudo" className="block text-sm font-semibold">
-        {hasPseudo ? t('profile.pseudoForm.label') : t('onboarding.pseudo.label')}
+        {t('onboarding.pseudo.label')}
       </label>
       <div className="mt-2 flex gap-3">
         <input
@@ -72,7 +72,7 @@ export function PseudoForm({ me }: { me: Me }) {
           aria-invalid={message ? true : undefined}
           aria-describedby={describedBy}
           className="h-11 min-w-0 flex-1 rounded-row border border-border bg-surface px-3 text-ink"
-          {...register('pseudo', { onChange: () => setSaved(false) })}
+          {...register('pseudo', { onChange: () => setSaved(undefined) })}
         />
         <button
           type="submit"
@@ -97,7 +97,7 @@ export function PseudoForm({ me }: { me: Me }) {
         </p>
       )}
       <p role="status" className="mt-1 text-sm text-muted">
-        {saved ? t('profile.pseudoForm.saved') : ''}
+        {saved && t(`profile.pseudoForm.${saved}`)}
       </p>
     </form>
   );

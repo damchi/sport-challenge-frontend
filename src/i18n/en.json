@@ -68,8 +68,7 @@
       "length": "The nickname must be 3 to 20 characters long.",
       "characters": "Only letters, digits, _, . or -.",
       "taken": "This nickname is already taken. Try another one.",
-      "invalid": "This nickname is not accepted. Try another one.",
-      "required": "Your nickname can be changed, not removed."
+      "invalid": "This nickname is not accepted. Try another one."
     },
     "name": {
       "required": "This field is required.",
@@ -83,9 +82,9 @@
       "missing": "Not provided"
     },
     "pseudoForm": {
-      "label": "Nickname",
       "save": "Save",
-      "saved": "Nickname saved."
+      "saved": "Nickname saved.",
+      "removed": "Nickname removed: others see your first and last name."
     }
   },
   "nav": {

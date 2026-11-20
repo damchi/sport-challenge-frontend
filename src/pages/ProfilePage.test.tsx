@@ -62,23 +62,32 @@ describe('ProfilePage', () => {
       );
       renderProfile();
 
-      expect(await screen.findByLabelText('Pseudo')).toHaveValue('marie_92');
+      expect(await screen.findByLabelText('Pseudo (facultatif)')).toHaveValue('marie_92');
       expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
-      await changePseudo('Pseudo', ' jean.luc ');
+      await changePseudo('Pseudo (facultatif)', ' jean.luc ');
       fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
       expect(await screen.findByText('Pseudo enregistré.')).toHaveAttribute('role', 'status');
       expect(sent).toEqual({ pseudo: 'jean.luc' });
     });
 
-    it('can be changed, not removed', async () => {
+    it('removes the pseudo when emptied', async () => {
+      let sent: unknown;
+      server.use(
+        http.patch('*/api/v1/me', async ({ request }) => {
+          sent = await request.json();
+          return HttpResponse.json({ ...mockMe, pseudo: null });
+        }),
+      );
       renderProfile();
 
-      await changePseudo('Pseudo', '');
+      await changePseudo('Pseudo (facultatif)', '  ');
+      fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent(
-        'Ton pseudo peut être changé, pas retiré.',
-      );
+      expect(
+        await screen.findByText('Pseudo retiré : les autres voient ton prénom et ton nom.'),
+      ).toHaveAttribute('role', 'status');
+      expect(sent).toEqual({ pseudo: null });
     });
 
     it('shows a taken pseudo under its field', async () => {
@@ -94,11 +103,11 @@ describe('ProfilePage', () => {
       );
       renderProfile();
 
-      await changePseudo('Pseudo', 'jean.luc');
+      await changePseudo('Pseudo (facultatif)', 'jean.luc');
       fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
-      expect(screen.getByLabelText('Pseudo')).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.getByLabelText('Pseudo (facultatif)')).toHaveAttribute('aria-invalid', 'true');
     });
 
     it('is optional while there is none', async () => {

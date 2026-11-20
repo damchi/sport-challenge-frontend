@@ -4,7 +4,11 @@ import type { components } from '../generated/schema';
 import { queryKeys } from '../queryKeys';
 
 export type Me = components['schemas']['Me'];
-export type MeUpdate = components['schemas']['MeUpdate'];
+// The pseudo can now be removed (null), which the backend is being updated
+// to accept: drop this override once the contract is synced (SC-WEB-053).
+export type MeUpdate = Omit<components['schemas']['MeUpdate'], 'pseudo'> & {
+  pseudo?: string | null;
+};
 
 /** Profile of the signed-in user (created empty on first sign-in). */
 export function useMe() {
@@ -29,7 +33,9 @@ export function useUpdateMe() {
   return useMutation({
     meta: { handlesError: true },
     mutationFn: async (update: MeUpdate) => {
-      const { data } = await client.PATCH('/api/v1/me', { body: update });
+      // Cast until the contract allows `pseudo: null` (see MeUpdate).
+      const body = update as components['schemas']['MeUpdate'];
+      const { data } = await client.PATCH('/api/v1/me', { body });
       if (!data) throw new Error('Empty profile response');
       return data;
     },

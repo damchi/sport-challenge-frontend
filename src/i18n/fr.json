@@ -68,8 +68,7 @@
       "length": "Le pseudo doit faire de 3 à 20 caractères.",
       "characters": "Seulement des lettres, des chiffres, _, . ou -.",
       "taken": "Ce pseudo est déjà pris. Essaie-en un autre.",
-      "invalid": "Ce pseudo n'est pas accepté. Essaie-en un autre.",
-      "required": "Ton pseudo peut être changé, pas retiré."
+      "invalid": "Ce pseudo n'est pas accepté. Essaie-en un autre."
     },
     "name": {
       "required": "Ce champ est obligatoire.",
@@ -83,9 +82,9 @@
       "missing": "Non renseigné"
     },
     "pseudoForm": {
-      "label": "Pseudo",
       "save": "Enregistrer",
-      "saved": "Pseudo enregistré."
+      "saved": "Pseudo enregistré.",
+      "removed": "Pseudo retiré : les autres voient ton prénom et ton nom."
     }
   },
   "nav": {

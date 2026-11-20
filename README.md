@@ -54,7 +54,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Résultats figés à la fin du challenge, sans délai de grâce.
 
 **Profil et divers**
-- ✅ Prénom et nom **obligatoires** (1 à 50 lettres de tout alphabet, en mots séparés par une espace, `-`, `'` ou `’`) ; pseudo **facultatif** (unique sans tenir compte de la casse, 3 à 20 caractères : lettres, chiffres, `_`, `.`, `-` ; une fois choisi, modifiable mais pas retirable) ; nom affiché aux autres : le pseudo s'il existe, sinon le prénom et le nom ; e-mail venu de la connexion, **privé** (seul son titulaire le voit, sur son profil) ; avatar ; français et anglais ; distances en km uniquement.
+- ✅ Prénom et nom **obligatoires** (1 à 50 lettres de tout alphabet, en mots séparés par une espace, `-`, `'` ou `’`) ; pseudo **facultatif** (unique sans tenir compte de la casse, 3 à 20 caractères : lettres, chiffres, `_`, `.`, `-` , modifiable et retirable) ; nom affiché aux autres : le pseudo s'il existe, sinon le prénom et le nom ; e-mail venu de la connexion, **privé** (seul son titulaire le voit, sur son profil) ; avatar ; français et anglais ; distances en km uniquement.
 - ✅ **Badges (V1.1, reportés après la V1)** : le créateur d'un challenge en crée autant qu'il veut, chacun avec une condition (mesure, portée, filtre de sport, seuil) ; un participant le gagne dès qu'il l'atteint. 🟡 Un badge gagné est conservé ; 50 badges maximum par challenge.
 - ✅ Application gratuite ; pas de contestation d'activité pour l'instant.
 

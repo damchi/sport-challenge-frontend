@@ -13,7 +13,7 @@ import { fieldErrors, NAME_FIELDS } from './profileErrors';
  * First profile: first and last name (required), pseudo (optional, shown
  * instead of the names when set), all checked as typed, and language. Also
  * shown to a profile made before the names were asked, with what it already
- * has: a pseudo already set can be changed, not removed. On success the
+ * has (its pseudo can be changed or removed). On success the
  * server says whether the profile is complete, and the profile gate opens
  * the app.
  */
@@ -28,7 +28,7 @@ export function OnboardingForm({ me }: { me: Me }) {
     control,
     formState: { errors, isSubmitting },
   } = useForm<ProfileInput>({
-    resolver: zodResolver(profileSchema(me.pseudo !== null)),
+    resolver: zodResolver(profileSchema),
     // Checked once the field is left, then at each keystroke.
     mode: 'onTouched',
     reValidateMode: 'onChange',
@@ -43,7 +43,7 @@ export function OnboardingForm({ me }: { me: Me }) {
   const onSubmit = async (profile: ProfileInput) => {
     setFormError(undefined);
     try {
-      await updateMe.mutateAsync(profileUpdate(profile));
+      await updateMe.mutateAsync(profileUpdate(profile, me.pseudo));
       // The profile is saved: a failed language switch is not a form error.
       i18n.changeLanguage(profile.language).catch(() => undefined);
     } catch (error) {

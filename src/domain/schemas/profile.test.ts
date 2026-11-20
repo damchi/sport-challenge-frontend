@@ -1,6 +1,4 @@
-import { profileSchema as schemaFor, profileUpdate, pseudoSchema } from './profile';
-
-const profileSchema = schemaFor(false);
+import { profileSchema, profileUpdate, pseudoUpdate } from './profile';
 
 const valid = {
   pseudo: 'marie_92',
@@ -74,26 +72,31 @@ describe('profileSchema', () => {
     });
   });
 
-  it('accepts an empty pseudo, left out of the update', () => {
-    const profile = profileSchema.parse({ ...valid, pseudo: '  ' });
+  it('accepts an empty pseudo', () => {
+    expect(profileSchema.parse({ ...valid, pseudo: '  ' }).pseudo).toBe('');
+  });
 
-    expect(profile.pseudo).toBe('');
-    expect(profileUpdate(profile)).toEqual({
+  describe('pseudoUpdate', () => {
+    it('sends a pseudo typed', () => {
+      expect(pseudoUpdate('jean.luc', null)).toEqual({ pseudo: 'jean.luc' });
+    });
+
+    it('removes the pseudo the profile has when emptied', () => {
+      expect(pseudoUpdate('', 'marie_92')).toEqual({ pseudo: null });
+    });
+
+    it('sends nothing when there is no pseudo to remove', () => {
+      expect(pseudoUpdate('', null)).toEqual({});
+    });
+  });
+
+  it('builds the onboarding update', () => {
+    expect(profileUpdate({ ...valid, pseudo: '' }, null)).toEqual({
       first_name: 'Marie',
       last_name: 'Tremblay',
       language: 'fr',
     });
-    expect(profileUpdate(profileSchema.parse(valid))).toEqual(valid);
-  });
-
-  it('keeps a pseudo once set: it can be changed, not removed', () => {
-    const result = schemaFor(true).safeParse({ ...valid, pseudo: ' ' });
-    expect(result.error?.issues[0]?.message).toBe('profile.pseudo.required');
-    expect(pseudoSchema(true).safeParse({ pseudo: '' }).error?.issues[0]?.message).toBe(
-      'profile.pseudo.required',
-    );
-    expect(pseudoSchema(false).parse({ pseudo: '' })).toEqual({ pseudo: '' });
-    expect(pseudoSchema(true).parse({ pseudo: ' jean.luc ' })).toEqual({ pseudo: 'jean.luc' });
+    expect(profileUpdate(valid, null)).toEqual(valid);
   });
 
   it('only knows French and English', () => {

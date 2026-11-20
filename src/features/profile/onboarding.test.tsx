@@ -278,11 +278,5 @@ describe('profile onboarding', () => {
     expect(router.state.location.pathname).toBe('/onboarding');
     expect(screen.getByLabelText('Prénom')).toHaveValue('');
     expect(screen.getByLabelText('Nom')).toHaveValue('');
-
-    // Once set, the pseudo can be changed, not removed.
-    await typePseudo('');
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Ton pseudo peut être changé, pas retiré.',
-    );
   });
 });
