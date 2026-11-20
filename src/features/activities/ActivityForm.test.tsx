@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import type { ActivityCreate } from '../../api/hooks/useActivities';
+import type { Activity, ActivityContribution, ActivityCreate } from '../../api/hooks/useActivities';
 import type { components } from '../../api/generated/schema';
 import { mockChallenges } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
@@ -68,6 +68,36 @@ function recordWith(respond: () => Response | Promise<Response>) {
     }),
   );
   return sent;
+}
+
+/** The recorded activity, counting in these challenges. */
+function recorded(contributions: ActivityContribution[] = []) {
+  return HttpResponse.json<Activity>(
+    {
+      id: '00000000-0000-4000-8000-0000000000a1',
+      sport_code: 'run',
+      sport_label: null,
+      started_at: STARTED_AT,
+      duration_seconds: 2700,
+      distance_meters: 8200,
+      source: 'manual',
+      speed_mps: 3.04,
+      pace_seconds_per_km: 329,
+      contributions,
+      locked: false,
+    },
+    { status: 201 },
+  );
+}
+
+/** What the activity brings to the challenge `title`. */
+function contribution(id: string, title: string): ActivityContribution {
+  return {
+    challenge_id: id,
+    challenge_title: title,
+    distance_meters: 8200,
+    duration_seconds: 2700,
+  };
 }
 
 function refuse(code: string, status = 422, params: Record<string, string> = {}) {
@@ -145,7 +175,7 @@ describe('ActivityForm', () => {
 
   it("reads the start in the device's time zone without an ongoing challenge", async () => {
     ongoingIn();
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    const sent = recordWith(() => recorded());
     renderForm({ deviceTimeZone: 'Europe/Paris' });
     expect(
       await screen.findByText('Date et heure de début, heure normale d’Europe centrale.'),
@@ -162,7 +192,7 @@ describe('ActivityForm', () => {
   it("reads the start in the device's time zone when the challenges are in several", async () => {
     // A run in Montréal while taking part in a challenge there and one in Paris.
     ongoingIn('America/Toronto', 'Europe/Paris');
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    const sent = recordWith(() => recorded());
     renderForm({ deviceTimeZone: 'America/Toronto' });
     expect(
       await screen.findByText('Date et heure de début, heure de l’Est nord-américain.'),
@@ -220,8 +250,13 @@ describe('ActivityForm', () => {
     await fill();
     fireEvent.click(save());
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Activité enregistrée.');
-    expect(screen.getByRole('status')).toHaveFocus();
+    // The development mock counts it in no challenge: a success all the same.
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent('Activité enregistrée.');
+    expect(status).toHaveTextContent('Elle ne compte encore dans aucun défi.');
+    expect(status).toHaveFocus();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
     expect(sent).toEqual([
       {
         key: KEY,
@@ -239,8 +274,63 @@ describe('ActivityForm', () => {
     );
   });
 
+  it('says the challenge it counts in, with a link to its leaderboard', async () => {
+    recordWith(() => recorded([contribution('c1', 'Novembre en mouvement')]));
+    renderForm();
+    await fill();
+    fireEvent.click(save());
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Elle compte dans 1 défi :');
+    expect(
+      screen.getByRole('link', { name: /Novembre en mouvement.*Voir le classement/ }),
+    ).toHaveAttribute('href', '/challenges/c1');
+  });
+
+  it('lists every challenge it counts in', async () => {
+    recordWith(() =>
+      recorded([contribution('c1', 'Novembre en mouvement'), contribution('c2', 'Course du midi')]),
+    );
+    renderForm();
+    await fill();
+    fireEvent.click(save());
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Elle compte dans 2 défis :');
+    const links = within(screen.getByRole('list')).getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/challenges/c1',
+      '/challenges/c2',
+    ]);
+    expect(links[1]).toHaveTextContent('Course du midi');
+  });
+
+  it('keeps the outcome when the challenges cannot reload afterwards', async () => {
+    recordWith(() => recorded([contribution('c1', 'Novembre en mouvement')]));
+    renderForm();
+    await fill();
+    server.use(
+      http.get('*/api/v1/challenges', () =>
+        HttpResponse.json({ error: { code: 'internal_error', message: 'x' } }, { status: 500 }),
+      ),
+    );
+    fireEvent.click(save());
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Elle compte dans 1 défi :');
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+  });
+
+  it('says so at once, without waiting for the challenges to reload', async () => {
+    recordWith(() => recorded([contribution('c1', 'Novembre en mouvement')]));
+    renderForm();
+    await fill();
+    // The reload never answers.
+    server.use(http.get('*/api/v1/challenges', () => new Promise<Response>(() => undefined)));
+    fireEvent.click(save());
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Elle compte dans 1 défi :');
+  });
+
   it('asks for the distance of a sport with km', async () => {
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    const sent = recordWith(() => recorded());
     renderForm();
     await fill({ km: '' });
     expect(screen.getByText('Obligatoire pour ce sport.')).toBeInTheDocument();
@@ -252,7 +342,7 @@ describe('ActivityForm', () => {
   });
 
   it('shows no distance for a sport without km, and sends none', async () => {
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    const sent = recordWith(() => recorded());
     renderForm();
     type(await screen.findByRole('combobox', { name: 'Sport' }), 'run');
     const typed = distance();
@@ -273,7 +363,7 @@ describe('ActivityForm', () => {
   });
 
   it('asks for the label of the "other" sport, its distance optional', async () => {
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    const sent = recordWith(() => recorded());
     renderForm();
     await fill({ code: 'other', km: '' });
     expect(screen.getByText(/Facultative/)).toBeInTheDocument();
@@ -294,7 +384,7 @@ describe('ActivityForm', () => {
   });
 
   it('always asks for the duration and refuses a start in the future', async () => {
-    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    const sent = recordWith(() => recorded());
     renderForm();
     type(await screen.findByRole('combobox', { name: 'Sport' }), 'yoga');
     type(start(), '2026-11-20T12:30');

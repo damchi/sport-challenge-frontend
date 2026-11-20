@@ -153,7 +153,13 @@
       "label": "Save the activity",
       "busy": "Saving…"
     },
-    "saved": "Activity saved.",
+    "saved": {
+      "title": "Activity saved.",
+      "counts_one": "It counts in {{count}} challenge:",
+      "counts_other": "It counts in {{count}} challenges:",
+      "none": "It doesn't count in any challenge yet. It will count in a challenge you join later, if it took place during its dates.",
+      "leaderboard": "See the leaderboard"
+    },
     "back": "Back to my activities"
   },
   "settings": {

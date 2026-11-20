@@ -2,9 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { ApiError, errorMessage } from '../../api/errors';
-import { useCreateActivity } from '../../api/hooks/useActivities';
+import { useCreateActivity, type Activity } from '../../api/hooks/useActivities';
 import { useChallenges } from '../../api/hooks/useChallenges';
 import { useSports, type Sport } from '../../api/hooks/useSports';
 import { ErrorState } from '../../components/states/ErrorState';
@@ -22,6 +21,7 @@ import {
 import { FieldError } from '../challenges/create/FieldError';
 import { describedBy, inputClass } from '../challenges/create/fields';
 import { useSportName } from '../challenges/create/useSportName';
+import { ActivitySaved } from './ActivitySaved';
 
 const DURATION_PARTS = ['hours', 'minutes', 'seconds'] as const;
 // Statuses of POST /activities that record nothing.
@@ -31,7 +31,8 @@ const REFUSED_FOR_GOOD = new Set([400, 404, 422]);
  * Entry of an activity, once the catalogue of sports and the user's ongoing
  * challenges are loaded: the start is read in their time zone when they
  * share one, in the device's otherwise. Tests give `now`, the device's time
- * zone and the maker of idempotency keys.
+ * zone and the maker of idempotency keys. Once recorded, the outcome stays
+ * whatever the queries reloading afterwards do.
  */
 export function ActivityForm({
   now,
@@ -44,11 +45,13 @@ export function ActivityForm({
 }) {
   const sports = useSports();
   const ongoing = useChallenges('mine', 'ongoing');
+  const [saved, setSaved] = useState<Activity>();
   // Every page: a zone missed would read the start in the wrong one.
   const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = ongoing;
   useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
+    if (!saved && hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
+  }, [saved, hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
+  if (saved) return <ActivitySaved contributions={saved.contributions} />;
   if (sports.isPending || ongoing.isPending || (hasNextPage && !isError)) {
     return <LoadingState />;
   }
@@ -73,6 +76,7 @@ export function ActivityForm({
       timeZone={timeZone}
       now={now ?? (() => new Date())}
       newIdempotencyKey={newIdempotencyKey ?? (() => crypto.randomUUID())}
+      onSaved={setSaved}
     />
   );
 }
@@ -84,25 +88,26 @@ export function ActivityForm({
  * has one: required, or optional for "other". No speed: the API computes it.
  * The idempotency key is chosen when the form opens and goes with every
  * attempt that may have been recorded; a refused one gets a new key. Once
- * recorded, the form gives way to the outcome.
+ * recorded, `onSaved` gets the activity as the server answers it.
  */
 function ActivityFormFields({
   sports,
   timeZone,
   now,
   newIdempotencyKey,
+  onSaved,
 }: {
   sports: readonly Sport[];
   timeZone: string;
   now: () => Date;
   newIdempotencyKey: () => string;
+  onSaved: (activity: Activity) => void;
 }) {
   const { t, i18n } = useTranslation();
   const sportName = useSportName();
   const createActivity = useCreateActivity();
   const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
   const [submitError, setSubmitError] = useState<string>();
-  const [saved, setSaved] = useState(false);
   // Set at once, unlike the mutation's state: a second click in the same
   // instant sends nothing.
   const sending = useRef(false);
@@ -167,8 +172,7 @@ function ActivityFormFields({
     sending.current = true;
     setSubmitError(undefined);
     try {
-      await createActivity.mutateAsync({ activity, idempotencyKey });
-      setSaved(true);
+      onSaved(await createActivity.mutateAsync({ activity, idempotencyKey }));
     } catch (error) {
       // Refused for good by the contract (400, 404, 422): nothing was
       // recorded, the corrected entry goes with a new key. Otherwise (no
@@ -181,22 +185,6 @@ function ActivityFormFields({
       sending.current = false;
     }
   };
-
-  if (saved) {
-    return (
-      <div className="mt-6 flex flex-col items-start gap-4">
-        <p ref={(element) => element?.focus()} tabIndex={-1} role="status" className="font-bold">
-          {t('activityForm.saved')}
-        </p>
-        <Link
-          to="/activities"
-          className="inline-flex h-11 items-center font-semibold text-accent underline"
-        >
-          {t('activityForm.back')}
-        </Link>
-      </div>
-    );
-  }
 
   const sportError = errors.sport_code?.message;
   const labelError = errors.sport_label?.message;
