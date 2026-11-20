@@ -368,5 +368,19 @@
     "roller": "Roller",
     "xc_ski": "Ski de fond",
     "other": "Autre"
+  },
+  "leaderboard": {
+    "label": "Classement du défi",
+    "categories": "Catégorie du classement",
+    "podium": "Podium",
+    "ranking": "Classement complet",
+    "rank_ordinal_one": "{{count}}er",
+    "rank_ordinal_other": "{{count}}e",
+    "out": "Éliminés",
+    "abandoned": "A abandonné",
+    "you": "Toi",
+    "tied": "ex æquo",
+    "equivalent": "{{distance}} éq. course",
+    "empty": "Personne n'est encore classé dans ce défi."
   }
 }
