@@ -21,6 +21,9 @@ type ApiErrorBody = components['schemas']['Error'];
 export const mockMe: Me = {
   id: '6f1c2a8e-3b5d-4e7f-9a0b-1c2d3e4f5a6b',
   pseudo: 'marie_92',
+  first_name: 'Marie',
+  last_name: 'Tremblay',
+  email: 'marie@example.com',
   avatar: null,
   language: 'fr',
   profile_complete: true,

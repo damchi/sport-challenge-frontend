@@ -1,4 +1,4 @@
-import { avatarColor, initials } from './avatar';
+import { avatarColor, avatarInitials, initials } from './avatar';
 
 describe('initials', () => {
   it.each([
@@ -8,8 +8,24 @@ describe('initials', () => {
     ['x', 'X'],
     ['__a', 'A'],
     ['  jean.luc ', 'JL'],
-  ])('%s gives %s', (pseudo, expected) => {
-    expect(initials(pseudo)).toBe(expected);
+    ['Marie Tremblay', 'MT'],
+    ['Marie-Ève Tremblay', 'MT'],
+    ['Jean-Paul', 'JP'],
+    ['Éloïse N’Diaye', 'ÉN'],
+  ])('%s gives %s', (name, expected) => {
+    expect(initials(name)).toBe(expected);
+  });
+});
+
+describe('avatarInitials', () => {
+  it.each([
+    [{ pseudo: 'marie_92', first_name: 'Marie', last_name: 'Tremblay' }, 'MA'],
+    [{ pseudo: null, first_name: 'Damien Paul-Louis', last_name: 'Raffi' }, 'DR'],
+    [{ pseudo: '', first_name: 'éloïse', last_name: 'N’Diaye' }, 'ÉN'],
+    [{ pseudo: null, first_name: 'Marie', last_name: null }, 'M'],
+    [{ pseudo: null, first_name: null, last_name: null }, ''],
+  ])('%j gives %j', (user, expected) => {
+    expect(avatarInitials(user)).toBe(expected);
   });
 });
 

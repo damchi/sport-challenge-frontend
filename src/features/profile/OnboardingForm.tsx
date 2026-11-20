@@ -5,24 +5,17 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
-import { profileSchema, type ProfileInput } from '../../domain/schemas/profile';
-
-// A validation_failed answer about the pseudo: 409 means taken (contract);
-// a 400 gives no reason, so the message stays generic.
-function pseudoError(error: unknown): string | undefined {
-  if (
-    !(error instanceof ApiError) ||
-    error.code !== 'validation_failed' ||
-    !(error.params.fields ?? '').split(',').includes('pseudo')
-  ) {
-    return undefined;
-  }
-  return error.status === 409 ? 'profile.pseudo.taken' : 'profile.pseudo.invalid';
-}
+import { profileSchema, profileUpdate, type ProfileInput } from '../../domain/schemas/profile';
+import { NameInput } from './NameInput';
+import { fieldErrors } from './profileErrors';
 
 /**
- * First profile: pseudo (checked as typed) and language. On success the
- * cached profile becomes complete and the profile gate opens the app.
+ * First profile: first and last name (required), pseudo (optional, shown
+ * instead of the names when set), all checked as typed, and language. Also
+ * shown to a profile made before the names were asked, with what it already
+ * has (its pseudo can be changed or removed). On success the
+ * server says whether the profile is complete, and the profile gate opens
+ * the app.
  */
 export function OnboardingForm({ me }: { me: Me }) {
   const { t, i18n } = useTranslation();
@@ -41,6 +34,8 @@ export function OnboardingForm({ me }: { me: Me }) {
     reValidateMode: 'onChange',
     defaultValues: {
       pseudo: me.pseudo ?? '',
+      first_name: me.first_name ?? '',
+      last_name: me.last_name ?? '',
       language: me.language ?? (i18n.language === 'en' ? 'en' : 'fr'),
     },
   });
@@ -48,13 +43,15 @@ export function OnboardingForm({ me }: { me: Me }) {
   const onSubmit = async (profile: ProfileInput) => {
     setFormError(undefined);
     try {
-      await updateMe.mutateAsync(profile);
+      await updateMe.mutateAsync(profileUpdate(profile, me.pseudo));
       // The profile is saved: a failed language switch is not a form error.
       i18n.changeLanguage(profile.language).catch(() => undefined);
     } catch (error) {
-      const message = pseudoError(error);
-      if (message) {
-        setError('pseudo', { message }, { shouldFocus: true });
+      const invalid = fieldErrors(error);
+      if (invalid.length > 0) {
+        invalid.forEach(([field, message], index) =>
+          setError(field, { message }, { shouldFocus: index === 0 }),
+        );
       } else {
         const { key, values } =
           error instanceof ApiError
@@ -65,35 +62,57 @@ export function OnboardingForm({ me }: { me: Me }) {
     }
   };
 
-  const pseudo = useWatch({ control, name: 'pseudo' });
+  const [pseudo, firstName, lastName] = useWatch({
+    control,
+    name: ['pseudo', 'first_name', 'last_name'],
+  });
   const pseudoMessage = errors.pseudo?.message;
 
   return (
     <form onSubmit={(event) => void handleSubmit(onSubmit)(event)} noValidate className="mt-6">
-      <label htmlFor="pseudo" className="block text-sm font-semibold">
-        {t('onboarding.pseudo.label')}
-      </label>
-      <div className="mt-2 flex items-center gap-3">
-        <Avatar userId={me.id} pseudo={pseudo || '?'} />
-        <input
-          id="pseudo"
-          autoComplete="nickname"
-          autoCapitalize="none"
-          spellCheck={false}
-          aria-invalid={pseudoMessage ? true : undefined}
-          aria-describedby={pseudoMessage ? 'pseudo-hint pseudo-error' : 'pseudo-hint'}
-          className="h-11 min-w-0 flex-1 rounded-row border border-border bg-surface px-3 text-ink"
-          {...register('pseudo')}
+      <div className="flex flex-col gap-6">
+        <NameInput
+          name="first_name"
+          label={t('onboarding.firstName')}
+          autoComplete="given-name"
+          message={errors.first_name?.message}
+          registration={register('first_name')}
         />
+        <NameInput
+          name="last_name"
+          label={t('onboarding.lastName')}
+          autoComplete="family-name"
+          message={errors.last_name?.message}
+          registration={register('last_name')}
+        />
+
+        <div>
+          <label htmlFor="pseudo" className="block text-sm font-semibold">
+            {t('onboarding.pseudo.label')}
+          </label>
+          <div className="mt-2 flex items-center gap-3">
+            <Avatar userId={me.id} user={{ pseudo, first_name: firstName, last_name: lastName }} />
+            <input
+              id="pseudo"
+              autoComplete="nickname"
+              autoCapitalize="none"
+              spellCheck={false}
+              aria-invalid={pseudoMessage ? true : undefined}
+              aria-describedby={pseudoMessage ? 'pseudo-hint pseudo-error' : 'pseudo-hint'}
+              className="h-11 min-w-0 flex-1 rounded-row border border-border bg-surface px-3 text-ink"
+              {...register('pseudo')}
+            />
+          </div>
+          <p id="pseudo-hint" className="mt-1 text-sm text-muted">
+            {t('onboarding.pseudo.hint')}
+          </p>
+          {pseudoMessage && (
+            <p id="pseudo-error" role="alert" className="mt-1 text-sm text-risk-fg">
+              {t(pseudoMessage)}
+            </p>
+          )}
+        </div>
       </div>
-      <p id="pseudo-hint" className="mt-1 text-sm text-muted">
-        {t('onboarding.pseudo.hint')}
-      </p>
-      {pseudoMessage && (
-        <p id="pseudo-error" role="alert" className="mt-1 text-sm text-risk-fg">
-          {t(pseudoMessage)}
-        </p>
-      )}
 
       <fieldset className="mt-6">
         <legend className="text-sm font-semibold">{t('onboarding.language.label')}</legend>

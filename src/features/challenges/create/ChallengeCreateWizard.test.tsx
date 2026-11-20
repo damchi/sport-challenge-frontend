@@ -625,7 +625,7 @@ describe('ChallengeCreateWizard', () => {
     });
 
     it.each([
-      [422, 'profile_incomplete', "Choisis d'abord ton pseudo dans ton profil."],
+      [422, 'profile_incomplete', "Indique d'abord ton prénom et ton nom dans ton profil."],
       [
         500,
         'internal_error',

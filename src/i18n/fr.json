@@ -13,7 +13,7 @@
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
     "not_found": "Cette page n'existe pas ou plus.",
-    "profile_incomplete": "Choisis d'abord ton pseudo dans ton profil.",
+    "profile_incomplete": "Indique d'abord ton prénom et ton nom dans ton profil.",
     "rate_limited": "Trop de requêtes. Réessaie dans un instant.",
     "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s.",
     "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
@@ -47,11 +47,13 @@
   },
   "onboarding": {
     "title": "Bienvenue",
-    "intro": "Choisis ton pseudo : c'est lui que verront les autres participants.",
+    "intro": "Présente-toi. Les autres participants verront ton pseudo si tu en choisis un, sinon ton prénom et ton nom. Ton e-mail reste privé.",
     "pseudo": {
-      "label": "Pseudo",
+      "label": "Pseudo (facultatif)",
       "hint": "3 à 20 caractères : lettres, chiffres, _, . ou -."
     },
+    "firstName": "Prénom",
+    "lastName": "Nom",
     "language": {
       "label": "Langue",
       "fr": "Français",
@@ -67,6 +69,25 @@
       "characters": "Seulement des lettres, des chiffres, _, . ou -.",
       "taken": "Ce pseudo est déjà pris. Essaie-en un autre.",
       "invalid": "Ce pseudo n'est pas accepté. Essaie-en un autre."
+    },
+    "name": {
+      "required": "Ce champ est obligatoire.",
+      "length": "50 caractères au plus.",
+      "characters": "Seulement des lettres, avec une espace, - ou ' entre les mots.",
+      "invalid": "Ce nom n'est pas accepté. Vérifie son orthographe."
+    },
+    "identity": {
+      "title": "Identité",
+      "email": "E-mail",
+      "missing": "Non renseigné"
+    },
+    "pseudoForm": {
+      "saved": "Pseudo enregistré.",
+      "removed": "Pseudo retiré : les autres voient ton prénom et ton nom."
+    },
+    "save": "Enregistrer",
+    "namesForm": {
+      "saved": "Prénom et nom enregistrés."
     }
   },
   "nav": {

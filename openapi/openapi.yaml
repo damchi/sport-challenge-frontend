@@ -89,8 +89,10 @@ paths:
       summary: Read my profile
       description: |
         Profile of the authenticated user, created empty on first login. The
-        profile is complete once the pseudo is set: creating or joining a
-        challenge requires it (`profile_incomplete`).
+        profile is complete once the first name and the last name are set, with
+        or without a pseudo: creating or joining a challenge and recording an
+        activity require it (`profile_incomplete`). The e-mail comes from the access token and is
+        only ever returned here, to its owner.
       tags: [me]
       responses:
         "200":
@@ -109,8 +111,11 @@ paths:
       operationId: patchMe
       summary: Update my profile
       description: |
-        Changes the pseudo and the language. An absent field is left
-        unchanged; `null` is refused (a pseudo cannot be removed).
+        Changes the pseudo, the first name, the last name and the language.
+        An absent field is left unchanged. `pseudo: null` removes the pseudo,
+        which is optional; `null` is refused for the other fields (the first
+        name, the last name and the language can be changed, never removed).
+        The e-mail is not editable: it comes from the auth provider.
       tags: [me]
       requestBody:
         required: true
@@ -145,9 +150,11 @@ paths:
       operationId: deleteMe
       summary: Delete my account
       description: |
-        Final: the account is anonymized (pseudo and avatar erased) and
-        abandons every challenge not finished; a finished challenge keeps its
-        results under a neutral name. The user is also deleted at the auth
+        Final: the account is anonymized (pseudo, first name, last name,
+        e-mail and avatar erased) and
+        abandons every challenge not finished. The account is also left out
+        of the leaderboard of every challenge, finished ones included: the
+        others move up. The user is also deleted at the auth
         provider. Every later request with a token of this account, even
         one still valid, answers 401 `account_deleted`; logging in again
         with this identity never creates a new account. The client asks for confirmation first.
@@ -334,7 +341,7 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
-          description: The profile is incomplete (`profile_incomplete`); choose a pseudo first.
+          description: The profile is incomplete (`profile_incomplete`); set the first name and last name first.
           content:
             application/json:
               schema:
@@ -569,7 +576,7 @@ paths:
         for a private one. Anyone else, like a missing or deleted challenge,
         gets the same 404 `challenge_not_found`. Every participant is listed,
         abandoned or excluded ones included (shown as abandoned), in order
-        of registration.
+        of registration; a deleted account is not listed at all.
       tags: [challenges]
       parameters:
         - name: challengeId
@@ -621,8 +628,10 @@ paths:
         deleted challenge, gets the same 404 `challenge_not_found`.
 
         Equal values share a rank (1, 1, 3). Participants who abandoned
-        (also the excluded and the deleted accounts) are listed last in every
-        category, with `abandoned` true and no rank nor value.
+        (also the excluded) are listed last in every category, with
+        `abandoned` true and no rank nor value. A deleted account is not
+        listed at all, even in a finished challenge: the others move up, the
+        equal ones still sharing a rank.
 
         In `run_elimination`, `elimination` gives the live situation: the
         survivors first by distance, then the eliminated, the last
@@ -666,7 +675,8 @@ paths:
         the exclusion. A creator cannot be excluded, even one who abandoned
         (422 `cannot_exclude_creator`); a finished challenge answers 422
         `challenge_ended`; excluding a participant already out answers 204
-        and changes nothing; a user who never joined answers 404 `not_found`.
+        and changes nothing; a user who never joined, or a deleted account,
+        answers 404 `not_found`.
       tags: [challenges]
       parameters:
         - name: challengeId
@@ -719,13 +729,15 @@ paths:
         or excluded ones included) and its creators. A challenge the user
         may not see answers 404 `challenge_not_found`; a visible one the
         user never joined (a public challenge shows them its leaderboard
-        only), or a `userId` who never joined it, answers 404 `not_found`.
-        `challenge_ids` and `locked` are read from this challenge only, never
-        from the other challenges of the participant: `challenge_ids` holds
+        only), or a `userId` who never joined it or whose account was
+        deleted, answers 404 `not_found`.
+        `contributions` and `locked` are read from this challenge only, never
+        from the other challenges of the participant: `contributions` holds
         it when the activity counts in it (never for a participant who
         abandoned: empty), and `locked` is true once its week has ended in
-        it, where it counts (never for a participant who abandoned). The author's own listing (`/me/activities`) may still show an
-        activity locked by another challenge.
+        it, where it counts (never for a participant who abandoned). The
+        author's own listing (`/me/activities`) may still show an activity
+        locked by another challenge.
       tags: [activities]
       parameters:
         - name: challengeId
@@ -767,7 +779,8 @@ paths:
         "404":
           description: |
             A missing, deleted or hidden challenge (`challenge_not_found`), or
-            an actor or a `userId` who never joined it (`not_found`).
+            an actor or a `userId` who never joined it, or a deleted account
+            (`not_found`).
           content:
             application/json:
               schema:
@@ -783,7 +796,8 @@ paths:
       description: |
         Creators only (403 `forbidden`). The target must be an active
         participant (422 `not_active_participant`): every creator is a
-        participant. Adding an existing creator answers 200 and changes
+        participant, and a deleted account is none, even one that was a
+        creator. Adding an existing creator answers 200 and changes
         nothing. A finished challenge answers 422 `challenge_ended`.
       tags: [challenges]
       parameters:
@@ -965,7 +979,7 @@ paths:
         complete profile (`profile_incomplete`). It belongs to the user, not
         to a challenge: it counts in every challenge, not deleted, where the
         user is an active participant and whose window holds `started_at`
-        (`challenge_ids`, possibly empty). An activity outside every window
+        (`contributions`, possibly empty). An activity outside every window
         is recorded all the same. It is refused (`week_locked`) when its week
         has ended in one of those challenges, finished ones included. Its end
         (`started_at` plus `duration_seconds`) is never in the future (5
@@ -1282,12 +1296,21 @@ components:
       type: string
       pattern: "^[A-Za-z0-9_.-]{3,20}$"
       example: marie_92
+    PersonName:
+      description: |
+        A first or last name: 1 to 50 letters (any alphabet, accents
+        included), words separated by one space, `-`, `'` or `’`, each
+        starting with a letter; no space at either end.
+      type: string
+      maxLength: 50
+      pattern: "^\\p{L}[\\p{L}\\p{M}]*(?:[ '’-]\\p{L}[\\p{L}\\p{M}]*)*$"
+      example: Marie-Ève
     Language:
       type: string
       enum: [fr, en]
     Me:
       type: object
-      required: [id, pseudo, avatar, language, profile_complete]
+      required: [id, pseudo, first_name, last_name, email, avatar, language, profile_complete]
       additionalProperties: false
       properties:
         id:
@@ -1298,11 +1321,32 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/Pseudo"
-          description: Null until the user chooses one.
+          description: Null until the user chooses one, or once removed (optional).
+        first_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null until the user sets it.
+        last_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null until the user sets it.
+        email:
+          type: string
+          nullable: true
+          maxLength: 254
+          description: |
+            From the access token (claim set by the auth provider); null until
+            a token carries it. Only returned to its owner.
         avatar:
           type: string
           nullable: true
-          description: Avatar image; always null in V1, where the apps show the pseudo's initials.
+          description: |
+            Avatar image; always null in V1, where the apps show the initials
+            of the pseudo, or of the first and last names without one.
         language:
           type: string
           nullable: true
@@ -1311,13 +1355,26 @@ components:
           description: Null until the user chooses one.
         profile_complete:
           type: boolean
-          description: True once the pseudo is set.
+          description: True once the first name and the last name are set, with or without a pseudo.
     MeUpdate:
       type: object
       additionalProperties: false
       properties:
         pseudo:
-          $ref: "#/components/schemas/Pseudo"
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Pseudo"
+          description: "`null` removes the pseudo."
+          # Tells an absent pseudo (left as is) from null (removed).
+          x-go-type: nullable.Nullable[string]
+          x-go-type-skip-optional-pointer: true
+          x-go-type-import:
+            path: github.com/oapi-codegen/nullable
+        first_name:
+          $ref: "#/components/schemas/PersonName"
+        last_name:
+          $ref: "#/components/schemas/PersonName"
         language:
           $ref: "#/components/schemas/Language"
     SportList:
@@ -1508,7 +1565,7 @@ components:
           description: Pass it as `cursor` for the next page; null on the last page.
     Participant:
       type: object
-      required: [user_id, pseudo, avatar, status, joined_at]
+      required: [user_id, pseudo, first_name, last_name, avatar, status, joined_at]
       additionalProperties: false
       properties:
         user_id:
@@ -1519,15 +1576,29 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/Pseudo"
-          description: Null for a deleted (anonymized) account; the apps show a neutral name.
+          description: Null until the user chooses one (a deleted account is never listed).
+        first_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for an account that has not set it (a deleted account is never listed).
+        last_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for an account that has not set it (a deleted account is never listed).
         avatar:
           type: string
           nullable: true
-          description: Avatar image; always null in V1, where the apps show the pseudo's initials.
+          description: |
+            Avatar image; always null in V1, where the apps show the initials
+            of the pseudo, or of the first and last names without one.
         status:
           type: string
           enum: [active, abandoned]
-          description: "`abandoned` also covers an excluded participant and a deleted account."
+          description: "`abandoned` also covers an excluded participant. A deleted account is never listed."
         joined_at:
           type: string
           format: date-time
@@ -1556,8 +1627,8 @@ components:
         entries:
           type: array
           description: |
-            Every participant. Ranked ones first, best first; abandoned ones
-            last. `value` is in seconds for `cumulative_time` and in meters
+            Every participant but the deleted accounts. Ranked ones first,
+            best first; abandoned ones last. `value` is in seconds for `cumulative_time` and in meters
             for the other two.
           items:
             $ref: "#/components/schemas/LeaderboardEntry"
@@ -1588,7 +1659,7 @@ components:
           description: Only in `run_elimination`, and null for a participant who abandoned.
     LeaderboardUser:
       type: object
-      required: [id, pseudo, avatar]
+      required: [id, pseudo, first_name, last_name, avatar]
       additionalProperties: false
       properties:
         id:
@@ -1599,11 +1670,25 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/Pseudo"
-          description: Null for a deleted (anonymized) account; the apps show a neutral name.
+          description: Null for an account that has not set it (a deleted account is never listed).
+        first_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for an account that has not set it (a deleted account is never listed).
+        last_name:
+          type: string
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/PersonName"
+          description: Null for an account that has not set it (a deleted account is never listed).
         avatar:
           type: string
           nullable: true
-          description: Avatar image; always null in V1, where the apps show the pseudo's initials.
+          description: |
+            Avatar image; always null in V1, where the apps show the initials
+            of the pseudo, or of the first and last names without one.
     EliminationProgress:
       type: object
       required: [status, eliminated_week, minimum_meters, run_meters, week_ends_at]
@@ -1656,7 +1741,7 @@ components:
           format: date-time
         participant_count:
           type: integer
-          description: Everyone who joined, abandoned included.
+          description: Everyone who joined, abandoned included, deleted accounts left out.
         my_role:
           type: string
           enum: [creator, participant, abandoned, invited, outsider]
@@ -1868,7 +1953,7 @@ components:
           description: Required or refused according to the sport's `distance_mode`.
     Activity:
       type: object
-      required: [id, sport_code, sport_label, started_at, duration_seconds, distance_meters, source, speed_mps, pace_seconds_per_km, challenge_ids, locked]
+      required: [id, sport_code, sport_label, started_at, duration_seconds, distance_meters, source, speed_mps, pace_seconds_per_km, contributions, locked]
       additionalProperties: false
       properties:
         id:
@@ -1901,17 +1986,41 @@ components:
           format: double
           nullable: true
           description: Pace in seconds per kilometer, computed; null without distance.
-        challenge_ids:
+        contributions:
           type: array
-          description: Challenges where the activity counts, now; possibly empty.
+          description: |
+            What the activity brings, now, to each challenge where it counts;
+            possibly empty. A deleted challenge never appears.
           items:
-            type: string
-            format: uuid
+            $ref: "#/components/schemas/ActivityContribution"
         locked:
           type: boolean
           description: |
             True once the week of the activity has ended in a challenge where
             it counts: it can no longer be changed nor deleted.
+    ActivityContribution:
+      type: object
+      required: [challenge_id, challenge_title, distance_meters, duration_seconds]
+      additionalProperties: false
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        challenge_title:
+          type: string
+        distance_meters:
+          type: integer
+          nullable: true
+          description: |
+            The distance brought to the cumulative distance category: the
+            distance times the factor of the sport in this challenge, rounded
+            to the meter (half up) as the ranking rounds a total. Null when
+            the sport has no factor in this challenge or the activity no
+            distance. The ranking rounds the total once, so it may differ by
+            a meter or so from the sum of these values.
+        duration_seconds:
+          type: integer
+          description: The duration brought to the cumulative time category.
     ActivityPage:
       type: object
       required: [items, next_cursor]

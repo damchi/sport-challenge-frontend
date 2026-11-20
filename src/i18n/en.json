@@ -13,7 +13,7 @@
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
     "not_found": "This page doesn't exist or was removed.",
-    "profile_incomplete": "Choose your pseudo in your profile first.",
+    "profile_incomplete": "Enter your first and last name in your profile first.",
     "rate_limited": "Too many requests. Try again in a moment.",
     "rate_limited_delay": "Too many requests. Try again in {{retry_after}} s.",
     "unauthenticated": "Your session has ended. Sign in again.",
@@ -47,11 +47,13 @@
   },
   "onboarding": {
     "title": "Welcome",
-    "intro": "Choose your nickname: it is what other participants will see.",
+    "intro": "Introduce yourself. Other participants will see your nickname if you choose one, otherwise your first and last name. Your email stays private.",
     "pseudo": {
-      "label": "Nickname",
+      "label": "Nickname (optional)",
       "hint": "3 to 20 characters: letters, digits, _, . or -."
     },
+    "firstName": "First name",
+    "lastName": "Last name",
     "language": {
       "label": "Language",
       "fr": "Français",
@@ -67,6 +69,25 @@
       "characters": "Only letters, digits, _, . or -.",
       "taken": "This nickname is already taken. Try another one.",
       "invalid": "This nickname is not accepted. Try another one."
+    },
+    "name": {
+      "required": "This field is required.",
+      "length": "50 characters at most.",
+      "characters": "Letters only, in words separated by a space, - or '.",
+      "invalid": "This name isn't accepted. Check its spelling."
+    },
+    "identity": {
+      "title": "Identity",
+      "email": "Email",
+      "missing": "Not provided"
+    },
+    "pseudoForm": {
+      "saved": "Nickname saved.",
+      "removed": "Nickname removed: others see your first and last name."
+    },
+    "save": "Save",
+    "namesForm": {
+      "saved": "First and last name saved."
     }
   },
   "nav": {

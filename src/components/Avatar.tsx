@@ -1,4 +1,5 @@
-import { avatarColor, initials } from '../domain/avatar';
+import { avatarColor, avatarInitials } from '../domain/avatar';
+import type { NamedUser } from '../domain/displayName';
 
 // Tailwind needs the full class names in the source.
 const COLORS: Record<number, string> = {
@@ -10,19 +11,26 @@ const COLORS: Record<number, string> = {
   6: 'bg-avatar-6-bg text-avatar-6-fg',
 };
 
+// 32 px in rows (design.md); larger at the head of the profile.
+const SIZES = {
+  md: 'size-8 text-xs',
+  lg: 'size-16 text-xl',
+};
+
 interface AvatarProps {
   userId: string;
-  pseudo: string;
+  user: NamedUser;
+  size?: keyof typeof SIZES;
 }
 
-/** Round initials avatar. Decorative: the pseudo is always written next to it. */
-export function Avatar({ userId, pseudo }: AvatarProps) {
+/** Round initials avatar. Decorative: the name is always written next to it. */
+export function Avatar({ userId, user, size = 'md' }: AvatarProps) {
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${COLORS[avatarColor(userId)]}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${SIZES[size]} ${COLORS[avatarColor(userId)]}`}
     >
-      {initials(pseudo)}
+      {avatarInitials(user) || '?'}
     </span>
   );
 }
