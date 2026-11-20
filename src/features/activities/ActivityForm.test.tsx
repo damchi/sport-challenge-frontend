@@ -22,13 +22,26 @@ const NOW = new Date('2026-11-20T17:00:00Z');
 const STARTED_AT = '2026-11-20T12:30:00.000Z';
 const KEY = 'activity-key-1';
 
+/** Keys as the form makes them: activity-key-1, activity-key-2... */
+function keyMaker() {
+  let count = 0;
+  return () => {
+    count += 1;
+    return `activity-key-${count}`;
+  };
+}
+
 function renderForm({ deviceTimeZone = 'Asia/Tokyo' }: { deviceTimeZone?: string } = {}) {
   const router = createMemoryRouter(
     [
       {
         path: '/activities/new',
         element: (
-          <ActivityForm now={() => NOW} deviceTimeZone={deviceTimeZone} idempotencyKey={KEY} />
+          <ActivityForm
+            now={() => NOW}
+            deviceTimeZone={deviceTimeZone}
+            newIdempotencyKey={keyMaker()}
+          />
         ),
       },
       { path: '/', element: <p>Page d'accueil</p> },
@@ -318,7 +331,7 @@ describe('ActivityForm', () => {
     expect(sent).toHaveLength(1);
   });
 
-  it('sends the same idempotency key again on a new attempt', async () => {
+  it('sends the same key again when the first attempt got no clear answer', async () => {
     const sent = refuse('internal_error', 500);
     renderForm();
     await fill();
@@ -328,6 +341,20 @@ describe('ActivityForm', () => {
 
     await waitFor(() => expect(sent).toHaveLength(2));
     expect(sent.map(({ key }) => key)).toEqual([KEY, KEY]);
+  });
+
+  it('sends a corrected entry with a new key once the server refused the first', async () => {
+    const sent = refuse('activity_overlap');
+    renderForm();
+    await fill();
+    fireEvent.click(save());
+    await screen.findByRole('alert');
+    type(minutes(), '30');
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(2));
+    expect(sent.map(({ key }) => key)).toEqual([KEY, 'activity-key-2']);
+    expect(sent[1]?.body.duration_seconds).toBe(1800);
   });
 
   it.each([

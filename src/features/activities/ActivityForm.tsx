@@ -29,16 +29,16 @@ const DURATION_PARTS = ['hours', 'minutes', 'seconds'] as const;
  * Entry of an activity, once the catalogue of sports and the user's ongoing
  * challenges are loaded: the start is read in their time zone when they
  * share one, in the device's otherwise. Tests give `now`, the device's time
- * zone and the idempotency key.
+ * zone and the maker of idempotency keys.
  */
 export function ActivityForm({
   now,
   deviceTimeZone,
-  idempotencyKey,
+  newIdempotencyKey,
 }: {
   now?: () => Date;
   deviceTimeZone?: string;
-  idempotencyKey?: string;
+  newIdempotencyKey?: () => string;
 }) {
   const sports = useSports();
   const ongoing = useChallenges('mine', 'ongoing');
@@ -70,7 +70,7 @@ export function ActivityForm({
       sports={sports.data}
       timeZone={timeZone}
       now={now ?? (() => new Date())}
-      idempotencyKey={idempotencyKey}
+      newIdempotencyKey={newIdempotencyKey ?? (() => crypto.randomUUID())}
     />
   );
 }
@@ -81,23 +81,24 @@ export function ActivityForm({
  * distance, shown only when the sport
  * has one: required, or optional for "other". No speed: the API computes it.
  * The idempotency key is chosen when the form opens and goes with every
- * attempt; once recorded, the form gives way to the outcome.
+ * attempt that may have been recorded; a refused one gets a new key. Once
+ * recorded, the form gives way to the outcome.
  */
 function ActivityFormFields({
   sports,
   timeZone,
   now,
-  idempotencyKey: givenKey,
+  newIdempotencyKey,
 }: {
   sports: readonly Sport[];
   timeZone: string;
   now: () => Date;
-  idempotencyKey: string | undefined;
+  newIdempotencyKey: () => string;
 }) {
   const { t, i18n } = useTranslation();
   const sportName = useSportName();
   const createActivity = useCreateActivity();
-  const [idempotencyKey] = useState(() => givenKey ?? crypto.randomUUID());
+  const [idempotencyKey, setIdempotencyKey] = useState(newIdempotencyKey);
   const [submitError, setSubmitError] = useState<string>();
   const [saved, setSaved] = useState(false);
   // Set at once, unlike the mutation's state: a second click in the same
@@ -167,6 +168,12 @@ function ActivityFormFields({
       await createActivity.mutateAsync({ activity, idempotencyKey });
       setSaved(true);
     } catch (error) {
+      // Refused for good (4xx): nothing was recorded, the corrected entry
+      // goes with a new key. Otherwise (no answer, server error) it may have
+      // been: the same key comes again, so nothing is recorded twice.
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        setIdempotencyKey(newIdempotencyKey());
+      }
       showError(error);
       sending.current = false;
     }
