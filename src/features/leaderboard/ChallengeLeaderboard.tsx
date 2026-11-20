@@ -6,6 +6,7 @@ import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../domain/challenge';
+import { challengeTime, otherTimeZoneName } from '../../domain/format/challengeDates';
 import { sharedRanks } from '../../domain/format/rank';
 import { CATEGORY_NAMES } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
@@ -20,12 +21,13 @@ const SEGMENT_OFF = 'text-muted';
  * the address, ?category=), with its podium (ranks 1 to 3, ties included),
  * its full ranking and, apart, the participants who abandoned or, in the run
  * elimination, were eliminated. Ranks, order and statuses are the server's.
- * The user's row stands out and stays on screen.
+ * The user's row stands out and stays on screen. No live update in V1: it
+ * says when the server computed it.
  * Rendered under the challenge page, which has already loaded the challenge.
  */
 export function ChallengeLeaderboard() {
   const { challengeId = '' } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [params, setParams] = useSearchParams();
   const challenge = useChallenge(challengeId);
   const leaderboard = useLeaderboard(challengeId);
@@ -37,10 +39,18 @@ export function ChallengeLeaderboard() {
     return <ErrorState error={leaderboard.error} onRetry={() => void leaderboard.refetch()} />;
   }
 
-  const { categories } = leaderboard.data;
+  const { categories, computed_at: computedAt } = leaderboard.data;
   const category =
     categories.find((candidate) => candidate.type === params.get('category')) ?? categories[0];
   if (!category) return <EmptyState message={t('leaderboard.empty')} />;
+
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const { timezone } = challenge.data;
+  const zone = otherTimeZoneName(
+    timezone,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    locale,
+  );
 
   const choose = (type: string) => {
     const next = new URLSearchParams(params);
@@ -80,6 +90,14 @@ export function ChallengeLeaderboard() {
           </button>
         ))}
       </div>
+
+      <p className="mt-2 text-xs text-muted">
+        {t('leaderboard.updated', {
+          date: challengeTime(computedAt, timezone, locale),
+          zone,
+          context: zone && 'zone',
+        })}
+      </p>
 
       {/* Only during the weeks of the challenge: the minimum then applies. */}
       {category.type === 'run_elimination' && challenge.data.current_week !== null && (

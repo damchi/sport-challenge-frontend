@@ -75,6 +75,20 @@ export function challengeInstant(instant: string, timeZone: string, locale: stri
   }).format(new Date(instant));
 }
 
+/**
+ * An instant of a challenge to the minute (last computation of its
+ * leaderboard), in its time zone: "18 nov., 10:00".
+ */
+export function challengeTime(instant: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(instant));
+}
+
 /** Name of a time zone that holds all year ("heure de l'Est nord-américain"). */
 export function timeZoneName(timeZone: string, locale: string): string {
   const parts = new Intl.DateTimeFormat(locale, {

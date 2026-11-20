@@ -512,7 +512,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 `F5` · Story · Phase 5 · Estimation 2 · Dépend de : 030 · Backend : —
 
 **Critères d'acceptation**
-- [ ] Rechargement à l'ouverture de l'onglet, au retour dans l'onglet ou l'application (visibilité de la page) et par un bouton « Actualiser » (tirer pour rafraîchir sur téléphone).
+- [ ] Rechargement à l'ouverture de l'onglet et au retour dans l'onglet ou l'application (visibilité de la page). Décision du 2026-11-20 : ni bouton « Actualiser » ni geste maison ; le tirer-pour-rafraîchir natif du téléphone et le rechargement de la page suffisent ; rafraîchissement automatique reporté (SC-WEB-055).
 - [ ] Heure de dernière mise à jour affichée (`computed_at`).
 - [ ] Pas de temps réel en V1.
 
