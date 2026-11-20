@@ -108,6 +108,40 @@ export function zonedMidnight(date: string, timeZone: string): Date {
   return new Date(instant);
 }
 
+/** A date and time as a native field writes it ("2026-11-20T07:30"), in `timeZone`. */
+export function toZonedDateTime(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}`;
+}
+
+/**
+ * The instant of a date and time read in `timeZone` ("2026-11-20T07:30").
+ * Undefined when it is not one, or when that time does not exist there (a
+ * day the calendar lacks, an hour skipped by a change of time).
+ */
+export function zonedDateTime(value: string, timeZone: string): Date | undefined {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  if (!match) return undefined;
+  const [, year, month, day, hour, minute] = match.map(Number);
+  const wallClock = Date.UTC(year ?? NaN, (month ?? NaN) - 1, day ?? NaN, hour, minute);
+  if (Number.isNaN(wallClock)) return undefined;
+  // The offset at the guess may be the one before a change: check again.
+  let instant = wallClock - offset(wallClock, timeZone);
+  instant = wallClock - offset(instant, timeZone);
+  const date = new Date(instant);
+  return toZonedDateTime(date, timeZone) === value ? date : undefined;
+}
+
 /** Start (included) and end (excluded) instants of a challenge window. */
 export function challengeWindow(
   startDate: string,

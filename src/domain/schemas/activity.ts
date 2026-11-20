@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isTimeZone, zonedDateTime } from '../challengeWindow';
 import { characterCount, hasOnlyAllowedCharacters, visibleCount } from './text';
 
 // Activity entry rules of the API contract (ActivityCreate). The form holds
@@ -19,8 +20,6 @@ const MAX_DISTANCE_METERS = 1_000_000;
 const END_TOLERANCE_MS = 5 * 60 * 1000;
 const EARLIEST_START = Date.UTC(2000, 0, 1);
 
-// "2026-11-20T07:30", as a native date and time field gives it.
-const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const WHOLE = /^\d+$/;
 // Km with a point or a comma, 3 decimals at most (the meter).
 const KM = /^\d+(?:[.,]\d{1,3})?$/;
@@ -28,26 +27,6 @@ const KM = /^\d+(?:[.,]\d{1,3})?$/;
 /** The free label of the "other" sport as the server cleans it: spaces collapsed. */
 export function cleanSportLabel(label: string): string {
   return label.replace(/\s+/gu, ' ').trim();
-}
-
-/**
- * A native date and time field's value ("2026-11-20T07:30"), read in the
- * device's time zone, where the activity took place. Undefined when it is
- * not one.
- */
-export function localDateTime(value: string): Date | undefined {
-  if (!LOCAL_DATE_TIME.test(value)) return undefined;
-  const date = new Date(value);
-  // A day the calendar lacks (30 February) rolls over: refused.
-  return toLocalDateTime(date) === value ? date : undefined;
-}
-
-/** A date as a native date and time field writes it, in the device's time zone. */
-export function toLocalDateTime(date: Date): string {
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}`;
 }
 
 // A part of the duration: empty counts as 0.
@@ -77,7 +56,8 @@ function distanceMeters(value: string): number | undefined {
  * Activity entry input. `now` gives the current instant at each check: the
  * activity is entered once done, so neither its start nor its end is in the
  * future. `sports` is the catalogue, whose distance mode tells whether the
- * distance is required, optional (the "other" sport) or absent.
+ * distance is required, optional (the "other" sport) or absent. The start,
+ * as a native field gives it, is read in the chosen `time_zone`.
  */
 export function activityCreateSchema(now: () => Date, sports: readonly ActivitySport[]) {
   const modeOf = (code: string) => sports.find((sport) => sport.code === code)?.distance_mode;
@@ -87,6 +67,7 @@ export function activityCreateSchema(now: () => Date, sports: readonly ActivityS
       sport_code: z.string(),
       sport_label: z.string(),
       started_at: z.string(),
+      time_zone: z.string(),
       hours: z.string(),
       minutes: z.string(),
       seconds: z.string(),
@@ -108,7 +89,9 @@ export function activityCreateSchema(now: () => Date, sports: readonly ActivityS
         }
       }
 
-      const start = localDateTime(input.started_at);
+      const start = isTimeZone(input.time_zone)
+        ? zonedDateTime(input.started_at, input.time_zone)
+        : undefined;
       const current = now().getTime();
       if (!start) issue('started_at', 'activityForm.fields.startedAt.required');
       else if (start.getTime() < EARLIEST_START || start.getTime() > current) {
@@ -137,7 +120,7 @@ export function activityCreateSchema(now: () => Date, sports: readonly ActivityS
       const mode = modeOf(input.sport_code);
       const meters = mode === 'none' ? undefined : distanceMeters(input.distance_km);
       // Valid by now: the refinement above passed.
-      const start = localDateTime(input.started_at) ?? new Date(Number.NaN);
+      const start = zonedDateTime(input.started_at, input.time_zone) ?? new Date(Number.NaN);
       return {
         sport_code: input.sport_code,
         ...(input.sport_code === 'other' && { sport_label: cleanSportLabel(input.sport_label) }),

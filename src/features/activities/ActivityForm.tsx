@@ -5,14 +5,17 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useCreateActivity } from '../../api/hooks/useActivities';
+import { useChallenges } from '../../api/hooks/useChallenges';
 import { useSports, type Sport } from '../../api/hooks/useSports';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
+import { activityTimeZones } from '../../domain/activity';
 import { sortSportsByName } from '../../domain/challengeCreate';
+import { toZonedDateTime } from '../../domain/challengeWindow';
+import { timeZoneName } from '../../domain/format/challengeDates';
 import {
   activityCreateSchema,
   activityFormFieldOf,
-  toLocalDateTime,
   type ActivityCreateInput,
   type ActivityCreateValues,
 } from '../../domain/schemas/activity';
@@ -23,24 +26,43 @@ import { useSportName } from '../challenges/create/useSportName';
 const DURATION_PARTS = ['hours', 'minutes', 'seconds'] as const;
 
 /**
- * Entry of an activity, once the catalogue of sports is loaded. Tests give
- * `now` and the idempotency key.
+ * Entry of an activity, once the catalogue of sports and the user's ongoing
+ * challenges are loaded: the start is read in their time zone (the device's
+ * without one). Tests give `now`, the device's time zone and the idempotency
+ * key.
  */
 export function ActivityForm({
   now,
+  deviceTimeZone,
   idempotencyKey,
 }: {
   now?: () => Date;
+  deviceTimeZone?: string;
   idempotencyKey?: string;
 }) {
   const sports = useSports();
-  if (sports.isPending) return <LoadingState />;
-  if (!sports.data) {
-    return <ErrorState error={sports.error} onRetry={() => void sports.refetch()} />;
+  // The first page is enough: a user takes part in few challenges at once.
+  const ongoing = useChallenges('mine', 'ongoing');
+  if (sports.isPending || ongoing.isPending) return <LoadingState />;
+  if (!sports.data || !ongoing.data) {
+    return (
+      <ErrorState
+        error={sports.error ?? ongoing.error}
+        onRetry={() => {
+          if (sports.isError) void sports.refetch();
+          if (ongoing.isError) void ongoing.refetch();
+        }}
+      />
+    );
   }
+  const timeZones = activityTimeZones(
+    ongoing.data.pages.flatMap((page) => page.items),
+    deviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
   return (
     <ActivityFormFields
       sports={sports.data}
+      timeZones={timeZones}
       now={now ?? (() => new Date())}
       idempotencyKey={idempotencyKey}
     />
@@ -49,17 +71,20 @@ export function ActivityForm({
 
 /**
  * The fields: a sport of the catalogue (or "other", with a free label), the
- * start, the duration (always) and the distance, shown only when the sport
+ * start in the time zone of the challenges (to choose when they have
+ * several), the duration (always) and the distance, shown only when the sport
  * has one: required, or optional for "other". No speed: the API computes it.
  * The idempotency key is chosen when the form opens and goes with every
  * attempt; once recorded, the form gives way to the outcome.
  */
 function ActivityFormFields({
   sports,
+  timeZones,
   now,
   idempotencyKey: givenKey,
 }: {
   sports: readonly Sport[];
+  timeZones: readonly string[];
   now: () => Date;
   idempotencyKey: string | undefined;
 }) {
@@ -85,6 +110,7 @@ function ActivityFormFields({
       sport_code: '',
       sport_label: '',
       started_at: '',
+      time_zone: timeZones[0] ?? '',
       hours: '',
       minutes: '',
       seconds: '',
@@ -96,6 +122,7 @@ function ActivityFormFields({
     formState: { errors },
   } = form;
   const sportCode = useWatch({ control: form.control, name: 'sport_code' });
+  const timeZone = useWatch({ control: form.control, name: 'time_zone' });
   const mode = sports.find((sport) => sport.code === sportCode)?.distance_mode;
 
   // validation_failed names the refused fields: each shows an error where it
@@ -210,6 +237,29 @@ function ActivityFormFields({
         </div>
       )}
 
+      {timeZones.length > 1 && (
+        <div>
+          <label htmlFor="time_zone" className="block text-sm font-semibold">
+            {t('activityForm.fields.timeZone.label')}
+          </label>
+          <select
+            id="time_zone"
+            aria-describedby="time_zone-hint"
+            className={`${inputClass} h-11 w-full`}
+            {...register('time_zone', { deps: ['started_at'] })}
+          >
+            {timeZones.map((zone) => (
+              <option key={zone} value={zone}>
+                {timeZoneName(zone, locale)}
+              </option>
+            ))}
+          </select>
+          <p id="time_zone-hint" className="mt-1 text-sm text-muted">
+            {t('activityForm.fields.timeZone.hint')}
+          </p>
+        </div>
+      )}
+
       <div>
         <label htmlFor="started_at" className="block text-sm font-semibold">
           {t('activityForm.fields.startedAt.label')}
@@ -217,15 +267,15 @@ function ActivityFormFields({
         <input
           id="started_at"
           type="datetime-local"
-          // The device's time: the schema checks it again at sending.
-          max={toLocalDateTime(now())}
+          // The time there now: the schema checks it again at sending.
+          max={toZonedDateTime(now(), timeZone)}
           aria-invalid={startError ? true : undefined}
           aria-describedby={describedBy('started_at', startError)}
           className={`${inputClass} h-11 w-full`}
           {...register('started_at')}
         />
         <p id="started_at-hint" className="mt-1 text-sm text-muted">
-          {t('activityForm.fields.startedAt.hint')}
+          {t('activityForm.fields.startedAt.hint', { zone: timeZoneName(timeZone, locale) })}
         </p>
         <FieldError id="started_at-error" message={startError} />
       </div>

@@ -125,9 +125,13 @@
         "length": "Write 2 to 40 characters.",
         "characters": "This name has invisible or control characters. Remove them."
       },
+      "timeZone": {
+        "label": "Time zone",
+        "hint": "Your ongoing challenges are in several time zones: choose the one of the start time."
+      },
       "startedAt": {
         "label": "Start",
-        "hint": "Start date and time, on your device's clock.",
+        "hint": "Start date and time, {{zone}}.",
         "required": "Enter the start date and time.",
         "range": "The start cannot be in the future, nor before 2000."
       },

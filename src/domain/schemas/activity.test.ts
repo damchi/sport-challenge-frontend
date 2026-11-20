@@ -2,8 +2,6 @@ import {
   activityCreateSchema,
   activityFormFieldOf,
   cleanSportLabel,
-  localDateTime,
-  toLocalDateTime,
   type ActivityCreateInput,
   type ActivitySport,
 } from './activity';
@@ -14,14 +12,17 @@ const sports: ActivitySport[] = [
   { code: 'other', distance_mode: 'optional' },
 ];
 
-// Read in the device's time zone, like the form's field.
-const now = new Date(2026, 10, 20, 12, 0);
+// Friday 20 November 2026, noon in Montréal.
+const now = new Date('2026-11-20T17:00:00Z');
+// 7:30 in Montréal.
+const STARTED_AT = '2026-11-20T12:30:00.000Z';
 const schema = activityCreateSchema(() => now, sports);
 
 const valid: ActivityCreateInput = {
   sport_code: 'run',
   sport_label: '',
   started_at: '2026-11-20T07:30',
+  time_zone: 'America/Toronto',
   hours: '1',
   minutes: '02',
   seconds: '3',
@@ -40,7 +41,7 @@ describe('activityCreateSchema', () => {
   it('gives the request: start in UTC, duration in seconds, distance in meters', () => {
     expect(schema.parse(valid)).toEqual({
       sport_code: 'run',
-      started_at: new Date(2026, 10, 20, 7, 30).toISOString(),
+      started_at: STARTED_AT,
       duration_seconds: 3723,
       distance_meters: 12_500,
     });
@@ -60,7 +61,7 @@ describe('activityCreateSchema', () => {
       expect(schema.parse({ ...valid, ...other, sport_label: '  Pétanque   en  duo ' })).toEqual({
         sport_code: 'other',
         sport_label: 'Pétanque en duo',
-        started_at: new Date(2026, 10, 20, 7, 30).toISOString(),
+        started_at: STARTED_AT,
         duration_seconds: 3723,
       });
     });
@@ -96,6 +97,15 @@ describe('activityCreateSchema', () => {
   });
 
   describe('start', () => {
+    it('is read in the chosen time zone', () => {
+      expect(schema.parse({ ...valid, time_zone: 'Europe/Paris' }).started_at).toBe(
+        '2026-11-20T06:30:00.000Z',
+      );
+      expect(errorsOf({ time_zone: 'Nowhere/Land' }).started_at).toBe(
+        'activityForm.fields.startedAt.required',
+      );
+    });
+
     it.each(['', '2026-11-20', 'yesterday'])('wants a date and a time, not %j', (startedAt) => {
       expect(errorsOf({ started_at: startedAt }).started_at).toBe(
         'activityForm.fields.startedAt.required',
@@ -113,10 +123,10 @@ describe('activityCreateSchema', () => {
     });
 
     it('reads the current instant at each check', () => {
-      let current = new Date(2026, 10, 20, 7, 0);
+      let current = new Date('2026-11-20T12:00:00Z');
       const live = activityCreateSchema(() => current, sports);
       expect(live.safeParse(valid).success).toBe(false);
-      current = new Date(2026, 10, 20, 9, 0);
+      current = new Date('2026-11-20T14:00:00Z');
       expect(live.safeParse(valid).success).toBe(true);
     });
   });
@@ -182,14 +192,6 @@ describe('activityCreateSchema', () => {
 describe('cleanSportLabel', () => {
   it('collapses and trims the spaces', () => {
     expect(cleanSportLabel(' a   b\t')).toBe('a b');
-  });
-});
-
-describe('localDateTime and toLocalDateTime', () => {
-  it('read and write a native date and time field in the device time zone', () => {
-    expect(localDateTime('2026-11-20T07:30')).toEqual(new Date(2026, 10, 20, 7, 30));
-    expect(localDateTime('2026-02-30T07:30')).toBeUndefined();
-    expect(toLocalDateTime(new Date(2026, 0, 5, 9, 7, 42))).toBe('2026-01-05T09:07');
   });
 });
 

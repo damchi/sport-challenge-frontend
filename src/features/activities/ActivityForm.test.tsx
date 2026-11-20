@@ -2,21 +2,34 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ActivityCreate } from '../../api/hooks/useActivities';
+import type { components } from '../../api/generated/schema';
+import { mockChallenges } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
 import { ActivityForm } from './ActivityForm';
 
-// Friday 20 November 2026, noon on the device's clock.
-const NOW = new Date(2026, 10, 20, 12, 0);
+type ChallengePage = components['schemas']['ChallengePage'];
+
+const found = mockChallenges[1];
+if (!found) throw new Error('No mock challenge');
+const challenge = found;
+
+// Friday 20 November 2026, noon in Montréal, the time zone of the mock
+// challenges.
+const NOW = new Date('2026-11-20T17:00:00Z');
+// 7:30 in Montréal.
+const STARTED_AT = '2026-11-20T12:30:00.000Z';
 const KEY = 'activity-key-1';
 
-function renderForm() {
+function renderForm({ deviceTimeZone = 'Asia/Tokyo' }: { deviceTimeZone?: string } = {}) {
   const router = createMemoryRouter(
     [
       {
         path: '/activities/new',
-        element: <ActivityForm now={() => NOW} idempotencyKey={KEY} />,
+        element: (
+          <ActivityForm now={() => NOW} deviceTimeZone={deviceTimeZone} idempotencyKey={KEY} />
+        ),
       },
       { path: '/', element: <p>Page d'accueil</p> },
     ],
@@ -90,6 +103,67 @@ describe('ActivityForm', () => {
     expect(start()).toHaveAttribute('max', '2026-11-20T12:00');
   });
 
+  /** The user's ongoing challenges, in these time zones. */
+  function ongoingIn(...timeZones: string[]) {
+    server.use(
+      http.get('*/api/v1/challenges', () =>
+        HttpResponse.json<ChallengePage>({
+          items: timeZones.map((timezone, index) => ({
+            ...challenge,
+            id: `00000000-0000-4000-8000-00000000010${index}`,
+            timezone,
+            my_role: 'participant',
+            my_status: 'active',
+            status: 'ongoing',
+          })),
+          next_cursor: null,
+        }),
+      ),
+    );
+  }
+
+  it("reads the start in the time zone of the user's ongoing challenges", async () => {
+    renderForm();
+    expect(
+      await screen.findByText('Date et heure de début, heure de l’Est nord-américain.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Fuseau horaire' })).not.toBeInTheDocument();
+  });
+
+  it("reads the start in the device's time zone without an ongoing challenge", async () => {
+    ongoingIn();
+    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    renderForm({ deviceTimeZone: 'Europe/Paris' });
+    expect(
+      await screen.findByText('Date et heure de début, heure normale d’Europe centrale.'),
+    ).toBeInTheDocument();
+    // 18:00 in Paris.
+    expect(start()).toHaveAttribute('max', '2026-11-20T18:00');
+    await fill();
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.body.started_at).toBe('2026-11-20T06:30:00.000Z');
+  });
+
+  it('offers the time zones of the challenges when they have several', async () => {
+    ongoingIn('America/Toronto', 'America/Vancouver');
+    const sent = recordWith(() => HttpResponse.json({}, { status: 201 }));
+    renderForm();
+    const zone = await screen.findByRole('combobox', { name: 'Fuseau horaire' });
+    expect(
+      within(zone)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['heure de l’Est nord-américain', 'heure du Pacifique nord-américain']);
+    await fill();
+    type(zone, 'America/Vancouver');
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.body.started_at).toBe('2026-11-20T15:30:00.000Z');
+  });
+
   it('records the activity with its idempotency key, then says so', async () => {
     // The development mock answers as the server: 201 with the activity.
     const sent: { body: ActivityCreate; key: string | null }[] = [];
@@ -113,7 +187,7 @@ describe('ActivityForm', () => {
         key: KEY,
         body: {
           sport_code: 'run',
-          started_at: new Date(2026, 10, 20, 7, 30).toISOString(),
+          started_at: STARTED_AT,
           duration_seconds: 2700,
           distance_meters: 8200,
         },
@@ -150,7 +224,7 @@ describe('ActivityForm', () => {
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]?.body).toEqual({
       sport_code: 'yoga',
-      started_at: new Date(2026, 10, 20, 7, 30).toISOString(),
+      started_at: STARTED_AT,
       duration_seconds: 3600,
     });
   });
@@ -171,7 +245,7 @@ describe('ActivityForm', () => {
     expect(sent[0]?.body).toEqual({
       sport_code: 'other',
       sport_label: '<b>Pétanque</b>',
-      started_at: new Date(2026, 10, 20, 7, 30).toISOString(),
+      started_at: STARTED_AT,
       duration_seconds: 2700,
     });
   });

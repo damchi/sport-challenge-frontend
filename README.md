@@ -39,6 +39,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 **Activités**
 - ✅ V1 : saisie manuelle uniquement.
 - ✅ La durée est toujours demandée ; la distance seulement pour les sports qui produisent des km (pas pour le yoga).
+- ✅ L'heure de début d'une activité est saisie dans le fuseau des challenges en cours de l'utilisateur (choix entre leurs fuseaux s'ils diffèrent), dans celui de l'appareil s'il n'en a aucun ; le fuseau utilisé est nommé à côté du champ. Durée saisie en heures, minutes et secondes (décision du 2026-11-20).
 - ✅ Une activité est saisie **une seule fois** et compte dans tous les challenges de l'utilisateur dont la fenêtre la contient (l'interface l'indique après l'enregistrement). Elle devient non modifiable dès que sa semaine est terminée dans l'un d'eux.
 - ✅ Si le sport n'est pas proposé, l'utilisateur choisit « Autre » et écrit un libellé libre (2 à 40 caractères). ✅ Ce sport compte pour le temps ; la distance est facultative et, si elle est saisie, il compte aussi pour la distance (✅ coefficient suggéré ×1, modifiable par le créateur comme les autres ; README backend §2.5).
 - ✅ Impossible d'ajouter une activité après la fin du challenge.
