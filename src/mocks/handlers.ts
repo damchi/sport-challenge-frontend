@@ -119,6 +119,25 @@ export const handlers = [
     }
     return HttpResponse.json<ChallengeDetail>(mockChallengeDetail(summary));
   }),
+  // The challenge as the new participant sees it.
+  http.post('*/api/v1/challenges/:challengeId/join', ({ params }) => {
+    const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<ChallengeDetail>(
+      {
+        ...mockChallengeDetail(summary),
+        my_role: 'participant',
+        my_status: 'active',
+        can_join: false,
+      },
+      { status: 201 },
+    );
+  }),
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({

@@ -7,15 +7,18 @@
     "backHome": "Retour à l'accueil"
   },
   "errors": {
+    "already_participant": "Tu participes déjà à ce défi.",
     "app_unavailable": "L'application est momentanément indisponible.",
     "challenge_not_found": "Ce défi n'existe pas ou tu n'y as pas accès.",
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
     "not_found": "Cette page n'existe pas ou plus.",
+    "participation_abandoned": "Tu as abandonné ce défi : tu ne peux plus le rejoindre.",
     "profile_incomplete": "Indique d'abord ton prénom et ton nom dans ton profil.",
     "rate_limited": "Trop de requêtes. Réessaie dans un instant.",
     "rate_limited_delay": "Trop de requêtes. Réessaie dans {{retry_after}} s.",
+    "registration_closed": "Les inscriptions à ce défi sont closes depuis la fin de la semaine 1.",
     "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
     "unknown": "Une erreur est survenue. Réessaie.",
     "validation_failed": "Certaines informations sont invalides. Vérifie-les, puis réessaie."
@@ -308,6 +311,18 @@
     "notFound": {
       "title": "Défi introuvable",
       "message": "Ce défi n'existe pas ou tu n'y as pas accès."
+    },
+    "join": {
+      "button": "Rejoindre le défi",
+      "busy": "Inscription…",
+      "title": "Rejoindre « {{title}} » ?",
+      "message": "Tes activités (date, sport, durée, distance) seront visibles par les autres participants du défi.",
+      "confirm": "Rejoindre",
+      "cancel": "Annuler",
+      "closed": "Les inscriptions sont closes depuis la fin de la semaine 1, le {{date}}.",
+      "closed_zone": "Les inscriptions sont closes depuis la fin de la semaine 1, le {{date}}, {{zone}}.",
+      "participant": "Tu participes à ce défi.",
+      "abandoned": "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre."
     }
   },
   "sports": {
