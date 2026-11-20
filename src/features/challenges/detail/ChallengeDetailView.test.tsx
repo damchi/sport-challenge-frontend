@@ -290,6 +290,158 @@ describe('ChallengeDetailView', () => {
     });
   });
 
+  describe('abandoning', () => {
+    let abandons = 0;
+    const abandoned: ChallengeDetail = {
+      ...base,
+      my_role: 'abandoned',
+      my_status: 'abandoned',
+      can_join: false,
+    };
+
+    beforeEach(() => {
+      abandons = 0;
+      answer({});
+    });
+
+    function abandonAnswers(response: () => Response | Promise<Response>) {
+      server.use(
+        http.post('*/api/v1/challenges/:challengeId/abandon', () => {
+          abandons += 1;
+          return response();
+        }),
+      );
+    }
+
+    // An arrow, not a hoisted function, so that `summary` stays narrowed.
+    const openConfirmation = async () => {
+      renderAt(`/challenges/${id}`);
+      fireEvent.click(await screen.findByRole('button', { name: 'Abandonner le défi' }));
+      return screen.getByRole('dialog', { name: `Abandonner « ${summary.title} » ?` });
+    };
+
+    it('asks for a confirmation that says it is final and off the podium', async () => {
+      abandonAnswers(() => HttpResponse.json(abandoned));
+      const dialog = await openConfirmation();
+
+      expect(dialog).toHaveAccessibleDescription(
+        "C'est définitif : tu es éliminé des 3 catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
+      );
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(abandons).toBe(0);
+    });
+
+    it('abandons on confirmation and reloads the challenge, its lists and leaderboards', async () => {
+      abandonAnswers(() => HttpResponse.json(abandoned));
+      const before = requests;
+      const dialog = await openConfirmation();
+      answer(abandoned);
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
+
+      const outcome = await screen.findByRole('status');
+      expect(outcome).toHaveTextContent(
+        "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+      );
+      // The button is gone: the focus moves to the outcome.
+      expect(outcome).toHaveFocus();
+      expect(screen.getByText('A abandonné')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
+      expect(abandons).toBe(1);
+      // The lists and the leaderboards (same root key) reload too.
+      await vi.waitFor(() => expect(requests).toBeGreaterThan(before));
+    });
+
+    it('sends the abandon once when clicked again while it is sent', async () => {
+      let release: () => void = () => undefined;
+      const sent = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      abandonAnswers(async () => {
+        await sent;
+        return HttpResponse.json(abandoned);
+      });
+      const dialog = await openConfirmation();
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
+
+      const busy = await screen.findByRole('button', { name: 'Abandon…' });
+      expect(busy).toHaveAttribute('aria-disabled', 'true');
+      expect(busy).toBeEnabled();
+      fireEvent.click(busy);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(abandons).toBe(1);
+      answer(abandoned);
+      release();
+      expect(
+        await screen.findByText(
+          "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('says the challenge is over when the server refuses', async () => {
+      abandonAnswers(() =>
+        HttpResponse.json({ error: { code: 'challenge_ended', message: 'Raw' } }, { status: 422 }),
+      );
+      const dialog = await openConfirmation();
+      answer({ status: 'finished', current_week: null, week_ends_at: null });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Ce défi est terminé.');
+      // The reloaded challenge is finished: the button is gone, the focus
+      // moves to the message.
+      await vi.waitFor(() =>
+        expect(
+          screen.queryByRole('button', { name: 'Abandonner le défi' }),
+        ).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole('alert')).toHaveFocus();
+      expect(screen.queryByText('Raw')).not.toBeInTheDocument();
+    });
+
+    it('keeps the creator role of a creator who abandons', async () => {
+      const creator = { my_role: 'creator', my_status: 'active' } as const;
+      answer(creator);
+      abandonAnswers(() => HttpResponse.json({ ...base, ...creator, my_status: 'abandoned' }));
+      const dialog = await openConfirmation();
+      answer({ ...creator, my_status: 'abandoned' });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
+      );
+      expect(screen.getByText('Créateur')).toBeInTheDocument();
+      expect(screen.getByText('A abandonné')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
+    });
+
+    it('keeps the button to try again after a network error', async () => {
+      abandonAnswers(() => HttpResponse.error());
+      const dialog = await openConfirmation();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Connexion impossible.');
+      expect(screen.getByRole('button', { name: 'Abandonner le défi' })).toBeInTheDocument();
+    });
+
+    it.each([
+      ['a finished challenge', { status: 'finished' }],
+      ['an abandoned participation', { my_role: 'abandoned', my_status: 'abandoned' }],
+      ['a creator who does not take part', { my_role: 'creator', my_status: null }],
+    ] as const)('offers no abandon for %s', async (_, detail) => {
+      answer(detail);
+      renderAt(`/challenges/${id}`);
+
+      expect(await title()).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
+    });
+  });
+
   it('shows the categories read only, with their frozen settings', async () => {
     answer({});
     renderAt(`/challenges/${id}`);

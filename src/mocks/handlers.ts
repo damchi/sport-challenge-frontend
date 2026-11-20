@@ -138,6 +138,22 @@ export const handlers = [
       { status: 201 },
     );
   }),
+  // The challenge as the user sees it once abandoned: a creator keeps the role.
+  http.post('*/api/v1/challenges/:challengeId/abandon', ({ params }) => {
+    const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<ChallengeDetail>({
+      ...mockChallengeDetail(summary),
+      my_role: summary.my_role === 'creator' ? 'creator' : 'abandoned',
+      my_status: 'abandoned',
+      can_join: false,
+    });
+  }),
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({

@@ -94,3 +94,31 @@ export function useJoinChallenge(challengeId: string) {
       queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
   });
 }
+
+/**
+ * Abandons a challenge, for good: its page shows the answer, and the lists
+ * and the leaderboards reload without the user competing. Abandoning again
+ * succeeds and changes nothing. Its errors (challenge finished, not a
+ * participant) are shown by the page, not the global banner; the challenge
+ * then reloads, so the page shows the participation as it now is.
+ */
+export function useAbandonChallenge(challengeId: string) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async () => {
+      const { data } = await client.POST('/api/v1/challenges/{challengeId}/abandon', {
+        params: { path: { challengeId } },
+      });
+      if (!data) throw new Error('Empty challenge response');
+      return data;
+    },
+    onSuccess: (challenge) => {
+      queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+    },
+    onError: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
+  });
+}
