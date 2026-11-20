@@ -21,6 +21,8 @@ type ParticipantPage = components['schemas']['ParticipantPage'];
 type Leaderboard = components['schemas']['Leaderboard'];
 type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
 type ApiErrorBody = components['schemas']['Error'];
+type Activity = components['schemas']['Activity'];
+type ActivityCreate = components['schemas']['ActivityCreate'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
 export const mockMe: Me = {
@@ -299,6 +301,28 @@ export const handlers = [
       ],
     }),
   ),
+  // The recorded activity as the server answers it, from the request: it
+  // counts in no challenge, and the speed is computed.
+  http.post('*/api/v1/activities', async ({ request }) => {
+    const body = (await request.json()) as ActivityCreate;
+    const distance = body.distance_meters ?? null;
+    return HttpResponse.json<Activity>(
+      {
+        id: '00000000-0000-4000-8000-0000000000a1',
+        sport_code: body.sport_code,
+        sport_label: body.sport_label ?? null,
+        started_at: body.started_at,
+        duration_seconds: body.duration_seconds,
+        distance_meters: distance,
+        source: 'manual',
+        speed_mps: distance === null ? null : distance / body.duration_seconds,
+        pace_seconds_per_km: distance === null ? null : body.duration_seconds / (distance / 1000),
+        contributions: [],
+        locked: false,
+      },
+      { status: 201 },
+    );
+  }),
   // The created challenge as the server answers it, from the request.
   http.post('*/api/v1/challenges', async ({ request }) => {
     const body = (await request.json()) as ChallengeCreate;

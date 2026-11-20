@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
@@ -20,6 +20,8 @@ describe('routes', () => {
   it('renders the home page title on /', async () => {
     renderAt('/');
     expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
+    // Adding an activity belongs to the activities page.
+    expect(screen.queryByRole('link', { name: 'Ajouter une activité' })).not.toBeInTheDocument();
   });
 
   it('opens the challenge creation on /challenges/new', async () => {
@@ -28,6 +30,28 @@ describe('routes', () => {
       await screen.findByRole('heading', { level: 1, name: 'Créer un défi' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
+  });
+
+  it('opens the activity entry from the activities page, its first item', async () => {
+    renderAt('/activities');
+    const add = await screen.findByRole('link', { name: 'Ajouter une activité' });
+    expect(add).toHaveAttribute('href', '/activities/new');
+    // Before the rest of the page.
+    expect(
+      add.compareDocumentPosition(screen.getByText('Tes activités apparaîtront ici.')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    fireEvent.click(add);
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Ajouter une activité' }),
+    ).toBeInTheDocument();
+
+    // Back goes to the activities, not to the challenges.
+    fireEvent.click(screen.getByRole('link', { name: 'Mes activités' }));
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Mes activités' }),
+    ).toBeInTheDocument();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', () => {

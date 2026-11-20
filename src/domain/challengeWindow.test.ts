@@ -5,6 +5,8 @@ import {
   isStartDateInRange,
   isTimeZone,
   localDate,
+  toZonedDateTime,
+  zonedDateTime,
   zonedMidnight,
 } from './challengeWindow';
 
@@ -41,6 +43,37 @@ describe('addToDate', () => {
     expect(addToDate('2026-10-05', { days: 42 })).toBe('2026-11-16');
     expect(addToDate('2026-12-28', { days: 7 })).toBe('2027-01-04');
     expect(addToDate('2026-11-19', { years: 1 })).toBe('2027-11-19');
+  });
+});
+
+describe('zonedDateTime and toZonedDateTime', () => {
+  it('read and write a date and time in a time zone, whatever the device', () => {
+    expect(zonedDateTime('2026-11-20T07:30', 'America/Toronto')?.toISOString()).toBe(
+      '2026-11-20T12:30:00.000Z',
+    );
+    expect(zonedDateTime('2026-07-20T07:30', 'America/Toronto')?.toISOString()).toBe(
+      '2026-07-20T11:30:00.000Z',
+    );
+    expect(zonedDateTime('2026-11-20T07:30', 'Asia/Tokyo')?.toISOString()).toBe(
+      '2026-11-19T22:30:00.000Z',
+    );
+    expect(toZonedDateTime(new Date('2026-11-20T12:30:42Z'), 'America/Toronto')).toBe(
+      '2026-11-20T07:30',
+    );
+  });
+
+  it('refuses what is not a date and time there', () => {
+    expect(zonedDateTime('2026-02-30T07:30', 'America/Toronto')).toBeUndefined();
+    expect(zonedDateTime('2026-11-20', 'America/Toronto')).toBeUndefined();
+    // 8 March 2026, 2:30: skipped by the change to summer time in Montréal.
+    expect(zonedDateTime('2026-03-08T02:30', 'America/Toronto')).toBeUndefined();
+  });
+
+  it('takes the first of an hour that happens twice', () => {
+    // 1 November 2026, 1:30: before the change back to winter time (EDT).
+    expect(zonedDateTime('2026-11-01T01:30', 'America/Toronto')?.toISOString()).toBe(
+      '2026-11-01T05:30:00.000Z',
+    );
   });
 });
 
