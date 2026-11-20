@@ -7,7 +7,6 @@
     "backHome": "Retour à l'accueil"
   },
   "errors": {
-    "activity_not_found": "Cette activité n'existe plus : elle a été supprimée.",
     "activity_overlap": "Cette activité chevauche une autre de tes activités. Vérifie le début et la durée.",
     "already_participant": "Tu participes déjà à ce défi.",
     "app_unavailable": "L'application est momentanément indisponible.",

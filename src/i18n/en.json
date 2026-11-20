@@ -7,7 +7,6 @@
     "backHome": "Back to home"
   },
   "errors": {
-    "activity_not_found": "This activity no longer exists: it was deleted.",
     "activity_overlap": "This activity overlaps another of your activities. Check the start and the duration.",
     "already_participant": "You are already taking part in this challenge.",
     "app_unavailable": "The app is temporarily unavailable.",
