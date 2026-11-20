@@ -5,6 +5,7 @@ const TONES = {
   neutral: 'bg-segment text-muted',
   ok: 'bg-ok-bg text-ok-fg',
   out: 'bg-out-bg text-out-fg',
+  risk: 'bg-risk-bg text-risk-fg',
 } as const;
 
 interface StatusPillProps {

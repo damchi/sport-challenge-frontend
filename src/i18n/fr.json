@@ -378,9 +378,18 @@
     "rank_ordinal_other": "{{count}}e",
     "out": "Éliminés",
     "abandoned": "A abandonné",
+    "eliminated": "Éliminé en semaine {{week}}",
     "you": "Toi",
     "tied": "ex æquo",
     "equivalent": "{{distance}} éq. course",
-    "empty": "Personne n'est encore classé dans ce défi."
+    "empty": "Personne n'est encore classé dans ce défi.",
+    "elimination": {
+      "reached": "Objectif atteint",
+      "in_progress": "En cours",
+      "at_risk": "À risque",
+      "progress": "{{run}} sur {{minimum}} cette semaine",
+      "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
+      "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu cours plus que le minimum, ta distance devient la nouvelle base."
+    }
   }
 }

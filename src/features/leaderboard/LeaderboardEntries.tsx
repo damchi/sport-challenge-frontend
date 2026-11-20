@@ -6,6 +6,7 @@ import { Avatar } from '../../components/Avatar';
 import { displayName } from '../../domain/displayName';
 import { formatKm } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
+import { EliminationProgress } from './EliminationProgress';
 
 type CategoryType = Leaderboard['categories'][number]['type'];
 
@@ -26,6 +27,7 @@ interface RankedProps extends EntryProps {
 const BOX = 'rounded-row border';
 const BOX_ON = 'border-2 border-accent bg-accent-soft';
 const BOX_OFF = 'border-border bg-surface';
+const BOX_RISK = 'border-2 border-risk-border bg-surface';
 
 /** The entry as a link to the participant's activities, or as plain text. */
 function EntryBox({
@@ -87,33 +89,44 @@ export function PodiumCard({ entry, type, me, href, tied }: RankedProps) {
   );
 }
 
-/** A row of the full ranking: the rank written as text (1, 1, 3), as the server gives it. */
+/**
+ * A row of the full ranking: the rank written as text (1, 1, 3), as the
+ * server gives it, and in the run elimination the week of the participant.
+ */
 export function LeaderboardRow({ entry, type, me, href, tied }: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const value = useEntryValue(type, entry.value);
+  const atRisk = entry.elimination?.status === 'at_risk';
   return (
     <EntryBox
       href={href}
-      className={`flex min-h-14 items-center gap-3 px-3 py-2 ${BOX} ${me ? BOX_ON : BOX_OFF}`}
+      className={`flex min-h-14 items-center gap-3 px-3 py-2 ${BOX} ${me ? BOX_ON : atRisk ? BOX_RISK : BOX_OFF}`}
     >
       <span className="min-w-[22px] shrink-0 text-center font-bold text-muted tabular-nums">
         {entry.rank}
         {tied && <span className="sr-only"> {t('leaderboard.tied')}</span>}
       </span>
       <Avatar userId={entry.user.id} user={entry.user} />
-      <span className="min-w-0 flex-1 truncate font-semibold" title={name}>
-        {name}
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate font-semibold" title={name}>
+          {name}
+        </span>
+        {entry.elimination && <EliminationProgress progress={entry.elimination} />}
       </span>
       <span className="shrink-0 font-bold tabular-nums">{value}</span>
     </EntryBox>
   );
 }
 
-/** A participant who abandoned: dashed and muted, without a rank nor a value (design.md). */
-export function AbandonedRow({ entry, me, href }: EntryProps) {
+/**
+ * A participant out of the ranking, who abandoned or was eliminated from the
+ * run elimination: dashed and muted, without a rank nor a value (design.md).
+ */
+export function OutRow({ entry, me, href }: EntryProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
+  const week = entry.elimination?.eliminated_week;
   return (
     <EntryBox
       href={href}
@@ -123,7 +136,11 @@ export function AbandonedRow({ entry, me, href }: EntryProps) {
       <span className="min-w-0 flex-1 truncate font-semibold" title={name}>
         {name}
       </span>
-      <span className="shrink-0 text-sm">{t('leaderboard.abandoned')}</span>
+      <span className="shrink-0 text-sm">
+        {entry.abandoned || !week
+          ? t('leaderboard.abandoned')
+          : t('leaderboard.eliminated', { week })}
+      </span>
     </EntryBox>
   );
 }
