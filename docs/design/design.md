@@ -287,11 +287,12 @@ venir » en pointillés).
 ### Boutons
 
 - **Principal** : fond `--color-accent`, texte `--color-on-accent` 15 px / 700,
-  hauteur 52 px, rayon 26 px. Une seule action principale par écran
-  (« Ajouter une activité » en bouton flottant en bas à droite de la page
-  Activités en mobile ; à partir de `md`, même bouton de 48 px de haut à
-  droite du titre de page). ✅ Ce bouton est sur la page Activités, pas sur
-  l'accueil (décision du 2026-11-20).
+  hauteur 52 px, rayon 26 px. Une seule action principale par écran.
+  ✅ « Ajouter une activité » n'est ni un bouton flottant ni sur l'accueil :
+  c'est une tuile en tête de la page Activités, toujours première de la
+  liste, au style de la tuile « Créer un défi » (bordure pointillée, icône
+  `plus` et texte en accent, hauteur minimale 120 px) (décisions du
+  2026-11-20).
 - **Secondaire** : fond `--color-surface`, bordure `--color-border`, hauteur
   40–44 px (« Inviter » en mobile, « Inviter des amis » en web).
 - **Icône seule** : 44 × 44, rond.
@@ -347,7 +348,8 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `defi.png`,
      clôture ; cartes de défi (à risque en premier, puis en cours, puis
      éliminés) ; dernière activité (« Course · 8,2 km », date, contribution
      « +8,2 km » en accent) ; barre de navigation (le bouton flottant de la
-     maquette est sur la page Activités, décision du 2026-11-20).
+     maquette devient la tuile « Ajouter une activité » de la page
+     Activités, décision du 2026-11-20).
    - Web : barre en haut ; salutation + titre à gauche (« Ajouter une
      activité » est sur la page Activités) ; colonne principale = grille des cartes de défi
      (même ordre) terminée par « Créer un défi » ; colonne latérale = bandeau

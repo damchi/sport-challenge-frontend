@@ -3,15 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 /**
- * The main action of the activities page: floating at the bottom right of a
- * phone, above the navigation bar; beside the page title from `md`.
+ * Tile that opens the activity entry, first of the activities page: the
+ * same look as the "Create a challenge" tile of the home page.
  */
 export function AddActivityLink() {
   const { t } = useTranslation();
   return (
     <Link
       to="/activities/new"
-      className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 inline-flex h-13 items-center gap-2 rounded-full bg-accent px-6 text-button font-bold text-on-accent shadow-[0_6px_16px_rgba(22,24,29,.18)] md:static md:h-12 md:shadow-none"
+      className="flex min-h-30 items-center justify-center gap-2 rounded-card border-2 border-dashed border-border-dashed p-4 font-bold text-accent"
     >
       <Plus aria-hidden="true" size={22} strokeWidth={2} />
       {t('activityForm.title')}

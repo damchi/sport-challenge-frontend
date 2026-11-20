@@ -32,10 +32,15 @@ describe('routes', () => {
     expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
   });
 
-  it('opens the activity entry from the activities page', async () => {
+  it('opens the activity entry from the activities page, its first item', async () => {
     renderAt('/activities');
     const add = await screen.findByRole('link', { name: 'Ajouter une activité' });
     expect(add).toHaveAttribute('href', '/activities/new');
+    // Before the rest of the page.
+    expect(
+      add.compareDocumentPosition(screen.getByText('Tes activités apparaîtront ici.')) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     fireEvent.click(add);
 
     expect(
