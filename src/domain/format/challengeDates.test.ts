@@ -1,4 +1,5 @@
 import {
+  challengeDay,
   challengeInstant,
   challengePeriod,
   challengeWindowBounds,
@@ -108,5 +109,19 @@ describe('challengeInstant', () => {
 
   it('does not take the hour of another time zone', () => {
     expect(challengeInstant(weekEnd, 'Europe/Paris', 'fr')).toBe('lundi 23 novembre à 06 h');
+  });
+});
+
+describe('challengeDay', () => {
+  // 2 November 2026 at 03:00 UTC: still 1 November in Montréal.
+  const joinedAt = '2026-11-02T03:00:00Z';
+
+  it('writes the day in the challenge time zone', () => {
+    expect(challengeDay(joinedAt, 'America/Montreal', 'fr')).toBe('1 nov.');
+    expect(challengeDay(joinedAt, 'America/Montreal', 'en')).toBe('Nov 1');
+  });
+
+  it('does not take the day of another time zone', () => {
+    expect(challengeDay(joinedAt, 'Europe/Paris', 'fr')).toBe('2 nov.');
   });
 });

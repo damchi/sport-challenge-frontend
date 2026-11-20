@@ -16,6 +16,8 @@ type ChallengeSummary = components['schemas']['ChallengeSummary'];
 type ChallengePage = components['schemas']['ChallengePage'];
 type ChallengeDetail = components['schemas']['ChallengeDetail'];
 type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
+type Participant = components['schemas']['Participant'];
+type ParticipantPage = components['schemas']['ParticipantPage'];
 type ApiErrorBody = components['schemas']['Error'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
@@ -92,6 +94,23 @@ export function mockChallengeDetail(summary: ChallengeSummary): ChallengeDetail 
   };
 }
 
+const PSEUDOS = ['marie_92', 'jean.luc', 'coureuse', 'velo_max', 'sam'];
+
+/**
+ * Participants of every mock challenge, enough for two pages, in order of
+ * registration: the user first, some who abandoned, one known by their first
+ * and last names only, and one without any name.
+ */
+export const mockParticipants: Participant[] = Array.from({ length: 25 }, (_, index) => ({
+  user_id: index === 0 ? mockMe.id : `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+  pseudo: index === 7 || index === 11 ? null : `${PSEUDOS[index % PSEUDOS.length]}${index || ''}`,
+  first_name: index === 11 ? null : 'Alex',
+  last_name: index === 11 ? null : 'Gagnon',
+  avatar: null,
+  status: index % 4 === 3 ? 'abandoned' : 'active',
+  joined_at: new Date(Date.UTC(2026, 10, 2, 14 + index)).toISOString(),
+}));
+
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   // The cursor is the index of the next item; `mine` keeps the challenges
@@ -119,6 +138,19 @@ export const handlers = [
       return HttpResponse.json(body, { status: 404 });
     }
     return HttpResponse.json<ChallengeDetail>(mockChallengeDetail(summary));
+  }),
+  // The cursor is the index of the next participant.
+  http.get('*/api/v1/challenges/:challengeId/participants', ({ params, request }) => {
+    if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
+    const items = mockParticipants.slice(from, from + PAGE_SIZE);
+    const next = from + PAGE_SIZE < mockParticipants.length ? String(from + PAGE_SIZE) : null;
+    return HttpResponse.json<ParticipantPage>({ items, next_cursor: next });
   }),
   // The challenge with its new title and description; an empty description
   // removes it.

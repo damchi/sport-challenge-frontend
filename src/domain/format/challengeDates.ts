@@ -95,3 +95,8 @@ export function otherTimeZoneName(
 ): string | undefined {
   return timeZone === userTimeZone ? undefined : timeZoneName(timeZone, locale);
 }
+
+/** The day of an instant in the challenge's time zone: "3 nov.". */
+export function challengeDay(instant: string, timeZone: string, locale: string): string {
+  return dayFormat(locale, timeZone, false).format(new Date(instant));
+}

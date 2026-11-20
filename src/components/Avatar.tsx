@@ -21,14 +21,16 @@ interface AvatarProps {
   userId: string;
   user: NamedUser;
   size?: keyof typeof SIZES;
+  /** Grey, for a participant out of the challenge (design.md). */
+  muted?: boolean;
 }
 
 /** Round initials avatar. Decorative: the name is always written next to it. */
-export function Avatar({ userId, user, size = 'md' }: AvatarProps) {
+export function Avatar({ userId, user, size = 'md', muted = false }: AvatarProps) {
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${SIZES[size]} ${COLORS[avatarColor(userId)]}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${SIZES[size]} ${muted ? 'bg-segment text-muted' : COLORS[avatarColor(userId)]}`}
     >
       {avatarInitials(user) || '?'}
     </span>

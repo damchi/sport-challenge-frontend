@@ -347,6 +347,16 @@
       "cancel": "Annuler",
       "saved": "Titre et description enregistrés.",
       "serverInvalid": "Valeur refusée. Vérifie-la, puis réessaie."
+    },
+    "participants": {
+      "label": "Participants du défi",
+      "empty": "Personne n'a encore rejoint ce défi.",
+      "unnamed": "Membre sans nom",
+      "joined": "Inscription : {{date}}",
+      "status": {
+        "active": "Actif",
+        "abandoned": "A abandonné"
+      }
     }
   },
   "sports": {
