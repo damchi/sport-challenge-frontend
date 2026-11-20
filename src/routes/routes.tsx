@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router';
 import { ChallengeParticipants } from '../features/challenges/detail/ChallengeParticipants';
 import { ChallengeLeaderboard } from '../features/leaderboard/ChallengeLeaderboard';
 import { TabPending } from '../features/challenges/detail/TabPending';
+import { ParticipantActivities } from '../features/activities/ParticipantActivities';
 import { ActivitiesPage } from '../pages/ActivitiesPage';
 import { ActivityCreatePage } from '../pages/ActivityCreatePage';
 import { ActivityEditPage } from '../pages/ActivityEditPage';
@@ -54,8 +55,7 @@ export const routes: RouteObject[] = [
                     children: [
                       { index: true, element: <ChallengeLeaderboard /> },
                       { path: 'participants', element: <ChallengeParticipants /> },
-                      // Activities of a participant: ticket SC-WEB-037.
-                      { path: 'participants/:userId', element: <TabPending /> },
+                      { path: 'participants/:userId', element: <ParticipantActivities /> },
                       { path: 'activities', element: <TabPending /> },
                     ],
                   },

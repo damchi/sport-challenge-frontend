@@ -273,6 +273,27 @@ export const handlers = [
     }
     return HttpResponse.json<Leaderboard>(mockLeaderboard);
   }),
+  // Every participant shows the user's activities; the cursor is the index
+  // of the next one. Someone who never joined answers 404.
+  http.get(
+    '*/api/v1/challenges/:challengeId/participants/:userId/activities',
+    ({ params, request }) => {
+      if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
+        const body: ApiErrorBody = {
+          error: { code: 'challenge_not_found', message: 'Challenge not found' },
+        };
+        return HttpResponse.json(body, { status: 404 });
+      }
+      if (!mockParticipants.some((participant) => participant.user_id === params.userId)) {
+        const body: ApiErrorBody = { error: { code: 'not_found', message: 'Not found' } };
+        return HttpResponse.json(body, { status: 404 });
+      }
+      const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
+      const items = mockActivities.slice(from, from + PAGE_SIZE);
+      const next = from + PAGE_SIZE < mockActivities.length ? String(from + PAGE_SIZE) : null;
+      return HttpResponse.json<ActivityPage>({ items, next_cursor: next });
+    },
+  ),
   // The challenge with its new title and description; an empty description
   // removes it.
   http.patch('*/api/v1/challenges/:challengeId', async ({ params, request }) => {

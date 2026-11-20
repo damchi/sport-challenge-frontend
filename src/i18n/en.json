@@ -129,6 +129,12 @@
       "cancel": "Cancel"
     }
   },
+  "participantActivities": {
+    "label": "Participant's activities",
+    "empty": "No activity from this participant in this challenge yet.",
+    "notFound": "These activities aren't available.",
+    "toParticipants": "See the participants"
+  },
   "activityForm": {
     "title": "Add an activity",
     "fields": {

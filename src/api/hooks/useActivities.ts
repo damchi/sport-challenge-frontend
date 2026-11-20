@@ -30,6 +30,29 @@ export function useMyActivities() {
 }
 
 /**
+ * The activities of a participant started in the window of the challenge,
+ * most recent first, page by page (cursor). Only the participants and the
+ * creators of the challenge may see them: anyone else, or a user who never
+ * joined it, gets a 404.
+ */
+export function useParticipantActivities(challengeId: string, userId: string) {
+  const client = useApiClient();
+  return useInfiniteQuery({
+    queryKey: queryKeys.challenges.participantActivities(challengeId, userId),
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data } = await client.GET(
+        '/api/v1/challenges/{challengeId}/participants/{userId}/activities',
+        { params: { path: { challengeId, userId }, query: { cursor: pageParam } }, signal },
+      );
+      if (!data) throw new Error('Empty activity page');
+      return data;
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+}
+
+/**
  * Records an activity. The idempotency key, chosen once per entry, goes
  * with every attempt: a request sent again records nothing more. Once
  * recorded, the activities, the challenges and their leaderboards reload with

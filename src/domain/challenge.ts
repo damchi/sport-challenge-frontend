@@ -16,12 +16,17 @@ export function isChallengeStatus(value: unknown): value is ChallengeStatus {
   return CHALLENGE_STATUSES.includes(value as ChallengeStatus);
 }
 
-// A challenge id of the API: a UUID (any version), in lower or upper case.
-const CHALLENGE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// An id of the API (challenge, user): a UUID (any version), in lower or upper case.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Whether an address parameter can be a challenge id, checked before any request. */
 export function isChallengeId(value: unknown): value is string {
-  return typeof value === 'string' && CHALLENGE_ID.test(value);
+  return typeof value === 'string' && UUID.test(value);
+}
+
+/** Whether an address parameter can be a user id, checked before any request. */
+export function isUserId(value: unknown): value is string {
+  return typeof value === 'string' && UUID.test(value);
 }
 
 /**
