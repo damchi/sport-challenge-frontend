@@ -5,6 +5,10 @@
 export const queryKeys = {
   me: ['me'] as const,
   sports: ['sports'] as const,
+  activities: {
+    // Reloaded once an activity is recorded; the lists of activities nest under it.
+    all: ['activities'] as const,
+  },
   challenges: {
     all: ['challenges'] as const,
     list: (scope: string, status: string | undefined) =>

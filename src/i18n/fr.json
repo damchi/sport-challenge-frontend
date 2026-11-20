@@ -153,7 +153,14 @@
       "label": "Enregistrer l'activité",
       "busy": "Enregistrement…"
     },
-    "saved": "Activité enregistrée.",
+    "saved": {
+      "title": "Activité enregistrée.",
+      "counts_one": "Elle compte dans {{count}} défi :",
+      "counts_many": "Elle compte dans {{count}} défis :",
+      "counts_other": "Elle compte dans {{count}} défis :",
+      "none": "Elle ne compte encore dans aucun défi. Elle comptera dans un défi rejoint plus tard, si elle a lieu pendant ses dates.",
+      "leaderboard": "Voir le classement"
+    },
     "back": "Retour à mes activités"
   },
   "settings": {
