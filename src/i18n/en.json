@@ -82,9 +82,12 @@
       "missing": "Not provided"
     },
     "pseudoForm": {
-      "save": "Save",
       "saved": "Nickname saved.",
       "removed": "Nickname removed: others see your first and last name."
+    },
+    "save": "Save",
+    "namesForm": {
+      "saved": "First and last name saved."
     }
   },
   "nav": {

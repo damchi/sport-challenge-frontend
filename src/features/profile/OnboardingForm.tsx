@@ -1,13 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm, useWatch, type UseFormRegister } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
 import { displayName } from '../../domain/displayName';
 import { profileSchema, profileUpdate, type ProfileInput } from '../../domain/schemas/profile';
-import { fieldErrors, NAME_FIELDS } from './profileErrors';
+import { NameInput } from './NameInput';
+import { fieldErrors } from './profileErrors';
 
 /**
  * First profile: first and last name (required), pseudo (optional, shown
@@ -77,14 +78,14 @@ export function OnboardingForm({ me }: { me: Me }) {
           label={t('onboarding.firstName')}
           autoComplete="given-name"
           message={errors.first_name?.message}
-          register={register}
+          registration={register('first_name')}
         />
         <NameInput
           name="last_name"
           label={t('onboarding.lastName')}
           autoComplete="family-name"
           message={errors.last_name?.message}
-          register={register}
+          registration={register('last_name')}
         />
 
         <div>
@@ -145,44 +146,5 @@ export function OnboardingForm({ me }: { me: Me }) {
         {isSubmitting ? t('onboarding.saving') : t('onboarding.submit')}
       </button>
     </form>
-  );
-}
-
-/** A required first or last name, its error read with the field. */
-function NameInput({
-  name,
-  label,
-  autoComplete,
-  message,
-  register,
-}: {
-  name: (typeof NAME_FIELDS)[number];
-  label: string;
-  autoComplete: string;
-  message: string | undefined;
-  register: UseFormRegister<ProfileInput>;
-}) {
-  const { t } = useTranslation();
-  const errorId = `${name}-error`;
-  return (
-    <div>
-      <label htmlFor={name} className="block text-sm font-semibold">
-        {label}
-      </label>
-      <input
-        id={name}
-        autoComplete={autoComplete}
-        aria-required="true"
-        aria-invalid={message ? true : undefined}
-        aria-describedby={message ? errorId : undefined}
-        className="mt-2 h-11 w-full rounded-row border border-border bg-surface px-3 text-ink"
-        {...register(name)}
-      />
-      {message && (
-        <p id={errorId} role="alert" className="mt-1 text-sm text-risk-fg">
-          {t(message)}
-        </p>
-      )}
-    </div>
   );
 }

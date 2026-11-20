@@ -159,7 +159,7 @@ frontend/
 | Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → catégories (incrément X, coefficients) → récapitulatif et envoi |
 | Challenge | Classement par catégorie (onglets), statut live (« objectif atteint », « à risque »), participants, activités, badges du challenge, infos, invitations |
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
-| Profil | Prénom, nom et e-mail (lecture seule), pseudo modifiable, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
+| Profil | Prénom et nom modifiables, e-mail (lecture seule), pseudo modifiable, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
 | Badges (créateur) | Création et gestion des badges d'un challenge : nom, description, assistant de condition |
 | V2 | Connexion aux marques sportives (Strava, Polar, Garmin, Coros) |
 

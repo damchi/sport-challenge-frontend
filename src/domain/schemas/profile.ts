@@ -39,6 +39,11 @@ export const profileSchema = z.object({
 
 export type ProfileInput = z.infer<typeof profileSchema>;
 
+/** The first and last name, changed from the profile page. */
+export const namesSchema = z.object({ first_name: personName, last_name: personName });
+
+export type NamesInput = z.infer<typeof namesSchema>;
+
 /** The pseudo alone, changed or removed from the profile page. */
 export const pseudoSchema = z.object({ pseudo });
 

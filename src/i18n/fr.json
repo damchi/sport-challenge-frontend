@@ -82,9 +82,12 @@
       "missing": "Non renseigné"
     },
     "pseudoForm": {
-      "save": "Enregistrer",
       "saved": "Pseudo enregistré.",
       "removed": "Pseudo retiré : les autres voient ton prénom et ton nom."
+    },
+    "save": "Enregistrer",
+    "namesForm": {
+      "saved": "Prénom et nom enregistrés."
     }
   },
   "nav": {

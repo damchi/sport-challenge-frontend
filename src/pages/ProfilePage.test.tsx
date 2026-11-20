@@ -26,32 +26,98 @@ async function identity() {
 }
 
 describe('ProfilePage', () => {
-  it('shows the names and the e-mail as the server gives them, read-only', async () => {
+  async function change(label: string, value: string) {
+    const input = await screen.findByLabelText(label);
+    fireEvent.change(input, { target: { value } });
+    fireEvent.blur(input);
+  }
+
+  // The names, then the pseudo, each have their own save button.
+  function saveButton(index: number): HTMLElement {
+    const button = screen.getAllByRole('button', { name: 'Enregistrer' })[index];
+    if (!button) throw new Error(`No save button ${index}`);
+    return button;
+  }
+  const saveNames = () => saveButton(0);
+  const savePseudo = () => saveButton(1);
+
+  it('shows the names to change and the e-mail read-only', async () => {
     renderProfile();
     const section = await identity();
 
-    expect(section.getByText('Prénom').nextElementSibling).toHaveTextContent('Marie');
-    expect(section.getByText('Nom').nextElementSibling).toHaveTextContent('Tremblay');
+    expect(section.getByLabelText('Prénom')).toHaveValue('Marie');
+    expect(section.getByLabelText('Nom')).toHaveValue('Tremblay');
     expect(section.getByText('E-mail').nextElementSibling).toHaveTextContent('marie@example.com');
-    expect(section.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(section.queryByDisplayValue('marie@example.com')).not.toBeInTheDocument();
   });
 
-  it('says a value the server does not have is missing', async () => {
+  it('says an e-mail the server does not have is missing', async () => {
     server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, email: null })));
     renderProfile();
     const section = await identity();
 
     expect(section.getByText('E-mail').nextElementSibling).toHaveTextContent('Non renseigné');
-    expect(section.getByText('Prénom').nextElementSibling).toHaveTextContent('Marie');
+  });
+
+  describe('names', () => {
+    it('changes the first and last name', async () => {
+      let sent: unknown;
+      server.use(
+        http.patch('*/api/v1/me', async ({ request }) => {
+          sent = await request.json();
+          return HttpResponse.json({ ...mockMe, first_name: 'Marie-Ève', last_name: 'Gagnon' });
+        }),
+      );
+      renderProfile();
+
+      await screen.findByLabelText('Prénom');
+      expect(saveNames()).toBeDisabled();
+      await change('Prénom', ' Marie-Ève ');
+      await change('Nom', 'Gagnon');
+      fireEvent.click(saveNames());
+
+      expect(await screen.findByText('Prénom et nom enregistrés.')).toHaveAttribute(
+        'role',
+        'status',
+      );
+      expect(sent).toEqual({ first_name: 'Marie-Ève', last_name: 'Gagnon' });
+    });
+
+    it('keeps them required', async () => {
+      renderProfile();
+
+      await change('Nom', '');
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Ce champ est obligatoire.');
+      expect(screen.getByLabelText('Nom')).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('shows a name the server refuses under its field', async () => {
+      server.use(
+        http.patch('*/api/v1/me', () =>
+          HttpResponse.json(
+            {
+              error: {
+                code: 'validation_failed',
+                message: 'bad',
+                params: { fields: 'first_name' },
+              },
+            },
+            { status: 400 },
+          ),
+        ),
+      );
+      renderProfile();
+
+      await change('Prénom', 'Mariette');
+      fireEvent.click(saveNames());
+
+      expect(await screen.findByRole('alert')).toHaveTextContent("Ce nom n'est pas accepté.");
+      expect(screen.getByLabelText('Prénom')).toHaveFocus();
+    });
   });
 
   describe('pseudo', () => {
-    async function changePseudo(label: string, value: string) {
-      const input = await screen.findByLabelText(label);
-      fireEvent.change(input, { target: { value } });
-      fireEvent.blur(input);
-    }
-
     it('changes the pseudo', async () => {
       let sent: unknown;
       server.use(
@@ -63,9 +129,9 @@ describe('ProfilePage', () => {
       renderProfile();
 
       expect(await screen.findByLabelText('Pseudo (facultatif)')).toHaveValue('marie_92');
-      expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
-      await changePseudo('Pseudo (facultatif)', ' jean.luc ');
-      fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+      expect(savePseudo()).toBeDisabled();
+      await change('Pseudo (facultatif)', ' jean.luc ');
+      fireEvent.click(savePseudo());
 
       expect(await screen.findByText('Pseudo enregistré.')).toHaveAttribute('role', 'status');
       expect(sent).toEqual({ pseudo: 'jean.luc' });
@@ -81,8 +147,8 @@ describe('ProfilePage', () => {
       );
       renderProfile();
 
-      await changePseudo('Pseudo (facultatif)', '  ');
-      fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+      await change('Pseudo (facultatif)', '  ');
+      fireEvent.click(savePseudo());
 
       expect(
         await screen.findByText('Pseudo retiré : les autres voient ton prénom et ton nom.'),
@@ -103,8 +169,8 @@ describe('ProfilePage', () => {
       );
       renderProfile();
 
-      await changePseudo('Pseudo (facultatif)', 'jean.luc');
-      fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+      await change('Pseudo (facultatif)', 'jean.luc');
+      fireEvent.click(savePseudo());
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
       expect(screen.getByLabelText('Pseudo (facultatif)')).toHaveAttribute('aria-invalid', 'true');
@@ -114,10 +180,10 @@ describe('ProfilePage', () => {
       server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, pseudo: null })));
       renderProfile();
 
-      await changePseudo('Pseudo (facultatif)', '');
+      await change('Pseudo (facultatif)', '');
 
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Enregistrer' })).toBeDisabled();
+      expect(savePseudo()).toBeDisabled();
     });
   });
 });

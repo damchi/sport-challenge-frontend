@@ -650,19 +650,19 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 
 **Origine des données**
 - **E-mail** : vient du claim `email` du jeton Auth0 ; le backend le lit et le renvoie dans `GET /me`. Il n'est ni saisi ni modifiable dans l'app, et reste **privé** : seul son titulaire le voit.
-- **Prénom et nom** : saisis par l'utilisateur à l'onboarding ; **obligatoires**. Le serveur décide si le profil est complet (`profile_complete`) ; l'app ne recalcule pas cette règle.
+- **Prénom et nom** : saisis par l'utilisateur à l'onboarding, modifiables ensuite sur `/me` ; **obligatoires**. Le serveur décide si le profil est complet (`profile_complete`) ; l'app ne recalcule pas cette règle.
 - **Pseudo** : **facultatif** ; il peut être choisi, changé ou retiré (onboarding ou `/me`) ; retiré, il est envoyé à `null`. Nom affiché aux autres : le pseudo s'il est renseigné, sinon le prénom et le nom.
 
 **Critères d'acceptation**
 - [ ] Onboarding (`/onboarding`) : champs **Prénom** et **Nom** obligatoires, **Pseudo** facultatif (non envoyé s'il est vide), envoyés par `PATCH /me` ; validation en ligne avec un schéma de `src/domain/schemas` reprenant les règles du contrat (longueurs, caractères), messages traduits ; erreurs de l'API traduites par leur code.
 - [ ] Un utilisateur déjà inscrit sans prénom ni nom repasse par l'onboarding si `profile_complete` est faux (garde existante `ProfileGate`), avec son pseudo pré-rempli.
-- [ ] Page `/me` : prénom, nom et e-mail affichés en lecture seule, tels que `GET /me` les renvoie ; une valeur absente affiche une mention traduite (« non renseigné »), jamais un champ vide ni une valeur inventée.
+- [ ] Page `/me` : prénom et nom modifiables (mêmes règles que l'onboarding, jamais retirés), e-mail en lecture seule, tels que `GET /me` les renvoie ; une valeur absente affiche une mention traduite (« non renseigné »), jamais un champ vide ni une valeur inventée.
 - [ ] Page `/me` : pseudo modifiable (mêmes règles et mêmes erreurs que l'onboarding), facultatif ; le vider le retire.
 - [ ] Nom affiché d'un utilisateur : le pseudo s'il existe, sinon le prénom et le nom (fonction pure de `src/domain`, initiales de l'avatar comprises) ; l'e-mail n'apparaît que sur la page `/me` de son titulaire.
 - [ ] Ni le nom, ni le prénom, ni l'e-mail ne partent dans les journaux, les analytics ou Sentry.
 - [ ] Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`).
 
-**Tests** : onboarding (noms vides refusés, pseudo vide non envoyé, valeurs valides envoyées, erreur de l'API), utilisateur existant sans nom renvoyé à l'onboarding, profil (valeurs présentes et absentes, pseudo modifié, pris, retiré), nom affiché (pseudo, sinon prénom et nom).
+**Tests** : onboarding (noms vides refusés, pseudo vide non envoyé, valeurs valides envoyées, erreur de l'API), utilisateur existant sans nom renvoyé à l'onboarding, profil (noms modifiés, refusés, e-mail présent et absent, pseudo modifié, pris, retiré), nom affiché (pseudo, sinon prénom et nom).
 **Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`, `spec-guardian`.
 **Commit** : `feat(profile): collect name at onboarding and show it with the email`
 **Statut** : À faire

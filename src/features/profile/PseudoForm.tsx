@@ -80,7 +80,7 @@ export function PseudoForm({ me }: { me: Me }) {
           aria-busy={isSubmitting}
           className="h-11 rounded-full bg-accent px-4 text-sm font-bold text-on-accent disabled:opacity-60"
         >
-          {isSubmitting ? t('onboarding.saving') : t('profile.pseudoForm.save')}
+          {isSubmitting ? t('onboarding.saving') : t('profile.save')}
         </button>
       </div>
       <p id="profile-pseudo-hint" className="mt-1 text-sm text-muted">
