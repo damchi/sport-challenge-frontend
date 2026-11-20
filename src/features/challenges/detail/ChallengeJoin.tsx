@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../../api/errors';
 import { useJoinChallenge, type ChallengeDetail } from '../../../api/hooks/useChallenges';
@@ -16,6 +16,8 @@ export function ChallengeJoin({ challenge }: { challenge: ChallengeDetail }) {
   const { t, i18n } = useTranslation();
   const join = useJoinChallenge(challenge.id);
   const [confirming, setConfirming] = useState(false);
+  // The outcome takes the focus once, not again on each refresh.
+  const outcomeFocused = useRef(false);
   const locale = i18n.resolvedLanguage ?? 'fr';
   const zone = otherTimeZoneName(
     challenge.timezone,
@@ -35,10 +37,21 @@ export function ChallengeJoin({ challenge }: { challenge: ChallengeDetail }) {
         : challenge.my_status === 'abandoned'
           ? t('challengeDetail.join.abandoned')
           : t('challengeDetail.join.closed', deadline);
-    // After a refused join, the reloaded challenge says why: it is announced
-    // in place of the error, which would repeat it.
+    // After a join, the button is gone: the focus moves to the outcome, which
+    // is announced. A refusal is said by the reloaded challenge's reason, in
+    // place of the error, which would repeat it.
+    const answered = join.isSuccess || join.isError;
     return (
-      <p role={join.isError ? 'alert' : undefined} className="mt-4 text-sm text-muted">
+      <p
+        ref={(element) => {
+          if (!answered || !element || outcomeFocused.current) return;
+          outcomeFocused.current = true;
+          element.focus();
+        }}
+        tabIndex={answered ? -1 : undefined}
+        role={join.isError ? 'alert' : join.isSuccess ? 'status' : undefined}
+        className="mt-4 text-sm text-muted"
+      >
         {reason}
       </p>
     );

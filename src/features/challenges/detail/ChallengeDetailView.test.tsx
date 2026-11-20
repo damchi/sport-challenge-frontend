@@ -154,8 +154,8 @@ describe('ChallengeDetailView', () => {
       'Les inscriptions sont closes depuis la fin de la semaine 1, le lundi 9 novembre à 00 h.',
     ],
   ] as const)('explains why a %s (%s) cannot join', async (role, status, reason) => {
-    // can_join decides, not the dates: week 1 is still running here.
-    answer({ my_role: role, my_status: status, can_join: false, current_week: 1 });
+    // can_join and my_status decide: the page compares no date.
+    answer({ my_role: role, my_status: status, can_join: false });
     renderAt(`/challenges/${id}`);
 
     expect(await title()).toBeInTheDocument();
@@ -214,7 +214,10 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
 
-      expect(await screen.findByText('Tu participes à ce défi.')).toBeInTheDocument();
+      const outcome = await screen.findByRole('status');
+      expect(outcome).toHaveTextContent('Tu participes à ce défi.');
+      // The button is gone: the focus moves to the outcome.
+      expect(outcome).toHaveFocus();
       expect(screen.getByText('Participant')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Rejoindre le défi' })).not.toBeInTheDocument();
       expect(joins).toBe(1);
