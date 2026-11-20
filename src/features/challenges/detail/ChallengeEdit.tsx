@@ -4,13 +4,14 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../../api/errors';
 import { useUpdateChallenge, type ChallengeDetail } from '../../../api/hooks/useChallenges';
-import { challengePeriod } from '../../../domain/format/challengeDates';
+import { challengePeriod, otherTimeZoneName } from '../../../domain/format/challengeDates';
 import {
   challengeUpdateSchema,
   type ChallengeUpdateInput,
 } from '../../../domain/schemas/challenge';
 import { FieldError } from '../create/FieldError';
 import { describedBy, inputClass } from '../create/fields';
+import { CATEGORY_NAMES } from './categoryNames';
 
 const EDIT_FIELDS = ['title', 'description'] as const;
 
@@ -21,7 +22,8 @@ function isEditField(field: string): field is (typeof EDIT_FIELDS)[number] {
 /**
  * Edition of a challenge's title and description, for its creators (the
  * server's role), at any time. The rest is frozen at creation: the form says
- * so and shows the dates and the visibility read only. Once saved or
+ * so and shows the dates (with the challenge's zone when the user's differs),
+ * the visibility and the categories read only. Once saved or
  * cancelled, the focus comes back to the button that opened it.
  */
 export function ChallengeEdit({ challenge }: { challenge: ChallengeDetail }) {
@@ -99,6 +101,16 @@ function ChallengeEditForm({
     challenge.ends_at,
     challenge.timezone,
     locale,
+  );
+  const zone = otherTimeZoneName(
+    challenge.timezone,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    locale,
+  );
+  const categories = new Intl.ListFormat(locale, { type: 'conjunction' }).format(
+    [...challenge.categories]
+      .sort((a, b) => a.position - b.position)
+      .map((category) => t(CATEGORY_NAMES[category.type])),
   );
 
   useEffect(() => {
@@ -186,9 +198,16 @@ function ChallengeEditForm({
         <p className="text-sm text-muted">{t('challengeDetail.edit.frozen')}</p>
         <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="font-semibold">{t('challengeDetail.edit.dates')}</dt>
-          <dd>{t('challenges.period', period)}</dd>
+          <dd>
+            {t('challenges.period', period)}
+            {zone && (
+              <span className="block text-muted">{t('challengeDetail.timeZone', { zone })}</span>
+            )}
+          </dd>
           <dt className="font-semibold">{t('challengeDetail.edit.visibility')}</dt>
           <dd>{t(`challenges.visibility.${challenge.visibility}`)}</dd>
+          <dt className="font-semibold">{t('challengeDetail.edit.categories')}</dt>
+          <dd>{categories}</dd>
         </dl>
       </div>
 

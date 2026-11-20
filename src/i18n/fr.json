@@ -340,6 +340,7 @@
       "frozen": "Les dates, la visibilité et les catégories sont fixées à la création : elles ne changent plus. Seuls le titre et la description peuvent être modifiés.",
       "dates": "Dates",
       "visibility": "Visibilité",
+      "categories": "Catégories",
       "descriptionHint": "2000 caractères au plus. Vide, elle est retirée du défi.",
       "save": "Enregistrer",
       "saving": "Enregistrement…",

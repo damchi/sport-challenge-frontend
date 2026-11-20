@@ -338,6 +338,7 @@
       "frozen": "Dates, visibility and categories are set at creation: they no longer change. Only the title and description can be edited.",
       "dates": "Dates",
       "visibility": "Visibility",
+      "categories": "Categories",
       "descriptionHint": "2000 characters at most. Left empty, it is removed from the challenge.",
       "save": "Save",
       "saving": "Saving…",

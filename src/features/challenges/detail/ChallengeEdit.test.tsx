@@ -46,10 +46,10 @@ function updateAnswers(response: (update: ChallengeUpdate) => Response) {
   );
 }
 
-function renderChallenge() {
+function renderChallenge(deviceTimeZone = 'America/Montreal') {
   vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
     ...new Intl.DateTimeFormat('fr').resolvedOptions(),
-    timeZone: 'America/Montreal',
+    timeZone: deviceTimeZone,
   });
   const router = createMemoryRouter(routes, { initialEntries: [`/challenges/${id}`] });
   render(
@@ -117,6 +117,19 @@ describe('ChallengeEdit', () => {
     ).toBeInTheDocument();
     expect(within(form).getByText('Du 2 nov. au 29 nov.')).toBeInTheDocument();
     expect(within(form).getByText('Privé')).toBeInTheDocument();
+    expect(
+      within(form).getByText('Temps cumulé, Distance cumulée et Course avec élimination'),
+    ).toBeInTheDocument();
+    // Same zone as the device: not named.
+    expect(within(form).queryByText(/Fuseau du défi/)).not.toBeInTheDocument();
+  });
+
+  it('names the challenge time zone by its dates when the device is elsewhere', async () => {
+    renderChallenge('Europe/Paris');
+    fireEvent.click(await screen.findByRole('button', { name: OPEN }));
+    const form = screen.getByRole('form', { name: 'Modifier le défi' });
+
+    expect(within(form).getByText(/^Fuseau du défi : /)).toBeInTheDocument();
   });
 
   it('checks the fields as they are filled in and sends nothing invalid', async () => {
