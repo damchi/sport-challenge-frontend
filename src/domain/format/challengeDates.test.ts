@@ -1,6 +1,7 @@
 import {
   challengeDay,
   challengeInstant,
+  challengeLastDay,
   challengeTime,
   challengePeriod,
   challengeWindowBounds,
@@ -41,6 +42,15 @@ describe('challengePeriod', () => {
       'fr',
     );
     expect(period).toEqual({ start: '14 déc. 2026', end: '10 janv. 2027' });
+  });
+});
+
+describe('challengeLastDay', () => {
+  it('gives the last day with its year, in the challenge time zone', () => {
+    expect(challengeLastDay(endsAt, 'America/Montreal', 'fr')).toBe('30 nov. 2026');
+    expect(challengeLastDay(endsAt, 'America/Montreal', 'en')).toBe('Nov 30, 2026');
+    // In Paris the excluded end is already the next day.
+    expect(challengeLastDay(endsAt, 'Europe/Paris', 'fr')).toBe('1 déc. 2026');
   });
 });
 

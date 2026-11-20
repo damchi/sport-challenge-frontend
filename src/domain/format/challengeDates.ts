@@ -38,6 +38,14 @@ export function challengePeriod(
 }
 
 /**
+ * Last day of a challenge, with its year, in its time zone ("29 nov. 2026"):
+ * a finished challenge is read long after its end.
+ */
+export function challengeLastDay(endsAt: string, timeZone: string, locale: string): string {
+  return dayFormat(locale, timeZone, true).format(lastInstant(endsAt));
+}
+
+/**
  * Bounds of a challenge window as written in its time zone, to the hour
  * ("lundi 5 octobre à 00 h"): the end is the excluded instant, the start of
  * the day after the last one. The year shows when the two differ.
