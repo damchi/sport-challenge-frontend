@@ -220,7 +220,10 @@ describe('ActivityForm', () => {
         },
       },
     ]);
-    expect(screen.getByRole('link', { name: 'Retour à mes défis' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Retour à mes activités' })).toHaveAttribute(
+      'href',
+      '/activities',
+    );
   });
 
   it('asks for the distance of a sport with km', async () => {

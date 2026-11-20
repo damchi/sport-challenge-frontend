@@ -178,7 +178,10 @@ function ActivityFormFields({
         <p ref={(element) => element?.focus()} tabIndex={-1} role="status" className="font-bold">
           {t('activityForm.saved')}
         </p>
-        <Link to="/" className="inline-flex h-11 items-center font-semibold text-accent underline">
+        <Link
+          to="/activities"
+          className="inline-flex h-11 items-center font-semibold text-accent underline"
+        >
           {t('activityForm.back')}
         </Link>
       </div>
