@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { getConfig } from './lib/config';
+import { reportError, startErrorTracking } from './lib/errorTracking';
 import './styles/index.css';
 import i18n from 'i18next';
 import { startLanguage } from './lib/language';
@@ -15,7 +16,16 @@ if (!rootElement) {
 // Before anything renders: the error screen below is translated too.
 startLanguage();
 startTheme();
-const root = createRoot(rootElement);
+// React's own error hooks: a crash of the tree, or an error an error boundary
+// caught. Setting them replaces React's console output, kept here.
+function onReactError(error: unknown): void {
+  console.error(error);
+  reportError(error);
+}
+const root = createRoot(rootElement, {
+  onUncaughtError: onReactError,
+  onCaughtError: onReactError,
+});
 
 // Development mocks, before the first request; the DEV guard removes them, and
 // msw, from the production bundle.
@@ -27,7 +37,9 @@ async function startMocks(): Promise<void> {
 }
 
 try {
-  getConfig();
+  const config = getConfig();
+  // Not awaited: the SDK loads apart and the errors raised meanwhile wait for it.
+  void startErrorTracking({ dsn: config.sentryDsn, dev: import.meta.env.DEV });
   await startMocks();
   root.render(
     <StrictMode>

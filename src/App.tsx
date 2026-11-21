@@ -17,6 +17,7 @@ import {
   type SessionEnd,
 } from './lib/auth/useHandleLostSession';
 import { getConfig } from './lib/config';
+import { reportError } from './lib/errorTracking';
 import { GlobalErrorContext } from './lib/globalError';
 import { SessionEndPage } from './pages/SessionEndPage';
 import { routes } from './routes/routes';
@@ -43,6 +44,7 @@ function AppContent() {
     createQueryClient({
       onAuthError: (error) => setAuthError((last) => ({ id: (last?.id ?? 0) + 1, error })),
       onError: setGlobalError,
+      onFailure: reportError,
     }),
   );
   // The global error goes with the user's data.

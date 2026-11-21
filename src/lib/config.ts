@@ -12,6 +12,8 @@ export interface Config {
     /** Identifier of the backend API: the access token is issued for it. */
     audience: string;
   };
+  /** Sentry DSN: public, it only lets the app send errors. Absent: no error tracking. */
+  sentryDsn: string | undefined;
 }
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
@@ -49,6 +51,15 @@ export function readConfig(env: Record<string, unknown>): Config {
     throw new Error(`VITE_AUTH0_DOMAIN must be a host name, without protocol: ${domain}`);
   }
 
+  const sentryDsn = env.VITE_SENTRY_DSN;
+  if (sentryDsn !== undefined && typeof sentryDsn !== 'string') {
+    throw new Error('VITE_SENTRY_DSN must be a string');
+  }
+  // Errors travel to this address: https only.
+  if (sentryDsn && !sentryDsn.startsWith('https://')) {
+    throw new Error(`VITE_SENTRY_DSN must be an https address: ${sentryDsn}`);
+  }
+
   return {
     apiUrl: apiUrl.replace(/\/+$/, ''),
     auth0: {
@@ -56,6 +67,7 @@ export function readConfig(env: Record<string, unknown>): Config {
       clientId: required(env, 'VITE_AUTH0_CLIENT_ID'),
       audience: required(env, 'VITE_AUTH0_AUDIENCE'),
     },
+    sentryDsn: sentryDsn || undefined,
   };
 }
 
