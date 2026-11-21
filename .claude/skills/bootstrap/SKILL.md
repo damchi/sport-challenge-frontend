@@ -44,7 +44,7 @@ Assistant en 4 étapes : infos (titre, description, visibilité, les participant
 
 ## Phase 6 — Détail et classement
 
-Un onglet par catégorie, podium, statuts de l'élimination, ex aequo, « a abandonné », rafraîchissement au retour dans l'app et par tirer-pour-rafraîchir, rejoindre et abandonner. Lis `challenge-ui-rules`.
+Un onglet par catégorie, podium, statuts de l'élimination, ex aequo, « a abandonné », rafraîchissement à l'ouverture et au retour dans l'app (ni bouton ni geste maison), rejoindre et abandonner. Lis `challenge-ui-rules`.
 
 ## Phase 7 — Saisie d'activité
 
