@@ -57,9 +57,8 @@ test('the abandon dialog has no serious accessibility violation', async ({ page 
   expect(await seriousViolations(page)).toEqual([]);
 });
 
-// Text enlarged to 200 % (the browser's text size setting): every screen still fits
-// the width, nothing pushed off the side. (the browser's text size): every screen still fits
-// the width, nothing pushed off the side.
+// Text enlarged to 200 % (the browser's text size setting): every screen
+// still fits the width, and each control stays whole within it.
 for (const screen of SCREENS) {
   test(`${screen.name} keeps its content with text at 200 %`, async ({ page }) => {
     await signInAt(page, screen.path);
@@ -74,5 +73,18 @@ for (const screen of SCREENS) {
       viewport: html.clientWidth,
     }));
     expect(width.content).toBeLessThanOrEqual(width.viewport);
+    const cut = await page.locator('main').evaluate((main) =>
+      Array.from(main.querySelectorAll('a, button, input, select, textarea, label'))
+        // A row that scrolls sideways on purpose (the filters) keeps its controls in reach.
+        .filter((control) => !control.parentElement?.closest('.overflow-x-auto'))
+        .filter((control) => {
+          const box = control.getBoundingClientRect();
+          return (
+            box.width > 0 && (box.left < 0 || box.right > document.documentElement.clientWidth)
+          );
+        })
+        .map((control) => control.textContent?.trim() || control.id),
+    );
+    expect(cut).toEqual([]);
   });
 }
