@@ -36,7 +36,7 @@ Les tickets sont des **issues GitHub** (importées depuis `TASKS.md`). Le statut
 - Suis les critères d'acceptation et suis leur avancement pendant le travail.
 - Données : uniquement par les hooks de `src/api`. Si une route ou un champ manque dans le contrat, utilise le skill `api-client-sync` et signale-le ; ne contourne pas.
 - Textes : skill `i18n-and-formats` (clés FR **et** EN, aucune chaîne en dur). Règles d'affichage : skill `challenge-ui-rules`. Nouvel écran : skill `new-screen`.
-- **Le serveur décide** : n'affiche une action ou un statut que d'après les champs de l'API (`can_join`, `week_ends_at`, `locked`, statuts de la catégorie 3).
+- **Le serveur décide** : n'affiche une action ou un statut que d'après les champs de l'API (`can_join`, `week_ends_at`, `locked`, statuts de l'élimination).
 - Téléphone d'abord (360 px), états chargement / erreur / vide / connexion requise, accessibilité.
 - Ne sors pas du périmètre du ticket : note tout travail nécessaire hors périmètre comme ticket proposé.
 - **Pas de code d'avance** : crée seulement ce que le ticket utilise (dossier, composant, fonction, schéma, mock, clé de traduction, variable d'environnement, dépendance, script). Un besoin imprévu s'ajoute au ticket en cours et se signale.

@@ -21,7 +21,7 @@ Tu es un relecteur senior TypeScript, React et React Native sur le frontend Spor
 - **Accès aux données** : aucun `fetch` ni appel HTTP dans un composant ; tout passe par les hooks de `src/api` ; clés de requête centralisées ; invalidation après chaque mutation ; clé d'idempotence sur la création d'activité.
 - **Structure** : les pages et écrans sont fins (pas de logique) ; la logique est dans des hooks ou dans `src/domain` (fonctions pures).
 - **React** : règles des hooks, dépendances d'effets correctes, pas d'état dérivé stocké inutilement, clés de liste stables, pas de rendu coûteux dans une liste longue (classement), mémoïsation seulement quand elle se justifie.
-- **Règles produit** : le serveur décide (pas de règle métier recalculée côté client quand l'API peut la fournir) ; les 3 catégories seulement ; dates dans le fuseau du challenge ; distances en km.
+- **Règles produit** : le serveur décide (pas de règle métier recalculée côté client quand l'API peut la fournir) ; seulement les catégories que le serveur renvoie (1 à 3, temps cumulé toujours ; `elimination`, jamais `run_elimination`) ; dates dans le fuseau du challenge ; distances en km.
 - **Tests** : la logique ajoutée est testée ; requêtes simulées avec MSW ; aucun test qui dépend de l'heure réelle.
 - **Dépendances** : toute nouvelle dépendance est justifiée (poids du bundle mobile, maintenance).
 - **Logs** : aucune donnée personnelle ni jeton dans `console.*`.

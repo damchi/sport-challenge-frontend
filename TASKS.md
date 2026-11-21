@@ -381,7 +381,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 `F4` · Story · Phase 4 · Estimation 5 · Dépend de : 022 · Backend : `POST /challenges` (SC-API-029)
 
 **Critères d'acceptation**
-- [ ] Étape 3 : les **3 catégories** sont affichées comme fixes (temps cumulé, distance cumulée, course avec élimination) avec une explication courte de chacune ; l'**incrément X** (en km, supérieur à 0, 100 au plus ; ✅ une décimale au plus : choix d'interface du porteur du projet le 2026-11-19, plus strict que le contrat en mètres entiers) de la catégorie 3 est saisi, ainsi que les coefficients de la catégorie 2 (voir ci-dessous), avec un exemple chiffré (« X = 2 : 5 km en semaine 1, au moins 7 km en semaine 2… »).
+- [ ] Étape 3 (remplacée depuis le 2026-11-20 par SC-WEB-057 : sport de référence, temps cumulé toujours, distance cumulée et élimination au choix) : les **3 catégories** sont affichées comme fixes (temps cumulé, distance cumulée, course avec élimination) avec une explication courte de chacune ; l'**incrément X** (en km, supérieur à 0, 100 au plus ; ✅ une décimale au plus : choix d'interface du porteur du projet le 2026-11-19, plus strict que le contrat en mètres entiers) de la catégorie 3 est saisi, ainsi que les coefficients de la catégorie 2 (voir ci-dessous), avec un exemple chiffré (« X = 2 : 5 km en semaine 1, au moins 7 km en semaine 2… »).
 - [ ] Récapitulatif complet avec avertissement : « les catégories ne pourront plus être modifiées ».
 - [ ] Envoi : bouton désactivé pendant la requête ; succès : redirection vers le challenge ; erreurs traduites par champ (`validation_failed`, `profile_incomplete`).
 - [ ] Les coefficients de la catégorie 2 sont pré-remplis par les suggestions de l'API des sports et ✅ modifiables par le créateur (0,1 à 2, deux décimales ; course fixe à ×1) ; seuls ceux qu'il change sont envoyés (décision du 2026-11-19, alignée sur le README backend §2.4).
@@ -425,7 +425,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 
 **Critères d'acceptation**
 - [ ] Bouton « Abandonner » (jamais « Quitter ») pour un participant actif.
-- [ ] Confirmation qui précise que c'est **définitif**, que la personne sera éliminée des 3 catégories et apparaîtra « a abandonné », hors podium.
+- [ ] Confirmation qui précise que c'est **définitif**, que la personne sera éliminée de toutes les catégories (de 1 à 3 depuis le 2026-11-20, SC-WEB-056) et apparaîtra « a abandonné », hors podium.
 - [ ] Après abandon : statut affiché partout, plus d'ajout d'activité pour ce challenge, les actions dépendantes disparaissent.
 - [ ] Challenge terminé (`challenge_ended`) : message adapté.
 
@@ -473,6 +473,18 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Tests** : abandonné, compte supprimé, pagination.
 **Revue** : `ts-reviewer`, `ux-reviewer`.
 **Commit** : `feat(challenges): add participants list`
+**Statut** : À faire
+
+### SC-WEB-061 · Docs internes : catégories à la carte
+`F4` · Task · Phase 4 · Estimation 1 · Dépend de : 056 · Backend : aucun (README backend §2.1, §2.3, §2.4)
+
+**Critères d'acceptation**
+- [ ] Agents (`spec-guardian`, `ts-reviewer`) et skills (`challenge-ui-rules`, `bootstrap`) alignés sur la décision du 2026-11-20 : temps cumulé toujours présent, distance cumulée et élimination au choix, élimination sur le sport de référence, abandon = éliminé de toutes les catégories.
+- [ ] `TASKS.md` : tickets concernés annotés, SC-WEB-061 ajouté, dépendance et routes de SC-WEB-039 alignées sur le contrat, en-têtes de sécurité de SC-WEB-047 complétés (`frame-ancestors`).
+- [ ] Aucune règle nouvelle : tout reprend les README ; un écart se signale.
+
+**Revue** : `spec-guardian`.
+**Commit** : `docs: align agents and skills with the optional categories`
 **Statut** : À faire
 
 ---
@@ -618,7 +630,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Statut** : À faire
 
 ### SC-WEB-039 · Page d'invitation et acceptation
-`F7` · Story · Phase 7 · Estimation 5 · Dépend de : 017, 025, 038 · Backend : `GET /invitations/{token}` et `POST /invitations/{token}/accept` (SC-API-066)
+`F7` · Story · Phase 7 · Estimation 5 · Dépend de : 017, 025, 038, 056 · Backend : `POST /invitations/open` et `POST /invitations/accept`, jeton dans le corps (SC-API-066) ; `participant_count` de `ChallengeDetail` (SC-API-139), arrivé avec le contrat régénéré par SC-WEB-056
 
 **Critères d'acceptation**
 - [ ] `/invite#<jeton>` (jeton dans le fragment, décision du 2026-11-20, README §4.4) : si l'utilisateur n'est pas connecté, connexion puis **retour automatique** sur l'invitation.
@@ -771,7 +783,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 
 **Critères d'acceptation**
 - [ ] Choix de l'hébergement confirmé (FD2) : Firebase Hosting proposé, avec réécriture vers `index.html` pour l'application monopage.
-- [ ] En-têtes de sécurité (politique de contenu, `X-Content-Type-Options`, `Referrer-Policy`) ; cache long pour les fichiers versionnés, jamais pour `index.html`.
+- [ ] En-têtes de sécurité (politique de contenu avec `frame-ancestors 'none'`, plus `X-Frame-Options: DENY` pour les anciens navigateurs, contre le clickjacking de « Accepter l'invitation » relevé dans la PR #95 ; `X-Content-Type-Options`, `Referrer-Policy`) ; cache long pour les fichiers versionnés, jamais pour `index.html`.
 - [ ] Adresses de staging ajoutées dans Auth0 (rappel, déconnexion, origines) et dans la configuration CORS du backend.
 - [ ] Déploiement de staging par la CI **sur demande explicite** ; aucune publication automatique.
 
