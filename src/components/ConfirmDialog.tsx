@@ -1,9 +1,11 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 
 /**
  * Modal confirmation: a title, a sentence saying what will happen, and two
  * buttons. Escape cancels. Uses the native `<dialog>`, which keeps the focus
- * inside and makes the rest of the page inert.
+ * inside and makes the rest of the page inert. A heavier confirmation adds
+ * `details` (read with the message) and `children` above the buttons (a
+ * checkbox), with `confirmDisabled` until the user has gone through them.
  */
 export function ConfirmDialog({
   open,
@@ -13,10 +15,16 @@ export function ConfirmDialog({
   cancelLabel,
   onConfirm,
   onCancel,
+  details,
+  children,
+  confirmDisabled = false,
 }: {
   open: boolean;
   title: string;
   message: string;
+  details?: ReactNode;
+  children?: ReactNode;
+  confirmDisabled?: boolean;
   confirmLabel: string;
   cancelLabel: string;
   onConfirm: () => void;
@@ -51,19 +59,25 @@ export function ConfirmDialog({
         event.preventDefault();
         onCancel();
       }}
-      className="m-auto w-[calc(100%-2.5rem)] max-w-sm rounded-card bg-surface p-6 text-ink backdrop:bg-surface-raised/60"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2.5rem)] max-w-sm overflow-y-auto rounded-card bg-surface p-6 text-ink backdrop:bg-surface-raised/60"
     >
       <h2 id={titleId} className="font-display text-lg font-bold">
         {title}
       </h2>
-      <p id={messageId} className="mt-2 text-muted">
-        {message}
-      </p>
+      <div id={messageId} className="mt-2 text-muted">
+        <p>{message}</p>
+        {details}
+      </div>
+      {children}
       <div className="mt-6 flex flex-col gap-3">
         <button
           type="button"
-          onClick={onConfirm}
-          className="h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+          // Not `disabled`: it stays reachable, so a screen reader finds it.
+          aria-disabled={confirmDisabled || undefined}
+          onClick={() => {
+            if (!confirmDisabled) onConfirm();
+          }}
+          className="h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60"
         >
           {confirmLabel}
         </button>

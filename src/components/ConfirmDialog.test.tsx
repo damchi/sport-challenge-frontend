@@ -62,4 +62,39 @@ describe('ConfirmDialog', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('reads the details with the message and confirms only once allowed', () => {
+    const onConfirm = vi.fn();
+    const ui = (confirmDisabled: boolean) => (
+      <ConfirmDialog
+        open
+        title="Delete?"
+        message="This is final."
+        details={<p>Everything goes.</p>}
+        confirmDisabled={confirmDisabled}
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onConfirm={onConfirm}
+        onCancel={vi.fn()}
+      >
+        <label>
+          <input type="checkbox" /> I understand
+        </label>
+      </ConfirmDialog>
+    );
+    const { rerender } = render(ui(true));
+
+    expect(screen.getByRole('dialog')).toHaveAccessibleDescription(
+      'This is final. Everything goes.',
+    );
+    expect(screen.getByRole('checkbox', { name: 'I understand' })).toBeInTheDocument();
+    const confirm = screen.getByRole('button', { name: 'Delete' });
+    expect(confirm).toHaveAttribute('aria-disabled', 'true');
+    fireEvent.click(confirm);
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    rerender(ui(false));
+    fireEvent.click(confirm);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
 });

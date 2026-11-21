@@ -12,6 +12,16 @@ describe('SessionEndPage', () => {
     expect(onAction).toHaveBeenCalledTimes(1);
   });
 
+  it('confirms an account the user just deleted', () => {
+    render(<SessionEndPage reason="account_deleted_by_user" onAction={() => Promise.resolve()} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Compte supprimé' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Ton compte a été supprimé. « Terminer » ferme ta session.',
+    );
+    expect(screen.getByRole('button', { name: 'Terminer' })).toBeInTheDocument();
+  });
+
   it('runs the action once, even on a double click', () => {
     const onAction = vi.fn(() => new Promise<void>(() => undefined));
     render(<SessionEndPage reason="account_deleted" onAction={onAction} />);

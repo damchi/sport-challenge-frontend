@@ -4,11 +4,13 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import { ApiClientContext } from './api/ApiClientContext';
 import { createApiClient } from './api/client';
 import { createQueryClient } from './api/queryClient';
+import { AccountDeletedContext, accountDeletedHandler } from './lib/auth/accountDeleted';
 import { useAuth } from './lib/auth/auth';
 import { Auth0AuthProvider } from './lib/auth/Auth0AuthProvider';
 import { createReauthGuard } from './lib/auth/reauthGuard';
 import { sessionFromAuth } from './lib/auth/session';
 import {
+  firstSessionEnd,
   sessionEndAction,
   useHandleLostSession,
   type AuthErrorEvent,
@@ -48,12 +50,21 @@ function AppContent() {
     queryClient.clear();
     setGlobalError(undefined);
   }, [queryClient]);
+  const endSession = useCallback(
+    (end: SessionEnd) => setSessionEnd((current) => firstSessionEnd(current, end)),
+    [],
+  );
   useHandleLostSession(auth, authError, {
     clearCache,
     currentPath,
     reauth,
-    onSessionEnd: setSessionEnd,
+    onSessionEnd: endSession,
   });
+
+  const onAccountDeleted = useMemo(
+    () => accountDeletedHandler(auth, { clearCache, onSessionEnd: endSession }),
+    [auth, clearCache, endSession],
+  );
 
   const dismiss = useCallback(() => setGlobalError(undefined), []);
   const globalErrorValue = useMemo(() => ({ error: globalError, dismiss }), [globalError, dismiss]);
@@ -68,7 +79,9 @@ function AppContent() {
               onAction={() => sessionEndAction(sessionEnd, auth, reauth)}
             />
           ) : (
-            <RouterProvider router={router} />
+            <AccountDeletedContext.Provider value={onAccountDeleted}>
+              <RouterProvider router={router} />
+            </AccountDeletedContext.Provider>
           )}
         </GlobalErrorContext.Provider>
       </QueryClientProvider>

@@ -36,3 +36,17 @@ export function useUpdateMe() {
     onSuccess: (me) => queryClient.setQueryData(queryKeys.me, me),
   });
 }
+
+/**
+ * Deletes the account for good. Its errors are shown by the profile (a
+ * refusal lists the challenges to hand over first), not the global banner.
+ */
+export function useDeleteMe() {
+  const client = useApiClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async () => {
+      await client.DELETE('/api/v1/me');
+    },
+  });
+}

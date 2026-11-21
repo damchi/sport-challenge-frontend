@@ -275,6 +275,7 @@ function activityNotFound() {
 
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
+  http.delete('*/api/v1/me', () => new HttpResponse(null, { status: 204 })),
   // The cursor is the index of the next item; `mine` keeps the challenges
   // the user created or joined, and `status` keeps those with that status.
   http.get('*/api/v1/challenges', ({ request }) => {

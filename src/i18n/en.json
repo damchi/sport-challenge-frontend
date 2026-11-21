@@ -19,6 +19,7 @@
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
     "invitation_invalid": "This invitation link is not valid or has expired.",
+    "last_creator": "You're the last creator of a challenge in progress. Add another creator or delete the challenge.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
     "not_found": "This page doesn't exist or was removed.",
     "participation_abandoned": "You abandoned this challenge: you can't join it again.",
@@ -49,7 +50,8 @@
     "accountDeleted": {
       "title": "Account deleted",
       "message": "This account was deleted: you have been signed out.",
-      "finish": "Finish"
+      "finish": "Finish",
+      "byUser": "Your account was deleted. “Finish” closes your session."
     },
     "sessionUnavailable": {
       "title": "Unable to connect",
@@ -99,6 +101,23 @@
     "save": "Save",
     "namesForm": {
       "saved": "First and last name saved."
+    },
+    "deleteAccount": {
+      "button": "Delete my account",
+      "busy": "Deleting…",
+      "title": "Delete your account?",
+      "message": "Here's what will happen:",
+      "consequences": {
+        "challenges": "You leave all your challenges, and your activities are erased.",
+        "profile": "Your profile is anonymized: first name, last name, pseudo and e-mail are erased.",
+        "signIn": "Your sign-in account is deleted: you won't be able to sign in with it again.",
+        "final": "It's final: nothing can be recovered."
+      },
+      "understood": "I understand this is final.",
+      "confirm": "Delete my account",
+      "cancel": "Keep my account",
+      "blocking": "Challenges concerned:",
+      "challengeFallback": "Open the challenge"
     }
   },
   "nav": {
