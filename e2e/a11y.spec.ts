@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import { http, HttpResponse } from 'msw';
 import type { Page } from '@playwright/test';
 import { mockInvitationToken } from '../src/mocks/handlers';
 import { expect, signInAt, test } from './fixtures';
@@ -48,6 +49,24 @@ for (const colorScheme of ['light', 'dark'] as const) {
     }
   });
 }
+
+test('the error state has no serious accessibility violation', async ({ network, page }) => {
+  network.use(http.get('*/api/v1/challenges', () => new HttpResponse(null, { status: 500 })));
+  await signInAt(page, '/');
+  await expect(page.getByRole('button', { name: 'Réessayer' })).toBeVisible();
+
+  expect(await seriousViolations(page)).toEqual([]);
+});
+
+test('the empty state has no serious accessibility violation', async ({ network, page }) => {
+  network.use(
+    http.get('*/api/v1/me/activities', () => HttpResponse.json({ items: [], next_cursor: null })),
+  );
+  await signInAt(page, '/activities');
+  await expect(page.getByText('Aucune activité pour le moment.', { exact: false })).toBeVisible();
+
+  expect(await seriousViolations(page)).toEqual([]);
+});
 
 test('the abandon dialog has no serious accessibility violation', async ({ page }) => {
   await signInAt(page, `/challenges/${CHALLENGE_ID}`);

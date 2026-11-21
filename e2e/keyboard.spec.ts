@@ -17,9 +17,10 @@ async function tabTo(page: Page, name: string): Promise<string[]> {
         name: (label ?? element).textContent?.trim() ?? '',
         // Not :focus while on the date field's own picker button, which the
         // browser rings itself.
-        ring: element.matches(':focus')
-          ? `${getComputedStyle(element).outlineStyle} ${getComputedStyle(element).outlineWidth}`
-          : 'solid 2px',
+        ring:
+          !element.matches(':focus') && element.matches('input[type="datetime-local"]')
+            ? 'solid 2px'
+            : `${getComputedStyle(element).outlineStyle} ${getComputedStyle(element).outlineWidth}`,
       };
     });
     if (!focused) throw new Error(`The focus left the page after: ${met.join(' › ')}`);
