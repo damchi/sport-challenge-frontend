@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Participant } from '../../../api/hooks/useChallenges';
@@ -124,8 +124,11 @@ describe('ChallengeParticipants', () => {
     const router = renderAt(path);
 
     fireEvent.click(await screen.findByRole('link', { name: /sam/ }));
-    expect(router.state.location.pathname).toBe(
-      `/challenges/${id}/participants/10000000-0000-4000-8000-000000000001`,
+    // Once the code of the participant's page has loaded.
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(
+        `/challenges/${id}/participants/10000000-0000-4000-8000-000000000001`,
+      ),
     );
     expect(screen.getByRole('link', { name: 'Participants' })).toHaveAttribute(
       'aria-current',

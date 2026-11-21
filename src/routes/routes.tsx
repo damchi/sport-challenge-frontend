@@ -1,30 +1,62 @@
-import type { RouteObject } from 'react-router';
-import { ChallengeParticipants } from '../features/challenges/detail/ChallengeParticipants';
-import { ChallengeLeaderboard } from '../features/leaderboard/ChallengeLeaderboard';
-import { TabPending } from '../features/challenges/detail/TabPending';
-import { ParticipantActivities } from '../features/activities/ParticipantActivities';
-import { ActivitiesPage } from '../pages/ActivitiesPage';
-import { ActivityCreatePage } from '../pages/ActivityCreatePage';
-import { ActivityEditPage } from '../pages/ActivityEditPage';
+import type { LazyRouteFunction, RouteObject } from 'react-router';
+import { Page } from '../components/Page';
+import { LoadingState } from '../components/states/LoadingState';
 import { CallbackPage } from '../pages/CallbackPage';
-import { ChallengeCreatePage } from '../pages/ChallengeCreatePage';
-import { ChallengePage } from '../pages/ChallengePage';
 import { HomePage } from '../pages/HomePage';
-import { InvitePage } from '../pages/InvitePage';
-import { NotFoundPage } from '../pages/NotFoundPage';
-import { OnboardingPage } from '../pages/OnboardingPage';
-import { ProfilePage } from '../pages/ProfilePage';
 import { AppShell } from './AppShell';
 import { ProfileGate } from './ProfileGate';
 import { RequireAuth } from './RequireAuth';
 import { RootLayout } from './RootLayout';
+import { RouteError } from './RouteError';
 import type { RouteHandle } from './routeHandle';
 
 const title = (titleKey: string): RouteHandle => ({ titleKey });
 
+// Each page is a chunk of its own, loaded when its route is first opened. The
+// home page, the usual first page, and the callback, which every sign-in
+// passes through, stay in the main bundle: no extra request.
+const pages = {
+  activities: () =>
+    import('../pages/ActivitiesPage').then((m) => ({ Component: m.ActivitiesPage })),
+  activityCreate: () =>
+    import('../pages/ActivityCreatePage').then((m) => ({ Component: m.ActivityCreatePage })),
+  activityEdit: () =>
+    import('../pages/ActivityEditPage').then((m) => ({ Component: m.ActivityEditPage })),
+  challenge: () => import('../pages/ChallengePage').then((m) => ({ Component: m.ChallengePage })),
+  challengeCreate: () =>
+    import('../pages/ChallengeCreatePage').then((m) => ({ Component: m.ChallengeCreatePage })),
+  invite: () => import('../pages/InvitePage').then((m) => ({ Component: m.InvitePage })),
+  notFound: () => import('../pages/NotFoundPage').then((m) => ({ Component: m.NotFoundPage })),
+  onboarding: () =>
+    import('../pages/OnboardingPage').then((m) => ({ Component: m.OnboardingPage })),
+  profile: () => import('../pages/ProfilePage').then((m) => ({ Component: m.ProfilePage })),
+  leaderboard: () =>
+    import('../features/leaderboard/ChallengeLeaderboard').then((m) => ({
+      Component: m.ChallengeLeaderboard,
+    })),
+  participants: () =>
+    import('../features/challenges/detail/ChallengeParticipants').then((m) => ({
+      Component: m.ChallengeParticipants,
+    })),
+  participantActivities: () =>
+    import('../features/activities/ParticipantActivities').then((m) => ({
+      Component: m.ParticipantActivities,
+    })),
+  pending: () =>
+    import('../features/challenges/detail/TabPending').then((m) => ({ Component: m.TabPending })),
+} satisfies Record<string, LazyRouteFunction<RouteObject>>;
+
 export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
+    // A page whose code fails to load; rendering errors stay in RootLayout's boundary.
+    errorElement: <RouteError />,
+    // While the code of the page opened first loads.
+    hydrateFallbackElement: (
+      <Page>
+        <LoadingState />
+      </Page>
+    ),
     children: [
       // Public: it finishes the sign-in.
       { path: '/callback', element: <CallbackPage />, handle: title('auth.callback.title') },
@@ -36,7 +68,7 @@ export const routes: RouteObject[] = [
             children: [
               {
                 path: '/onboarding',
-                element: <OnboardingPage />,
+                lazy: pages.onboarding,
                 handle: title('onboarding.title'),
               },
               {
@@ -45,44 +77,44 @@ export const routes: RouteObject[] = [
                   { path: '/', element: <HomePage />, handle: title('nav.challenges') },
                   {
                     path: '/challenges/new',
-                    element: <ChallengeCreatePage />,
+                    lazy: pages.challengeCreate,
                     handle: title('challengeCreate.title'),
                   },
                   {
                     // Sections of the challenge: the leaderboard is its first page.
                     path: '/challenges/:challengeId',
-                    element: <ChallengePage />,
+                    lazy: pages.challenge,
                     handle: title('challengeDetail.title'),
                     children: [
-                      { index: true, element: <ChallengeLeaderboard /> },
-                      { path: 'participants', element: <ChallengeParticipants /> },
-                      { path: 'participants/:userId', element: <ParticipantActivities /> },
-                      { path: 'activities', element: <TabPending /> },
+                      { index: true, lazy: pages.leaderboard },
+                      { path: 'participants', lazy: pages.participants },
+                      { path: 'participants/:userId', lazy: pages.participantActivities },
+                      { path: 'activities', lazy: pages.pending },
                     ],
                   },
                   {
                     path: '/activities',
-                    element: <ActivitiesPage />,
+                    lazy: pages.activities,
                     handle: title('activities.title'),
                   },
                   {
                     path: '/activities/new',
-                    element: <ActivityCreatePage />,
+                    lazy: pages.activityCreate,
                     handle: title('activityForm.title'),
                   },
                   {
                     path: '/activities/:activityId/edit',
-                    element: <ActivityEditPage />,
+                    lazy: pages.activityEdit,
                     handle: title('activityEdit.title'),
                   },
                   {
                     // The token is in the fragment: never sent to the host.
                     path: '/invite',
-                    element: <InvitePage />,
+                    lazy: pages.invite,
                     handle: title('invitationPage.title'),
                   },
-                  { path: '/me', element: <ProfilePage />, handle: title('nav.profile') },
-                  { path: '*', element: <NotFoundPage />, handle: title('notFound.title') },
+                  { path: '/me', lazy: pages.profile, handle: title('nav.profile') },
+                  { path: '*', lazy: pages.notFound, handle: title('notFound.title') },
                 ],
               },
             ],

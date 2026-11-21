@@ -11,6 +11,20 @@ export default defineConfig(({ command }) => ({
     // Serves the mock worker to the development server only: never in a build.
     command === 'serve' && msw({ mode: 'worker-only' }),
   ],
+  build: {
+    // The size that matters is gzip, checked by pnpm bundle:check (scripts/bundleBudget.ts).
+    chunkSizeWarningLimit: 1000,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          // What the first page needs comes in one file, not in a score of small
+          // shared chunks: fewer requests on a phone network. The pages loaded
+          // later keep their own chunks (src/routes/routes.tsx).
+          groups: [{ name: 'app', tags: ['$initial'] }],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

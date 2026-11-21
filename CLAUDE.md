@@ -22,6 +22,7 @@ Scripts du `package.json`, ajoutés **au fur et à mesure** par les tickets qui 
 ```
 pnpm dev                 serveur de développement
 pnpm build               build de tous les paquets et du web
+pnpm bundle:check        budget de taille du build (après pnpm build)
 pnpm typecheck           tsc --noEmit
 pnpm lint                ESLint
 pnpm format              Prettier

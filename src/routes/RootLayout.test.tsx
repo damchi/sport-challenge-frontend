@@ -30,6 +30,8 @@ function AppWithError({ path }: { path: string }) {
 describe('RootLayout', () => {
   it('shows the global error banner and hides it on navigation', async () => {
     render(<AppWithError path="/does-not-exist" />);
+    // Once the code of the page has loaded.
+    await screen.findByRole('heading', { level: 1, name: 'Page introuvable' });
 
     fireEvent.click(screen.getByRole('button', { name: 'fail' }));
     expect(screen.getByRole('alert')).toBeInTheDocument();

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
@@ -146,6 +146,27 @@ describe('ChallengeLeaderboard', () => {
     expect(rows[0]).not.toHaveClass('sticky');
   });
 
+  it('renders a long ranking whole, leaving the rows off screen to the browser', async () => {
+    const many = Array.from({ length: 1000 }, (_, index) =>
+      entry(`runner_${index + 1}`, index + 1, 100_000 - index),
+    );
+    answer();
+    leaderboard([{ type: 'cumulative_time', entries: [...many, entry('leo', null, null)] }]);
+    renderAt(`/challenges/${id}`);
+
+    const rows = within(await section('Classement complet')).getAllByRole('listitem');
+    // In the page, so the browser's find and screen readers reach every row.
+    expect(rows).toHaveLength(1000);
+    expect(rows.at(-1)).toHaveTextContent('runner_1000');
+    for (const row of [
+      rows[0],
+      rows.at(-1),
+      ...within(await section('Éliminés')).getAllByRole('listitem'),
+    ]) {
+      expect(row).toHaveClass('[content-visibility:auto]');
+    }
+  });
+
   it('lists the participants who abandoned apart, without a rank nor the podium', async () => {
     answer();
     leaderboard(threeCategories);
@@ -284,8 +305,11 @@ describe('ChallengeLeaderboard', () => {
     fireEvent.click(
       within(await section('Classement complet')).getByRole('link', { name: /hugo/ }),
     );
-    expect(router.state.location.pathname).toMatch(
-      new RegExp(`^/challenges/${id}/participants/[0-9a-f-]+$`),
+    // Once the code of the participant's page has loaded.
+    await waitFor(() =>
+      expect(router.state.location.pathname).toMatch(
+        new RegExp(`^/challenges/${id}/participants/[0-9a-f-]+$`),
+      ),
     );
   });
 
