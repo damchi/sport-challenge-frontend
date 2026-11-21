@@ -19,6 +19,14 @@ export interface SessionEnd {
   returnTo: string;
 }
 
+/**
+ * The session end to show: the first one stays, so a 401 right after a
+ * deletion does not replace the user's own confirmation.
+ */
+export function firstSessionEnd(current: SessionEnd | undefined, next: SessionEnd): SessionEnd {
+  return current ?? next;
+}
+
 /** Remembers automatic re-sign-ins across page loads, to stop a loop. */
 export interface ReauthGuard {
   /** False right after an automatic re-sign-in: a new 401 would loop. */

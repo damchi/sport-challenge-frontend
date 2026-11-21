@@ -10,6 +10,7 @@ import { Auth0AuthProvider } from './lib/auth/Auth0AuthProvider';
 import { createReauthGuard } from './lib/auth/reauthGuard';
 import { sessionFromAuth } from './lib/auth/session';
 import {
+  firstSessionEnd,
   sessionEndAction,
   useHandleLostSession,
   type AuthErrorEvent,
@@ -49,10 +50,8 @@ function AppContent() {
     queryClient.clear();
     setGlobalError(undefined);
   }, [queryClient]);
-  // The first end stays: a 401 right after a deletion must not replace the
-  // user's own confirmation.
   const endSession = useCallback(
-    (end: SessionEnd) => setSessionEnd((current) => current ?? end),
+    (end: SessionEnd) => setSessionEnd((current) => firstSessionEnd(current, end)),
     [],
   );
   useHandleLostSession(auth, authError, {

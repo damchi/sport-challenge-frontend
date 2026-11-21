@@ -3,6 +3,7 @@ import { ApiError } from '../../api/errors';
 import { createFakeAuth } from '../../test/fakeAuth';
 import type { Auth } from './auth';
 import {
+  firstSessionEnd,
   sessionEndAction,
   useHandleLostSession,
   type AuthErrorEvent,
@@ -159,5 +160,15 @@ describe('sessionEndAction', () => {
 
     expect(guard.forget).toHaveBeenCalledTimes(1);
     expect(auth.signIn).toHaveBeenCalledWith('/challenges/42');
+  });
+});
+
+describe('firstSessionEnd', () => {
+  it('keeps the confirmation of a deletion over a later lost session', () => {
+    const deleted = { reason: 'account_deleted_by_user', returnTo: '/' } as const;
+    const lost = { reason: 'account_deleted', returnTo: '/me' } as const;
+
+    expect(firstSessionEnd(undefined, deleted)).toBe(deleted);
+    expect(firstSessionEnd(deleted, lost)).toBe(deleted);
   });
 });
