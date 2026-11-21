@@ -19,6 +19,9 @@ test('a participant reads the leaderboard and the statuses', async ({ page }) =>
   await expect(podium.getByRole('link', { name: /^1er ex æquo / })).toHaveCount(2);
   await expect(podium.getByRole('link', { name: /^1er ex æquo Toi / })).toBeVisible();
   await expect(podium.getByRole('link', { name: /^3e / })).toBeVisible();
+  // Those who abandoned stay off the podium, listed in the full ranking only.
+  await expect(podium.getByRole('link')).toHaveCount(3);
+  await expect(podium.getByText('A abandonné')).toHaveCount(0);
   const leaderboard = page.getByRole('region', { name: 'Classement du défi' });
   await expect(leaderboard.getByText('A abandonné').first()).toBeVisible();
 
