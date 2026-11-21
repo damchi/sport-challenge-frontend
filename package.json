@@ -19,6 +19,7 @@
     "api:generate": "openapi-typescript openapi/openapi.yaml -o src/api/generated/schema.ts",
     "i18n:check": "node scripts/check-i18n.ts",
     "bundle:check": "node scripts/check-bundle-size.ts",
+    "hosting:config": "node scripts/write-hosting-config.ts",
     "e2e": "playwright test"
   },
   "dependencies": {

@@ -215,7 +215,7 @@ frontend/
 - Suivi d'erreurs sur web et mobile (ex. Sentry) ; analytics produit plus tard, avec consentement.
 - ✅ CI GitHub Actions (`.github/workflows/ci.yml`) sur chaque pull request et sur `main` : `typecheck`, `lint`, `test`, `build`. Claude relit chaque pull request (`.github/workflows/claude-review.yml`) et commente seulement, sans droit de pousser ni de fusionner ; il lui faut le secret de dépôt `CLAUDE_CODE_OAUTH_TOKEN`.
 - ✅ Protection de `main` (réglée à la main dans GitHub, Settings > Rules) : pull request obligatoire, vérification « typecheck, lint, test, build » verte avant fusion, pas de push forcé ni de suppression.
-- Web : hébergement statique (Firebase Hosting ou Cloud Storage avec CDN), déployé par la CI.
+- ✅ Web : **Firebase Hosting**, dans le projet GCP `sport-challenge-prod`, production seule comme le backend (pas de staging). Déployé par la CI (`.github/workflows/deploy.yml`) après chaque fusion sur `main`, avec l'approbation de l'Environment GitHub `production` ; en-têtes (cache, sécurité, politique de contenu) générés par `scripts/hostingConfig.ts`. Mise en place et retour arrière : `docs/deploiement.md`.
 - Mobile : builds avec EAS Build, diffusion de test par TestFlight (iOS) et pistes de test internes (Android), puis publication sur les deux stores.
 - Les stores exigent une étiquette de confidentialité, et une option de signalement ou de blocage si du contenu public est visible.
 
@@ -269,7 +269,7 @@ frontend/
 ## 8. Questions ouvertes
 
 - ❓ V2 : l'application mobile arrive-t-elle avec les synchronisations Strava et Polar, ou avant ?
-- ❓ Hébergement du web : Firebase Hosting ou Cloud Storage avec CDN.
+- ✅ Hébergement du web : Firebase Hosting, production seule (décision du 2026-11-21, `docs/deploiement.md`).
 - ✅ Structure du dépôt : une seule application Vite en V1 ; monorepo pnpm (avec ou sans Turborepo, à décider alors) à l'arrivée du mobile en V2.
 - ❓ État local : contexte React ou Zustand.
 - ❓ Confirmer les points marqués 🟡.

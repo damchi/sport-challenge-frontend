@@ -1,0 +1,139 @@
+name: Deploy
+
+# Once the CI is green on main, the web app goes to production (Firebase
+# Hosting), after the approval of the `production` GitHub Environment. A
+# rollback redeploys an older commit of main by hand. See docs/deploiement.md.
+#
+# The infrastructure is never changed here: it is set up by hand
+# (docs/deploiement.md); this only builds and publishes the site.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit SHA of main to redeploy (rollback); empty for the head of main
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  production:
+    name: production
+    # A push to main of this repository whose CI passed, or a run by hand on
+    # main; never a pull request (a fork's branch may be called main too).
+    # Opt-in (Settings > Secrets and variables > Actions > Variables):
+    # DEPLOY_PRODUCTION is set to "true" once the Environment and its required
+    # reviewers exist, so that a merge does not fail before then.
+    if: >-
+      github.ref == 'refs/heads/main' && vars.DEPLOY_PRODUCTION == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    # One deployment at a time, and a running one is never cancelled.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write # the OIDC token exchanged for GCP credentials
+    env:
+      SHA: ${{ inputs.ref || github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          fetch-depth: 0 # to check that the commit belongs to main
+          persist-credentials: false
+
+      # The approval can come late: when main has moved on, the newer merge
+      # deploys instead (never an older release after a newer one). A rollback
+      # is deliberate: only its commit must be on main.
+      - name: Commit to deploy
+        id: plan
+        env:
+          ROLLBACK: ${{ github.event_name == 'workflow_dispatch' && inputs.ref != '' }}
+        run: |
+          git fetch --quiet origin main
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "::error::$SHA is not a commit of main"
+            exit 1
+          fi
+          if [ "$ROLLBACK" != "true" ] && [ "$SHA" != "$(git rev-parse origin/main)" ]; then
+            echo "::notice::$SHA is not deployed: main has moved on, its own run deploys it"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        if: steps.plan.outputs.skip != 'true'
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.plan.outputs.skip != 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        if: steps.plan.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+
+      # Public values only (variables of the Environment, never secrets): they
+      # end up in the bundle and in the content security policy.
+      - name: Build
+        if: steps.plan.outputs.skip != 'true'
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_AUTH0_DOMAIN: ${{ vars.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ vars.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ vars.VITE_AUTH0_AUDIENCE }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+        run: |
+          pnpm build
+          pnpm bundle:check
+          pnpm hosting:config
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        if: steps.plan.outputs.skip != 'true'
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_WEB_DEPLOY_SERVICE_ACCOUNT }}
+
+      # The CLI is pinned and only fetched here: it is not a dependency of the app.
+      - name: Publish
+        if: steps.plan.outputs.skip != 'true'
+        env:
+          PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          npx --yes firebase-tools@15.35.0 deploy --only hosting --project "$PROJECT" \
+            --non-interactive --message "$SHA"
+
+      # The site serves this build, with its policy, and checks its worker at once.
+      - name: Smoke test
+        if: steps.plan.outputs.skip != 'true'
+        env:
+          WEB_URL: ${{ vars.WEB_URL }}
+        run: |
+          entry=$(grep -o 'src="/assets/[^"]*\.js"' dist/index.html | head -1)
+          for attempt in 1 2 3 4 5 6; do
+            page=$(curl -fsS "$WEB_URL/challenges" || true)
+            if grep -qF "$entry" <<<"$page"; then break; fi
+            if [ "$attempt" = 6 ]; then
+              echo "::error::$WEB_URL does not serve this build"
+              exit 1
+            fi
+            sleep 10
+          done
+          curl -fsSI "$WEB_URL/" | grep -qi '^content-security-policy:' \
+            || { echo "::error::no content security policy"; exit 1; }
+          curl -fsSI "$WEB_URL/sw.js" | grep -qi '^cache-control: no-cache' \
+            || { echo "::error::sw.js may be kept in a cache"; exit 1; }
+          status=$(curl -s -o /dev/null -w '%{http_code}' "$WEB_URL/assets/missing.js")
+          [ "$status" = 404 ] || { echo "::error::a missing file answers $status"; exit 1; }
