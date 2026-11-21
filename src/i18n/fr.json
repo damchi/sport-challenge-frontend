@@ -18,6 +18,7 @@
     "field_not_editable": "Seuls le titre et la description d'un défi peuvent être modifiés.",
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
+    "invitation_invalid": "Ce lien d'invitation n'est pas valide ou a expiré.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
     "not_found": "Cette page n'existe pas ou plus.",
     "participation_abandoned": "Tu as abandonné ce défi : tu ne peux plus le rejoindre.",
@@ -508,5 +509,12 @@
     "shareFailed": "Partage impossible. Copie le lien à la place.",
     "shareText": "Rejoins-moi dans le défi « {{title}} »",
     "forbidden": "Tu ne peux pas inviter d'amis à ce défi."
+  },
+  "invitationPage": {
+    "title": "Invitation",
+    "intro": "On t'invite à rejoindre ce défi.",
+    "invalid": "Ce lien d'invitation n'est pas valide ou a expiré. Demande un nouveau lien à la personne qui te l'a envoyé.",
+    "accept": "Accepter l'invitation",
+    "open": "Voir le défi"
   }
 }

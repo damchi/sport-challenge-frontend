@@ -7,7 +7,7 @@ import {
   type ChallengeDetail,
 } from '../../../api/hooks/useChallenges';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
-import { challengeInstant, otherTimeZoneName } from '../../../domain/format/challengeDates';
+import { useJoinCopy } from './useJoinCopy';
 
 /**
  * The user's participation in a challenge. Joining, as the server allows it
@@ -26,17 +26,7 @@ export function ChallengeParticipation({ challenge }: { challenge: ChallengeDeta
   // Each outcome takes the focus once, not again on each refresh. One ref is
   // enough: a join and an abandon never show their outcomes together.
   const focusedOutcome = useRef<string | null>(null);
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const zone = otherTimeZoneName(
-    challenge.timezone,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    locale,
-  );
-  const deadline = {
-    date: challengeInstant(challenge.registration_deadline, challenge.timezone, locale),
-    zone,
-    context: zone && 'zone',
-  };
+  const { deadline, reason } = useJoinCopy(challenge);
   const translateError = (error: Error | null) =>
     error instanceof ApiError
       ? errorMessage(error, (candidate) => i18n.exists(candidate))
@@ -50,12 +40,6 @@ export function ChallengeParticipation({ challenge }: { challenge: ChallengeDeta
   };
 
   if (!challenge.can_join) {
-    const reason =
-      challenge.my_status === 'active'
-        ? t('challengeDetail.join.participant')
-        : challenge.my_status === 'abandoned'
-          ? t('challengeDetail.join.abandoned')
-          : t('challengeDetail.join.closed', deadline);
     // The status is the server's: a finished challenge cannot be abandoned.
     const canAbandon = challenge.my_status === 'active' && challenge.status !== 'finished';
     // After a join or an abandon, the button is gone: the focus moves to the

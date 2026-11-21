@@ -35,3 +35,17 @@ export function canInvite(challenge: InvitationRights, now: Date): boolean {
 export function invitationLink(origin: string, token: string): string {
   return `${origin}/invite#${encodeURIComponent(token)}`;
 }
+
+// Shape of a token, checked before any call: URL-safe base64 characters, 256
+// at most. The server checks no format (a malformed token is an invalid
+// invitation): this only keeps odd input and huge payloads from leaving.
+const TOKEN_SHAPE = /^[A-Za-z0-9_-]{1,256}$/;
+
+/**
+ * The token of an invitation link, read from its fragment ("#<token>"), or
+ * null when the fragment cannot be one.
+ */
+export function invitationTokenFromHash(hash: string): string | null {
+  const token = hash.startsWith('#') ? hash.slice(1) : hash;
+  return TOKEN_SHAPE.test(token) ? token : null;
+}
