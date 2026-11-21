@@ -21,11 +21,11 @@ Tu relis le code sous l'angle sécurité et protection des données. Tu ne modif
 - **Liens profonds** : les paramètres (jeton d'invitation, identifiants) sont validés avant usage ; aucune action sensible déclenchée sans confirmation ; redirections limitées à des destinations connues.
 - **Contenu d'autres utilisateurs** : pseudos et avatars affichés comme du texte ; jamais de `dangerouslySetInnerHTML` ni de HTML interprété.
 - **Uploads** : type et taille de l'image vérifiés côté client (le serveur reste l'autorité) ; envoi direct par URL signée de courte durée ; pas de métadonnées de localisation conservées dans l'avatar.
-- **Analytics et suivi** : rien n'est envoyé avant le consentement ; aucun nom, e-mail ni jeton dans les événements, ni dans Sentry (nettoyage avant envoi).
+- **Analytics et suivi** : pas d'analytics en V1 (si elles arrivent, rien n'est envoyé avant le consentement) ; Sentry fonctionne sans consentement, donc aucun nom, e-mail ni jeton dans les événements (nettoyage avant envoi).
 - **Permissions** : seulement celles qui sont nécessaires (photos pour l'avatar, notifications plus tard), avec justification claire.
 - **Dépendances** : nouvelle dépendance justifiée, maintenue, sans script d'installation suspect ; versions fixées par le fichier de verrouillage.
 - **Stockage local** : aucune donnée personnelle superflue ; effacée à la déconnexion et à la suppression de compte.
-- **Conformité** : suppression de compte accessible dans l'app, lien vers la politique de confidentialité, signalement et blocage prévus pour le contenu public.
+- **Conformité** : suppression de compte accessible dans l'app (pas de pages légales en V1 : app entre amis), signalement et blocage prévus pour le contenu public.
 
 ## Format du rapport
 

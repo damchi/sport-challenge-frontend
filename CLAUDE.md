@@ -8,7 +8,7 @@ Frontend de l'application de challenges sportifs entre amis : **web (React + Vit
 - Légende du README : ✅ décidé · 🟡 proposition · ❓ question ouverte. Applique les ✅. Ne transforme jamais un 🟡 ou un ❓ en règle sans demander.
 - **Règles du produit** : la source de vérité est le README du backend (§2). Si le dépôt est cloné à côté (`../sport-challenge-api`), tu peux le lire, mais **tu ne le modifies jamais depuis ce projet**.
 - **Contrat d'API** : `openapi.yaml` du backend. Le client de `src/api` est généré ; si une route ou un champ manque, signale-le à l'utilisateur au lieu de contourner.
-- **Backlog** : issues GitHub (importées depuis `TASKS.md`, qui reste le document de référence ; 56 tickets `SC-WEB-001` à `SC-WEB-062`, numérotation non consécutive : les anciens tickets de préparation ont été fusionnés dans les tickets fonctionnels ; un ticket = un commit). Utilise le skill `next-task` pour le traiter ; le statut vit dans l'issue, pas dans `TASKS.md`.
+- **Backlog** : issues GitHub (importées depuis `TASKS.md`, qui reste le document de référence ; 55 tickets `SC-WEB-001` à `SC-WEB-062`, numérotation non consécutive : les anciens tickets de préparation ont été fusionnés dans les tickets fonctionnels ; un ticket = un commit). Utilise le skill `next-task` pour le traiter ; le statut vit dans l'issue, pas dans `TASKS.md`.
 - Si le code et le README se contredisent, signale-le et demande, ne tranche pas seul.
 
 ## Stack
@@ -96,7 +96,7 @@ Règles de structure :
 - **Aucun secret dans le bundle** : les variables `VITE_*` et `EXPO_PUBLIC_*` sont publiques. Elles ne contiennent que des adresses et des identifiants publics.
 - N'utilise jamais `dangerouslySetInnerHTML`. Les pseudos et textes d'autres utilisateurs sont affichés comme du texte.
 - Valide les paramètres des liens profonds (jeton d'invitation, identifiants) avant usage.
-- Analytics et suivi : rien n'est envoyé avant le consentement ; aucun nom, e-mail ni jeton dans les logs ni dans Sentry.
+- Analytics : aucune en V1 (si elles arrivent, rien n'est envoyé avant le consentement). Suivi d'erreurs sans consentement (app entre amis, pas de pages légales) : aucun nom, e-mail ni jeton dans les logs ni dans Sentry.
 - Ne lis pas et n'affiche pas `.env*` ni les fichiers de signature (`*.jks`, `*.p8`, `*.p12`, `*.keystore`).
 
 ## Workflow attendu
