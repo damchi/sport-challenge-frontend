@@ -1,6 +1,6 @@
 ---
 name: ts-reviewer
-description: Relecteur de code TypeScript et React du frontend Sport Challenge (web en V1, mobile en V2). À utiliser de façon proactive après toute modification de code, avant un commit, pour vérifier les types, la structure du monorepo, l'accès à l'API, les hooks et les tests.
+description: Relecteur de code TypeScript et React du frontend Sport Challenge (web en V1, mobile en V2). À utiliser de façon proactive après toute modification de code, avant un commit, pour vérifier les types, la structure du projet (une seule application en V1, monorepo en V2), l'accès à l'API, les hooks et les tests.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

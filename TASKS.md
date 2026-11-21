@@ -34,15 +34,15 @@ Correspondance avec les anciens statuts :
    Si l'API du ticket n'est pas encore disponible (champ **Backend**), il travaille contre les **mocks MSW** (ticket 010) et le signale.
 3. Implémentation, puis `pnpm check` (et les tests de bout en bout pour un parcours critique).
 4. Revue par les agents indiqués.
-5. Claude coche les critères dans l'issue (`tasks.py tick`), puis **propose** (sans l'exécuter) les fichiers et le message de commit, qui se termine par `Closes #N`. **Aucun commit ni push sans ton accord explicite.**
-6. Tu relis, tu commits, tu ouvres la pull request ; l'issue se ferme à la fusion et le ticket suivant devient disponible.
+5. Claude coche les critères dans l'issue (`tasks.py tick`), puis **committe et pousse sans demander** sur la branche du ticket (message terminé par `Closes #N`), comme le prévoit `CLAUDE.md`.
+6. La pull request s'ouvre sur ta demande ; Claude attend la CI, lit les commentaires et corrige ce qui est fondé. Tu fusionnes : l'issue se ferme et le ticket suivant devient disponible.
 
 ## Conventions
 
 - **Estimation** en points : 1, 2, 3, 5 (un ticket à 8 doit être découpé).
 - **Statut** : voir le tableau de correspondance ci-dessus (issue ouverte, étiquettes `en-cours`, `v1.1`, `blocked`, `needs-decision`, issue fermée). La ligne `Statut` de chaque ticket ci-dessous ne sert qu'à l'import.
 - **Commits** : Conventional Commits en anglais (`feat`, `fix`, `refactor`, `test`, `docs`, `chore`), scope = fonctionnalité, 72 caractères au plus, `Closes #N` (numéro de l'issue) puis `Refs: SC-WEB-0xx` en pied.
-- **Routes web** : `/` accueil · `/challenges/new` · `/challenges/:id` (onglets classement, participants, activités) · `/activities/new` · `/me` · `/invite/:token` · `/onboarding` · `/callback`.
+- **Routes web** : `/` accueil · `/challenges/new` · `/challenges/:id` (onglets classement, participants, activités) · `/activities/new` · `/me` · `/invite#<jeton>` (jeton dans le fragment, README §4.4) · `/onboarding` · `/callback`.
 - **Définition de terminé** :
   - [ ] Critères d'acceptation remplis
   - [ ] `pnpm check` passe (typecheck, lint, tests)
@@ -80,7 +80,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062, créés pendant le développement (voir leurs sections).
 
 ## Décisions à confirmer
 
@@ -96,17 +96,17 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de l'épopée F10 sont reportés en V1.1 (décision D10 : badges et upload d'avatar).
+Total : **165 points** (56 tickets), dont **151 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
-| F0 | Fondations minimales et CI | 001, 003, 005, 052 |
+| F0 | Fondations minimales et CI | 001, 003, 005, 052, 062 |
 | F1 | Contrat et client d'API | 007, 008, 009, 010 |
 | F2 | Internationalisation | 012 |
-| F3 | Authentification et coque | 016, 017, 018, 019 |
-| F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029 |
-| F5 | Classement | 030, 031, 032, 033 |
-| F6 | Activités | 034, 035, 036, 037 |
+| F3 | Authentification et coque | 016, 017, 018, 019, 054 |
+| F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 056, 057, 058, 061 |
+| F5 | Classement | 030, 031, 032, 033, 055, 059 |
+| F6 | Activités | 034, 035, 036, 037, 060 |
 | F7 | Invitations | 038, 039 |
 | F8 | Profil et compte | 040, 053, 041, 042 |
 | F9 | Qualité et livraison | 043, 044, 045, 046, 015, 047, 048 |
@@ -181,6 +181,26 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Commit** : `ci: add Claude pull request review workflow`
 **Statut** : À faire
 
+### SC-WEB-062 · Docs internes : corrections relevées par la relecture
+`F0` · Task · Phase 0 · Estimation 1 · Dépend de : 061 · Backend : aucun
+
+**Contexte** : écarts relevés par `spec-guardian` pendant SC-WEB-061 (PR #96). Ce ne sont pas des règles produit : la documentation se contredit, ou contredit `CLAUDE.md` et le code. Les deux écarts de règles (délai de grâce du verrouillage à 7 h, statuts des badges V1.1) sont à trancher à part et ne font pas partie de ce ticket.
+
+**Critères d'acceptation**
+- [ ] `TASKS.md` : nombre de tickets, points et tableau des épopées à jour ; SC-WEB-054 à SC-WEB-060 ajoutés d'après leurs issues ; route `/invite#<jeton>` à la place de `/invite/:token` (l. 45, README §4.4) ; SC-WEB-032 sans bouton de rafraîchissement dans ses tests ni son message de commit (décision du ticket : ni bouton ni geste maison).
+- [ ] `TASKS.md` (l. 37) et `.claude/skills/bootstrap/SKILL.md` : règle de commit et de push alignée sur `CLAUDE.md` (commit et push sans demander une fois les vérifications passées).
+- [ ] `.claude/agents/ts-reviewer.md` : plus de « structure du monorepo » (pas de monorepo en V1, FD3).
+- [ ] Chemin du backend : `../sport-challenge-api` à la place de `../backend` dans `CLAUDE.md`, `.claude/agents/spec-guardian.md` et les skills qui le citent (le script `api:sync` connaît déjà les deux).
+- [ ] Plage des tickets (`SC-WEB-001` à `SC-WEB-053`) mise à jour dans `CLAUDE.md` et `.claude/skills/next-task/SKILL.md`.
+- [ ] `challenge-ui-rules` et `bootstrap` : même ordre des étapes de l'assistant de création (visibilité à l'étape 1, puis récapitulatif), comme dans le code.
+- [ ] `README.md` §2 (coefficients) : suggestion « arrondie à deux décimales et jamais sous 0,1 », comme le README backend §2.4 (✅).
+- [ ] Aucune règle nouvelle ; un écart de règle se signale au lieu d'être tranché.
+
+**Tests** : aucun (documentation) ; `pnpm check` passe.
+**Revue** : `spec-guardian`.
+**Commit** : `docs: fix outdated internal docs`
+**Statut** : À faire
+
 ---
 
 # F1 — Contrat et client d'API
@@ -189,7 +209,7 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 `F1` · Task · Phase 1 · Estimation 3 · Dépend de : 001 · Backend : `api/openapi.yaml` (tickets API de chaque route)
 
 **Critères d'acceptation**
-- [ ] `pnpm api:sync` copie `openapi.yaml` depuis `../backend/api/openapi.yaml` s'il existe, sinon depuis l'adresse fournie ; la copie est versionnée dans `openapi/openapi.yaml`.
+- [ ] `pnpm api:sync` copie `openapi.yaml` depuis `../sport-challenge-api/api/openapi.yaml` (ou `../backend/api/openapi.yaml`) s'il existe, sinon depuis l'adresse fournie ; la copie est versionnée dans `openapi/openapi.yaml`.
 - [ ] `pnpm api:generate` produit les types dans `src/api/generated/` (jamais modifié à la main). Les scripts `api:sync` et `api:generate` sont ajoutés au `package.json` par ce ticket.
 - [ ] Si le contrat du backend n'existe pas encore, un contrat **provisoire** est rédigé avec l'utilisateur et sert de base aux mocks.
 - [ ] Un changement incompatible détecté dans le diff du contrat est signalé avant de continuer.
@@ -326,6 +346,21 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Tests** : navigation, 404.
 **Revue** : `ts-reviewer`, `ux-reviewer`.
 **Commit** : `feat(web): add application shell and navigation`
+**Statut** : À faire
+
+### SC-WEB-054 · Accueil : tuile « Créer un défi » en fin de liste
+`F3` · Story · Phase 3 · Estimation 1 · Dépend de : 020 · Backend : aucun
+
+**Contexte** : « Créer un défi » n'apparaît que dans l'état vide de l'accueil. Dès que la liste contient un défi (même abandonné), il n'y a plus aucun moyen d'en créer un autre. Décision du propriétaire (2026-11-20) : le 🟡 de `docs/design/design.md` (« La grille se termine par une tuile "Créer un défi" ») est validé.
+
+**Critères d'acceptation**
+- [ ] Quand la liste de l'accueil contient des défis, elle se termine par une tuile « Créer un défi » qui mène à `/challenges/new` : bordure pointillée `--color-border-dashed`, icône `plus` et texte en accent, hauteur minimale 120 px ; même tuile en mobile et dans la grille web.
+- [ ] La tuile est un lien accessible (nom « Créer un défi », zone tactile ≥ 44 px) ; l'état vide garde son bouton.
+- [ ] `docs/design/design.md` : le 🟡 de la tuile passe en ✅.
+
+**Tests** : liste non vide (tuile présente, lien vers la création), liste vide (bouton de l'état vide).
+**Revue** : `ux-reviewer`, `ts-reviewer`.
+**Commit** : `feat(challenges): end the home list with a create tile`
 **Statut** : À faire
 
 ---
@@ -475,6 +510,60 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Commit** : `feat(challenges): add participants list`
 **Statut** : À faire
 
+### SC-WEB-056 · Catégories variables et élimination sur le sport de référence
+`F4` · Task · Phase 4 · Estimation 2 · Dépend de : 032 · Backend : damchi/sport-challenge-api#251 (SC-API-132), damchi/sport-challenge-api#253 (SC-API-134)
+
+Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-carte-design.md`
+
+**Contexte** : décision du propriétaire du 2026-11-20 : un challenge a toujours le temps cumulé, les autres catégories deviennent optionnelles, et `run_elimination` est renommé `elimination` (l'élimination porte sur le sport de référence, plus seulement sur la course).
+
+**Critères d'acceptation**
+- [ ] Contrat régénéré (`openapi/`, `src/api/generated/schema.ts`) ; plus aucune référence à `run_elimination`.
+- [ ] Détail du challenge (`ChallengeCategories`, `categoryNames`), classement (`ChallengeLeaderboard`, `EliminationProgress`) et « Mes défis » affichent de 1 à 3 catégories, dans l'ordre reçu, sans supposer qu'il y en a 3.
+- [ ] Le libellé de l'élimination nomme le sport de référence (« Vélo avec élimination »), traduit en français et en anglais.
+- [ ] Mocks (`src/mocks/handlers.ts`) : un challenge à 1 catégorie et un challenge vélo.
+
+**Tests** : rendu à 1, 2 et 3 catégories ; libellé de l'élimination selon le sport.
+**Revue** : `ts-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): show only the categories a challenge has`
+**Statut** : À faire
+
+### SC-WEB-057 · Création : sport de référence et catégories optionnelles
+`F4` · Story · Phase 4 · Estimation 3 · Dépend de : 056 · Backend : damchi/sport-challenge-api#252 (SC-API-133), damchi/sport-challenge-api#253 (SC-API-134)
+
+Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-carte-design.md`
+
+**Contexte** : la création n'est plus centrée sur la course. Le créateur choisit un sport de référence, puis ajoute s'il le veut la distance cumulée et l'élimination.
+
+**Critères d'acceptation**
+- [ ] Étape catégories (`CategoriesStep`) : sport de référence parmi les sports dont la distance est obligatoire (course par défaut) ; temps cumulé affiché comme toujours inclus ; distance cumulée et élimination activables séparément ; X demandé seulement si l'élimination est choisie.
+- [ ] Coefficients pré-remplis avec la même règle que le backend : `min(1, f_sport / f_référence)`, deux décimales, jamais sous 0,1 ; la référence est à ×1, non modifiable ; changer de référence recalcule les suggestions. Seuls les coefficients modifiés sont envoyés, par rapport à ces suggestions (`challengeCreate.ts`).
+- [ ] Coefficients masqués et non envoyés quand aucune catégorie ne s'en sert.
+- [ ] Requête : `reference_sport`, `categories.cumulative_distance`, `categories.elimination.step_meters` ; correspondance des erreurs serveur (`reference_sport`, `categories.elimination.step_meters`, `distance_factors`) vers les champs du formulaire.
+- [ ] Récapitulatif (`RecapStep`) : référence et catégories choisies.
+
+**Tests** : calcul des suggestions par référence ; diff des coefficients après un changement de référence ; challenge au temps seul ; erreurs serveur rattachées aux champs.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): pick the reference sport and the optional categories`
+**Statut** : À faire
+
+### SC-WEB-058 · Création : catégorie Points
+`F4` · Story · Phase 4 · Estimation 2 · Dépend de : 057 · Backend : damchi/sport-challenge-api#255 (SC-API-136)
+
+Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-carte-design.md`
+
+**Contexte** : nouvelle catégorie Points. Chaque semaine, chaque critère choisi donne un mini-classement, et le top 5 ou le top 10 marque des points dégressifs, comme en F1.
+
+**Critères d'acceptation**
+- [ ] Création : catégorie Points activable ; critères à cocher (au moins un) : séance la plus longue en temps, séance la plus longue en distance équivalente, nombre de séances ; barème top 5 (10-8-6-4-2) ou top 10 (25-18-15-12-10-8-6-4-2-1), avec le barème affiché ; durée minimale d'une séance (1 à 180 min, 20 par défaut) demandée seulement si « nombre de séances » est coché.
+- [ ] Coefficients affichés dès que la distance cumulée **ou** le critère de distance est choisi.
+- [ ] Requête `categories.points` ; erreurs serveur `categories.points.*` rattachées aux champs ; récapitulatif.
+
+**Tests** : validation du formulaire, requête envoyée, visibilité conditionnelle de la durée minimale et des coefficients.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): create a points category`
+**Statut** : À faire
+
 ### SC-WEB-061 · Docs internes : catégories à la carte
 `F4` · Task · Phase 4 · Estimation 1 · Dépend de : 056 · Backend : aucun (README backend §2.1, §2.3, §2.4)
 
@@ -531,9 +620,9 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 - [ ] Heure de dernière mise à jour affichée (`computed_at`).
 - [ ] Pas de temps réel en V1.
 
-**Tests** : rechargement au retour de visibilité, bouton, affichage de l'heure.
+**Tests** : rechargement au retour de visibilité, affichage de l'heure.
 **Revue** : `ts-reviewer`, `ux-reviewer`.
-**Commit** : `feat(leaderboard): refresh on focus and manual refresh`
+**Commit** : `feat(leaderboard): refresh on focus and show the update time`
 **Statut** : À faire
 
 ### SC-WEB-033 · Challenge terminé : résultats figés
@@ -547,6 +636,40 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Tests** : challenge terminé, actions absentes.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
 **Commit** : `feat(leaderboard): show frozen results for finished challenges`
+**Statut** : À faire
+
+### SC-WEB-055 · Rafraîchissement automatique du classement
+`F5` · Story · V1.1 · Estimation 1 · Dépend de : 032 · Backend : aucun (charge du recalcul du classement à vérifier côté backend)
+
+**Contexte** : décision du propriétaire (2026-11-20, pendant SC-WEB-032) : en V1, le classement se recharge à l'ouverture et au retour sur la page ; pas de bouton « Actualiser » ni de geste maison (le tirer-pour-rafraîchir natif du navigateur recharge la page). Un rafraîchissement automatique est reporté : il change la règle ✅ « pas de temps réel en V1 » (README §2 et §4) et doit être tranché avant d'être fait.
+
+**Critères d'acceptation**
+- [ ] Décision : rafraîchissement automatique (polling) ou attente du flux serveur (SSE), et intervalle.
+- [ ] Si polling : `refetchInterval` sur `useLeaderboard`, arrêté quand la page est cachée (`refetchIntervalInBackground: false`).
+- [ ] Un rafraîchissement automatique raté n'affiche pas le bandeau d'erreur à chaque intervalle.
+- [ ] README (§2, §4) et `docs/design/design.md` mis à jour avec la nouvelle règle.
+
+**Tests** : rechargement à l'intervalle (horloge simulée), arrêt quand la page est cachée, erreur silencieuse.
+**Revue** : `ts-reviewer`, `spec-guardian`.
+**Commit** : `feat(leaderboard): refresh automatically while on screen`
+**Statut** : Reporté (V1.1), à valider
+
+### SC-WEB-059 · Classement et Mes défis : catégorie Points
+`F5` · Story · Phase 5 · Estimation 3 · Dépend de : 056 · Backend : damchi/sport-challenge-api#255 (SC-API-136)
+
+Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-carte-design.md`
+
+**Contexte** : le classement Points montre les points acquis (semaines verrouillées) et, à part, les points provisoires de la semaine en cours ; le rang porte sur les points acquis seuls.
+
+**Critères d'acceptation**
+- [ ] Classement : catégorie Points avec rang, points acquis et points provisoires (par exemple « 43 pts + 12 provisoires ») ; rien de provisoire une fois le challenge terminé et figé.
+- [ ] Détail du challenge : critères, barème et durée minimale de la catégorie.
+- [ ] « Mes défis » : rang dans la catégorie Points et points provisoires.
+- [ ] Textes en français et en anglais ; explication courte de l'attribution des points (quand ils deviennent acquis : 7 h, heure locale du challenge, le premier jour de la semaine suivante).
+
+**Tests** : rendu avec et sans points provisoires, ex aequo, challenge terminé.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(leaderboard): show the points category`
 **Statut** : À faire
 
 ---
@@ -610,6 +733,22 @@ Total : **150 points** (47 tickets), dont **137 pour la V1** ; les 13 points de 
 **Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`, `spec-guardian`.
 **Commit** : `feat(activities): add read-only participant activities view`
 **Statut** : À faire
+
+### SC-WEB-060 · Variante « danger » de la boîte de confirmation
+`F6` · Story · Phase 6 · Estimation 1 · Dépend de : 036 · Backend : aucun
+
+**Contexte** : relecture UX de SC-WEB-036 (PR #89). `ConfirmDialog` donne au bouton de confirmation le style principal (`--color-accent`) quelle que soit l'action. Une action définitive (supprimer une activité, abandonner un défi) ressemble ainsi à une action ordinaire. `docs/design/design.md` n'a pas de jeton ni de style de bouton « danger » : la couleur est à décider avant de coder.
+
+**Critères d'acceptation**
+- [ ] Décision de design : jeton(s) de l'action destructive (clair et sombre, contraste AA) ajoutés à `docs/design/design.md` (couleurs et boutons).
+- [ ] `ConfirmDialog` accepte une variante `danger` pour le bouton de confirmation ; la variante par défaut ne change pas.
+- [ ] La suppression d'une activité (`ActivityItem`) et l'abandon d'un défi (`ChallengeParticipation`) utilisent la variante `danger` ; la confirmation de sortie de l'assistant de création est à trancher avec la décision.
+- [ ] Le focus initial reste sur « Annuler » ; l'action n'est jamais signalée par la couleur seule (libellé explicite).
+
+**Tests** : rendu des deux variantes, focus initial sur « Annuler » conservé.
+**Revue** : `ux-reviewer`, `ts-reviewer`.
+**Commit** : `feat(ui): add a danger variant to the confirmation dialog`
+**Statut** : À valider
 
 ---
 
