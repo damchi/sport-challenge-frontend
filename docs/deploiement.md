@@ -12,6 +12,7 @@ L'infrastructure est **configurée à la main** ; ce document la décrit. Le wor
 | Contenu | le build de production (`dist/`) : fichiers statiques, aucune donnée personnelle |
 | Configuration | `firebase.json`, **généré** après le build par `pnpm hosting:config` (`scripts/hostingConfig.ts`), non versionné |
 | Workflow | `.github/workflows/deploy.yml` |
+| CLI Firebase | `ci/firebase/` : `firebase-tools` épinglé avec son propre lockfile, outil de la CI seulement (pas une dépendance de l'application) |
 
 Les fichiers statiques sont servis par le CDN mondial de Firebase. Ils ne contiennent aucune donnée d'utilisateur : la cible « données à Montréal » du backend ne les concerne pas.
 
@@ -25,7 +26,7 @@ Toutes les règles sont dans `scripts/hostingConfig.ts`, testé par la CI :
 - **En-têtes de sécurité** sur toutes les réponses : `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.
 - **Politique de contenu**, calculée à partir des mêmes variables `VITE_*` que le build : scripts du site et empreinte du script de thème de `index.html` ; connexions vers le site, l'API, Auth0 et l'hôte de Sentry ; iframe d'Auth0 (restauration de session) ; workers du site et `blob:` (le SDK Auth0 garde le jeton de rafraîchissement dans un worker créé depuis un blob) ; `frame-ancestors 'none'` contre le clickjacking (PR #95).
 
-Une adresse qui change (API, Auth0, Sentry) se change donc seulement dans les variables de l'Environment.
+Une adresse qui change (API, Auth0, Sentry) se change donc seulement dans les variables `VITE_*` du dépôt.
 
 ## Workflow
 
@@ -35,15 +36,23 @@ Une adresse qui change (API, Auth0, Sentry) se change donc seulement dans les va
 | `workflow_dispatch` sans `ref` | redéploie la tête de `main`, avec la même approbation |
 | `workflow_dispatch` avec `ref` (retour arrière) | redéploie ce commit de `main`, avec la même approbation |
 
-Étapes :
+Deux jobs, pour que le code de l'application et de ses dépendances ne s'exécute jamais avec des droits GCP :
 
-1. Vérifie que le commit appartient à `main`. Si l'approbation arrive après une fusion plus récente, ce déploiement est sauté : celui de la fusion suivante le remplace (jamais une version plus ancienne après une plus récente). Un retour arrière n'est pas concerné.
-2. `pnpm build` avec les variables de l'Environment, `pnpm bundle:check`, puis `pnpm hosting:config`.
-3. Authentification à GCP par **Workload Identity Federation** : le jeton OIDC du job est échangé contre les droits du compte `sc-web-deploy`. Aucune clé JSON, aucun secret.
-4. Publication avec la CLI Firebase, épinglée (`firebase-tools@15.35.0`, via `npx` : elle n'est pas une dépendance de l'application). Le message de la version Firebase est le SHA du commit.
-5. **Test de fumée** : le site sert bien ce build (script d'entrée de `index.html`), avec la politique de contenu ; `sw.js` est en `no-cache` ; un fichier absent répond 404.
+1. **`build`**, sans aucun droit ni Environment :
+   - vérifie que `ref` est un SHA complet et que le commit appartient à `main`, avant d'exécuter le moindre code du commit ;
+   - `pnpm build` avec les variables `VITE_*` du dépôt, `pnpm bundle:check`, puis `pnpm hosting:config` ;
+   - garde `dist/` et `firebase.json` comme artefact.
+2. **`production`**, dans l'Environment `production`, après l'approbation ; seul job à pouvoir obtenir le jeton OIDC (`id-token: write`) :
+   - si l'approbation arrive après une fusion plus récente, ce déploiement est sauté : celui de la fusion suivante le remplace (jamais une version plus ancienne après une plus récente). Un retour arrière n'est pas concerné ;
+   - installe la CLI Firebase depuis `ci/firebase/` (`--frozen-lockfile --ignore-scripts`, sans cache de dépendances), puis récupère l'artefact dans un dossier à part (`site/`) : l'artefact ne peut écraser ni la CLI ni le fichier d'identifiants ;
+   - vérifie `firebase.json` **avant** l'authentification : seules les clés que `scripts/hostingConfig.ts` écrit sont acceptées, `public` vaut `dist`, les réécritures mènent à un fichier. Un build compromis ne peut ainsi ni faire exécuter une commande (`predeploy`) avec les droits GCP, ni publier autre chose que `dist/` ;
+   - authentification à GCP par **Workload Identity Federation** : le jeton OIDC du job est échangé contre les droits du compte `sc-web-deploy`. Aucune clé JSON, aucun secret ;
+   - publication ; le message de la version Firebase est le SHA du commit ;
+   - **test de fumée** : le site sert bien ce build (script d'entrée de `index.html`), avec la politique de contenu (`frame-ancestors 'none'`) et `X-Frame-Options: DENY` ; `sw.js` est en `no-cache` ; un fichier absent répond 404.
 
-Un seul déploiement à la fois, jamais annulé en cours. Permissions minimales : `contents: read`, et `id-token: write` seulement dans le job de déploiement. Actions épinglées par SHA.
+Un seul déploiement à la fois, jamais annulé en cours. Permissions minimales : `contents: read`, et `id-token: write` seulement dans le job `production`. Actions épinglées par SHA.
+
+Mettre à jour la CLI Firebase : changer la version dans `ci/firebase/package.json`, puis `pnpm install --dir ci/firebase --ignore-workspace --lockfile-only`, et committer le lockfile.
 
 Retour arrière rapide sans rebuild : la console Firebase (Hosting > Historique des versions > Restaurer). Le workflow suivant republie la tête de `main`.
 
@@ -67,14 +76,16 @@ gcloud projects add-iam-policy-binding $P --member=serviceAccount:$SA \
   --role=roles/firebasehosting.admin --condition=None
 
 # Fournisseur du dépôt web, dans le pool du backend : le seul job de
-# l'Environment production, sur main, de ce dépôt (identifiant numérique compris)
+# l'Environment production, sur main, de ce dépôt (identifiant numérique compris),
+# dans le workflow de déploiement (aucun autre workflow de main)
 gcloud iam workload-identity-pools providers create-oidc github-web-provider \
   --workload-identity-pool=github-prod --location=global --project=$P \
   --issuer-uri=https://token.actions.githubusercontent.com \
   --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
   --attribute-condition="assertion.repository_id == '1438466700' && \
 assertion.repository == 'damchi/sport-challenge-frontend' && assertion.ref == 'refs/heads/main' && \
-assertion.environment == 'production'"
+assertion.environment == 'production' && \
+assertion.job_workflow_ref == 'damchi/sport-challenge-frontend/.github/workflows/deploy.yml@refs/heads/main'"
 gcloud iam service-accounts add-iam-policy-binding $SA --project=$P \
   --role=roles/iam.workloadIdentityUser \
   --member="principal://iam.googleapis.com/$POOL/subject/repo:damchi@38217786/sport-challenge-frontend@1438466700:environment:production"
@@ -98,7 +109,9 @@ Ajouter l'origine du site à `CORS_ALLOWED_ORIGINS` de l'API de production (`../
 
 ### 5. GitHub
 
-1. **Environment** `production` (Settings > Environments), avec ces **variables** (pas des secrets : toutes sont publiques, elles finissent dans le bundle ou dans la politique de contenu) :
+Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publiques et finissent dans le bundle, dans la politique de contenu ou dans les journaux.
+
+1. **Environment** `production` (Settings > Environments), avec les variables du job de publication :
 
    | Variable | Valeur |
    |---|---|
@@ -106,14 +119,19 @@ Ajouter l'origine du site à `CORS_ALLOWED_ORIGINS` de l'API de production (`../
    | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/<numéro du projet>/locations/global/workloadIdentityPools/github-prod/providers/github-web-provider` |
    | `GCP_WEB_DEPLOY_SERVICE_ACCOUNT` | `sc-web-deploy@sport-challenge-prod.iam.gserviceaccount.com` |
    | `WEB_URL` | `https://sport-challenge-prod.web.app` (sans `/` final) |
+
+   **Deployment branches = Selected branches, `main` seulement**, et **Required reviewers**. Décocher **Allow administrators to bypass configured protection rules** et, si possible, cocher **Prevent self-review**.
+2. **Variables du dépôt** (Settings > Secrets and variables > Actions > Variables), lues par le job `build`, qui n'a pas d'Environment :
+
+   | Variable | Valeur |
+   |---|---|
    | `VITE_API_URL` | adresse de l'API de production |
    | `VITE_AUTH0_DOMAIN` | `sport-challenge-prod.ca.auth0.com` (puis le domaine personnalisé) |
    | `VITE_AUTH0_CLIENT_ID` | identifiant de l'application web de production |
    | `VITE_AUTH0_AUDIENCE` | identifiant de l'API de production dans Auth0 |
    | `VITE_SENTRY_DSN` | facultatif : DSN du projet Sentry du web |
 
-   **Deployment branches = Selected branches, `main` seulement**, et **Required reviewers**. Décocher **Allow administrators to bypass configured protection rules** et, si possible, cocher **Prevent self-review**.
-2. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et ses reviewers en place. Tant qu'elle ne vaut pas `true`, le job est ignoré :
+3. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et ses reviewers en place. Tant qu'elle ne vaut pas `true`, les deux jobs sont ignorés :
    ```
    gh variable set DEPLOY_PRODUCTION --body true
    ```

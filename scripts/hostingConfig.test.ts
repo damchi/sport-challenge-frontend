@@ -67,6 +67,14 @@ describe('hostingConfig', () => {
   const { hosting } = hostingConfig(env, html);
   const rewrite = new RegExp(hosting.rewrites[0].regex);
 
+  // The deploy workflow refuses any other key (step "Check firebase.json").
+  it('writes only the keys the deploy workflow accepts', () => {
+    expect(Object.keys(hostingConfig(env, html))).toEqual(['hosting']);
+    expect(Object.keys(hosting).sort()).toEqual(['headers', 'ignore', 'public', 'rewrites']);
+    expect(hosting.public).toBe('dist');
+    expect(hosting.rewrites.every((entry) => 'destination' in entry)).toBe(true);
+  });
+
   it('serves index.html for the app addresses, never for a file', () => {
     expect(
       ['/', '/callback', '/challenges/42/participants', '/invite'].every((path) =>

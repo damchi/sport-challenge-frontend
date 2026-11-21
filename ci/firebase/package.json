@@ -1,0 +1,9 @@
+{
+  "name": "firebase-cli",
+  "private": true,
+  "description": "Firebase CLI of the deploy workflow, locked on its own: not a dependency of the app",
+  "packageManager": "pnpm@12.21.0",
+  "dependencies": {
+    "firebase-tools": "15.35.0"
+  }
+}
