@@ -29,7 +29,8 @@ function BlockingChallenge({ challengeId }: { challengeId: string }) {
 /**
  * Deletes the account, after a confirmation that says what it does and asks
  * the user to tick that they understand it is final. Deleted: the app ends
- * the session. Refused because the user is the last creator of challenges
+ * the session, also when a retry finds it already gone (`account_deleted`).
+ * Refused because the user is the last creator of challenges
  * not finished: those challenges are listed, to hand them over first.
  */
 export function DeleteAccount() {
@@ -97,7 +98,13 @@ export function DeleteAccount() {
         cancelLabel={t('profile.deleteAccount.cancel')}
         onConfirm={() => {
           setConfirming(false);
-          deleteMe.mutate(undefined, { onSuccess: onDeleted });
+          deleteMe.mutate(undefined, {
+            onSuccess: onDeleted,
+            // A retry after a 500 that came once the account was deleted.
+            onError: (failure) => {
+              if (failure instanceof ApiError && failure.code === 'account_deleted') onDeleted();
+            },
+          });
         }}
         onCancel={() => setConfirming(false)}
       >

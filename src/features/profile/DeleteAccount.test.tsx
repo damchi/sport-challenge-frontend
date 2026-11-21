@@ -89,6 +89,32 @@ describe('DeleteAccount', () => {
     expect(sent).toHaveBeenCalledTimes(1);
   });
 
+  it('ends the session when a retry finds the account already deleted', async () => {
+    // The first attempt fails after the deletion; the retry finds it done.
+    let attempts = 0;
+    deleteAnswers(() =>
+      ++attempts === 1
+        ? HttpResponse.json(
+            { error: { code: 'internal_error', message: 'Internal error' } },
+            { status: 500 },
+          )
+        : HttpResponse.json(
+            { error: { code: 'account_deleted', message: 'Account deleted' } },
+            { status: 401 },
+          ),
+    );
+    const { onAccountDeleted } = renderDeleteAccount();
+
+    confirmDeletion();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Le service est momentanément indisponible. Réessaie dans un instant.',
+    );
+    expect(onAccountDeleted).not.toHaveBeenCalled();
+    confirmDeletion();
+
+    await waitFor(() => expect(onAccountDeleted).toHaveBeenCalledTimes(1));
+  });
+
   it('lists the challenges to hand over when the user is their last creator', async () => {
     const [first, second] = mockChallenges;
     deleteAnswers(() =>
