@@ -11,7 +11,7 @@ import {
 } from '../../../domain/schemas/challenge';
 import { FieldError } from '../create/FieldError';
 import { describedBy, inputClass } from '../create/fields';
-import { CATEGORY_NAMES } from './categoryNames';
+import { useCategoryName } from './categoryNames';
 
 const EDIT_FIELDS = ['title', 'description'] as const;
 
@@ -107,10 +107,11 @@ function ChallengeEditForm({
     Intl.DateTimeFormat().resolvedOptions().timeZone,
     locale,
   );
+  const categoryName = useCategoryName(challenge.reference_sport);
   const categories = new Intl.ListFormat(locale, { type: 'conjunction' }).format(
     [...challenge.categories]
       .sort((a, b) => a.position - b.position)
-      .map((category) => t(CATEGORY_NAMES[category.type])),
+      .map((category) => categoryName(category.type)),
   );
 
   useEffect(() => {

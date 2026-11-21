@@ -21,9 +21,9 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 **Challenges**
 - ✅ Public (listé sur l'accueil) ou privé (sur invitation d'un créateur ou d'un participant).
 - ✅ Plusieurs créateurs possibles.
-- ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. Tout challenge a **toujours les 3 catégories** ; le créateur règle l'incrément X (en km) de la catégorie 3 et peut changer les coefficients de distance de la catégorie 2 (voir Activités).
+- ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. ✅ Catégories à la carte (décision du 2026-11-20, README backend §2.1) : un challenge a **toujours** le temps cumulé ; la distance cumulée et l'élimination sont **au choix** (un challenge peut n'avoir que le temps cumulé). Le créateur choisit un **sport de référence** parmi les sports à distance obligatoire (**course par défaut**), règle l'incrément X (en km) de l'élimination et peut changer les coefficients de la distance cumulée (voir Activités). La catégorie Points viendra avec SC-WEB-058.
 - ✅ Début et fin selon le **fuseau du lieu de lancement** (ex. Montréal) : l'interface affiche les dates dans ce fuseau.
-- ✅ Catégories (incrément X et coefficients) **figées à la création** (README backend §2.3, §2.4) ; ✅ à tout moment (avant comme après le début), seuls le titre et la description sont modifiables : dates, fuseau, visibilité, « les participants peuvent inviter » et catégories sont figés à la création (décision du 2026-11-20, alignée sur le contrat `PATCH /challenges/{id}`).
+- ✅ Catégories, sport de référence, incrément X et coefficients **figés à la création** (README backend §2.3, §2.4) ; ✅ à tout moment (avant comme après le début), seuls le titre et la description sont modifiables : dates, fuseau, visibilité, « les participants peuvent inviter » et catégories sont figés à la création (décision du 2026-11-20, alignée sur le contrat `PATCH /challenges/{id}`).
 
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
@@ -31,10 +31,10 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Les activités détaillées (date, sport, durée, distance) de chaque participant sont visibles par les autres participants du challenge ; l'app l'indique clairement **avant** de rejoindre.
 - ✅ « Quitter » = **abandon** : éliminé de toutes les catégories, définitivement (affiché « a abandonné »). Un compte supprimé est traité de la même façon. Les créateurs peuvent supprimer le challenge, ajouter un créateur et exclure un participant.
 
-**Catégories** (3, un podium chacune)
+**Catégories** (1 à 3, un podium chacune, affichées dans l'ordre du challenge : temps, distance, élimination)
 - ✅ **1. Temps cumulé** : toutes les activités, tous sports confondus ; plus de temps cumulé.
-- ✅ **2. Distance cumulée** : activités avec km, ramenées à une distance de course si le sport est plus rapide ; plus de distance équivalente.
-- ✅ **3. Course avec élimination** : course seule, en distance ; la distance d'une semaine doit être **au minimum** celle de la semaine précédente plus X km (incrément choisi à la création) ; si la personne court plus que le minimum, sa distance réelle devient la nouvelle base (X = 2 : 5 km, puis minimum 7 km ; 10 km courus, puis minimum 12 km). Éliminé de cette catégorie seulement ; pas d'élimination en semaine 1. Pendant la semaine, statut « objectif atteint », « en cours » ou « à risque ».
+- ✅ **2. Distance cumulée** (au choix) : activités avec km, ramenées à une distance du sport de référence si le sport est plus rapide ; plus de distance équivalente (« 12,5 km éq. vélo »).
+- ✅ **3. Élimination** (au choix), nommée d'après le sport de référence (« Course avec élimination », « Vélo avec élimination ») : sport de référence seul, en distance réelle ; la distance d'une semaine doit être **au minimum** celle de la semaine précédente plus X km (incrément choisi à la création) ; si la personne court plus que le minimum, sa distance réelle devient la nouvelle base (X = 2 : 5 km, puis minimum 7 km ; 10 km courus, puis minimum 12 km). Éliminé de cette catégorie seulement ; pas d'élimination en semaine 1. Pendant la semaine, statut « objectif atteint », « en cours » ou « à risque ».
 
 **Activités**
 - ✅ V1 : saisie manuelle uniquement.
@@ -47,7 +47,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.
 - ✅ La vitesse (ou l'allure) n'est **jamais saisie** : l'interface affiche celle que l'API calcule à partir de la durée et de la distance.
 - ✅ Les activités manuelles sont marquées « manuelle » (décision du propriétaire du 2026-11-20, consignée dans la PR #89).
-- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; le créateur peut les changer à la création (0,1 à 2, deux décimales), la course restant ×1, puis ils sont figés (README backend §2.4).
+- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; ils sont exprimés par rapport à la course ; pour une autre référence, la suggestion est `min(1, coefficient du sport / coefficient de la référence)` (README backend §2.4). Le créateur peut les changer à la création (0,1 à 2, deux décimales), le sport de référence restant ×1, puis ils sont figés. Sans distance cumulée, il n'y a pas de coefficients (la création les refuse).
 
 **Classement**
 - ✅ Mis à jour **au rafraîchissement** en V1 (pas de temps réel).

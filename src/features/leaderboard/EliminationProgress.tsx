@@ -19,7 +19,7 @@ const STATUSES: Record<
 };
 
 /**
- * The week of a survivor in the run elimination: status, distance run against
+ * The week of a survivor in the elimination: status, distance run against
  * the minimum of the week, and a bar. Every value is the server's.
  */
 export function EliminationProgress({ progress }: { progress: Progress }) {
@@ -36,7 +36,7 @@ export function EliminationProgress({ progress }: { progress: Progress }) {
         <StatusPill label={t(`leaderboard.elimination.${status}`)} Icon={Icon} tone={tone} />
         <span className="text-sm text-muted tabular-nums">
           {t('leaderboard.elimination.progress', {
-            run: formatKm(progress.run_meters / 1000, locale),
+            done: formatKm(progress.run_meters / 1000, locale),
             minimum: formatKm(minimum / 1000, locale),
           })}
         </span>
@@ -50,7 +50,7 @@ export function EliminationProgress({ progress }: { progress: Progress }) {
 }
 
 /**
- * Context of the run elimination, above its ranking: the end of the week in
+ * Context of the elimination, above its ranking: the end of the week in
  * the challenge's time zone, that week 1 eliminates no one, and how the
  * minimum moves (the server applies it; only X is shown here).
  */
@@ -65,7 +65,7 @@ export function EliminationContext({
   const locale = i18n.resolvedLanguage ?? 'fr';
   const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zone = otherTimeZoneName(challenge.timezone, userTimeZone, locale);
-  const step = challenge.categories.find((category) => category.type === 'run_elimination')?.params
+  const step = challenge.categories.find((category) => category.type === 'elimination')?.params
     .step_meters;
   return (
     <div className="mt-4 grid gap-1 text-sm text-muted">

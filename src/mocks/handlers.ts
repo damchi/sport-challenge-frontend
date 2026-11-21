@@ -60,8 +60,50 @@ export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_,
     my_role: role,
     my_status: role === 'abandoned' ? 'abandoned' : role === 'outsider' ? null : 'active',
     status: index % 3 === 0 ? 'upcoming' : index % 3 === 1 ? 'ongoing' : 'finished',
+    my_week: null,
   };
 });
+
+/** A challenge of the mocks run in cycling: distances brought back to the ride. */
+export const mockRideChallengeId = '00000000-0000-4000-8000-000000000005';
+/** A challenge of the mocks with the cumulative time only. */
+export const mockTimeOnlyChallengeId = '00000000-0000-4000-8000-000000000014';
+
+type Category = ChallengeDetail['categories'][number];
+
+function mockCategories(
+  challengeId: string,
+): Pick<ChallengeDetail, 'reference_sport' | 'categories'> {
+  const time: Category = { type: 'cumulative_time', position: 1, params: {} };
+  if (challengeId === mockTimeOnlyChallengeId)
+    return { reference_sport: 'run', categories: [time] };
+  if (challengeId === mockRideChallengeId) {
+    return {
+      reference_sport: 'ride',
+      categories: [
+        time,
+        {
+          type: 'cumulative_distance',
+          position: 2,
+          params: { factors: { ride: 1, run: 1, rowing: 1, walk: 1 } },
+        },
+        { type: 'elimination', position: 3, params: { sport: 'ride', step_meters: 10_000 } },
+      ],
+    };
+  }
+  return {
+    reference_sport: 'run',
+    categories: [
+      time,
+      {
+        type: 'cumulative_distance',
+        position: 2,
+        params: { factors: { run: 1, ride: 0.3, rowing: 0.5, walk: 1 } },
+      },
+      { type: 'elimination', position: 3, params: { sport: 'run', step_meters: 2000 } },
+    ],
+  };
+}
 
 const PAGE_SIZE = 20;
 
@@ -81,15 +123,8 @@ export function mockChallengeDetail(summary: ChallengeSummary): ChallengeDetail 
     timezone: summary.timezone,
     starts_at: summary.starts_at,
     ends_at: summary.ends_at,
-    categories: [
-      { type: 'cumulative_time', position: 1, params: {} },
-      {
-        type: 'cumulative_distance',
-        position: 2,
-        params: { factors: { run: 1, ride: 0.3, rowing: 0.5, walk: 1 } },
-      },
-      { type: 'run_elimination', position: 3, params: { sport: 'run', step_meters: 2000 } },
-    ],
+    ...mockCategories(summary.id),
+    participant_count: summary.participant_count,
     my_role: summary.my_role,
     my_status: summary.my_status,
     status: summary.status,
@@ -114,6 +149,7 @@ export const mockParticipants: Participant[] = Array.from({ length: 25 }, (_, in
   last_name: index === 11 ? null : 'Gagnon',
   avatar: null,
   status: index % 4 === 3 ? 'abandoned' : 'active',
+  is_creator: index === 0,
   joined_at: new Date(Date.UTC(2026, 10, 2, 14 + index)).toISOString(),
 }));
 
@@ -144,9 +180,9 @@ function mockRanking(
     user: user(entry.participant),
     value: entry.value,
     abandoned: false,
-    // In run_elimination only; outside the weeks of the challenge here.
+    // In the elimination only; outside the weeks of the challenge here.
     elimination:
-      type === 'run_elimination'
+      type === 'elimination'
         ? {
             status: null,
             eliminated_week: null,
@@ -176,7 +212,7 @@ const mockLeaderboard: Leaderboard = {
     mockRanking('cumulative_time', (index) => (index < 2 ? 36_000 : 30_000 - index * 600)),
     // Meters; the second and third are tied.
     mockRanking('cumulative_distance', (index) => 52_300 - Math.max(index, 2) * 1_000),
-    mockRanking('run_elimination', (index) => 30_000 - index * 750),
+    mockRanking('elimination', (index) => 30_000 - index * 750),
   ],
 };
 
@@ -272,7 +308,12 @@ export const handlers = [
       };
       return HttpResponse.json(body, { status: 404 });
     }
-    return HttpResponse.json<Leaderboard>(mockLeaderboard);
+    // Only the categories the challenge has.
+    const types = new Set(mockCategories(String(params.challengeId)).categories.map((c) => c.type));
+    return HttpResponse.json<Leaderboard>({
+      ...mockLeaderboard,
+      categories: mockLeaderboard.categories.filter((category) => types.has(category.type)),
+    });
   }),
   // Every participant shows the user's activities; the cursor is the index
   // of the next one. Someone who never joined answers 404.
@@ -450,18 +491,30 @@ export const handlers = [
         timezone: body.timezone,
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),
+        reference_sport: body.reference_sport ?? 'run',
         categories: [
           { type: 'cumulative_time', position: 1, params: {} },
-          {
-            type: 'cumulative_distance',
-            position: 2,
-            params: { factors: { ride: 0.3, ...body.distance_factors } },
-          },
-          {
-            type: 'run_elimination',
-            position: 3,
-            params: { sport: 'run', step_meters: body.elimination_step_meters },
-          },
+          ...(body.categories?.cumulative_distance
+            ? [
+                {
+                  type: 'cumulative_distance' as const,
+                  position: 2,
+                  params: { factors: { ride: 0.3, ...body.distance_factors } },
+                },
+              ]
+            : []),
+          ...(body.categories?.elimination
+            ? [
+                {
+                  type: 'elimination' as const,
+                  position: 3,
+                  params: {
+                    sport: body.reference_sport ?? 'run',
+                    step_meters: body.categories.elimination.step_meters,
+                  },
+                },
+              ]
+            : []),
         ],
       },
       { status: 201 },

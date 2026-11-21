@@ -36,6 +36,7 @@ function participant(overrides: Partial<Participant>): Participant {
     last_name: 'Roy',
     avatar: null,
     status: 'active',
+    is_creator: false,
     joined_at: '2026-11-02T15:00:00Z',
     ...overrides,
   };

@@ -530,7 +530,7 @@ describe('ChallengeCreateWizard', () => {
           timezone: 'America/Toronto',
           start_date: '2026-10-05',
           weeks: 6,
-          elimination_step_meters: 2500,
+          categories: { cumulative_distance: {}, elimination: { step_meters: 2500 } },
         },
       ]);
     });
@@ -605,7 +605,12 @@ describe('ChallengeCreateWizard', () => {
     it('shows a refused X on its field', async () => {
       answerCreation(() =>
         HttpResponse.json(
-          { error: { code: 'validation_failed', params: { fields: 'elimination_step_meters' } } },
+          {
+            error: {
+              code: 'validation_failed',
+              params: { fields: 'categories.elimination.step_meters' },
+            },
+          },
           { status: 400 },
         ),
       );

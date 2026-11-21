@@ -151,11 +151,13 @@ paths:
       summary: Delete my account
       description: |
         Final: the account is anonymized (pseudo, first name, last name,
-        e-mail and avatar erased) and
-        abandons every challenge not finished. The account is also left out
-        of the leaderboard of every challenge, finished ones included: the
-        others move up. The user is also deleted at the auth
-        provider. Every later request with a token of this account, even
+        e-mail, avatar and language erased) and every row tied to it is erased, in
+        every challenge, finished ones included: its activities,
+        participations, eliminations, creator roles, its entries in the
+        frozen results (the others move up) and its invitation links
+        (people who already joined through them stay participants). The
+        challenges it created stay. A failure erases nothing. The user is
+        also deleted at the auth provider. Every later request with a token of this account, even
         one still valid, answers 401 `account_deleted`; logging in again
         with this identity never creates a new account. The client asks for confirmation first.
         A 500 may come after the account is deleted: retrying then answers
@@ -191,7 +193,9 @@ paths:
         most recent first (`started_at`, then `id`). `from` and `to` keep
         those started in `[from, to)`; `to` must come after `from`. Each one
         lists the challenges where it counts now and whether it is `locked`
-        (its week has ended in one of them).
+        (its week is locked in one of them: 7 am, local time of that
+        challenge, on the first day of the next week, the day of its
+        `week_ends_at`).
       tags: [activities]
       parameters:
         - name: from
@@ -272,6 +276,11 @@ paths:
         and field alike, is computed from the current instant. Upcoming and
         ongoing challenges come soonest first, finished ones most recent
         first; without a status filter, by start date.
+
+        In `mine`, `my_week` gives where the user stands in each ongoing
+        challenge they take part in: their lines of the leaderboard
+        (`GET /challenges/{challengeId}/leaderboard`), computed at the
+        instant the status is.
       tags: [challenges]
       parameters:
         - name: scope
@@ -317,11 +326,14 @@ paths:
       operationId: createChallenge
       summary: Create a challenge
       description: |
-        Creates a challenge with its 3 categories; the creator becomes its
-        first participant. Requires a complete profile (`profile_incomplete`).
+        Creates a challenge with its categories: the cumulative time always,
+        the cumulative distance and the elimination when chosen in
+        `categories`; the creator becomes its first participant. Requires a
+        complete profile (`profile_incomplete`).
         The window starts at local midnight of `start_date` in `timezone` and
         lasts `weeks` local weeks. Distance factors not given keep the
-        catalogue's suggested factor; all are frozen at creation.
+        catalogue's suggested factor brought back to `reference_sport`; all
+        are frozen at creation, like the reference sport.
       tags: [challenges]
       requestBody:
         required: true
@@ -424,8 +436,8 @@ paths:
         challenge is frozen at creation and answers 422 `field_not_editable`
         with the fields in `params.fields`. An absent field is left as is;
         an empty `description` removes it. `null` is refused for `title` and
-        `description`; a frozen field sent as `null` changes nothing and is
-        ignored, like an absent one.
+        `description`, and a frozen field sent as `null` answers 400
+        `validation_failed` with the field in `params.fields`.
       tags: [challenges]
       parameters:
         - name: challengeId
@@ -620,7 +632,7 @@ paths:
       operationId: getLeaderboard
       summary: Get the leaderboard
       description: |
-        The ranking of each of the 3 categories, always computed from the
+        The ranking of each category of the challenge, always computed from the
         raw activities at `computed_at`. Visible to whoever sees the
         challenge: every user for a public one (a non-participant sees the
         ranking only); its creators, participants (abandoned included) and
@@ -633,13 +645,17 @@ paths:
         listed at all, even in a finished challenge: the others move up, the
         equal ones still sharing a rank.
 
-        In `run_elimination`, `elimination` gives the live situation: the
+        In the `elimination` category, `elimination` gives the live situation: the
         survivors first by distance, then the eliminated, the last
         eliminated first. `status` is `reached` once the distance of the
         week reaches the minimum, else `at_risk` when the end of the week is
         at most the configured threshold (24 h by default) away, else
         `in_progress`; `eliminated` once eliminated. There is no minimum and
-        no status in week 1, nor outside the weeks of the challenge.
+        no status in week 1, nor outside the weeks of the challenge. A week
+        is judged when it locks, at 7 am on the first day of the next week
+        (the day of `week_ends_at`): until
+        then nobody is eliminated for it, and the minimum of the current
+        week may still rise.
       tags: [challenges]
       parameters:
         - name: challengeId
@@ -734,8 +750,10 @@ paths:
         `contributions` and `locked` are read from this challenge only, never
         from the other challenges of the participant: `contributions` holds
         it when the activity counts in it (never for a participant who
-        abandoned: empty), and `locked` is true once its week has ended in
-        it, where it counts (never for a participant who abandoned). The
+        abandoned: empty), and `locked` is true once its week is locked in
+        it (7 am, local time of the challenge, on the first day of the next
+        week),
+        where it counts (never for a participant who abandoned). The
         author's own listing (`/me/activities`) may still show an activity
         locked by another challenge.
       tags: [activities]
@@ -980,8 +998,12 @@ paths:
         to a challenge: it counts in every challenge, not deleted, where the
         user is an active participant and whose window holds `started_at`
         (`contributions`, possibly empty). An activity outside every window
-        is recorded all the same. It is refused (`week_locked`) when its week
-        has ended in one of those challenges, finished ones included. Its end
+        is recorded all the same. It counts wholly for the week it starts in,
+        even when it ends in the next one. It is refused (`week_locked`) when
+        its week is locked in one of those challenges, finished ones
+        included: a week locks at 7 am, local time of the challenge, on the
+        first day of the next week (the day of `week_ends_at`; the last one
+        on the day of the challenge's `ends_at`). Its end
         (`started_at` plus `duration_seconds`) is never in the future (5
         minutes of tolerance) and `started_at` never before 2000-01-01
         (`validation_failed`). It never overlaps another activity of the user
@@ -1031,7 +1053,7 @@ paths:
             The profile is incomplete (`profile_incomplete`), the sport needs
             a distance (`distance_required`) or takes none
             (`distance_not_allowed`), the activity overlaps another of the
-            user (`activity_overlap`), or the week of `started_at` has ended
+            user (`activity_overlap`), or the week of `started_at` is locked
             in a challenge where the activity counts (`week_locked`).
           content:
             application/json:
@@ -1060,7 +1082,7 @@ paths:
         (`sport_label`, `distance_meters`). The source and the
         `Idempotency-Key` of the creation stay. It is refused
         (`week_locked`) when the week of the current `started_at`, or of the
-        new one, has ended in a challenge where the activity counts, and
+        new one, is locked in a challenge where the activity counts, and
         (`activity_overlap`) when it would overlap another activity of the
         user.
       tags: [activities]
@@ -1088,7 +1110,7 @@ paths:
             The sport needs a distance (`distance_required`) or takes none
             (`distance_not_allowed`), it would overlap another activity of
             the user (`activity_overlap`), or the week of the current or the
-            new `started_at` has ended in a challenge where the activity
+            new `started_at` is locked in a challenge where the activity
             counts (`week_locked`).
           content:
             application/json:
@@ -1104,7 +1126,7 @@ paths:
       description: |
         Author only, as for the update (404 `activity_not_found`). The
         activity stops counting at once; it is refused (`week_locked`) when
-        its week has ended in a challenge where it counts. Deleting it again
+        its week is locked in a challenge where it counts. Deleting it again
         answers 404.
       tags: [activities]
       responses:
@@ -1117,7 +1139,7 @@ paths:
         "404":
           $ref: "#/components/responses/ActivityNotFound"
         "422":
-          description: The week of the activity has ended in a challenge where it counts (`week_locked`).
+          description: The week of the activity is locked in a challenge where it counts (`week_locked`).
           content:
             application/json:
               schema:
@@ -1409,7 +1431,7 @@ components:
           example: 0.3
     ChallengeCreate:
       type: object
-      required: [title, visibility, timezone, start_date, weeks, elimination_step_meters]
+      required: [title, visibility, timezone, start_date, weeks]
       additionalProperties: false
       properties:
         title:
@@ -1455,18 +1477,29 @@ components:
           minimum: 2
           maximum: 52
           description: Duration in whole weeks.
-        elimination_step_meters:
-          type: integer
-          minimum: 1
-          maximum: 100000
-          description: Increment X of the run elimination category, in meters.
+        categories:
+          $ref: "#/components/schemas/CategoriesCreate"
+        reference_sport:
+          type: string
+          description: |
+            Code of the sport the distances are brought back to and the
+            elimination is run in: a sport of the catalogue whose distance is
+            required (`distance_mode` `required`), otherwise 400
+            `validation_failed` on `reference_sport`. `run` when absent; `null`
+            is refused (no default in the schema, which would replace it).
+          pattern: "^[a-z][a-z0-9_]{0,31}$"
+          example: run
         distance_factors:
           type: object
           description: |
             Factors chosen by the creator, by sport code (distance sports only,
-            0.1 to 2, two decimals at most). Send only the factors the creator
-            changed: sports not given keep their suggested factor. `run` is
-            refused, even at 1: it is the reference and always counts x1.
+            0.1 to 2, two decimals at most), for the cumulative distance:
+            without that category, sending them answers 400
+            `validation_failed` on `distance_factors`. Send only the factors the creator
+            changed: sports not given keep their suggested factor brought back
+            to the reference sport, min(1, factor / factor of the reference),
+            rounded to two decimals and never under 0.1. The reference sport is
+            refused, even at 1: it always counts x1.
           additionalProperties:
             type: number
             format: double
@@ -1474,9 +1507,36 @@ components:
             maximum: 2
           example:
             ride: 0.25
+    CategoriesCreate:
+      type: object
+      additionalProperties: false
+      description: |
+        The optional categories the creator chooses, each present to be
+        part of the challenge; the cumulative time is always there. Absent,
+        the challenge has the cumulative time only. Frozen at creation.
+      properties:
+        cumulative_distance:
+          $ref: "#/components/schemas/CumulativeDistanceCreate"
+        elimination:
+          $ref: "#/components/schemas/EliminationCreate"
+    CumulativeDistanceCreate:
+      type: object
+      additionalProperties: false
+      description: Cumulative distance, with the factors of `distance_factors`; no settings of its own.
+    EliminationCreate:
+      type: object
+      required: [step_meters]
+      additionalProperties: false
+      description: Elimination, run in the reference sport.
+      properties:
+        step_meters:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          description: Increment X, in meters.
     Challenge:
       type: object
-      required: [id, title, description, visibility, members_can_invite, timezone, starts_at, ends_at, categories]
+      required: [id, title, description, visibility, members_can_invite, timezone, reference_sport, starts_at, ends_at, categories]
       additionalProperties: false
       properties:
         id:
@@ -1494,6 +1554,9 @@ components:
           type: boolean
         timezone:
           type: string
+        reference_sport:
+          type: string
+          description: Code of the sport the distances are brought back to and the elimination is run in.
         starts_at:
           type: string
           format: date-time
@@ -1504,6 +1567,7 @@ components:
           description: End of the window (excluded), in UTC.
         categories:
           type: array
+          description: The categories of the challenge, in their order.
           items:
             $ref: "#/components/schemas/Category"
     Category:
@@ -1513,11 +1577,12 @@ components:
       properties:
         type:
           type: string
-          enum: [cumulative_time, cumulative_distance, run_elimination]
+          enum: [cumulative_time, cumulative_distance, elimination]
         position:
           type: integer
           minimum: 1
           maximum: 3
+          description: Fixed by type, gaps left by the missing categories (cumulative_time 1, cumulative_distance 2, elimination 3).
         params:
           $ref: "#/components/schemas/CategoryParams"
     CategoryParams:
@@ -1533,10 +1598,10 @@ components:
             format: double
         sport:
           type: string
-          description: run_elimination only, always `run`.
+          description: Elimination category only, the reference sport of the challenge.
         step_meters:
           type: integer
-          description: run_elimination only, increment X in meters.
+          description: Elimination category only, increment X in meters.
     ChallengePage:
       type: object
       required: [items, next_cursor]
@@ -1565,7 +1630,7 @@ components:
           description: Pass it as `cursor` for the next page; null on the last page.
     Participant:
       type: object
-      required: [user_id, pseudo, first_name, last_name, avatar, status, joined_at]
+      required: [user_id, pseudo, first_name, last_name, avatar, status, is_creator, joined_at]
       additionalProperties: false
       properties:
         user_id:
@@ -1599,6 +1664,13 @@ components:
           type: string
           enum: [active, abandoned]
           description: "`abandoned` also covers an excluded participant. A deleted account is never listed."
+        is_creator:
+          type: boolean
+          description: |
+            Whether the participant is a creator of the challenge, initial or
+            added since. A creator who abandoned stays one (true with status
+            `abandoned`); an excluded participant never is (a creator cannot be
+            excluded).
         joined_at:
           type: string
           format: date-time
@@ -1610,10 +1682,10 @@ components:
         computed_at:
           type: string
           format: date-time
-          description: The instant the ranking was computed at; weeks are judged at it.
+          description: The instant the ranking was computed at; the weeks locked at it are judged.
         categories:
           type: array
-          description: The 3 categories, in the order of the challenge.
+          description: The categories of the challenge, in their order.
           items:
             $ref: "#/components/schemas/CategoryRanking"
     CategoryRanking:
@@ -1623,7 +1695,7 @@ components:
       properties:
         type:
           type: string
-          enum: [cumulative_time, cumulative_distance, run_elimination]
+          enum: [cumulative_time, cumulative_distance, elimination]
         entries:
           type: array
           description: |
@@ -1656,7 +1728,7 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/EliminationProgress"
-          description: Only in `run_elimination`, and null for a participant who abandoned.
+          description: Only in the `elimination` category, and null for a participant who abandoned.
     LeaderboardUser:
       type: object
       required: [id, pseudo, first_name, last_name, avatar]
@@ -1703,12 +1775,12 @@ components:
           type: integer
           minimum: 2
           nullable: true
-          description: The week the participant was eliminated at the end of; null if not eliminated.
+          description: The week the participant was eliminated in, judged when it locked; null if not eliminated.
         minimum_meters:
           type: integer
           minimum: 0
           nullable: true
-          description: The distance the current week needs; null in week 1, when eliminated, or outside the weeks.
+          description: The distance the current week needs; null in week 1, when eliminated, or outside the weeks. Until the week before locks, it may still rise.
         run_meters:
           type: integer
           minimum: 0
@@ -1720,7 +1792,7 @@ components:
           description: The end of the current week; null when eliminated or outside the weeks.
     ChallengeSummary:
       type: object
-      required: [id, title, visibility, timezone, starts_at, ends_at, participant_count, my_role, my_status, status]
+      required: [id, title, visibility, timezone, starts_at, ends_at, participant_count, my_role, my_status, status, my_week]
       additionalProperties: false
       properties:
         id:
@@ -1754,9 +1826,58 @@ components:
         status:
           type: string
           enum: [upcoming, ongoing, finished]
+        my_week:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/MyWeek"
+          description: |
+            Only in `mine`, for an ongoing challenge where the user is an
+            active participant; null otherwise (`public`, upcoming or
+            finished, abandoned).
+    MyWeek:
+      type: object
+      required: [week, week_ends_at, rankings]
+      additionalProperties: false
+      properties:
+        week:
+          type: integer
+          minimum: 1
+          description: Number of the current week.
+        week_ends_at:
+          type: string
+          format: date-time
+          description: End of the current week.
+        rankings:
+          type: array
+          description: The user's line in each category of the challenge, in their order.
+          items:
+            $ref: "#/components/schemas/MyRanking"
+    MyRanking:
+      type: object
+      required: [type, rank, ranked_count, elimination]
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum: [cumulative_time, cumulative_distance, elimination]
+        rank:
+          type: integer
+          minimum: 1
+          description: The user's rank, as in the leaderboard; equal values share it (1, 1, 3).
+        ranked_count:
+          type: integer
+          minimum: 1
+          description: How many participants are ranked in the category, abandoned ones and deleted accounts left out.
+        elimination:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/EliminationProgress"
+          description: Only in the `elimination` category, as in the leaderboard; null in the other categories.
     ChallengeDetail:
       type: object
-      required: [id, title, description, visibility, members_can_invite, timezone, starts_at, ends_at, categories, my_role, my_status, status, can_join, registration_deadline, current_week, week_ends_at]
+      required: [id, title, description, visibility, members_can_invite, timezone, reference_sport, starts_at, ends_at, categories, participant_count, my_role, my_status, status, can_join, registration_deadline, current_week, week_ends_at]
       additionalProperties: false
       properties:
         id:
@@ -1774,6 +1895,9 @@ components:
           type: boolean
         timezone:
           type: string
+        reference_sport:
+          type: string
+          description: Code of the sport the distances are brought back to and the elimination is run in.
         starts_at:
           type: string
           format: date-time
@@ -1782,8 +1906,12 @@ components:
           format: date-time
         categories:
           type: array
+          description: The categories of the challenge, in their order.
           items:
             $ref: "#/components/schemas/Category"
+        participant_count:
+          type: integer
+          description: Everyone who joined, abandoned included, deleted accounts left out.
         my_role:
           type: string
           enum: [creator, participant, abandoned, invited, outsider]
@@ -1841,25 +1969,30 @@ components:
             U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
             U+E007F).
         visibility:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         members_can_invite:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         timezone:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         start_date:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         weeks:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         elimination_step_meters:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: |
+            Former creation field, now `categories.elimination.step_meters`;
+            kept so that a client still sending it is told the step is frozen:
+            422 `field_not_editable`, and `null` 400 `validation_failed`.
+        reference_sport:
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         distance_factors:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         categories:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         starts_at:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
         ends_at:
-          description: Frozen at creation; sending it answers 422 `field_not_editable`.
+          description: Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`.
     CreatorAdd:
       type: object
       required: [user_id]
@@ -1996,8 +2129,9 @@ components:
         locked:
           type: boolean
           description: |
-            True once the week of the activity has ended in a challenge where
-            it counts: it can no longer be changed nor deleted.
+            True once the week of the activity is locked in a challenge where
+            it counts, at 7 am, local time of the challenge, on the first day
+            of the next week: it can no longer be changed nor deleted.
     ActivityContribution:
       type: object
       required: [challenge_id, challenge_title, distance_meters, duration_seconds]
@@ -2015,8 +2149,8 @@ components:
             The distance brought to the cumulative distance category: the
             distance times the factor of the sport in this challenge, rounded
             to the meter (half up) as the ranking rounds a total. Null when
-            the sport has no factor in this challenge or the activity no
-            distance. The ranking rounds the total once, so it may differ by
+            the challenge has no cumulative distance category, the sport no
+            factor in this challenge, or the activity no distance. The ranking rounds the total once, so it may differ by
             a meter or so from the sum of these values.
         duration_seconds:
           type: integer

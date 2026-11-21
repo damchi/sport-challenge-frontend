@@ -13,7 +13,7 @@ import {
   otherTimeZoneName,
 } from '../../domain/format/challengeDates';
 import { sharedRanks } from '../../domain/format/rank';
-import { CATEGORY_NAMES } from '../challenges/detail/categoryNames';
+import { useCategoryName } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
 import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
 
@@ -22,9 +22,10 @@ const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.
 const SEGMENT_OFF = 'text-muted';
 
 /**
- * Leaderboard tab of a challenge: one category at a time (its choice lives in
- * the address, ?category=), with its podium (ranks 1 to 3, ties included),
- * its full ranking and, apart, the participants who abandoned or, in the run
+ * Leaderboard tab of a challenge: one category at a time, among the 1 to 3
+ * the challenge has (its choice lives in the address, ?category=; no choice
+ * with a single category), with its podium (ranks 1 to 3, ties included),
+ * its full ranking and, apart, the participants who abandoned or, in the
  * elimination, were eliminated. Ranks, order and statuses are the server's.
  * The user's row stands out and stays on screen. No live update in V1: it
  * says when the server computed it. Once the challenge is finished (the
@@ -38,6 +39,9 @@ export function ChallengeLeaderboard() {
   const challenge = useChallenge(challengeId);
   const leaderboard = useLeaderboard(challengeId);
   const me = useMe();
+  // A hook comes before the early returns; the name is only read once the
+  // challenge has loaded, so the fallback never shows.
+  const categoryName = useCategoryName(challenge.data?.reference_sport ?? 'run');
 
   if (!challenge.data) return null;
   if (leaderboard.isPending) return <LoadingState />;
@@ -79,23 +83,27 @@ export function ChallengeLeaderboard() {
 
   return (
     <section aria-label={t('leaderboard.label')}>
-      <div
-        role="group"
-        aria-label={t('leaderboard.categories')}
-        className="flex rounded-row bg-segment p-1"
-      >
-        {categories.map(({ type }) => (
-          <button
-            key={type}
-            type="button"
-            aria-pressed={type === category.type}
-            onClick={() => choose(type)}
-            className={`${SEGMENT} ${type === category.type ? SEGMENT_ON : SEGMENT_OFF}`}
-          >
-            {t(CATEGORY_NAMES[type])}
-          </button>
-        ))}
-      </div>
+      {categories.length > 1 ? (
+        <div
+          role="group"
+          aria-label={t('leaderboard.categories')}
+          className="flex rounded-row bg-segment p-1"
+        >
+          {categories.map(({ type }) => (
+            <button
+              key={type}
+              type="button"
+              aria-pressed={type === category.type}
+              onClick={() => choose(type)}
+              className={`${SEGMENT} ${type === category.type ? SEGMENT_ON : SEGMENT_OFF}`}
+            >
+              {categoryName(type)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="font-semibold">{categoryName(category.type)}</p>
+      )}
 
       {challenge.data.status === 'finished' ? (
         <p className="mt-3 flex items-start gap-2 text-sm font-semibold text-ink">
@@ -117,7 +125,7 @@ export function ChallengeLeaderboard() {
       )}
 
       {/* Only during the weeks of the challenge: the minimum then applies. */}
-      {category.type === 'run_elimination' && challenge.data.current_week !== null && (
+      {category.type === 'elimination' && challenge.data.current_week !== null && (
         <EliminationContext challenge={challenge.data} weekEndsAt={challenge.data.week_ends_at} />
       )}
 
@@ -141,6 +149,7 @@ export function ChallengeLeaderboard() {
                   >
                     <PodiumCard
                       entry={entry}
+                      referenceSport={challenge.data.reference_sport}
                       tied={ties.has(entry.rank ?? 0)}
                       {...rowProps(entry.user.id)}
                     />
@@ -168,7 +177,12 @@ export function ChallengeLeaderboard() {
                           : undefined
                       }
                     >
-                      <LeaderboardRow entry={entry} tied={ties.has(entry.rank ?? 0)} {...props} />
+                      <LeaderboardRow
+                        entry={entry}
+                        tied={ties.has(entry.rank ?? 0)}
+                        referenceSport={challenge.data.reference_sport}
+                        {...props}
+                      />
                     </li>
                   );
                 })}

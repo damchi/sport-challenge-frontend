@@ -6,6 +6,7 @@ import { Avatar } from '../../components/Avatar';
 import { displayName } from '../../domain/displayName';
 import { formatKm } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
+import { useSportName } from '../challenges/create/useSportName';
 import { EliminationProgress } from './EliminationProgress';
 
 type CategoryType = Leaderboard['categories'][number]['type'];
@@ -22,6 +23,8 @@ interface EntryProps {
 interface RankedProps extends EntryProps {
   /** Another participant holds the same rank. */
   tied: boolean;
+  /** The sport the cumulative distance is brought back to. */
+  referenceSport: string;
 }
 
 const BOX = 'rounded-row border';
@@ -55,20 +58,28 @@ function useEntryName(entry: LeaderboardEntry, me: boolean): string {
   return displayName(entry.user) ?? t('challengeDetail.participants.unnamed');
 }
 
-/** The value of a category: h:mm, run-equivalent km, or km run. */
-function useEntryValue(type: CategoryType, value: number | null): string {
+/**
+ * The value of a category: h:mm, km equivalent to the reference sport, or
+ * km done in the reference sport (elimination).
+ */
+function useEntryValue(type: CategoryType, value: number | null, referenceSport: string): string {
   const { t, i18n } = useTranslation();
+  const sportName = useSportName();
   if (value === null) return '';
   if (type === 'cumulative_time') return formatDuration(value);
-  const distance = formatKm(value / 1000, i18n.resolvedLanguage ?? 'fr');
-  return type === 'cumulative_distance' ? t('leaderboard.equivalent', { distance }) : distance;
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const distance = formatKm(value / 1000, locale);
+  if (type !== 'cumulative_distance') return distance;
+  // Inside a sentence: "12,5 km éq. vélo".
+  const sport = sportName(referenceSport).toLocaleLowerCase(locale);
+  return t('leaderboard.equivalent', { distance, sport });
 }
 
 /** A card of the podium: the rank as an ordinal ("1er"), noted when shared. */
-export function PodiumCard({ entry, type, me, href, tied }: RankedProps) {
+export function PodiumCard({ entry, type, me, href, tied, referenceSport }: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
-  const value = useEntryValue(type, entry.value);
+  const value = useEntryValue(type, entry.value, referenceSport);
   return (
     <EntryBox
       href={href}
@@ -91,12 +102,12 @@ export function PodiumCard({ entry, type, me, href, tied }: RankedProps) {
 
 /**
  * A row of the full ranking: the rank written as text (1, 1, 3), as the
- * server gives it, and in the run elimination the week of the participant.
+ * server gives it, and in the elimination the week of the participant.
  */
-export function LeaderboardRow({ entry, type, me, href, tied }: RankedProps) {
+export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
-  const value = useEntryValue(type, entry.value);
+  const value = useEntryValue(type, entry.value, referenceSport);
   const atRisk = entry.elimination?.status === 'at_risk';
   return (
     <EntryBox
@@ -121,7 +132,7 @@ export function LeaderboardRow({ entry, type, me, href, tied }: RankedProps) {
 
 /**
  * A participant out of the ranking, who abandoned or was eliminated from the
- * run elimination: dashed and muted, without a rank nor a value (design.md).
+ * elimination: dashed and muted, without a rank nor a value (design.md).
  */
 export function OutRow({ entry, me, href }: EntryProps) {
   const { t } = useTranslation();
