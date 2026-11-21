@@ -917,6 +917,13 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Critères d'acceptation**
 - [ ] Choix de l'hébergement confirmé (FD2) : Firebase Hosting proposé, avec réécriture vers `index.html` pour l'application monopage.
 - [ ] En-têtes de sécurité (politique de contenu avec `frame-ancestors 'none'`, plus `X-Frame-Options: DENY` pour les anciens navigateurs, contre le clickjacking de « Accepter l'invitation » relevé dans la PR #95 ; `X-Content-Type-Options`, `Referrer-Policy`) ; cache long pour les fichiers versionnés, jamais pour `index.html`.
+- [ ] En-têtes de l'application installable (SC-WEB-015, PR #108, relecture `security-reviewer`) :
+  - `/sw.js` et `index.html` : `Cache-Control: no-cache` (aussi au CDN : un `sw.js` gardé en cache bloquerait les mises à jour, correctifs d'urgence compris ; un `index.html` en cache annulerait le « réseau d'abord » du service worker) ;
+  - `/assets/**` : `Cache-Control: public, max-age=31536000, immutable` ;
+  - la réécriture vers `index.html` exclut `/assets/**`, `/sw.js`, `/manifest.webmanifest` et les icônes : un fichier absent renvoie 404 ;
+  - `manifest.webmanifest` servi en `application/manifest+json` ;
+  - politique de contenu : `worker-src 'self'`, `manifest-src 'self'`, `img-src 'self'` pour les icônes, et une empreinte (hash) pour le script de thème en ligne de `index.html` ;
+  - procédure d'urgence documentée : un `sw.js` vide qui vide les caches et se désinscrit.
 - [ ] Adresses de staging ajoutées dans Auth0 (rappel, déconnexion, origines) et dans la configuration CORS du backend.
 - [ ] Déploiement de staging par la CI **sur demande explicite** ; aucune publication automatique.
 
