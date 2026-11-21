@@ -17,7 +17,8 @@ import { useCategoryName } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
 import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
 
-const SEGMENT = 'min-h-11 flex-1 rounded-tab px-2 py-1 text-sm leading-tight font-semibold';
+const SEGMENT =
+  'min-h-11 min-w-fit flex-1 rounded-tab px-2 py-1 text-sm leading-tight font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
 const SEGMENT_OFF = 'text-muted';
 
@@ -87,7 +88,8 @@ export function ChallengeLeaderboard() {
         <div
           role="group"
           aria-label={t('leaderboard.categories')}
-          className="flex rounded-row bg-segment p-1"
+          // The categories share a line, and wrap when the text is enlarged.
+          className="flex flex-wrap rounded-row bg-segment p-1"
         >
           {categories.map(({ type }) => (
             <button
@@ -164,7 +166,7 @@ export function ChallengeLeaderboard() {
               <h2 id="leaderboard-ranking" className="text-sm font-bold text-muted uppercase">
                 {t('leaderboard.ranking')}
               </h2>
-              <ol className="mt-2 grid gap-2">
+              <ol className="mt-2 grid grid-cols-1 gap-2">
                 {ranked.map((entry) => {
                   const props = rowProps(entry.user.id);
                   return (
@@ -195,7 +197,7 @@ export function ChallengeLeaderboard() {
               <h2 id="leaderboard-out" className="text-sm font-bold text-muted uppercase">
                 {t('leaderboard.out')}
               </h2>
-              <ul className="mt-2 grid gap-2">
+              <ul className="mt-2 grid grid-cols-1 gap-2">
                 {out.map((entry) => (
                   <li key={entry.user.id}>
                     <OutRow entry={entry} {...rowProps(entry.user.id)} />

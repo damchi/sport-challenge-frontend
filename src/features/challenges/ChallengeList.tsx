@@ -115,7 +115,7 @@ export function ChallengeList() {
           )
         ) : (
           <>
-            <ul className="grid gap-3 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:gap-4">
+            <ul className="grid grid-cols-1 gap-3 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:gap-4">
               {items.map((challenge) => (
                 <li key={challenge.id}>
                   <ChallengeCard challenge={challenge} showStatus={!status} />

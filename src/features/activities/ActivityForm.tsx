@@ -266,9 +266,10 @@ export function ActivityFormFields({
 
       <fieldset aria-describedby={describedBy('duration', durationError)}>
         <legend className="text-sm font-semibold">{t('activityForm.fields.duration.label')}</legend>
-        <div className="mt-2 flex gap-3">
+        {/* Side by side, one under the other when the text is enlarged. */}
+        <div className="mt-2 flex flex-wrap gap-3">
           {DURATION_PARTS.map((part) => (
-            <div key={part} className="flex-1">
+            <div key={part} className="min-w-fit flex-1">
               <label htmlFor={part} className="block text-sm text-muted">
                 {t(`activityForm.fields.duration.${part}`)}
               </label>

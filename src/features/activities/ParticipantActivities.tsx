@@ -68,7 +68,7 @@ function ParticipantActivitiesContent({
   return (
     <section aria-label={t('participantActivities.label')}>
       {zone && <p className="mb-3 text-sm text-muted">{t('activities.timeZone', { zone })}</p>}
-      <ul className="grid gap-3">
+      <ul className="grid grid-cols-1 gap-3">
         {items.map((activity) => (
           <li key={activity.id}>
             <ActivityCard activity={activity} timeZone={timeZone} />

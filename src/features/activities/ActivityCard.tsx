@@ -34,8 +34,12 @@ export function ActivityCard({
 
   return (
     <article aria-labelledby={titleId} className="rounded-card border border-border bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <h2 id={titleId} className="font-display text-lg font-bold break-words">
+      {/* The pill sits beside the sport, under it when the text is enlarged. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <h2
+          id={titleId}
+          className="min-w-0 flex-1 basis-24 font-display text-lg font-bold break-words"
+        >
           {sport}
         </h2>
         {activity.source === 'manual' && (
