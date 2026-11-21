@@ -24,7 +24,8 @@ export function AppShell() {
   const loading =
     pending !== undefined && !(challenge && isWithin(pending, challenge.pathnameBase));
   // Signed in, past the profile: the code of the other pages comes in the
-  // background. A signed-out visitor, sent to sign in, downloads none of it.
+  // background. A signed-out visitor, sent to sign in, downloads none of it,
+  // only the code of the page asked for (loaded before RequireAuth renders).
   useEffect(() => inBackground(preloadPages), []);
   return (
     <div className="min-h-dvh">
