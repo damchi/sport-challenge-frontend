@@ -10,6 +10,7 @@ import { CallbackPage } from '../pages/CallbackPage';
 import { ChallengeCreatePage } from '../pages/ChallengeCreatePage';
 import { ChallengePage } from '../pages/ChallengePage';
 import { HomePage } from '../pages/HomePage';
+import { InvitePage } from '../pages/InvitePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { OnboardingPage } from '../pages/OnboardingPage';
 import { ProfilePage } from '../pages/ProfilePage';
@@ -73,6 +74,12 @@ export const routes: RouteObject[] = [
                     path: '/activities/:activityId/edit',
                     element: <ActivityEditPage />,
                     handle: title('activityEdit.title'),
+                  },
+                  {
+                    // The token is in the fragment: never sent to the host.
+                    path: '/invite',
+                    element: <InvitePage />,
+                    handle: title('invitationPage.title'),
                   },
                   { path: '/me', element: <ProfilePage />, handle: title('nav.profile') },
                   { path: '*', element: <NotFoundPage />, handle: title('notFound.title') },

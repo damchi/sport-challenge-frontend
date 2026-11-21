@@ -18,6 +18,7 @@
     "field_not_editable": "Only the title and description of a challenge can be edited.",
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
+    "invitation_invalid": "This invitation link is not valid or has expired.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
     "not_found": "This page doesn't exist or was removed.",
     "participation_abandoned": "You abandoned this challenge: you can't join it again.",
@@ -507,5 +508,12 @@
     "shareFailed": "Could not share. Copy the link instead.",
     "shareText": "Join me in the challenge “{{title}}”",
     "forbidden": "You cannot invite friends to this challenge."
+  },
+  "invitationPage": {
+    "title": "Invitation",
+    "intro": "You're invited to join this challenge.",
+    "invalid": "This invitation link is not valid or has expired. Ask the person who sent it for a new one.",
+    "accept": "Accept the invitation",
+    "open": "See the challenge"
   }
 }

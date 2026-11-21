@@ -25,6 +25,8 @@ type Activity = components['schemas']['Activity'];
 type ActivityCreate = components['schemas']['ActivityCreate'];
 type ActivityPage = components['schemas']['ActivityPage'];
 type InvitationCreated = components['schemas']['InvitationCreated'];
+type InvitationPreview = components['schemas']['InvitationPreview'];
+type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
 
 /** Profile of the mocks: complete, as for most screens; onboarding tests override it. */
 export const mockMe: Me = {
@@ -253,6 +255,17 @@ export const mockActivities: Activity[] = Array.from({ length: 24 }, (_, index) 
   };
 });
 
+/** The token of the link the mocks create, and the challenge it leads to (private, upcoming). */
+export const mockInvitationToken = 'mock-invitation-token';
+export const mockInvitedChallengeId = '00000000-0000-4000-8000-000000000004';
+
+function invitationInvalid() {
+  const body: ApiErrorBody = {
+    error: { code: 'invitation_invalid', message: 'Invitation invalid' },
+  };
+  return HttpResponse.json(body, { status: 404 });
+}
+
 function activityNotFound() {
   const body: ApiErrorBody = {
     error: { code: 'activity_not_found', message: 'Activity not found' },
@@ -401,8 +414,36 @@ export const handlers = [
     }
     return HttpResponse.json<InvitationCreated>(
       {
-        token: 'mock-invitation-token',
+        token: mockInvitationToken,
         expires_at: mockChallengeDetail(summary).registration_deadline,
+      },
+      { status: 201 },
+    );
+  }),
+  // The link the mocks create leads to a private challenge open to joining;
+  // any other token is an invalid invitation.
+  http.post('*/api/v1/invitations/open', async ({ request }) => {
+    const { token } = (await request.json()) as InvitationTokenRequest;
+    const summary = mockChallenges.find((challenge) => challenge.id === mockInvitedChallengeId);
+    if (token !== mockInvitationToken || !summary) return invitationInvalid();
+    return HttpResponse.json<InvitationPreview>({
+      challenge_id: summary.id,
+      title: summary.title,
+      starts_at: summary.starts_at,
+      ends_at: summary.ends_at,
+    });
+  }),
+  // The challenge as the new participant sees it.
+  http.post('*/api/v1/invitations/accept', async ({ request }) => {
+    const { token } = (await request.json()) as InvitationTokenRequest;
+    const summary = mockChallenges.find((challenge) => challenge.id === mockInvitedChallengeId);
+    if (token !== mockInvitationToken || !summary) return invitationInvalid();
+    return HttpResponse.json<ChallengeDetail>(
+      {
+        ...mockChallengeDetail(summary),
+        my_role: 'participant',
+        my_status: 'active',
+        can_join: false,
       },
       { status: 201 },
     );

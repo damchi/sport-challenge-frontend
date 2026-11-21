@@ -1,4 +1,9 @@
-import { canInvite, invitationLink, type InvitationRights } from './invitation';
+import {
+  canInvite,
+  invitationLink,
+  invitationTokenFromHash,
+  type InvitationRights,
+} from './invitation';
 
 const deadline = '2026-11-09T05:00:00Z';
 const before = new Date('2026-11-09T04:59:59Z');
@@ -48,4 +53,22 @@ describe('invitationLink', () => {
       'https://app.example/invite#a%20b%23c',
     );
   });
+});
+
+describe('invitationTokenFromHash', () => {
+  it('reads the token of the fragment', () => {
+    expect(invitationTokenFromHash('#Ab3_x-9')).toBe('Ab3_x-9');
+  });
+
+  it('accepts 256 characters at most', () => {
+    expect(invitationTokenFromHash(`#${'a'.repeat(256)}`)).toBe('a'.repeat(256));
+    expect(invitationTokenFromHash(`#${'a'.repeat(257)}`)).toBeNull();
+  });
+
+  it.each(['', '#', '#a b', '#a%20b', '#a/b', '#a#b', '#<script>', '#é'])(
+    'refuses the fragment %j',
+    (hash) => {
+      expect(invitationTokenFromHash(hash)).toBeNull();
+    },
+  );
 });

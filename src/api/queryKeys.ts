@@ -10,6 +10,10 @@ export const queryKeys = {
     all: ['activities'] as const,
     mine: ['activities', 'mine'] as const,
   },
+  invitations: {
+    // The preview of a link; the token stays in memory only (gcTime 0).
+    open: (token: string) => ['invitations', 'open', token] as const,
+  },
   challenges: {
     all: ['challenges'] as const,
     list: (scope: string, status: string | undefined) =>
