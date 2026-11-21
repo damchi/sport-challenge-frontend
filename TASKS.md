@@ -87,7 +87,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 | # | Point | Proposition utilisée dans le backlog | Tickets |
 |---|---|---|---|
 | FD1 ✅ | Bibliothèque d'interface | **Tailwind CSS v4** et polices Fontsource, validés au ticket 003 ; composants de type shadcn/ui, ajoutés un par un à l'usage, encore à valider | 003 |
-| FD2 | Hébergement du web | Firebase Hosting (CDN, réécriture pour une application monopage) ; sinon Cloud Storage avec CDN | 047 |
+| FD2 ✅ | Hébergement du web | **Firebase Hosting**, production seule comme le backend (pas de staging), déployé après chaque fusion sur `main` avec approbation ; validé au ticket 047 (2026-11-21) | 047 |
 | FD3 ✅ | Structure du dépôt | **Une seule application Vite**, sans monorepo en V1 ; passage en monorepo pnpm en V2, à l'arrivée du mobile | 001 |
 | FD4 ✅ | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages ; validé au ticket 009 | 009, 016 |
 | FD5 ✅ | Champs date et heure | **Champs HTML natifs** (`date`, `datetime-local`) ; fuseaux via `Intl` ; validé au ticket 022 | 022, 034 |
@@ -945,11 +945,11 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Commit** : `test(web): cover the service worker offline behaviour end to end`
 **Statut** : À faire
 
-### SC-WEB-047 · Hébergement du web et déploiement staging
-`F9` · Ops · Phase 9 · Estimation 3 · Dépend de : 005, 046 · Backend : API de staging
+### SC-WEB-047 · Hébergement du web et déploiement en production
+`F9` · Ops · Phase 9 · Estimation 3 · Dépend de : 005, 046 · Backend : API de production (pas de staging, décision du 2026-11-21)
 
 **Critères d'acceptation**
-- [ ] Choix de l'hébergement confirmé (FD2) : Firebase Hosting proposé, avec réécriture vers `index.html` pour l'application monopage.
+- [ ] Choix de l'hébergement confirmé (FD2) : Firebase Hosting, production seule comme le backend, avec réécriture vers `index.html` pour l'application monopage.
 - [ ] En-têtes de sécurité (politique de contenu avec `frame-ancestors 'none'`, plus `X-Frame-Options: DENY` pour les anciens navigateurs, contre le clickjacking de « Accepter l'invitation » relevé dans la PR #95 ; `X-Content-Type-Options`, `Referrer-Policy`) ; cache long pour les fichiers versionnés, jamais pour `index.html`.
 - [ ] En-têtes de l'application installable (SC-WEB-015, PR #108, relecture `security-reviewer`) :
   - `/sw.js` et `index.html` : `Cache-Control: no-cache` (aussi au CDN : un `sw.js` gardé en cache bloquerait les mises à jour, correctifs d'urgence compris ; un `index.html` en cache annulerait le « réseau d'abord » du service worker) ;
@@ -958,11 +958,11 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
   - `manifest.webmanifest` servi en `application/manifest+json` ;
   - politique de contenu : `worker-src 'self'`, `manifest-src 'self'`, `img-src 'self'` pour les icônes, et une empreinte (hash) pour le script de thème en ligne de `index.html` ;
   - procédure d'urgence documentée : un `sw.js` vide qui vide les caches et se désinscrit.
-- [ ] Adresses de staging ajoutées dans Auth0 (rappel, déconnexion, origines) et dans la configuration CORS du backend.
-- [ ] Déploiement de staging par la CI **sur demande explicite** ; aucune publication automatique.
+- [ ] Adresses de production documentées pour Auth0 (rappel, déconnexion, origines) et pour la configuration CORS du backend (`docs/deploiement.md`).
+- [ ] Déploiement en production par la CI après chaque fusion sur `main`, **après l'approbation** de l'Environment GitHub `production` ; retour arrière à la main.
 
 **Revue** : `security-reviewer`.
-**Commit** : `chore(deploy): add web hosting configuration and staging pipeline`
+**Commit** : `chore(deploy): add web hosting configuration and production pipeline`
 **Statut** : À faire
 
 ### SC-WEB-048 · Runbook et liste de contrôle de mise en production
