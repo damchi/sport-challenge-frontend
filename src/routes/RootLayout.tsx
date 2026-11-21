@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useMatches } from 'react-router';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { GlobalErrorBanner } from '../components/GlobalErrorBanner';
+import { OfflineBanner } from '../components/OfflineBanner';
 import { useGlobalError } from '../lib/globalError';
 import { isRouteHandle } from './routeHandle';
 
 /**
- * Wraps every page: the global error banner above it, and an error boundary
- * around it. A navigation leaves both the banner and the error page behind.
+ * Wraps every page: the offline and global error banners above it, and an
+ * error boundary around it. A navigation leaves both the error banner and
+ * the error page behind.
  */
 export function RootLayout() {
   const { pathname } = useLocation();
@@ -46,6 +48,7 @@ export function RootLayout() {
 
   return (
     <>
+      <OfflineBanner />
       {error !== undefined && (
         <div className="px-5 lg:px-8">
           <GlobalErrorBanner error={error} onDismiss={dismiss} />

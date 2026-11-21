@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
@@ -60,6 +60,53 @@ describe('RequireAuth', () => {
 
     expect(auth.signIn).toHaveBeenCalledWith('/challenges/42?tab=ranking#me', {
       chooseAccount: true,
+    });
+  });
+
+  describe('offline', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function goOnline(online: boolean) {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(online);
+      act(() => {
+        window.dispatchEvent(new Event(online ? 'online' : 'offline'));
+      });
+    }
+
+    it('waits for the connection to sign in', () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      const auth = createFakeAuth();
+      renderProtected(auth);
+
+      expect(
+        screen.getByText('Tu pourras te connecter dès que tu seras de nouveau en ligne.'),
+      ).toBeInTheDocument();
+      expect(auth.signIn).not.toHaveBeenCalled();
+
+      goOnline(true);
+
+      expect(auth.signIn).toHaveBeenCalledWith('/challenges/42?tab=ranking#me');
+    });
+
+    it('still shows a loading session, and a failed sign-in with its retry', () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      const { unmount } = renderProtected(createFakeAuth({ isLoading: true }));
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      unmount();
+
+      renderProtected(createFakeAuth({ hasError: true }));
+      expect(screen.getByRole('alert')).toHaveTextContent("La connexion n'a pas abouti.");
+      expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument();
+    });
+
+    it('keeps the page of a signed-in user', () => {
+      renderProtected(createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } }));
+
+      goOnline(false);
+
+      expect(screen.getByText('protected page')).toBeInTheDocument();
     });
   });
 });

@@ -80,7 +80,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 064, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
 
 ## Décisions à confirmer
 
@@ -96,7 +96,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **163 points** (55 tickets), dont **149 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
+Total : **166 points** (57 tickets), dont **152 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
@@ -105,11 +105,11 @@ Total : **163 points** (55 tickets), dont **149 pour la V1** ; 14 points sont re
 | F2 | Internationalisation | 012 |
 | F3 | Authentification et coque | 016, 017, 018, 019, 054 |
 | F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 056, 057, 058, 061 |
-| F5 | Classement | 030, 031, 032, 033, 055, 059 |
+| F5 | Classement | 030, 031, 032, 033, 055, 059, 063 |
 | F6 | Activités | 034, 035, 036, 037, 060 |
 | F7 | Invitations | 038, 039 |
 | F8 | Profil et compte | 040, 053, 041 |
-| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 047, 048 |
+| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 064, 047, 048 |
 | F10 | Reportés en V1.1 (avatar, badges) | 049, 050, 051 |
 
 ---
@@ -672,6 +672,23 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Commit** : `feat(leaderboard): show the points category`
 **Statut** : À faire
 
+### SC-WEB-063 · Élimination : run_meters devient distance_meters
+`F5` · Task · Phase 5 · Estimation 1 · Backend : damchi/sport-challenge-api#259 (SC-API-137), PR damchi/sport-challenge-api#266
+
+**Contexte** : l'élimination se joue sur le sport de référence du challenge, pas toujours la course. Le contrat renomme donc `EliminationProgress.run_meters` en `distance_meters` (même valeur : la distance déjà parcourue dans le sport de référence pendant la semaine en cours ; 0 si éliminé ou hors des semaines). **Changement cassant** : dès le déploiement du backend, `run_meters` n'est plus renvoyé.
+
+Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » (rangs du participant), partout où `EliminationProgress` apparaît.
+
+**Critères d'acceptation**
+- [ ] Contrat régénéré (`openapi/`, `src/api/generated/schema.ts`) une fois la PR backend fusionnée ; plus aucune référence à `run_meters`.
+- [ ] Classement et « Mes défis » lisent `distance_meters` ; affichage inchangé.
+- [ ] Mocks (`src/mocks/handlers.ts`) mis à jour.
+
+**Tests** : rendu de la progression d'élimination avec `distance_meters`.
+**Revue** : `ts-reviewer`.
+**Commit** : `refactor(leaderboard): read distance_meters in the elimination progress`
+**Statut** : À faire
+
 ---
 
 # F6 — Activités
@@ -911,12 +928,36 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Commit** : `feat(web): make the app installable as a PWA`
 **Statut** : À faire
 
+### SC-WEB-064 · Tests de bout en bout du service worker (PWA)
+`F9` · Task · Phase 9 · Estimation 2 · Dépend de : 015 · Backend : —
+
+**Contexte** : la logique de cache de `public/sw.js` (SC-WEB-015, PR #108) n'est vérifiée qu'à la main dans Chromium. Elle ne peut pas l'être en test unitaire (jsdom n'a ni Cache API ni service worker), et les tests de bout en bout actuels tournent sur le serveur de dev avec les service workers bloqués (`serviceWorkers: 'block'`). La relecture de la PR #108 a demandé deux fois une couverture automatique.
+
+**Critères d'acceptation**
+- [ ] Un projet Playwright dédié lance un build de production (`vite build` puis `vite preview`, avec les valeurs de test d'Auth0 et de l'API) avec les service workers autorisés ; les autres parcours gardent leur configuration actuelle.
+- [ ] Hors ligne, après une première visite : l'enveloppe démarre, le bandeau « connexion requise » s'affiche et la connexion n'est pas lancée ; au retour du réseau, le bandeau disparaît.
+- [ ] Les caches ne contiennent que `/` et des fichiers de `/assets/` : aucune réponse de l'API ni d'Auth0, et l'enveloppe est stockée sans son adresse (pas de `/callback?code=…`).
+- [ ] Une réponse HTML pour un fichier de `/assets/` (fichier supprimé par un déploiement) n'est pas mise en cache.
+- [ ] Le projet tourne dans la CI ; son coût en temps est indiqué dans la PR.
+
+**Tests** : Playwright (projet dédié au build de production).
+**Revue** : `ts-reviewer`.
+**Commit** : `test(web): cover the service worker offline behaviour end to end`
+**Statut** : À faire
+
 ### SC-WEB-047 · Hébergement du web et déploiement staging
 `F9` · Ops · Phase 9 · Estimation 3 · Dépend de : 005, 046 · Backend : API de staging
 
 **Critères d'acceptation**
 - [ ] Choix de l'hébergement confirmé (FD2) : Firebase Hosting proposé, avec réécriture vers `index.html` pour l'application monopage.
 - [ ] En-têtes de sécurité (politique de contenu avec `frame-ancestors 'none'`, plus `X-Frame-Options: DENY` pour les anciens navigateurs, contre le clickjacking de « Accepter l'invitation » relevé dans la PR #95 ; `X-Content-Type-Options`, `Referrer-Policy`) ; cache long pour les fichiers versionnés, jamais pour `index.html`.
+- [ ] En-têtes de l'application installable (SC-WEB-015, PR #108, relecture `security-reviewer`) :
+  - `/sw.js` et `index.html` : `Cache-Control: no-cache` (aussi au CDN : un `sw.js` gardé en cache bloquerait les mises à jour, correctifs d'urgence compris ; un `index.html` en cache annulerait le « réseau d'abord » du service worker) ;
+  - `/assets/**` : `Cache-Control: public, max-age=31536000, immutable` ;
+  - la réécriture vers `index.html` exclut `/assets/**`, `/sw.js`, `/manifest.webmanifest` et les icônes : un fichier absent renvoie 404 ;
+  - `manifest.webmanifest` servi en `application/manifest+json` ;
+  - politique de contenu : `worker-src 'self'`, `manifest-src 'self'`, `img-src 'self'` pour les icônes, et une empreinte (hash) pour le script de thème en ligne de `index.html` ;
+  - procédure d'urgence documentée : un `sw.js` vide qui vide les caches et se désinscrit.
 - [ ] Adresses de staging ajoutées dans Auth0 (rappel, déconnexion, origines) et dans la configuration CORS du backend.
 - [ ] Déploiement de staging par la CI **sur demande explicite** ; aucune publication automatique.
 

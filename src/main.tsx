@@ -5,6 +5,7 @@ import { reportError, startErrorTracking } from './lib/errorTracking';
 import './styles/index.css';
 import i18n from 'i18next';
 import { startLanguage } from './lib/language';
+import { startServiceWorker } from './lib/serviceWorker';
 import { startTheme } from './lib/theme';
 import { App } from './App';
 
@@ -40,6 +41,9 @@ try {
   const config = getConfig();
   // Not awaited: the SDK loads apart and the errors raised meanwhile wait for it.
   void startErrorTracking({ dsn: config.sentryDsn, dev: import.meta.env.DEV });
+  if (import.meta.env.PROD) {
+    startServiceWorker('serviceWorker' in navigator ? navigator.serviceWorker : undefined);
+  }
   await startMocks();
   root.render(
     <StrictMode>
