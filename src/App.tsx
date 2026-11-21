@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { ApiClientContext } from './api/ApiClientContext';
 import { createApiClient } from './api/client';
@@ -20,11 +20,35 @@ import { getConfig } from './lib/config';
 import { reportError } from './lib/errorTracking';
 import { GlobalErrorContext } from './lib/globalError';
 import { SessionEndPage } from './pages/SessionEndPage';
-import { routes } from './routes/routes';
+import { preloadPages, routes } from './routes/routes';
 
 const router = createBrowserRouter(routes);
 
 const reauth = createReauthGuard();
+
+// Long enough for the first page to be up and its data asked for.
+const BACKGROUND_DELAY_MS = 3000;
+
+/**
+ * Runs the task in the background: some time after the start, once the device
+ * is idle, so that it never competes with the first page. Safari has no idle
+ * callback: the delay alone.
+ */
+function inBackground(task: () => void): () => void {
+  let cancelIdle = () => {};
+  const timer = globalThis.setTimeout(() => {
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(task, { timeout: 5000 });
+      cancelIdle = () => window.cancelIdleCallback(id);
+    } else {
+      task();
+    }
+  }, BACKGROUND_DELAY_MS);
+  return () => {
+    globalThis.clearTimeout(timer);
+    cancelIdle();
+  };
+}
 
 function currentPath(): string {
   const { pathname, search, hash } = router.state.location;
@@ -92,6 +116,8 @@ function AppContent() {
 }
 
 export function App() {
+  // Once the first page is up, the code of the others comes in the background.
+  useEffect(() => inBackground(preloadPages), []);
   return (
     <Auth0AuthProvider
       config={getConfig().auth0}

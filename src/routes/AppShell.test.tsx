@@ -1,7 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { AppProviders } from '../test/AppProviders';
 import { createFakeAuth } from '../test/fakeAuth';
+import { AppShell } from './AppShell';
 import { routes } from './routes';
 
 function renderApp(path = '/') {
@@ -45,5 +47,33 @@ describe('application shell', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument();
     expect(document.title).toBe('Page introuvable · Sport Challenge');
+  });
+
+  it('shows the loading state, under the navigation, while the code of the next page loads', async () => {
+    let loaded: (page: { Component: () => ReactNode }) => void = () => undefined;
+    const router = createMemoryRouter([
+      {
+        element: <AppShell />,
+        children: [
+          { path: '/', element: <p>first page</p> },
+          { path: '/next', lazy: () => new Promise((resolve) => (loaded = resolve)) },
+        ],
+      },
+    ]);
+    render(
+      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+        <RouterProvider router={router} />
+      </AppProviders>,
+    );
+    expect(screen.getByText('first page')).toBeInTheDocument();
+
+    act(() => void router.navigate('/next'));
+    expect(await screen.findByRole('status')).toHaveTextContent(/^Chargement…$/);
+    expect(screen.queryByText('first page')).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument();
+
+    await act(async () => loaded({ Component: () => <p>next page</p> }));
+    expect(await screen.findByText('next page')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

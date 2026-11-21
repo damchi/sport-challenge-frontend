@@ -46,6 +46,14 @@ const pages = {
     import('../features/challenges/detail/TabPending').then((m) => ({ Component: m.TabPending })),
 } satisfies Record<string, LazyRouteFunction<RouteObject>>;
 
+/** Loads the code of every page, so that opening one later does not wait for it. */
+export function preloadPages(): void {
+  for (const load of Object.values(pages)) {
+    // A failure is left to the route: opened, it loads again or shows RouteError.
+    load().catch(() => undefined);
+  }
+}
+
 export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
