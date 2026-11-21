@@ -47,7 +47,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.
 - ✅ La vitesse (ou l'allure) n'est **jamais saisie** : l'interface affiche celle que l'API calcule à partir de la durée et de la distance.
 - ✅ Les activités manuelles sont marquées « manuelle » (décision du propriétaire du 2026-11-20, consignée dans la PR #89).
-- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; ils sont exprimés par rapport à la course ; pour une autre référence, la suggestion est `min(1, coefficient du sport / coefficient de la référence)` (README backend §2.4). Le créateur peut les changer à la création (0,1 à 2, deux décimales), le sport de référence restant ×1, puis ils sont figés. Sans distance cumulée, il n'y a pas de coefficients (la création les refuse).
+- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; ils sont exprimés par rapport à la course ; pour une autre référence, la suggestion est `min(1, coefficient du sport / coefficient de la référence)`, arrondie à deux décimales et jamais sous 0,1 (README backend §2.4). Le créateur peut les changer à la création (0,1 à 2, deux décimales), le sport de référence restant ×1, puis ils sont figés. Sans distance cumulée, il n'y a pas de coefficients (la création les refuse).
 
 **Classement**
 - ✅ Mis à jour **au rafraîchissement** en V1 (pas de temps réel).
@@ -157,7 +157,7 @@ frontend/
 |---|---|
 | Entrée | Connexion / inscription, prénom et nom, pseudo facultatif, avatar, langue |
 | Accueil | Challenges publics ouverts, mes challenges (en cours, à venir, terminés) |
-| Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → catégories (incrément X, coefficients) → récapitulatif et envoi |
+| Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → sport de référence et catégories (temps cumulé toujours ; distance cumulée et élimination au choix ; incrément X, coefficients) → récapitulatif et envoi |
 | Challenge | Classement par catégorie (onglets), statut live (« objectif atteint », « à risque »), participants, activités, badges du challenge, infos, invitations |
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
 | Profil | Prénom et nom modifiables, e-mail (lecture seule), pseudo modifiable, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
@@ -167,7 +167,7 @@ frontend/
 ### 4.3 Données et état
 
 - ✅ **Données serveur** : TanStack Query (cache, rafraîchissement), configuré dans `src/api/queryClient.ts` ; clés de requête centralisées dans `src/api/queryKeys.ts`.
-- ✅ **V1 : classement mis à jour au rafraîchissement** : rechargement à l'ouverture de l'écran, au retour dans l'app et par tirer-pour-rafraîchir.
+- ✅ **V1 : classement mis à jour au rafraîchissement** : rechargement à l'ouverture de l'écran et au retour dans l'app ; ni bouton « Actualiser » ni geste maison, le tirer-pour-rafraîchir natif du navigateur recharge la page (décision du 2026-11-20 ; rafraîchissement automatique reporté à SC-WEB-055).
 - ✅ **État local** : minimal, sans bibliothèque d'état global : contextes React pour la session, la langue et les messages (décision FD4).
 - ✅ **Formulaires** : react-hook-form avec des schémas `zod` dans `src/domain/schemas` (décision FD7), reprenant les règles du contrat de l'API ; messages d'erreur en clés de traduction.
 - Plus tard : mise à jour instantanée via flux serveur (SSE) sans changer les écrans.

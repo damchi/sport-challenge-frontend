@@ -9,7 +9,7 @@ Le backend est la source de vérité du contrat (`openapi.yaml`). Le frontend ne
 
 ## Synchroniser et générer
 
-1. `pnpm api:sync` : copie `openapi.yaml` depuis `../backend/api/openapi.yaml` si le dépôt backend est cloné à côté, sinon depuis l'adresse ou le tag fournis par l'utilisateur. La copie est **versionnée** dans `openapi/openapi.yaml` pour que la CI soit autonome.
+1. `pnpm api:sync` : copie `openapi.yaml` depuis `../sport-challenge-api/api/openapi.yaml` (ou `../backend/api/openapi.yaml`) si le dépôt backend est cloné à côté, sinon depuis l'adresse ou le tag fournis par l'utilisateur. La copie est **versionnée** dans `openapi/openapi.yaml` pour que la CI soit autonome.
 2. Regarde le diff du contrat. S'il contient un changement incompatible (champ retiré ou renommé, route supprimée), liste les écrans touchés et préviens l'utilisateur avant de continuer.
 3. `pnpm api:generate` : régénère `src/api/generated/`. **Ne modifie jamais ce dossier à la main.**
 4. Outil de génération : 🟡 `openapi-typescript` (types) avec `openapi-fetch` (appels), hooks TanStack Query écrits à la main dans `hooks/`. Confirme avec l'utilisateur avant d'installer un autre outil.
@@ -21,7 +21,7 @@ Le backend est la source de vérité du contrat (`openapi.yaml`). Le frontend ne
 - Mutations : invalide les clés concernées (création d'activité → classement et activités ; départ d'un challenge → challenge, participants, classement).
 - Listes : pagination par curseur (`useInfiniteQuery`).
 - Création d'activité : clé d'idempotence générée côté client et envoyée à chaque tentative.
-- Classement : `staleTime` court, rechargement au retour dans l'app et au tirer-pour-rafraîchir ; pas de temps réel en V1.
+- Classement : `staleTime` court, rechargement à l'ouverture et au retour dans l'app (le tirer-pour-rafraîchir natif du navigateur recharge la page) ; pas de bouton, de geste maison ni de temps réel en V1.
 
 ## Erreurs
 

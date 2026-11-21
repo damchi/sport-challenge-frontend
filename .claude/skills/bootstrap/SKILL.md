@@ -9,7 +9,7 @@ description: Démarre le projet frontend Sport Challenge (application web, mobil
 
 **Pas de code d'avance** : une phase ne crée que ce que ses tickets utilisent.
 
-Avance **une phase à la fois**. À la fin de chaque phase : `pnpm check` passe, puis **propose** (sans l'exécuter) la liste des fichiers et un message de commit, et attends la validation de l'utilisateur avant de commiter et de passer à la suivante. Ne commit et ne push jamais de toi-même. Avant de commencer, lis le `README.md` (§2 et §4) et `CLAUDE.md`, et regarde l'état du dépôt pour trouver la première phase non terminée.
+Avance **une phase à la fois**. À la fin de chaque phase : `pnpm check` passe et les relectures sont faites, puis commit et push sur la branche de travail sans demander, comme le prévoit `CLAUDE.md` (jamais sur `main` ; la pull request s'ouvre sur demande de l'utilisateur), et présente les fichiers et les commits avant de passer à la suivante. Avant de commencer, lis le `README.md` (§2 et §4) et `CLAUDE.md`, et regarde l'état du dépôt pour trouver la première phase non terminée.
 
 Le backend est développé en premier : tant que son `openapi.yaml` n'est pas disponible, travaille contre des **mocks MSW** basés sur un contrat provisoire que tu fais valider par l'utilisateur.
 
@@ -40,11 +40,11 @@ Challenges publics et « mes challenges » (en cours, à venir, terminés). Skil
 
 ## Phase 5 — Création de challenge
 
-Assistant en étapes : infos → durée et fuseau → sport de référence et catégories (temps cumulé toujours ; distance cumulée et élimination au choix, avec l'incrément X en km de l'élimination ; SC-WEB-057) → visibilité et invitations. Validation avec les schémas partagés. Lis `challenge-ui-rules`.
+Assistant en 4 étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → sport de référence et catégories (temps cumulé toujours ; distance cumulée et élimination au choix, avec l'incrément X en km de l'élimination ; SC-WEB-057) → récapitulatif et envoi. Validation avec les schémas partagés. Lis `challenge-ui-rules`.
 
 ## Phase 6 — Détail et classement
 
-Un onglet par catégorie, podium, statuts de l'élimination, ex aequo, « a abandonné », rafraîchissement au retour dans l'app et par tirer-pour-rafraîchir, rejoindre et abandonner. Lis `challenge-ui-rules`.
+Un onglet par catégorie, podium, statuts de l'élimination, ex aequo, « a abandonné », rafraîchissement à l'ouverture et au retour dans l'app (ni bouton ni geste maison), rejoindre et abandonner. Lis `challenge-ui-rules`.
 
 ## Phase 7 — Saisie d'activité
 

@@ -9,7 +9,7 @@ Tu es le garant des règles du produit côté interface. Tu ne modifies aucun fi
 
 ## Démarche
 
-1. Lis le §2 (règles produit) du `README.md` du frontend. Si `../backend/README.md` existe, lis aussi son §2 : c'est la source de vérité. Retiens la légende : ✅ décidé, 🟡 proposition, ❓ question ouverte.
+1. Lis le §2 (règles produit) du `README.md` du frontend. Si `../sport-challenge-api/README.md` (dépôt backend cloné à côté) existe, lis aussi son §2 : c'est la source de vérité. Retiens la légende : ✅ décidé, 🟡 proposition, ❓ question ouverte.
 2. Identifie les écrans concernés (`features/`, `pages/`, `app/`).
 3. Compare, règle par règle.
 

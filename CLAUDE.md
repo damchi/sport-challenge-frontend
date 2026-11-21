@@ -6,9 +6,9 @@ Frontend de l'application de challenges sportifs entre amis : **web (React + Vit
 
 - `README.md` : spécification du frontend. **Lis le §2 (règles produit) et le §4 (architecture) avant toute tâche qui touche à un écran, à la structure ou à une règle d'affichage.**
 - Légende du README : ✅ décidé · 🟡 proposition · ❓ question ouverte. Applique les ✅. Ne transforme jamais un 🟡 ou un ❓ en règle sans demander.
-- **Règles du produit** : la source de vérité est le README du backend (§2). Si le dépôt est cloné à côté (`../backend`), tu peux le lire, mais **tu ne le modifies jamais depuis ce projet**.
+- **Règles du produit** : la source de vérité est le README du backend (§2). Si le dépôt est cloné à côté (`../sport-challenge-api`), tu peux le lire, mais **tu ne le modifies jamais depuis ce projet**.
 - **Contrat d'API** : `openapi.yaml` du backend. Le client de `src/api` est généré ; si une route ou un champ manque, signale-le à l'utilisateur au lieu de contourner.
-- **Backlog** : issues GitHub (importées depuis `TASKS.md`, qui reste le document de référence ; 47 tickets `SC-WEB-001` à `SC-WEB-053`, numérotation non consécutive : les anciens tickets de préparation ont été fusionnés dans les tickets fonctionnels ; un ticket = un commit). Utilise le skill `next-task` pour le traiter ; le statut vit dans l'issue, pas dans `TASKS.md`.
+- **Backlog** : issues GitHub (importées depuis `TASKS.md`, qui reste le document de référence ; 56 tickets `SC-WEB-001` à `SC-WEB-062`, numérotation non consécutive : les anciens tickets de préparation ont été fusionnés dans les tickets fonctionnels ; un ticket = un commit). Utilise le skill `next-task` pour le traiter ; le statut vit dans l'issue, pas dans `TASKS.md`.
 - Si le code et le README se contredisent, signale-le et demande, ne tranche pas seul.
 
 ## Stack
@@ -72,7 +72,7 @@ Règles de structure :
 - **Erreurs** : l'API renvoie un code stable ; l'interface le traduit (`errors.<code>`). Jamais le message brut du serveur.
 - **Dates** : un challenge s'affiche dans **son** fuseau (ex. Montréal) ; indique-le quand le fuseau de l'utilisateur diffère. Utilise `Intl.DateTimeFormat` avec l'option `timeZone`.
 - **Distances** : km uniquement, formatés selon la langue (12,5 km / 12.5 km).
-- **Classement** : ex aequo affichés avec le même rang (1, 1, 3) ; participant « a abandonné » hors podium ; en V1 le classement se met à jour au rafraîchissement (retour dans l'app, tirer-pour-rafraîchir), pas en temps réel.
+- **Classement** : ex aequo affichés avec le même rang (1, 1, 3) ; participant « a abandonné » hors podium ; en V1 le classement se met à jour au rafraîchissement (ouverture et retour dans l'app ; ni bouton ni geste maison, le tirer-pour-rafraîchir natif du navigateur recharge la page), pas en temps réel.
 - **Le serveur décide, l'interface reflète** : ne recalcule pas côté client une règle que l'API peut fournir (peut-on rejoindre, objectif de la semaine, statut). Si le champ manque dans le contrat, demande-le au lieu de dupliquer la règle.
 - **États** : chaque écran gère chargement, erreur (avec réessai), vide et « connexion requise ».
 - **Accessibilité** : libellés sur les contrôles, contraste suffisant, zones tactiles d'au moins 44 pt, thème clair et sombre via les jetons de design.

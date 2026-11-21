@@ -254,7 +254,8 @@ ligne : contour 2 px `--color-accent` et fond `--color-accent-soft` ; mon nom
 s'affiche « Toi ». Utiliser `<ol>` pour un classement, avec le rang écrit en
 texte (pas la numérotation automatique de la liste) : les ex aequo ont le même
 rang (1, 1, 3), tel que fourni par l'API. Le classement se met à jour au
-rafraîchissement (retour dans l'app, tirer pour rafraîchir), pas en temps
+rafraîchissement (ouverture et retour dans l'app ; ni bouton ni geste maison,
+le tirer pour rafraîchir natif du navigateur recharge la page), pas en temps
 réel.
 
 ### Tableau du classement (web)

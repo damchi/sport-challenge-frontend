@@ -41,7 +41,7 @@ Source de vérité : le `README.md` du backend (§2) et le §2 du README du fron
 ## Classement
 
 - Podium des 3 premiers rangs ; ex aequo avec le même rang (1, 1, 3) ; la ligne de l'utilisateur est mise en évidence et reste visible.
-- Heure de dernière mise à jour affichée. En V1 : rechargement à l'ouverture, au retour dans l'app et par tirer-pour-rafraîchir (pas de temps réel).
+- Heure de dernière mise à jour affichée. En V1 : rechargement à l'ouverture et au retour dans l'app ; ni bouton « Actualiser » ni geste maison, le tirer-pour-rafraîchir natif du navigateur recharge la page (décision du 2026-11-20 ; pas de temps réel, rafraîchissement automatique reporté à SC-WEB-055).
 - Challenge terminé : résultats **figés**, lecture seule (badges obtenus en V1.1).
 
 ## Élimination : statuts
