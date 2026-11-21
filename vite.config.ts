@@ -1,5 +1,5 @@
-/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
+import { configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { msw } from 'msw/vite';
@@ -15,6 +15,8 @@ export default defineConfig(({ command }) => ({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/setupTests.ts'],
+    // The journeys of e2e/ run with Playwright (pnpm e2e).
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     env: {
       VITE_API_URL: 'https://api.test',
       VITE_AUTH0_DOMAIN: 'auth.test',

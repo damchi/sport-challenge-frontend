@@ -135,7 +135,7 @@ frontend/
 - `src/api`, `src/domain` et `src/i18n` restent **portables** (aucun import de `react-dom` ni d'API du navigateur) pour que le mobile les réutilise tels quels en V2. Les composants d'interface sont propres à la plateforme.
 - Aucun appel HTTP direct dans les composants : tout passe par les hooks de `src/api`.
 - Les types de l'API sont **générés** depuis `openapi.yaml`, jamais écrits à la main.
-- Les tests sont à côté du code (`*.test.tsx`) ; les tests de bout en bout sont dans `e2e/`.
+- Les tests sont à côté du code (`*.test.tsx`) ; les tests de bout en bout sont dans `e2e/` (`pnpm e2e`, Playwright, Chromium en taille téléphone 360 px et bureau). Ils tournent contre le serveur de développement, avec l'API simulée par les mocks MSW de `src/mocks/handlers.ts` (`@msw/playwright`) et un faux Auth0 répondu dans le test (`e2e/fakeAuth0.ts`) : le vrai SDK se connecte, sans aucun code de test dans l'application, donc rien qui puisse s'activer en production. L'horloge de la page est fixée (`e2e/fixtures.ts`).
 
 **Écrans et fichiers (web, V1)**
 
