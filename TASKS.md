@@ -878,6 +878,7 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 - [ ] Variable `VITE_SENTRY_DSN` ajoutée à `src/lib/config.ts` et à `.env.example` (publique, non secrète).
 - [ ] Sentry (ou équivalent) pour les erreurs de l'interface, sans demande de consentement (app entre amis, SC-WEB-042 abandonné) : c'est le nettoyage ci-dessous qui protège les données.
 - [ ] Nettoyage avant envoi : aucun nom, pseudo, e-mail, jeton ni corps de requête ; l'identifiant de requête est conservé.
+- [ ] Adresse IP non conservée : `sendDefaultPii` désactivé et option « Prevent Storing of IP Addresses » active sur le projet Sentry.
 - [ ] Désactivé en développement ; le DSN est public et non secret.
 
 **Revue** : `security-reviewer`.
