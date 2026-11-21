@@ -6,7 +6,7 @@ import { reportError } from '../lib/errorTracking';
 /**
  * An error of the router itself, such as a page whose code failed to load
  * (no network, or a new release that replaced its file). Reloading fetches
- * the current release.
+ * the current release. Inside the shell, the main navigation stays above it.
  */
 export function RouteError() {
   const error = useRouteError();
