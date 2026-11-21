@@ -80,7 +80,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062 et 064, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 064, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
 
 ## Décisions à confirmer
 
@@ -96,7 +96,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **165 points** (56 tickets), dont **151 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
+Total : **166 points** (57 tickets), dont **152 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
@@ -105,7 +105,7 @@ Total : **165 points** (56 tickets), dont **151 pour la V1** ; 14 points sont re
 | F2 | Internationalisation | 012 |
 | F3 | Authentification et coque | 016, 017, 018, 019, 054 |
 | F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 056, 057, 058, 061 |
-| F5 | Classement | 030, 031, 032, 033, 055, 059 |
+| F5 | Classement | 030, 031, 032, 033, 055, 059, 063 |
 | F6 | Activités | 034, 035, 036, 037, 060 |
 | F7 | Invitations | 038, 039 |
 | F8 | Profil et compte | 040, 053, 041 |
@@ -670,6 +670,23 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Tests** : rendu avec et sans points provisoires, ex aequo, challenge terminé.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
 **Commit** : `feat(leaderboard): show the points category`
+**Statut** : À faire
+
+### SC-WEB-063 · Élimination : run_meters devient distance_meters
+`F5` · Task · Phase 5 · Estimation 1 · Backend : damchi/sport-challenge-api#259 (SC-API-137), PR damchi/sport-challenge-api#266
+
+**Contexte** : l'élimination se joue sur le sport de référence du challenge, pas toujours la course. Le contrat renomme donc `EliminationProgress.run_meters` en `distance_meters` (même valeur : la distance déjà parcourue dans le sport de référence pendant la semaine en cours ; 0 si éliminé ou hors des semaines). **Changement cassant** : dès le déploiement du backend, `run_meters` n'est plus renvoyé.
+
+Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » (rangs du participant), partout où `EliminationProgress` apparaît.
+
+**Critères d'acceptation**
+- [ ] Contrat régénéré (`openapi/`, `src/api/generated/schema.ts`) une fois la PR backend fusionnée ; plus aucune référence à `run_meters`.
+- [ ] Classement et « Mes défis » lisent `distance_meters` ; affichage inchangé.
+- [ ] Mocks (`src/mocks/handlers.ts`) mis à jour.
+
+**Tests** : rendu de la progression d'élimination avec `distance_meters`.
+**Revue** : `ts-reviewer`.
+**Commit** : `refactor(leaderboard): read distance_meters in the elimination progress`
 **Statut** : À faire
 
 ---
