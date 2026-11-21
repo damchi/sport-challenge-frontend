@@ -167,7 +167,7 @@ frontend/
 ### 4.3 Données et état
 
 - ✅ **Données serveur** : TanStack Query (cache, rafraîchissement), configuré dans `src/api/queryClient.ts` ; clés de requête centralisées dans `src/api/queryKeys.ts`.
-- ✅ **V1 : classement mis à jour au rafraîchissement** : rechargement à l'ouverture de l'écran, au retour dans l'app et par tirer-pour-rafraîchir.
+- ✅ **V1 : classement mis à jour au rafraîchissement** : rechargement à l'ouverture de l'écran et au retour dans l'app ; ni bouton « Actualiser » ni geste maison, le tirer-pour-rafraîchir natif du navigateur recharge la page (décision du 2026-11-20 ; rafraîchissement automatique reporté à SC-WEB-055).
 - ✅ **État local** : minimal, sans bibliothèque d'état global : contextes React pour la session, la langue et les messages (décision FD4).
 - ✅ **Formulaires** : react-hook-form avec des schémas `zod` dans `src/domain/schemas` (décision FD7), reprenant les règles du contrat de l'API ; messages d'erreur en clés de traduction.
 - Plus tard : mise à jour instantanée via flux serveur (SSE) sans changer les écrans.

@@ -72,7 +72,7 @@ Règles de structure :
 - **Erreurs** : l'API renvoie un code stable ; l'interface le traduit (`errors.<code>`). Jamais le message brut du serveur.
 - **Dates** : un challenge s'affiche dans **son** fuseau (ex. Montréal) ; indique-le quand le fuseau de l'utilisateur diffère. Utilise `Intl.DateTimeFormat` avec l'option `timeZone`.
 - **Distances** : km uniquement, formatés selon la langue (12,5 km / 12.5 km).
-- **Classement** : ex aequo affichés avec le même rang (1, 1, 3) ; participant « a abandonné » hors podium ; en V1 le classement se met à jour au rafraîchissement (retour dans l'app, tirer-pour-rafraîchir), pas en temps réel.
+- **Classement** : ex aequo affichés avec le même rang (1, 1, 3) ; participant « a abandonné » hors podium ; en V1 le classement se met à jour au rafraîchissement (ouverture et retour dans l'app ; ni bouton ni geste maison, le tirer-pour-rafraîchir natif du navigateur recharge la page), pas en temps réel.
 - **Le serveur décide, l'interface reflète** : ne recalcule pas côté client une règle que l'API peut fournir (peut-on rejoindre, objectif de la semaine, statut). Si le champ manque dans le contrat, demande-le au lieu de dupliquer la règle.
 - **États** : chaque écran gère chargement, erreur (avec réessai), vide et « connexion requise ».
 - **Accessibilité** : libellés sur les contrôles, contraste suffisant, zones tactiles d'au moins 44 pt, thème clair et sombre via les jetons de design.

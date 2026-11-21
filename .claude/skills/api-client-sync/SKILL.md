@@ -21,7 +21,7 @@ Le backend est la source de vérité du contrat (`openapi.yaml`). Le frontend ne
 - Mutations : invalide les clés concernées (création d'activité → classement et activités ; départ d'un challenge → challenge, participants, classement).
 - Listes : pagination par curseur (`useInfiniteQuery`).
 - Création d'activité : clé d'idempotence générée côté client et envoyée à chaque tentative.
-- Classement : `staleTime` court, rechargement au retour dans l'app et au tirer-pour-rafraîchir ; pas de temps réel en V1.
+- Classement : `staleTime` court, rechargement à l'ouverture et au retour dans l'app (le tirer-pour-rafraîchir natif du navigateur recharge la page) ; pas de bouton, de geste maison ni de temps réel en V1.
 
 ## Erreurs
 
