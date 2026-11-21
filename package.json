@@ -17,7 +17,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm i18n:check && pnpm test",
     "api:sync": "node scripts/api-sync.ts",
     "api:generate": "openapi-typescript openapi/openapi.yaml -o src/api/generated/schema.ts",
-    "i18n:check": "node scripts/check-i18n.ts"
+    "i18n:check": "node scripts/check-i18n.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.30.0",
@@ -37,6 +38,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@msw/playwright": "^0.7.0",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/vite": "^4.3.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",

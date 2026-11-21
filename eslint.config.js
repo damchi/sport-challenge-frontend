@@ -20,5 +20,11 @@ export default tseslint.config(
       globals: globals.browser,
     },
   },
+  {
+    // Playwright journeys run in Node, and their fixtures' `use` is not React's.
+    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    languageOptions: { globals: globals.node },
+    rules: { 'react-hooks/rules-of-hooks': 'off' },
+  },
   prettier,
 );
