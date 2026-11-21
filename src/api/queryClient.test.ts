@@ -94,4 +94,23 @@ describe('createQueryClient global errors', () => {
     expect(onFailure).toHaveBeenCalledWith(shown);
     expect(onFailure).toHaveBeenCalledWith(action);
   });
+
+  it('passes a failure to the error tracking last, after the session and the banner', async () => {
+    const calls: string[] = [];
+    const client = createQueryClient({
+      onAuthError: () => calls.push('auth'),
+      onError: () => calls.push('banner'),
+      onFailure: () => calls.push('tracking'),
+    });
+
+    for (const error of [new ApiError('token_expired', 401), new ApiError('week_locked', 409)]) {
+      await client
+        .getMutationCache()
+        .build(client, { mutationFn: failingWith(error) })
+        .execute(undefined)
+        .catch(() => undefined);
+    }
+
+    expect(calls).toEqual(['auth', 'tracking', 'banner', 'tracking']);
+  });
 });

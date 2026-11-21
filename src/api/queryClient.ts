@@ -41,9 +41,10 @@ export function createQueryClient({
   onFailure,
 }: QueryClientHandlers): QueryClient {
   function report(error: unknown, shownByScreen: boolean): void {
-    onFailure(error);
     if (isAuthError(error)) onAuthError(error);
     else if (!shownByScreen) onError(error);
+    // Last: the tracking never stands in the way of the session or the banner.
+    onFailure(error);
   }
 
   return new QueryClient({

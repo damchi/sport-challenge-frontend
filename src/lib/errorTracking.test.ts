@@ -228,4 +228,14 @@ describe('startErrorTracking', () => {
 
     expect(sdk.captureException).not.toHaveBeenCalled();
   });
+
+  it('never throws when the SDK fails to capture', async () => {
+    const { sdk, load } = fakeSentry();
+    sdk.captureException.mockImplementation(() => {
+      throw new Error('broken transport');
+    });
+    await startErrorTracking({ dsn: DSN, dev: false, load });
+
+    expect(() => reportError(new Error('boom'))).not.toThrow();
+  });
 });

@@ -116,11 +116,21 @@ function capture(client: Sentry, error: unknown): void {
   }
 }
 
-/** Reports an error to Sentry; does nothing when tracking is off or the error is expected. */
+/**
+ * Reports an error to Sentry; does nothing when tracking is off or the error
+ * is expected. Never throws: it runs inside the app's own error handling.
+ */
 export function reportError(error: unknown): void {
   if (!started || !shouldReport(error)) return;
-  if (sentry) capture(sentry, error);
-  else pending.push(error);
+  if (!sentry) {
+    pending.push(error);
+    return;
+  }
+  try {
+    capture(sentry, error);
+  } catch {
+    // A failing SDK loses this report, nothing more.
+  }
 }
 
 export interface ErrorTrackingOptions {
