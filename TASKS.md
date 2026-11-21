@@ -80,7 +80,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062, créés pendant le développement (voir leurs sections).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
 
 ## Décisions à confirmer
 
@@ -96,7 +96,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **165 points** (56 tickets), dont **151 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
+Total : **163 points** (55 tickets), dont **149 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
@@ -108,7 +108,7 @@ Total : **165 points** (56 tickets), dont **151 pour la V1** ; 14 points sont re
 | F5 | Classement | 030, 031, 032, 033, 055, 059 |
 | F6 | Activités | 034, 035, 036, 037, 060 |
 | F7 | Invitations | 038, 039 |
-| F8 | Profil et compte | 040, 053, 041, 042 |
+| F8 | Profil et compte | 040, 053, 041 |
 | F9 | Qualité et livraison | 043, 044, 045, 046, 015, 047, 048 |
 | F10 | Reportés en V1.1 (avatar, badges) | 049, 050, 051 |
 
@@ -792,7 +792,7 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Critères d'acceptation**
 - [ ] Route `/me` : pseudo, langue, thème, avatar à initiales.
 - [ ] Modification du pseudo (mêmes règles et mêmes erreurs que l'onboarding) et de la langue (appliquée tout de suite).
-- [ ] Liens vers « Mes activités », la politique de confidentialité et les conditions d'utilisation.
+- [ ] Lien vers « Mes activités ».
 - [ ] Déconnexion.
 
 **Tests** : modification valide et invalide, changement de langue.
@@ -835,19 +835,12 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Commit** : `feat(profile): add account deletion flow`
 **Statut** : À faire
 
-### SC-WEB-042 · Pages légales et consentement
-`F8` · Task · Phase 8 · Estimation 2 · Dépend de : 019, 012 · Backend : —
+### SC-WEB-042 · Pages légales et consentement (abandonné)
+`F8` · Task · Phase 8 · Estimation 0 · Backend : —
 
-**Critères d'acceptation**
-- [ ] Pages « Politique de confidentialité » et « Conditions d'utilisation » (contenu fourni par l'utilisateur après validation juridique) en français et en anglais, accessibles sans connexion.
-- [ ] Liens depuis l'inscription, le profil et le pied de page.
-- [ ] Mécanisme de **consentement** prêt pour le suivi et l'analytique : rien n'est envoyé tant que le consentement n'est pas accordé.
-- [ ] Le texte de la politique mentionne que les activités sont visibles par les autres participants d'un challenge.
+**Abandonné le 2026-11-20** : l'app est réservée à un cercle d'amis, sans politique de confidentialité, conditions d'utilisation, pied de page légal ni mécanisme de consentement. L'information utile reste dans l'app : les activités, le prénom et le nom sont visibles des autres participants, ce que l'écran du challenge indique avant de rejoindre. À rouvrir si l'app s'ouvre au-delà de ce cercle (et avant toute analytics produit).
 
-**Tests** : consentement refusé ou accordé, pages accessibles sans session.
-**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`.
-**Commit** : `feat(legal): add legal pages and consent mechanism`
-**Statut** : À faire
+**Statut** : Abandonné
 
 ---
 
@@ -879,11 +872,11 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Statut** : À faire
 
 ### SC-WEB-045 · Suivi d'erreurs sans donnée personnelle
-`F9` · Task · Phase 9 · Estimation 2 · Dépend de : 042 · Backend : —
+`F9` · Task · Phase 9 · Estimation 2 · Backend : —
 
 **Critères d'acceptation**
 - [ ] Variable `VITE_SENTRY_DSN` ajoutée à `src/lib/config.ts` et à `.env.example` (publique, non secrète).
-- [ ] Sentry (ou équivalent) pour les erreurs de l'interface, après consentement.
+- [ ] Sentry (ou équivalent) pour les erreurs de l'interface, sans demande de consentement (app entre amis, SC-WEB-042 abandonné) : c'est le nettoyage ci-dessous qui protège les données.
 - [ ] Nettoyage avant envoi : aucun nom, pseudo, e-mail, jeton ni corps de requête ; l'identifiant de requête est conservé.
 - [ ] Désactivé en développement ; le DSN est public et non secret.
 
@@ -935,7 +928,7 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 
 **Critères d'acceptation**
 - [ ] `docs/runbook.md` : déploiement, retour arrière, variables d'environnement par environnement, adresses Auth0 à déclarer, invalidation des caches.
-- [ ] Liste de contrôle avant ouverture : pages légales en place, consentement vérifié, suppression de compte testée, jeux de test e2e verts, aucune variable secrète dans le bundle, mocks MSW désactivés en production.
+- [ ] Liste de contrôle avant ouverture : suppression de compte testée, jeux de test e2e verts, aucune variable secrète dans le bundle, mocks MSW désactivés en production.
 
 **Revue** : `security-reviewer`.
 **Commit** : `docs: add frontend runbook and production readiness checklist`

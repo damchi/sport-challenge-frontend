@@ -248,8 +248,8 @@ frontend/
 
 > Je ne suis pas juriste : ces points sont à faire valider avant le lancement public.
 
-- Lien vers la **politique de confidentialité** et les conditions d'utilisation, en français et en anglais, depuis l'inscription et le profil.
-- **Consentement** explicite avant tout suivi d'analytics (aucun suivi tant qu'il n'est pas accordé).
+- ✅ **Pas de pages légales ni de consentement en V1** (décision du 2026-11-20, SC-WEB-042 abandonné) : l'app est réservée à un cercle d'amis. Ni politique de confidentialité, ni conditions d'utilisation, ni bannière de consentement. Le suivi d'erreurs (Sentry) fonctionne sans consentement, sans aucune donnée personnelle. À revoir si l'app s'ouvre au-delà de ce cercle.
+- **Analytics produit** : aucune en V1 ; si elles arrivent, consentement explicite avant tout envoi (et pages légales à rouvrir).
 - **Suppression de compte depuis l'app** : à ma connaissance, Apple l'exige pour toute app qui permet de créer un compte. Le backend anonymise et traite cela comme un départ des challenges.
 - **Étiquettes de confidentialité** des stores et justification de chaque permission demandée (photos pour l'avatar, notifications, plus tard Apple Health ou Health Connect).
 - Les stores demandent un moyen de **signaler ou bloquer** un utilisateur ou un contenu quand du contenu public est visible (pseudos et avatars des challenges publics) : à prévoir même sans système de litige pour les activités.

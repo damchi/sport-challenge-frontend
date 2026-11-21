@@ -60,7 +60,7 @@ Partage de lien, acceptation sur une page web (les liens profonds vers l'applica
 
 ## Phase 10 — Qualité et livraison
 
-Playwright (web), suivi d'erreurs après consentement, application installable (PWA), performance, hébergement web (❓), déploiement staging **sur demande explicite**. **Ne lance jamais de déploiement sans demande explicite.**
+Playwright (web), suivi d'erreurs sans donnée personnelle, application installable (PWA), performance, hébergement web (❓), déploiement staging **sur demande explicite**. **Ne lance jamais de déploiement sans demande explicite.**
 
 ## Fin de chaque phase
 
