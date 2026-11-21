@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { reportError } from '../lib/errorTracking';
 import { AppProviders } from '../test/AppProviders';
@@ -44,7 +44,8 @@ describe('RouteError', () => {
         name: "Oups, cette page n'a pas pu s'afficher",
       }),
     ).toBeInTheDocument();
-    expect(reportError).toHaveBeenCalledWith(failure);
+    // Reported by an effect, which may run just after the page shows.
+    await waitFor(() => expect(reportError).toHaveBeenCalledWith(failure));
 
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(reload).toHaveBeenCalled();
