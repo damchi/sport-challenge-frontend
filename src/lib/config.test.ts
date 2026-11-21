@@ -16,7 +16,17 @@ describe('readConfig', () => {
         clientId: 'client-id',
         audience: 'https://api.dev.sport-challenge',
       },
+      sentryDsn: undefined,
     });
+  });
+
+  it('reads the optional Sentry DSN, an https address', () => {
+    const dsn = 'https://public-key@o1.ingest.sentry.io/2';
+    expect(readConfig({ ...env, VITE_SENTRY_DSN: dsn }).sentryDsn).toBe(dsn);
+    expect(readConfig({ ...env, VITE_SENTRY_DSN: '' }).sentryDsn).toBeUndefined();
+    expect(() =>
+      readConfig({ ...env, VITE_SENTRY_DSN: 'http://public-key@o1.ingest.sentry.io/2' }),
+    ).toThrow('must be an https address');
   });
 
   it.each(['VITE_API_URL', 'VITE_AUTH0_DOMAIN', 'VITE_AUTH0_CLIENT_ID', 'VITE_AUTH0_AUDIENCE'])(

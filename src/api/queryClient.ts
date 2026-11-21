@@ -27,14 +27,21 @@ export interface QueryClientHandlers {
   onAuthError: (error: unknown) => void;
   /** Error no screen shows by itself: a failed action, or a failed background refresh. */
   onError: (error: unknown) => void;
+  /** Every failure, shown or not: for the error tracking, which keeps the unexpected ones. */
+  onFailure: (error: unknown) => void;
 }
 
 /**
  * Query client of the app. A query error is shown by its screen (error state
  * with retry); only errors no screen shows reach `onError`.
  */
-export function createQueryClient({ onAuthError, onError }: QueryClientHandlers): QueryClient {
+export function createQueryClient({
+  onAuthError,
+  onError,
+  onFailure,
+}: QueryClientHandlers): QueryClient {
   function report(error: unknown, shownByScreen: boolean): void {
+    onFailure(error);
     if (isAuthError(error)) onAuthError(error);
     else if (!shownByScreen) onError(error);
   }

@@ -2,7 +2,7 @@ import { ApiError } from './errors';
 import { createQueryClient, shouldRetry } from './queryClient';
 
 function setup() {
-  const handlers = { onAuthError: vi.fn(), onError: vi.fn() };
+  const handlers = { onAuthError: vi.fn(), onError: vi.fn(), onFailure: vi.fn() };
   return { client: createQueryClient(handlers), ...handlers };
 }
 
@@ -75,5 +75,23 @@ describe('createQueryClient global errors', () => {
 
     expect(onAuthError).toHaveBeenCalledTimes(2);
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('passes every failure to the error tracking, shown by a screen or not', async () => {
+    const { client, onFailure } = setup();
+    const shown = new ApiError('not_found', 404);
+    const action = new ApiError('internal_error', 500);
+
+    await client
+      .fetchQuery({ queryKey: ['a'], queryFn: failingWith(shown) })
+      .catch(() => undefined);
+    await client
+      .getMutationCache()
+      .build(client, { mutationFn: failingWith(action), meta: { handlesError: true } })
+      .execute(undefined)
+      .catch(() => undefined);
+
+    expect(onFailure).toHaveBeenCalledWith(shown);
+    expect(onFailure).toHaveBeenCalledWith(action);
   });
 });
