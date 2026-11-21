@@ -146,25 +146,32 @@ describe('ChallengeLeaderboard', () => {
     expect(rows[0]).not.toHaveClass('sticky');
   });
 
-  it('renders a long ranking whole, leaving the rows off screen to the browser', async () => {
-    const many = Array.from({ length: 1000 }, (_, index) =>
+  it('leaves the rows off screen to the browser, the sticky row of the user aside', async () => {
+    const many = Array.from({ length: 30 }, (_, index) =>
       entry(`runner_${index + 1}`, index + 1, 100_000 - index),
     );
     answer();
-    leaderboard([{ type: 'cumulative_time', entries: [...many, entry('leo', null, null)] }]);
+    leaderboard([
+      {
+        type: 'cumulative_time',
+        entries: [...many, entry('marie_92', 31, 1_000, mockMe.id), entry('leo', null, null)],
+      },
+    ]);
     renderAt(`/challenges/${id}`);
 
     const rows = within(await section('Classement complet')).getAllByRole('listitem');
-    // In the page, so the browser's find and screen readers reach every row.
-    expect(rows).toHaveLength(1000);
-    expect(rows.at(-1)).toHaveTextContent('runner_1000');
-    for (const row of [
-      rows[0],
-      rows.at(-1),
+    // Skipped, not removed: the browser's find and screen readers reach every row.
+    expect(rows).toHaveLength(31);
+    const mine = rows.at(-1);
+    expect(mine).toHaveTextContent('Toi');
+    expect(mine).toHaveClass('sticky');
+    // Sticky positioning needs the row painted.
+    expect(mine).not.toHaveClass('[content-visibility:auto]');
+    const others = [
+      ...rows.slice(0, -1),
       ...within(await section('Éliminés')).getAllByRole('listitem'),
-    ]) {
-      expect(row).toHaveClass('[content-visibility:auto]');
-    }
+    ];
+    for (const row of others) expect(row).toHaveClass('[content-visibility:auto]');
   });
 
   it('lists the participants who abandoned apart, without a rank nor the podium', async () => {

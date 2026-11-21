@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
@@ -103,17 +103,8 @@ export function PodiumCard({ entry, type, me, href, tied, referenceSport }: Rank
 /**
  * A row of the full ranking: the rank written as text (1, 1, 3), as the
  * server gives it, and in the elimination the week of the participant.
- * Memoized, as OutRow: on a reload, the query keeps the entries that did not
- * change, and only the rows of those that did render again.
  */
-export const LeaderboardRow = memo(function LeaderboardRow({
-  entry,
-  type,
-  me,
-  href,
-  tied,
-  referenceSport,
-}: RankedProps) {
+export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const value = useEntryValue(type, entry.value, referenceSport);
@@ -137,13 +128,13 @@ export const LeaderboardRow = memo(function LeaderboardRow({
       <span className="shrink-0 font-bold tabular-nums">{value}</span>
     </EntryBox>
   );
-});
+}
 
 /**
  * A participant out of the ranking, who abandoned or was eliminated from the
  * elimination: dashed and muted, without a rank nor a value (design.md).
  */
-export const OutRow = memo(function OutRow({ entry, me, href }: EntryProps) {
+export function OutRow({ entry, me, href }: EntryProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const week = entry.elimination?.eliminated_week;
@@ -163,4 +154,4 @@ export const OutRow = memo(function OutRow({ entry, me, href }: EntryProps) {
       </span>
     </EntryBox>
   );
-});
+}

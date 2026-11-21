@@ -3,8 +3,12 @@ import type { ReactNode } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { AppProviders } from '../test/AppProviders';
 import { createFakeAuth } from '../test/fakeAuth';
+import { inBackground } from '../lib/background';
 import { AppShell } from './AppShell';
+import { preloadPages } from './pages';
 import { routes } from './routes';
+
+vi.mock('../lib/background', () => ({ inBackground: vi.fn() }));
 
 function renderApp(path = '/') {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
@@ -47,6 +51,12 @@ describe('application shell', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument();
     expect(document.title).toBe('Page introuvable · Sport Challenge');
+  });
+
+  it('preloads the code of the other pages in the background', async () => {
+    renderApp('/');
+    await screen.findByRole('navigation', { name: 'Navigation principale' });
+    expect(inBackground).toHaveBeenCalledWith(preloadPages);
   });
 
   it('shows the loading state, under the navigation, while the code of the next page loads', async () => {

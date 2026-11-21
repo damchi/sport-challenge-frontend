@@ -1,7 +1,10 @@
+import { useEffect } from 'react';
 import { Outlet, useNavigation } from 'react-router';
 import { MainNav } from '../components/MainNav';
 import { Page } from '../components/Page';
 import { LoadingState } from '../components/states/LoadingState';
+import { inBackground } from '../lib/background';
+import { preloadPages } from './pages';
 
 /**
  * Pages of the signed-in app, with the main navigation first in the page
@@ -12,6 +15,9 @@ import { LoadingState } from '../components/states/LoadingState';
  */
 export function AppShell() {
   const loading = useNavigation().state === 'loading';
+  // Signed in, past the profile: the code of the other pages comes in the
+  // background. A signed-out visitor, sent to sign in, downloads none of it.
+  useEffect(() => inBackground(preloadPages), []);
   return (
     <div className="min-h-dvh">
       <MainNav />
