@@ -214,4 +214,18 @@ describe('startErrorTracking', () => {
       }),
     ).resolves.toBeUndefined();
   });
+
+  it('stays off, with nothing kept, when the SDK fails to start', async () => {
+    const { sdk, load } = fakeSentry();
+    sdk.init.mockImplementation(() => {
+      throw new Error('invalid DSN');
+    });
+
+    const started = startErrorTracking({ dsn: DSN, dev: false, load });
+    reportError(new Error('lost'));
+    await expect(started).resolves.toBeUndefined();
+    reportError(new Error('after'));
+
+    expect(sdk.captureException).not.toHaveBeenCalled();
+  });
 });

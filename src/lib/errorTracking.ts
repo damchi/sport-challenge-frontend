@@ -145,20 +145,21 @@ export async function startErrorTracking({
   let client: Sentry;
   try {
     client = await load();
+    client.init({
+      dsn,
+      // Sentry 11 replaced sendDefaultPii with dataCollection. userInfo: false
+      // also stops the IP address the SDK asks Sentry to infer ({{auto}}).
+      dataCollection: DATA_COLLECTION,
+      beforeSend: scrubEvent,
+      beforeBreadcrumb: scrubBreadcrumb,
+    });
   } catch {
-    // Tracking is not worth breaking the app (blocked by the browser, offline).
+    // Tracking is not worth breaking the app (SDK blocked by the browser,
+    // offline, or refusing its options): it stays off, nothing is kept.
     started = false;
     pending = [];
     return;
   }
-  client.init({
-    dsn,
-    // Sentry 11 replaced sendDefaultPii with dataCollection. userInfo: false
-    // also stops the IP address the SDK asks Sentry to infer ({{auto}}).
-    dataCollection: DATA_COLLECTION,
-    beforeSend: scrubEvent,
-    beforeBreadcrumb: scrubBreadcrumb,
-  });
   sentry = client;
   for (const error of pending) capture(client, error);
   pending = [];
