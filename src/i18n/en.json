@@ -365,7 +365,7 @@
       "categories": "Categories",
       "step": "Increment X: {{step}}",
       "final": "The categories cannot be changed once the challenge is created.",
-      "runFactor": "Running {{factor}} (reference)"
+      "referenceFactor": "{{sport}} {{factor}} (reference)"
     },
     "submit": {
       "label": "Create the challenge",
@@ -391,7 +391,8 @@
     "registrationOpen_zone": "Registration open until {{date}}, {{zone}}.",
     "categories": {
       "title": "Categories",
-      "frozen": "Set at creation, they no longer change."
+      "frozen": "Set at creation, they no longer change.",
+      "elimination": "{{sport}} with elimination"
     },
     "tabs": {
       "label": "Challenge sections",
@@ -420,7 +421,7 @@
       "button": "Abandon the challenge",
       "busy": "Abandoning…",
       "title": "Abandon “{{title}}”?",
-      "message": "This is final: you are eliminated from all 3 categories and shown as “Abandoned” in the leaderboards, off the podium. You won't be able to join this challenge again.",
+      "message": "This is final: you are eliminated from every category and shown as “Abandoned” in the leaderboards, off the podium. You won't be able to join this challenge again.",
       "confirm": "Abandon",
       "cancel": "Cancel"
     },
@@ -477,7 +478,7 @@
     "eliminated": "Eliminated in week {{week}}",
     "you": "You",
     "tied": "tied",
-    "equivalent": "{{distance}} run equiv.",
+    "equivalent": "{{distance}} {{sport}} equiv.",
     "empty": "No one is ranked in this challenge yet.",
     "final": "Final results: the challenge ended on {{date}}",
     "final_zone": "Final results: the challenge ended on {{date}}, {{zone}}",
@@ -487,9 +488,9 @@
       "reached": "Goal reached",
       "in_progress": "In progress",
       "at_risk": "At risk",
-      "progress": "{{run}} of {{minimum}} this week",
+      "progress": "{{done}} of {{minimum}} this week",
       "firstWeek": "No elimination in week 1: the first minimum applies in week 2.",
-      "rule": "Next week's minimum = your distance this week + {{step}}. Run more than the minimum and your distance becomes the new base."
+      "rule": "Next week's minimum = your distance this week + {{step}}. Go beyond the minimum and your distance becomes the new base."
     }
   },
   "invitations": {

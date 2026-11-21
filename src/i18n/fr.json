@@ -368,7 +368,7 @@
       "categories": "Catégories",
       "step": "Incrément X : {{step}}",
       "final": "Les catégories ne pourront plus être modifiées après la création.",
-      "runFactor": "Course {{factor}} (référence)"
+      "referenceFactor": "{{sport}} {{factor}} (référence)"
     },
     "submit": {
       "label": "Créer le défi",
@@ -394,7 +394,8 @@
     "registrationOpen_zone": "Inscriptions ouvertes jusqu'au {{date}}, {{zone}}.",
     "categories": {
       "title": "Catégories",
-      "frozen": "Fixées à la création, elles ne changent plus."
+      "frozen": "Fixées à la création, elles ne changent plus.",
+      "elimination": "{{sport}} avec élimination"
     },
     "tabs": {
       "label": "Sections du défi",
@@ -423,7 +424,7 @@
       "button": "Abandonner le défi",
       "busy": "Abandon…",
       "title": "Abandonner « {{title}} » ?",
-      "message": "C'est définitif : tu es éliminé des 3 catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
+      "message": "C'est définitif : tu es éliminé de toutes les catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
       "confirm": "Abandonner",
       "cancel": "Annuler"
     },
@@ -478,7 +479,7 @@
     "eliminated": "Éliminé en semaine {{week}}",
     "you": "Toi",
     "tied": "ex æquo",
-    "equivalent": "{{distance}} éq. course",
+    "equivalent": "{{distance}} éq. {{sport}}",
     "empty": "Personne n'est encore classé dans ce défi.",
     "final": "Résultats définitifs : le défi s'est terminé le {{date}}",
     "final_zone": "Résultats définitifs : le défi s'est terminé le {{date}}, {{zone}}",
@@ -488,9 +489,9 @@
       "reached": "Objectif atteint",
       "in_progress": "En cours",
       "at_risk": "À risque",
-      "progress": "{{run}} sur {{minimum}} cette semaine",
+      "progress": "{{done}} sur {{minimum}} cette semaine",
       "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
-      "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu cours plus que le minimum, ta distance devient la nouvelle base."
+      "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu fais plus que le minimum, ta distance devient la nouvelle base."
     }
   },
   "invitations": {

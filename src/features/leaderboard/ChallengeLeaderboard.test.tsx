@@ -69,7 +69,7 @@ function leaderboard(categories: Leaderboard['categories']) {
 
 type Elimination = NonNullable<LeaderboardEntry['elimination']>;
 
-/** A survivor or an eliminated one of the run elimination, in week 3 by default. */
+/** A survivor or an eliminated one of the elimination, in week 3 by default. */
 function runner(pseudo: string, rank: number, value: number, elimination: Partial<Elimination>) {
   return {
     ...entry(pseudo, rank, value),
@@ -87,7 +87,7 @@ function runner(pseudo: string, rank: number, value: number, elimination: Partia
 const threeCategories: Leaderboard['categories'] = [
   { type: 'cumulative_time', entries: time },
   { type: 'cumulative_distance', entries: [entry('nina', 1, 12_500)] },
-  { type: 'run_elimination', entries: [entry('hugo', 1, 8_000)] },
+  { type: 'elimination', entries: [entry('hugo', 1, 8_000)] },
 ];
 
 function renderAt(path: string) {
@@ -226,10 +226,59 @@ describe('ChallengeLeaderboard', () => {
     expect(within(await section('Podium')).getByText('8 km')).toBeInTheDocument();
   });
 
+  it('names the reference sport of a cycling challenge in its tabs and values', async () => {
+    answer({
+      reference_sport: 'ride',
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'cumulative_distance', position: 2, params: { factors: { ride: 1, run: 1 } } },
+        { type: 'elimination', position: 3, params: { sport: 'ride', step_meters: 10_000 } },
+      ],
+    });
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}?category=cumulative_distance`);
+
+    expect(within(await section('Podium')).getByText('12,5 km éq. vélo')).toBeInTheDocument();
+    const categories = within(screen.getByRole('group', { name: 'Catégorie du classement' }));
+    expect(categories.getByRole('button', { name: 'Vélo avec élimination' })).toBeInTheDocument();
+  });
+
+  it('shows two categories only, as the challenge has them', async () => {
+    answer();
+    leaderboard([
+      { type: 'cumulative_time', entries: time },
+      { type: 'elimination', entries: [entry('hugo', 1, 8_000)] },
+    ]);
+    renderAt(`/challenges/${id}`);
+
+    const categories = within(
+      await screen.findByRole('group', { name: 'Catégorie du classement' }),
+    );
+    expect(categories.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Temps cumulé',
+      'Course avec élimination',
+    ]);
+  });
+
+  it('offers no category choice when the challenge has the cumulative time only', async () => {
+    answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
+    leaderboard([{ type: 'cumulative_time', entries: time }]);
+    renderAt(`/challenges/${id}`);
+
+    expect(await section('Podium')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('group', { name: 'Catégorie du classement' }),
+    ).not.toBeInTheDocument();
+    // Named once, above its ranking.
+    expect(
+      within(await section('Classement du défi')).getByText('Temps cumulé'),
+    ).toBeInTheDocument();
+  });
+
   it('opens the activities of a participant for a participant of the challenge', async () => {
     answer();
     leaderboard(threeCategories);
-    const router = renderAt(`/challenges/${id}?category=run_elimination`);
+    const router = renderAt(`/challenges/${id}?category=elimination`);
 
     fireEvent.click(
       within(await section('Classement complet')).getByRole('link', { name: /hugo/ }),
@@ -254,7 +303,7 @@ describe('ChallengeLeaderboard', () => {
     leaderboard([
       { type: 'cumulative_time', entries: [] },
       { type: 'cumulative_distance', entries: [] },
-      { type: 'run_elimination', entries: [] },
+      { type: 'elimination', entries: [] },
     ]);
     renderAt(`/challenges/${id}`);
 
@@ -438,19 +487,19 @@ describe('ChallengeLeaderboard, finished challenge', () => {
   });
 });
 
-describe('ChallengeLeaderboard, run elimination', () => {
+describe('ChallengeLeaderboard, elimination', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  const at = `/challenges/${id}?category=run_elimination`;
+  const at = `/challenges/${id}?category=elimination`;
   const board = () => screen.findByRole('region', { name: 'Classement du défi' });
 
   it('shows each live status with its icon, the minimum, the distance run and the week end', async () => {
     answer({ current_week: 3 });
     leaderboard([
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [
           runner('julie', 1, 30_000, {
             status: 'reached',
@@ -507,7 +556,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
       answer({ current_week: 3 });
       leaderboard([
         {
-          type: 'run_elimination',
+          type: 'elimination',
           entries: [runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 })],
         },
       ]);
@@ -521,7 +570,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
     answer({ current_week: 3 });
     leaderboard([
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 })],
       },
     ]);
@@ -529,7 +578,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
 
     expect(
       await screen.findByText(
-        'Le minimum de la semaine suivante = ta distance de cette semaine + 2 km. Si tu cours plus que le minimum, ta distance devient la nouvelle base.',
+        'Le minimum de la semaine suivante = ta distance de cette semaine + 2 km. Si tu fais plus que le minimum, ta distance devient la nouvelle base.',
       ),
     ).toBeInTheDocument();
   });
@@ -538,7 +587,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
     answer({ current_week: 1 });
     leaderboard([
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [runner('julie', 1, 6_000, { run_meters: 6_000 })],
       },
     ]);
@@ -562,7 +611,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
     leaderboard([
       { type: 'cumulative_time', entries: [entry('hugo', 1, 9_000, hugo)] },
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [
           runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 }),
           {
@@ -596,7 +645,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
     answer({ current_week: 3 });
     leaderboard([
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [
           {
             ...runner('marie_92', 1, 9_000, {
@@ -620,7 +669,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
     answer({ current_week: 3 });
     leaderboard([
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [
           runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 }),
           {
@@ -647,7 +696,7 @@ describe('ChallengeLeaderboard, run elimination', () => {
     answer({ status: 'finished', current_week: null, week_ends_at: null });
     leaderboard([
       {
-        type: 'run_elimination',
+        type: 'elimination',
         entries: [runner('julie', 1, 30_000, { week_ends_at: null })],
       },
     ]);

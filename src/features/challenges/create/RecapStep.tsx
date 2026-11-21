@@ -77,7 +77,13 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
             <li>
               {t('challengeCreate.categories.distance.name')}
               <ul className="mt-1 text-sm text-muted">
-                <li>{t('challengeCreate.recap.runFactor', { factor: formatFactor(1, locale) })}</li>
+                <li>
+                  {/* The form keeps the run as reference until SC-WEB-057. */}
+                  {t('challengeCreate.recap.referenceFactor', {
+                    sport: sportName('run'),
+                    factor: formatFactor(1, locale),
+                  })}
+                </li>
                 {factors.map(({ code, text }) => (
                   <li key={code}>{text}</li>
                 ))}

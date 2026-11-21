@@ -64,7 +64,11 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
             <Outlet />
           </div>
         </div>
-        <ChallengeCategories categories={challenge.data.categories} className="flex-[1_1_300px]" />
+        <ChallengeCategories
+          categories={challenge.data.categories}
+          referenceSport={challenge.data.reference_sport}
+          className="flex-[1_1_300px]"
+        />
       </div>
     </>
   );

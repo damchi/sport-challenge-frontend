@@ -39,7 +39,8 @@ export function sortSportsByName<S extends { code: string }>(
 
 /**
  * The creation request. Only the factors the creator changed are sent: the
- * others keep the catalogue's suggestion. X goes in meters.
+ * others keep the catalogue's suggestion. The form makes the 3 categories,
+ * with the run as reference (the server's default); X goes in meters.
  */
 export function challengeCreateRequest(
   values: ChallengeCreateValues,
@@ -59,18 +60,21 @@ export function challengeCreateRequest(
     timezone: values.timezone,
     start_date: values.start_date,
     weeks: values.weeks,
-    elimination_step_meters: Math.round(values.elimination_step_km * 1000),
+    categories: {
+      cumulative_distance: {},
+      elimination: { step_meters: Math.round(values.elimination_step_km * 1000) },
+    },
     ...(changed.length > 0 && { distance_factors: Object.fromEntries(changed) }),
   };
 }
 
 /**
  * The form field of a field the server refused (`params.fields` of
- * validation_failed): "elimination_step_meters" is X in km,
+ * validation_failed): "categories.elimination.step_meters" is X in km,
  * "distance_factors.ride" a factor. Undefined for a field the form lacks.
  */
 export function formFieldOf(serverField: string): string | undefined {
-  if (serverField === 'elimination_step_meters') return 'elimination_step_km';
+  if (serverField === 'categories.elimination.step_meters') return 'elimination_step_km';
   if (serverField.startsWith('distance_factors.')) {
     return `factors.${serverField.slice('distance_factors.'.length)}`;
   }

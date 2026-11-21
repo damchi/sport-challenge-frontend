@@ -51,7 +51,7 @@ describe('sortSportsByName', () => {
 });
 
 describe('challengeCreateRequest', () => {
-  it('sends X in meters and no factor when none changed', () => {
+  it('sends the 3 categories, X in meters, and no factor when none changed', () => {
     expect(challengeCreateRequest(VALUES, SPORTS)).toEqual({
       title: 'Défi de printemps',
       description: '',
@@ -60,7 +60,7 @@ describe('challengeCreateRequest', () => {
       timezone: 'America/Toronto',
       start_date: '2026-10-05',
       weeks: 6,
-      elimination_step_meters: 2500,
+      categories: { cumulative_distance: {}, elimination: { step_meters: 2500 } },
     });
   });
 
@@ -75,8 +75,8 @@ describe('challengeCreateRequest', () => {
 
   it('rounds X to the meter', () => {
     expect(
-      challengeCreateRequest({ ...VALUES, elimination_step_km: 0.1 + 0.2 }, SPORTS)
-        .elimination_step_meters,
+      challengeCreateRequest({ ...VALUES, elimination_step_km: 0.1 + 0.2 }, SPORTS).categories
+        .elimination.step_meters,
     ).toBe(300);
   });
 });
@@ -85,7 +85,7 @@ describe('formFieldOf', () => {
   it.each([
     ['title', 'title'],
     ['start_date', 'start_date'],
-    ['elimination_step_meters', 'elimination_step_km'],
+    ['categories.elimination.step_meters', 'elimination_step_km'],
     ['distance_factors.ride', 'factors.ride'],
     ['distance_factors', undefined],
     ['categories', undefined],

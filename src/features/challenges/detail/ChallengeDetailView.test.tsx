@@ -1,9 +1,10 @@
 import { focusManager } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
-import { mockChallengeDetail, mockChallenges } from '../../../mocks/handlers';
+import { mockChallengeDetail, mockChallenges, mockMe } from '../../../mocks/handlers';
 import { server } from '../../../mocks/server';
 import { routes } from '../../../routes/routes';
 import { AppProviders } from '../../../test/AppProviders';
@@ -329,7 +330,7 @@ describe('ChallengeDetailView', () => {
       const dialog = await openConfirmation();
 
       expect(dialog).toHaveAccessibleDescription(
-        "C'est définitif : tu es éliminé des 3 catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
+        "C'est définitif : tu es éliminé de toutes les catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
       );
       fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -465,6 +466,74 @@ describe('ChallengeDetailView', () => {
     expect(within(section).getByText('Incrément X : 2 km')).toBeInTheDocument();
     expect(within(section).queryByRole('textbox')).not.toBeInTheDocument();
     expect(within(section).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('shows only the cumulative time of a challenge that has no other category', async () => {
+    answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
+    renderAt(`/challenges/${id}`);
+
+    const section = await screen.findByRole('region', { name: 'Catégories' });
+    const items = within(section).getAllByRole('listitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Temps cumulé']);
+  });
+
+  it('shows two categories in their order, without the missing one', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'elimination', position: 3, params: { sport: 'run', step_meters: 3000 } },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await screen.findByRole('region', { name: 'Catégories' });
+    const items = within(section).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('Temps cumulé');
+    expect(items[1]).toHaveTextContent('Course avec élimination');
+    expect(items[1]).toHaveTextContent('Incrément X : 3 km');
+    expect(within(section).queryByText('Distance cumulée')).not.toBeInTheDocument();
+  });
+
+  it('names the reference sport of a cycling challenge, in the elimination and the factors', async () => {
+    answer({
+      reference_sport: 'ride',
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        {
+          type: 'cumulative_distance',
+          position: 2,
+          params: { factors: { ride: 1, run: 1, rowing: 1 } },
+        },
+        { type: 'elimination', position: 3, params: { sport: 'ride', step_meters: 10_000 } },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await screen.findByRole('region', { name: 'Catégories' });
+    expect(within(section).getByText('Vélo avec élimination')).toBeInTheDocument();
+    expect(within(section).getByText('Vélo ×1 (référence)')).toBeInTheDocument();
+    expect(within(section).getByText('Course ×1')).toBeInTheDocument();
+    // The reference is listed once, as the reference.
+    expect(within(section).queryByText('Vélo ×1')).not.toBeInTheDocument();
+  });
+
+  it('names the elimination in English after the reference sport', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    answer({
+      reference_sport: 'ride',
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'elimination', position: 3, params: { sport: 'ride', step_meters: 10_000 } },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await screen.findByRole('region', { name: 'Categories' });
+    expect(within(section).getByText('Cycling with elimination')).toBeInTheDocument();
+    // Unmount first: a mounted page would apply its profile language again.
+    cleanup();
+    await i18n.changeLanguage('fr');
   });
 
   it('links the three sections, the leaderboard first', async () => {
