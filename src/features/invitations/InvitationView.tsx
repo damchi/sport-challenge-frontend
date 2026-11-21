@@ -8,7 +8,7 @@ import { PageTitle } from '../../components/Page';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { invitationTokenFromHash } from '../../domain/invitation';
-import { challengePeriod, otherTimeZoneName } from '../../domain/format/challengeDates';
+import { challengePeriod } from '../../domain/format/challengeDates';
 import { useJoinCopy } from '../challenges/detail/useJoinCopy';
 
 const isInvalid = (error: unknown) =>
@@ -101,7 +101,7 @@ function InvitedChallenge({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const accept = useAcceptInvitation(data.id);
-  const { deadline, reason } = useJoinCopy(data);
+  const { zone, deadline, reason } = useJoinCopy(data);
   // The reason of a refused accept takes the focus once: the button is gone.
   const focused = useRef(false);
 
@@ -110,11 +110,6 @@ function InvitedChallenge({
   if (accept.isSuccess) return <Loading />;
 
   const locale = i18n.resolvedLanguage ?? 'fr';
-  const zone = otherTimeZoneName(
-    data.timezone,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    locale,
-  );
   const acceptError =
     accept.error instanceof ApiError
       ? errorMessage(accept.error, (candidate) => i18n.exists(candidate))
