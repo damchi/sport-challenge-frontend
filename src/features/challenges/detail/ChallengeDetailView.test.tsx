@@ -58,8 +58,11 @@ beforeEach(() => {
   requests = 0;
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.restoreAllMocks();
+  // Unmount first: a mounted page would apply its profile language again.
+  cleanup();
+  await i18n.changeLanguage('fr');
 });
 
 describe('ChallengeDetailView', () => {
@@ -531,9 +534,6 @@ describe('ChallengeDetailView', () => {
 
     const section = await screen.findByRole('region', { name: 'Categories' });
     expect(within(section).getByText('Cycling with elimination')).toBeInTheDocument();
-    // Unmount first: a mounted page would apply its profile language again.
-    cleanup();
-    await i18n.changeLanguage('fr');
   });
 
   it('links the three sections, the leaderboard first', async () => {

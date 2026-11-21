@@ -263,7 +263,8 @@ describe('ChallengeLeaderboard', () => {
   it('offers no category choice when the challenge has the cumulative time only', async () => {
     answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
     leaderboard([{ type: 'cumulative_time', entries: time }]);
-    renderAt(`/challenges/${id}`);
+    // A category the challenge lacks falls back on its first one.
+    renderAt(`/challenges/${id}?category=elimination`);
 
     expect(await section('Podium')).toBeInTheDocument();
     expect(
