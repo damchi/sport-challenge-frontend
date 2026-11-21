@@ -80,7 +80,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 062 et 064, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
 
 ## Décisions à confirmer
 
@@ -96,7 +96,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **163 points** (55 tickets), dont **149 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
+Total : **165 points** (56 tickets), dont **151 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
@@ -109,7 +109,7 @@ Total : **163 points** (55 tickets), dont **149 pour la V1** ; 14 points sont re
 | F6 | Activités | 034, 035, 036, 037, 060 |
 | F7 | Invitations | 038, 039 |
 | F8 | Profil et compte | 040, 053, 041 |
-| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 047, 048 |
+| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 064, 047, 048 |
 | F10 | Reportés en V1.1 (avatar, badges) | 049, 050, 051 |
 
 ---
@@ -909,6 +909,23 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Tests** : manuels (installation sur téléphone) et audit Lighthouse.
 **Revue** : `ts-reviewer`, `security-reviewer`.
 **Commit** : `feat(web): make the app installable as a PWA`
+**Statut** : À faire
+
+### SC-WEB-064 · Tests de bout en bout du service worker (PWA)
+`F9` · Task · Phase 9 · Estimation 2 · Dépend de : 015 · Backend : —
+
+**Contexte** : la logique de cache de `public/sw.js` (SC-WEB-015, PR #108) n'est vérifiée qu'à la main dans Chromium. Elle ne peut pas l'être en test unitaire (jsdom n'a ni Cache API ni service worker), et les tests de bout en bout actuels tournent sur le serveur de dev avec les service workers bloqués (`serviceWorkers: 'block'`). La relecture de la PR #108 a demandé deux fois une couverture automatique.
+
+**Critères d'acceptation**
+- [ ] Un projet Playwright dédié lance un build de production (`vite build` puis `vite preview`, avec les valeurs de test d'Auth0 et de l'API) avec les service workers autorisés ; les autres parcours gardent leur configuration actuelle.
+- [ ] Hors ligne, après une première visite : l'enveloppe démarre, le bandeau « connexion requise » s'affiche et la connexion n'est pas lancée ; au retour du réseau, le bandeau disparaît.
+- [ ] Les caches ne contiennent que `/` et des fichiers de `/assets/` : aucune réponse de l'API ni d'Auth0, et l'enveloppe est stockée sans son adresse (pas de `/callback?code=…`).
+- [ ] Une réponse HTML pour un fichier de `/assets/` (fichier supprimé par un déploiement) n'est pas mise en cache.
+- [ ] Le projet tourne dans la CI ; son coût en temps est indiqué dans la PR.
+
+**Tests** : Playwright (projet dédié au build de production).
+**Revue** : `ts-reviewer`.
+**Commit** : `test(web): cover the service worker offline behaviour end to end`
 **Statut** : À faire
 
 ### SC-WEB-047 · Hébergement du web et déploiement staging
