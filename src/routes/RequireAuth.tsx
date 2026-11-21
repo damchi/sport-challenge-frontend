@@ -49,10 +49,7 @@ export function RequireAuth() {
 
   return (
     <Page>
-      {!online ? (
-        // The offline banner above says why.
-        <p className="text-muted">{t('offline.signInLater')}</p>
-      ) : auth.hasError || failed ? (
+      {auth.hasError || failed ? (
         <>
           <p role="alert" className="text-muted">
             {t('auth.callback.error')}
@@ -66,6 +63,9 @@ export function RequireAuth() {
             {t('auth.signIn')}
           </button>
         </>
+      ) : !online && !auth.isLoading ? (
+        // The offline banner above says why.
+        <p className="text-muted">{t('offline.signInLater')}</p>
       ) : (
         <p role="status" className="text-muted">
           {t('auth.callback.loading')}

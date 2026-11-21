@@ -1,4 +1,7 @@
+import { reportError } from './errorTracking';
 import { startServiceWorker } from './serviceWorker';
+
+vi.mock('./errorTracking', () => ({ reportError: vi.fn() }));
 
 function fakeContainer() {
   const register = vi.fn(() => Promise.resolve({} as ServiceWorkerRegistration));
@@ -28,6 +31,16 @@ describe('startServiceWorker', () => {
     startServiceWorker(container);
 
     expect(register).toHaveBeenCalledWith('/sw.js');
+  });
+
+  it('reports a failed registration', async () => {
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
+    const failure = new TypeError('bad script');
+    const register = vi.fn(() => Promise.reject(failure));
+
+    startServiceWorker({ register } as unknown as ServiceWorkerContainer);
+
+    await vi.waitFor(() => expect(reportError).toHaveBeenCalledWith(failure));
   });
 
   it('does nothing in a browser without service workers', () => {

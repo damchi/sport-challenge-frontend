@@ -90,6 +90,17 @@ describe('RequireAuth', () => {
       expect(auth.signIn).toHaveBeenCalledWith('/challenges/42?tab=ranking#me');
     });
 
+    it('still shows a loading session, and a failed sign-in with its retry', () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      const { unmount } = renderProtected(createFakeAuth({ isLoading: true }));
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      unmount();
+
+      renderProtected(createFakeAuth({ hasError: true }));
+      expect(screen.getByRole('alert')).toHaveTextContent("La connexion n'a pas abouti.");
+      expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument();
+    });
+
     it('keeps the page of a signed-in user', () => {
       renderProtected(createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } }));
 
