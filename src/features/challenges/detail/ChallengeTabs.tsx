@@ -7,7 +7,8 @@ const TABS = [
   { key: 'activities', path: '/activities' },
 ] as const;
 
-const TAB = 'flex h-11 flex-1 items-center justify-center rounded-tab px-2 text-sm font-semibold';
+const TAB =
+  'flex min-h-11 flex-1 items-center justify-center rounded-tab px-2 text-sm font-semibold';
 const TAB_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
 const TAB_OFF = 'text-muted';
 
@@ -16,9 +17,10 @@ export function ChallengeTabs({ challengeId }: { challengeId: string }) {
   const { t } = useTranslation();
   return (
     <nav aria-label={t('challengeDetail.tabs.label')}>
-      <ul className="flex rounded-row bg-segment p-1">
+      {/* The tabs share a line, and wrap when the text is enlarged. */}
+      <ul className="flex flex-wrap rounded-row bg-segment p-1">
         {TABS.map(({ key, path }) => (
-          <li key={key} className="flex flex-1">
+          <li key={key} className="flex min-w-fit flex-1">
             <NavLink
               to={`/challenges/${challengeId}${path}`}
               // A participant's page stays under the Participants tab.

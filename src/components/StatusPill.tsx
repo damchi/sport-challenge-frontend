@@ -18,9 +18,9 @@ interface StatusPillProps {
 export function StatusPill({ label, Icon, tone }: StatusPillProps) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${TONES[tone]}`}
+      className={`inline-flex max-w-full shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${TONES[tone]}`}
     >
-      <Icon aria-hidden="true" size={14} strokeWidth={2} />
+      <Icon aria-hidden="true" size={14} strokeWidth={2} className="shrink-0" />
       {label}
     </span>
   );

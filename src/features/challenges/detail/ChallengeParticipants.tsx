@@ -42,7 +42,7 @@ export function ChallengeParticipants() {
   const linked = canSeeParticipantActivities(challenge.data.my_role);
   return (
     <section aria-label={t('challengeDetail.participants.label')}>
-      <ul className="grid gap-2">
+      <ul className="grid grid-cols-1 gap-2">
         {items.map((participant) => {
           const row = `${ROW} ${participant.status === 'abandoned' ? ROW_ABANDONED : ROW_ACTIVE}`;
           const content = (
@@ -82,22 +82,25 @@ function ParticipantRow({ participant, timeZone }: { participant: Participant; t
   return (
     <>
       <Avatar userId={participant.user_id} user={participant} muted={abandoned} />
-      <div className="min-w-0 flex-1">
-        {/* A long name is cut: the title keeps it whole. */}
-        <p className="truncate font-semibold" title={name}>
-          {name}
-        </p>
-        <p className="text-sm text-muted">
-          {t('challengeDetail.participants.joined', {
-            date: challengeDay(participant.joined_at, timeZone, i18n.resolvedLanguage ?? 'fr'),
-          })}
-        </p>
+      {/* The pill sits beside the name, under it when the text is enlarged. */}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <div className="min-w-0 flex-1 basis-20">
+          {/* A long name is cut: the title keeps it whole. */}
+          <p className="truncate font-semibold" title={name}>
+            {name}
+          </p>
+          <p className="text-sm text-muted">
+            {t('challengeDetail.participants.joined', {
+              date: challengeDay(participant.joined_at, timeZone, i18n.resolvedLanguage ?? 'fr'),
+            })}
+          </p>
+        </div>
+        <StatusPill
+          label={t(`challengeDetail.participants.status.${participant.status}`)}
+          Icon={abandoned ? Flag : UserCheck}
+          tone={abandoned ? 'out' : 'neutral'}
+        />
       </div>
-      <StatusPill
-        label={t(`challengeDetail.participants.status.${participant.status}`)}
-        Icon={abandoned ? Flag : UserCheck}
-        tone={abandoned ? 'out' : 'neutral'}
-      />
     </>
   );
 }

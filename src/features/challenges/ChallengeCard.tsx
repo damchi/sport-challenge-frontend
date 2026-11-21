@@ -33,9 +33,12 @@ export function ChallengeCard({ challenge, showStatus }: ChallengeCardProps) {
       to={`/challenges/${challenge.id}`}
       className="block rounded-card border border-border bg-surface p-4 [@media(hover:hover)]:hover:border-muted"
     >
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-lg font-bold">{challenge.title}</h2>
-        <div className="flex shrink-0 flex-wrap justify-end gap-1">
+      {/* The pills sit beside the title, under it when the text is enlarged. */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <h2 className="min-w-0 flex-1 basis-24 font-display text-lg font-bold break-words">
+          {challenge.title}
+        </h2>
+        <div className="flex flex-wrap gap-1">
           <RolePills role={challenge.my_role} status={challenge.my_status} />
         </div>
       </div>

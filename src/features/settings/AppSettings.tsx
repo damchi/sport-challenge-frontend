@@ -9,7 +9,7 @@ import { setThemeChoice, useThemeChoice, type ThemeChoice } from '../../lib/them
 const THEMES: ThemeChoice[] = ['system', 'light', 'dark'];
 
 const OPTION =
-  'flex h-11 flex-1 items-center gap-2 rounded-row border border-border bg-surface px-3 has-[:checked]:border-2 has-[:checked]:border-accent';
+  'flex min-h-11 min-w-fit flex-1 items-center gap-2 rounded-row border border-border bg-surface px-3 has-[:checked]:border-2 has-[:checked]:border-accent';
 
 /**
  * Settings of the profile tab: language (kept in the profile), theme (kept on
@@ -46,7 +46,7 @@ export function AppSettings() {
     <div className="mt-6 flex flex-col gap-6">
       <fieldset>
         <legend className="text-sm font-semibold">{t('onboarding.language.label')}</legend>
-        <div className="mt-2 flex gap-3">
+        <div className="mt-2 flex flex-wrap gap-3">
           {SUPPORTED_LANGUAGES.map((language) => (
             <label key={language} className={OPTION}>
               <input

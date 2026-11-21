@@ -52,7 +52,7 @@ export function ActivityList({ deviceTimeZone }: { deviceTimeZone?: string }) {
               {t('activities.timeZone', { zone: zoneName })}
             </p>
           )}
-          <ul className="grid gap-3 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:gap-4">
+          <ul className="grid grid-cols-1 gap-3 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:gap-4">
             {items.map((activity) => (
               <li key={activity.id}>
                 <ActivityItem
