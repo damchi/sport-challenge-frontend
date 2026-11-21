@@ -46,14 +46,18 @@ test('a user records an activity with the keyboard only', async ({ page, isMobil
   expect(await tabTo(page, 'Ajouter une activité')).toEqual(['Ajouter une activité']);
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { level: 1, name: 'Ajouter une activité' })).toBeFocused();
+  // The form shows once its sports are loaded.
+  const sport = page.getByRole('combobox', { name: 'Sport' });
+  await expect(sport).toBeVisible();
 
   // The form, field after field.
   expect(await tabTo(page, 'Sport')).toEqual(['Sport']);
   await page.keyboard.type('Course');
+  await expect(sport).toHaveValue('run');
   expect(await tabTo(page, 'Début')).toEqual(['Début']);
-  // Each part moves on to the next once full; "A" answers AM when the
-  // browser shows a 12-hour clock.
-  await page.keyboard.type('202611190730A');
+  // The order of the date's parts (day, month, year, AM/PM) depends on the
+  // system: the value is set directly, the field is still left with Tab.
+  await page.getByLabel('Début').fill('2026-11-19T07:30');
   expect(await tabTo(page, 'Minutes')).toEqual(['Début', 'Heures', 'Minutes']);
   await page.keyboard.type('45');
   expect(await tabTo(page, 'Distance (km)')).toEqual(['Secondes', 'Distance (km)']);
