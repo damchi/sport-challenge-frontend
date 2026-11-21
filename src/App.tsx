@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 import { ApiClientContext } from './api/ApiClientContext';
 import { createApiClient } from './api/client';
 import { createQueryClient } from './api/queryClient';
+import { AccountDeletedContext, accountDeletedHandler } from './lib/auth/accountDeleted';
 import { useAuth } from './lib/auth/auth';
 import { Auth0AuthProvider } from './lib/auth/Auth0AuthProvider';
 import { createReauthGuard } from './lib/auth/reauthGuard';
@@ -48,12 +49,23 @@ function AppContent() {
     queryClient.clear();
     setGlobalError(undefined);
   }, [queryClient]);
+  // The first end stays: a 401 right after a deletion must not replace the
+  // user's own confirmation.
+  const endSession = useCallback(
+    (end: SessionEnd) => setSessionEnd((current) => current ?? end),
+    [],
+  );
   useHandleLostSession(auth, authError, {
     clearCache,
     currentPath,
     reauth,
-    onSessionEnd: setSessionEnd,
+    onSessionEnd: endSession,
   });
+
+  const onAccountDeleted = useMemo(
+    () => accountDeletedHandler(auth, { clearCache, onSessionEnd: endSession }),
+    [auth, clearCache, endSession],
+  );
 
   const dismiss = useCallback(() => setGlobalError(undefined), []);
   const globalErrorValue = useMemo(() => ({ error: globalError, dismiss }), [globalError, dismiss]);
@@ -68,7 +80,9 @@ function AppContent() {
               onAction={() => sessionEndAction(sessionEnd, auth, reauth)}
             />
           ) : (
-            <RouterProvider router={router} />
+            <AccountDeletedContext.Provider value={onAccountDeleted}>
+              <RouterProvider router={router} />
+            </AccountDeletedContext.Provider>
           )}
         </GlobalErrorContext.Provider>
       </QueryClientProvider>

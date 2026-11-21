@@ -1,4 +1,4 @@
-import { canSeeParticipantActivities, isChallengeId, isUserId } from './challenge';
+import { canSeeParticipantActivities, challengeIdList, isChallengeId, isUserId } from './challenge';
 
 describe('isChallengeId', () => {
   it('accepts a UUID', () => {
@@ -12,6 +12,20 @@ describe('isChallengeId', () => {
     expect(isChallengeId('new')).toBe(false);
     expect(isChallengeId('00000000-0000-4000-8000-00000000000')).toBe(false);
     expect(isChallengeId('00000000-0000-4000-8000-000000000001/../x')).toBe(false);
+  });
+});
+
+describe('challengeIdList', () => {
+  const first = '00000000-0000-4000-8000-000000000001';
+  const second = '00000000-0000-4000-8000-000000000002';
+
+  it('keeps each valid id once, in order', () => {
+    expect(challengeIdList(`${first}, ${second},${first}`)).toEqual([first, second]);
+  });
+
+  it('drops what is not an id', () => {
+    expect(challengeIdList(`..,${first},,/admin`)).toEqual([first]);
+    expect(challengeIdList(undefined)).toEqual([]);
   });
 });
 

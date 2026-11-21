@@ -139,18 +139,17 @@ describe('useHandleLostSession', () => {
 describe('sessionEndAction', () => {
   const reauth = () => ({ allowed: vi.fn(() => true), record: vi.fn(), forget: vi.fn() });
 
-  it('ends the Auth0 session of a deleted account', async () => {
-    const auth = createFakeAuth();
+  it.each(['account_deleted', 'account_deleted_by_user'] as const)(
+    'ends the Auth0 session of a deleted account (%s)',
+    async (reason) => {
+      const auth = createFakeAuth();
 
-    await sessionEndAction(
-      { reason: 'account_deleted', returnTo: '/challenges/42' },
-      auth,
-      reauth(),
-    );
+      await sessionEndAction({ reason, returnTo: '/challenges/42' }, auth, reauth());
 
-    expect(auth.signOut).toHaveBeenCalledWith();
-    expect(auth.signIn).not.toHaveBeenCalled();
-  });
+      expect(auth.signOut).toHaveBeenCalledWith();
+      expect(auth.signIn).not.toHaveBeenCalled();
+    },
+  );
 
   it('retries the sign-in back to the page in use, with the loop guard reset', async () => {
     const auth = createFakeAuth();

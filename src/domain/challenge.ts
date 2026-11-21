@@ -24,6 +24,15 @@ export function isChallengeId(value: unknown): value is string {
   return typeof value === 'string' && UUID.test(value);
 }
 
+/**
+ * Challenge ids of a comma-separated server parameter (`last_creator`'s
+ * `challenges`): only valid ids, each once.
+ */
+export function challengeIdList(value: string | undefined): string[] {
+  const ids = (value ?? '').split(',').map((id) => id.trim());
+  return [...new Set(ids.filter(isChallengeId))];
+}
+
 /** Whether an address parameter can be a user id, checked before any request. */
 export function isUserId(value: unknown): value is string {
   return typeof value === 'string' && UUID.test(value);

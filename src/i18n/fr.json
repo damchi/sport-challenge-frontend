@@ -19,6 +19,7 @@
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
     "invitation_invalid": "Ce lien d'invitation n'est pas valide ou a expiré.",
+    "last_creator": "Tu es le dernier créateur d'un défi en cours. Ajoute un autre créateur ou supprime ce défi.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
     "not_found": "Cette page n'existe pas ou plus.",
     "participation_abandoned": "Tu as abandonné ce défi : tu ne peux plus le rejoindre.",
@@ -49,7 +50,8 @@
     "accountDeleted": {
       "title": "Compte supprimé",
       "message": "Ce compte a été supprimé : tu as été déconnecté.",
-      "finish": "Terminer"
+      "finish": "Terminer",
+      "byUser": "Ton compte a été supprimé. « Terminer » ferme ta session."
     },
     "sessionUnavailable": {
       "title": "Connexion impossible",
@@ -99,6 +101,23 @@
     "save": "Enregistrer",
     "namesForm": {
       "saved": "Prénom et nom enregistrés."
+    },
+    "deleteAccount": {
+      "button": "Supprimer mon compte",
+      "busy": "Suppression…",
+      "title": "Supprimer ton compte ?",
+      "message": "Voici ce qui va se passer :",
+      "consequences": {
+        "challenges": "Tu abandonnes tous tes défis, et tes activités sont effacées.",
+        "profile": "Ton profil est anonymisé : prénom, nom, pseudo et e-mail sont effacés.",
+        "signIn": "Ton compte de connexion est supprimé : tu ne pourras plus te connecter avec.",
+        "final": "C'est définitif : rien ne pourra être récupéré."
+      },
+      "understood": "Je comprends que c'est définitif.",
+      "confirm": "Supprimer mon compte",
+      "cancel": "Garder mon compte",
+      "blocking": "Défis concernés :",
+      "challengeFallback": "Voir le défi"
     }
   },
   "nav": {

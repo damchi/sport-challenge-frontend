@@ -8,9 +8,13 @@ export interface AuthErrorEvent {
   error: unknown;
 }
 
-/** Why the session ended, when the app shows it instead of signing in again. */
+/**
+ * Why the session ended, when the app shows it instead of signing in again:
+ * the account is gone (`account_deleted`), the user just deleted it
+ * (`account_deleted_by_user`), or the session could not be restored.
+ */
 export interface SessionEnd {
-  reason: 'account_deleted' | 'unavailable';
+  reason: 'account_deleted' | 'account_deleted_by_user' | 'unavailable';
   /** Page in use when it ended: a retry comes back to it. */
   returnTo: string;
 }
@@ -87,7 +91,7 @@ export function useHandleLostSession(
  * back to the page in use.
  */
 export function sessionEndAction(end: SessionEnd, auth: Auth, reauth: ReauthGuard): Promise<void> {
-  if (end.reason === 'account_deleted') return auth.signOut();
+  if (end.reason !== 'unavailable') return auth.signOut();
   reauth.forget();
   return auth.signIn(end.returnTo);
 }

@@ -25,16 +25,19 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
     });
   };
   const texts =
-    reason === 'account_deleted'
+    reason === 'unavailable'
       ? {
-          title: t('auth.accountDeleted.title'),
-          message: t('auth.accountDeleted.message'),
-          action: t('auth.accountDeleted.finish'),
-        }
-      : {
           title: t('auth.sessionUnavailable.title'),
           message: t('auth.sessionUnavailable.message'),
           action: t('errorPage.retry'),
+        }
+      : {
+          title: t('auth.accountDeleted.title'),
+          message:
+            reason === 'account_deleted_by_user'
+              ? t('auth.accountDeleted.byUser')
+              : t('auth.accountDeleted.message'),
+          action: t('auth.accountDeleted.finish'),
         };
 
   return (
