@@ -40,11 +40,11 @@ Challenges publics et « mes challenges » (en cours, à venir, terminés). Skil
 
 ## Phase 5 — Création de challenge
 
-Assistant en étapes : infos → durée et fuseau → paramètres des 3 catégories (dont l'incrément X en km de la catégorie 3) → visibilité et invitations. Validation avec les schémas partagés. Lis `challenge-ui-rules`.
+Assistant en étapes : infos → durée et fuseau → sport de référence et catégories (temps cumulé toujours ; distance cumulée et élimination au choix, avec l'incrément X en km de l'élimination ; SC-WEB-057) → visibilité et invitations. Validation avec les schémas partagés. Lis `challenge-ui-rules`.
 
 ## Phase 6 — Détail et classement
 
-Un onglet par catégorie, podium, statuts de la catégorie 3, ex aequo, « a abandonné », rafraîchissement au retour dans l'app et par tirer-pour-rafraîchir, rejoindre et abandonner. Lis `challenge-ui-rules`.
+Un onglet par catégorie, podium, statuts de l'élimination, ex aequo, « a abandonné », rafraîchissement au retour dans l'app et par tirer-pour-rafraîchir, rejoindre et abandonner. Lis `challenge-ui-rules`.
 
 ## Phase 7 — Saisie d'activité
 
