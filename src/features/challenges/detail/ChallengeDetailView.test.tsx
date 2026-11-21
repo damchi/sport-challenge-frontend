@@ -2,12 +2,14 @@ import { focusManager } from '@tanstack/react-query';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
+import type { ReactNode } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
 import { mockChallengeDetail, mockChallenges, mockMe } from '../../../mocks/handlers';
 import { server } from '../../../mocks/server';
 import { routes } from '../../../routes/routes';
 import { AppProviders } from '../../../test/AppProviders';
+import { ChallengeDetailView } from './ChallengeDetailView';
 import { createFakeAuth } from '../../../test/fakeAuth';
 
 const summary = mockChallenges[1];
@@ -66,6 +68,38 @@ afterEach(async () => {
 });
 
 describe('ChallengeDetailView', () => {
+  it('keeps its header and shows the loading state while the code of a section loads', async () => {
+    answer({});
+    let loaded: (section: { Component: () => ReactNode }) => void = () => undefined;
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/challenges/:challengeId',
+          element: <ChallengeDetailView />,
+          children: [
+            { index: true, element: <p>first section</p> },
+            { path: 'participants', lazy: () => new Promise((resolve) => (loaded = resolve)) },
+          ],
+        },
+      ],
+      { initialEntries: [`/challenges/${id}`] },
+    );
+    render(
+      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+        <RouterProvider router={router} />
+      </AppProviders>,
+    );
+    expect(await screen.findByText('first section')).toBeInTheDocument();
+
+    act(() => void router.navigate(`/challenges/${id}/participants`));
+    expect(await screen.findByRole('status')).toHaveTextContent(/^Chargement…$/);
+    expect(screen.queryByText('first section')).not.toBeInTheDocument();
+    expect(await title()).toBeInTheDocument();
+
+    await act(async () => loaded({ Component: () => <p>participants section</p> }));
+    expect(await screen.findByText('participants section')).toBeInTheDocument();
+  });
+
   it('shows the header in the challenge time zone', async () => {
     answer({ visibility: 'private', description: 'Bougez !' });
     renderAt(`/challenges/${id}`);

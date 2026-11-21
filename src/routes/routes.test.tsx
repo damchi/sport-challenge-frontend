@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
@@ -65,11 +65,12 @@ describe('routes', () => {
     expect(await screen.findByRole('combobox', { name: 'Sport' })).toHaveValue('run');
   });
 
-  it('sends a signed-out visitor to sign in, back to the requested page', () => {
+  it('sends a signed-out visitor to sign in, back to the requested page', async () => {
     const auth = createFakeAuth();
     renderAt('/does-not-exist?tab=ranking', auth);
 
-    expect(auth.signIn).toHaveBeenCalledWith('/does-not-exist?tab=ranking');
+    // Once the code of the page has loaded.
+    await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('/does-not-exist?tab=ranking'));
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 
@@ -82,12 +83,18 @@ describe('routes', () => {
     expect(screen.queryByRole('button', { name: 'Publics' })).not.toBeInTheDocument();
   });
 
-  it('keeps /callback public', () => {
+  it('keeps /callback public', async () => {
     const auth = createFakeAuth();
     renderAt('/callback', auth);
 
-    expect(screen.getByText('Connecte-toi pour continuer.')).toBeInTheDocument();
+    expect(await screen.findByText('Connecte-toi pour continuer.')).toBeInTheDocument();
     expect(auth.signIn).not.toHaveBeenCalled();
+  });
+
+  it('shows the loading state while the code of the first page loads', async () => {
+    renderAt('/me');
+    expect(screen.getByRole('status')).toHaveTextContent(/^Chargement…$/);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profil' })).toBeInTheDocument();
   });
 
   it('renders the not found page on an unknown path', async () => {

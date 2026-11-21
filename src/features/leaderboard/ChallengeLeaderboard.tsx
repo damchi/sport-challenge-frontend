@@ -21,6 +21,11 @@ const SEGMENT =
   'min-h-11 min-w-fit flex-1 rounded-tab px-2 py-1 text-sm leading-tight font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
 const SEGMENT_OFF = 'text-muted';
+// A long ranking (no cap on participants) stays fast: the browser skips the
+// rendering of the rows off screen, which stay in the page (find, screen readers).
+// It clips the painting to the row: 4 px of padding, taken back by the margin,
+// keep the focus ring (2 px, 2 px away) whole.
+const OFFSCREEN_ROW = '-m-1 p-1 [content-visibility:auto] [contain-intrinsic-size:auto_4rem]';
 
 /**
  * Leaderboard tab of a challenge: one category at a time, among the 1 to 3
@@ -176,7 +181,7 @@ export function ChallengeLeaderboard() {
                       className={
                         props.me
                           ? 'sticky top-2 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[1] md:bottom-4'
-                          : undefined
+                          : OFFSCREEN_ROW
                       }
                     >
                       <LeaderboardRow
@@ -199,7 +204,7 @@ export function ChallengeLeaderboard() {
               </h2>
               <ul className="mt-2 grid grid-cols-1 gap-2">
                 {out.map((entry) => (
-                  <li key={entry.user.id}>
+                  <li key={entry.user.id} className={OFFSCREEN_ROW}>
                     <OutRow entry={entry} {...rowProps(entry.user.id)} />
                   </li>
                 ))}

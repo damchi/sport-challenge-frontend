@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
@@ -146,6 +146,34 @@ describe('ChallengeLeaderboard', () => {
     expect(rows[0]).not.toHaveClass('sticky');
   });
 
+  it('leaves the rows off screen to the browser, the sticky row of the user aside', async () => {
+    const many = Array.from({ length: 30 }, (_, index) =>
+      entry(`runner_${index + 1}`, index + 1, 100_000 - index),
+    );
+    answer();
+    leaderboard([
+      {
+        type: 'cumulative_time',
+        entries: [...many, entry('marie_92', 31, 1_000, mockMe.id), entry('leo', null, null)],
+      },
+    ]);
+    renderAt(`/challenges/${id}`);
+
+    const rows = within(await section('Classement complet')).getAllByRole('listitem');
+    // Skipped, not removed: the browser's find and screen readers reach every row.
+    expect(rows).toHaveLength(31);
+    const mine = rows.at(-1);
+    expect(mine).toHaveTextContent('Toi');
+    expect(mine).toHaveClass('sticky');
+    // Sticky positioning needs the row painted.
+    expect(mine).not.toHaveClass('[content-visibility:auto]');
+    const others = [
+      ...rows.slice(0, -1),
+      ...within(await section('Éliminés')).getAllByRole('listitem'),
+    ];
+    for (const row of others) expect(row).toHaveClass('[content-visibility:auto]');
+  });
+
   it('lists the participants who abandoned apart, without a rank nor the podium', async () => {
     answer();
     leaderboard(threeCategories);
@@ -284,8 +312,11 @@ describe('ChallengeLeaderboard', () => {
     fireEvent.click(
       within(await section('Classement complet')).getByRole('link', { name: /hugo/ }),
     );
-    expect(router.state.location.pathname).toMatch(
-      new RegExp(`^/challenges/${id}/participants/[0-9a-f-]+$`),
+    // Once the code of the participant's page has loaded.
+    await waitFor(() =>
+      expect(router.state.location.pathname).toMatch(
+        new RegExp(`^/challenges/${id}/participants/[0-9a-f-]+$`),
+      ),
     );
   });
 

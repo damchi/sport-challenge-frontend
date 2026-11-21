@@ -56,6 +56,10 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Fails when the initial load or a page's chunk outgrows its budget.
+      - name: Bundle size budget
+        run: pnpm bundle:check
+
   e2e:
     name: end-to-end (Playwright)
     runs-on: ubuntu-latest
