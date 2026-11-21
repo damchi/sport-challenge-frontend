@@ -59,6 +59,15 @@ describe('ProfilePage', () => {
     expect(screen.getByText('DR')).toHaveAttribute('aria-hidden', 'true');
   });
 
+  it('links to the activities', async () => {
+    renderProfile();
+
+    expect(await screen.findByRole('link', { name: 'Mes activités' })).toHaveAttribute(
+      'href',
+      '/activities',
+    );
+  });
+
   it('shows the names to change and the e-mail read-only', async () => {
     renderProfile();
     const section = await identity();
