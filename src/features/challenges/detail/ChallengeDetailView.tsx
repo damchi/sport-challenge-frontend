@@ -5,6 +5,7 @@ import { useChallenge } from '../../../api/hooks/useChallenges';
 import { ErrorState } from '../../../components/states/ErrorState';
 import { LoadingState } from '../../../components/states/LoadingState';
 import { isChallengeId } from '../../../domain/challenge';
+import { isWithin, usePendingPath } from '../../../lib/pendingNavigation';
 import { ChallengeInvite } from '../../invitations/ChallengeInvite';
 import { ChallengeCategories } from './ChallengeCategories';
 import { ChallengeEdit } from './ChallengeEdit';
@@ -26,6 +27,9 @@ export function ChallengeDetailView() {
 function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
   const { t } = useTranslation();
   const challenge = useChallenge(challengeId);
+  // A section of this challenge whose code still loads.
+  const pending = usePendingPath();
+  const sectionLoading = pending !== undefined && isWithin(pending, `/challenges/${challengeId}`);
 
   if (challenge.isPending) {
     return (
@@ -60,9 +64,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <div className="min-w-0 flex-[999_1_560px]">
           <ChallengeTabs challengeId={challengeId} />
-          <div className="mt-4">
-            <Outlet />
-          </div>
+          <div className="mt-4">{sectionLoading ? <LoadingState /> : <Outlet />}</div>
         </div>
         <ChallengeCategories
           categories={challenge.data.categories}

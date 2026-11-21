@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
+import { createMemoryRouter, Outlet, RouterProvider } from 'react-router';
 import { AppProviders } from '../test/AppProviders';
 import { createFakeAuth } from '../test/fakeAuth';
 import { inBackground } from '../lib/background';
@@ -85,5 +85,47 @@ describe('application shell', () => {
     await act(async () => loaded({ Component: () => <p>next page</p> }));
     expect(await screen.findByText('next page')).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('keeps the page of a challenge while the code of one of its sections loads', async () => {
+    let loaded: (section: { Component: () => ReactNode }) => void = () => undefined;
+    const challenge = (
+      <>
+        <p>challenge header</p>
+        <Outlet />
+      </>
+    );
+    const router = createMemoryRouter(
+      [
+        {
+          element: <AppShell />,
+          children: [
+            {
+              path: '/challenges/:challengeId',
+              element: challenge,
+              children: [
+                { index: true, element: <p>first section</p> },
+                { path: 'participants', lazy: () => new Promise((resolve) => (loaded = resolve)) },
+              ],
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/challenges/a'] },
+    );
+    render(
+      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+        <RouterProvider router={router} />
+      </AppProviders>,
+    );
+
+    act(() => void router.navigate('/challenges/a/participants'));
+    await waitFor(() => expect(router.state.navigation.state).toBe('loading'));
+    // The challenge page shows the wait below its header itself.
+    expect(screen.getByText('challenge header')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    await act(async () => loaded({ Component: () => <p>participants section</p> }));
+    expect(await screen.findByText('participants section')).toBeInTheDocument();
   });
 });
