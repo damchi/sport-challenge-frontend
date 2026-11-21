@@ -128,4 +128,38 @@ describe('application shell', () => {
     await act(async () => loaded({ Component: () => <p>participants section</p> }));
     expect(await screen.findByText('participants section')).toBeInTheDocument();
   });
+
+  it('keeps the page, with its state, on a navigation within it', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <AppShell />,
+          children: [
+            {
+              path: '/page',
+              lazy: () =>
+                Promise.resolve({ Component: () => <input aria-label="draft" defaultValue="" /> }),
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/page'] },
+    );
+    render(
+      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+        <RouterProvider router={router} />
+      </AppProviders>,
+    );
+    fireEvent.change(await screen.findByLabelText('draft'), { target: { value: 'typed' } });
+    const states: string[] = [];
+    const unsubscribe = router.subscribe((state) => states.push(state.navigation.state));
+
+    // Its code has loaded: a new query or fragment makes nothing wait.
+    await act(() => router.navigate('/page?tab=2#part'));
+    unsubscribe();
+
+    expect(router.state.location.search).toBe('?tab=2');
+    expect(states).not.toContain('loading');
+    expect(screen.getByLabelText('draft')).toHaveValue('typed');
+  });
 });
