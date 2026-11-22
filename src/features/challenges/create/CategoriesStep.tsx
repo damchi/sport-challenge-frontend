@@ -17,6 +17,11 @@ import { useSportName } from './useSportName';
 
 // X of the example while the field holds no valid increment.
 const EXAMPLE_STEP_KM = 2;
+// The example's week 1, then how far above the minimum week 2 goes: more
+// than the minimum, the new base (5 km, then 10 km when X = 2, as in the
+// README). Example figures, not a rule.
+const EXAMPLE_WEEK1_KM = 5;
+const EXAMPLE_ABOVE_MINIMUM_KM = 3;
 
 /**
  * Step 3 of the creation: the reference sport, then the categories. The
@@ -68,6 +73,7 @@ function Categories({ sports }: { sports: Sports }) {
     name: ['reference_sport', 'cumulative_distance', 'elimination', 'elimination_step_km'],
   });
   const exampleKm = stepKm !== undefined && stepKm > 0 && stepKm <= 100 ? stepKm : EXAMPLE_STEP_KM;
+  const week2DoneKm = EXAMPLE_WEEK1_KM + exampleKm + EXAMPLE_ABOVE_MINIMUM_KM;
   const referenceError = errors.reference_sport?.message;
   const stepError = errors.elimination_step_km?.message;
   // Refused as a whole by the server. Typed as a sport's error too, the
@@ -241,11 +247,10 @@ function Categories({ sports }: { sports: Sports }) {
               <p id="elimination-example" className="mt-2 text-sm">
                 {t('challengeCreate.categories.elimination.example', {
                   step: formatKm(exampleKm, locale),
-                  week1: formatKm(5, locale),
-                  week2: formatKm(5 + exampleKm, locale),
-                  // 3 km above the minimum: the new base, whatever X.
-                  ran2: formatKm(5 + exampleKm + 3, locale),
-                  week3: formatKm(5 + exampleKm + 3 + exampleKm, locale),
+                  week1: formatKm(EXAMPLE_WEEK1_KM, locale),
+                  week2: formatKm(EXAMPLE_WEEK1_KM + exampleKm, locale),
+                  ran2: formatKm(week2DoneKm, locale),
+                  week3: formatKm(week2DoneKm + exampleKm, locale),
                 })}
               </p>
             </div>

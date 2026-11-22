@@ -479,6 +479,22 @@ describe('ChallengeCreateWizard', () => {
       expect(factor('Aviron')).toHaveValue(0.5);
     });
 
+    it('shows the new suggestions when the total distance is added after a change of reference', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addDistance();
+      await screen.findByRole('spinbutton', { name: 'Vélo' });
+      await addDistance();
+
+      fireEvent.change(reference(), { target: { value: 'rowing' } });
+      await addDistance();
+
+      expect(await screen.findByRole('spinbutton', { name: 'Vélo' })).toHaveValue(0.6);
+      expect(factor('Vélo')).toHaveAccessibleDescription('Proposé : ×0,6');
+      expect(factor('Course')).toHaveValue(1);
+    });
+
     it('gives a worked example of X, in the reference sport', async () => {
       renderWizard();
       await fillInfoStep();

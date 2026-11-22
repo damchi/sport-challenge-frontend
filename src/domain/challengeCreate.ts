@@ -27,10 +27,13 @@ export function referenceSports<S extends CatalogueSport>(sports: readonly S[]):
  * rule: min(1, factor / factor of the reference), two decimals (half up),
  * never under 0.1. The catalogue's factors are against the run. Computed in
  * hundredths, in integers, as the backend does, so the rounding is the same.
+ * A reference without a positive factor counts as ×1, as in the backend
+ * (`referenceFactors`): the catalogue gives one to every reference sport.
  */
 export function relativeFactor(factor: number, referenceFactor: number): number {
   const hundredths = Math.round(factor * 100);
-  const reference = Math.round(referenceFactor * 100) > 0 ? Math.round(referenceFactor * 100) : 100;
+  const referenceHundredths = Math.round(referenceFactor * 100);
+  const reference = referenceHundredths > 0 ? referenceHundredths : 100;
   // Half up: floor(100 f / ref + 1/2).
   const ratio = Math.floor((200 * hundredths + reference) / (2 * reference));
   return Math.min(Math.max(ratio, 10), 100) / 100;

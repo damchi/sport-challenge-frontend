@@ -54,6 +54,8 @@ describe('relativeFactor', () => {
     // 0.125 rounds half up.
     [0.125, 1, 0.13],
     [0.1, 2, 0.1],
+    // A reference without a factor counts as ×1, as in the backend.
+    [0.3, 0, 0.3],
   ])('brings %d back to a reference at %d: %d', (factor, reference, expected) => {
     expect(relativeFactor(factor, reference)).toBe(expected);
   });
@@ -98,6 +100,10 @@ describe('rebaseFactors', () => {
     expect(
       rebaseFactors({ ride: 0.6, rowing: 1, run: 1, swim: 1, other: 1 }, SPORTS, 'ride', 'run'),
     ).toEqual({ ride: 0.3, rowing: 0.5 });
+  });
+
+  it('moves a factor set back to its former suggestion, as one never changed', () => {
+    expect(rebaseFactors({ ride: 0.3 }, SPORTS, 'run', 'rowing')).toMatchObject({ ride: 0.6 });
   });
 
   it('gives the suggestion of a factor never set', () => {
