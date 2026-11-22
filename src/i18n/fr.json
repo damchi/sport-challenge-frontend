@@ -345,6 +345,11 @@
           "Other": "Autres"
         }
       },
+      "referenceSport": {
+        "label": "Sport de référence",
+        "hint": "Les distances des autres sports y sont ramenées, et l'élimination se joue dans ce sport.",
+        "required": "Choisis le sport de référence."
+      },
       "eliminationStep": {
         "label": "Incrément X (en km)",
         "hint": "Plus de 0 km, 100 km au plus, une décimale au plus.",
@@ -352,10 +357,9 @@
       },
       "factors": {
         "label": "Coefficients de distance",
-        "hint": "Proposés par l'application ; tu peux les changer, de 0,1 à 2. La course compte toujours {{run}}.",
+        "hint": "Proposés par l'application d'après le sport de référence ; tu peux les changer, de 0,1 à 2.",
         "suggested": "Proposé : {{factor}}",
-        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus.",
-        "waiting": "Les coefficients doivent s'afficher avant de continuer : patiente ou réessaie."
+        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus."
       },
       "serverInvalid": "Valeur refusée. Vérifie-la, puis renvoie le défi."
     },
@@ -368,19 +372,22 @@
       "weeks_other": "{{count}} semaines"
     },
     "categories": {
-      "fixed": "Un défi a toujours ces 3 catégories, chacune avec son podium. Tu règles seulement les coefficients de distance et l'incrément X.",
+      "intro": "Le temps cumulé fait toujours partie du défi. Ajoute si tu veux la distance cumulée et l'élimination : chaque catégorie a son podium.",
+      "waiting": "Les sports doivent s'afficher avant de continuer : patiente ou réessaie.",
       "time": {
         "name": "Temps cumulé",
-        "explanation": "Le temps total de toutes les activités, tous sports confondus."
+        "explanation": "Le temps total de toutes les activités, tous sports confondus.",
+        "always": "Toujours inclus"
       },
       "distance": {
         "name": "Distance cumulée",
-        "explanation": "Les km des activités à distance, ramenés à une distance de course : un km de vélo à ×0,3 compte pour 0,3 km."
+        "explanation": "Les km des activités à distance, ramenés au sport de référence : un km à ×0,5 compte pour 0,5 km.",
+        "add": "Ajouter la distance cumulée"
       },
       "elimination": {
-        "name": "Course avec élimination",
-        "explanation": "Course seule. Chaque semaine, il faut courir au moins la distance de la semaine précédente plus X km, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
-        "example": "Exemple avec X = {{step}} : {{week1}} courus en semaine 1, il faut au moins {{week2}} en semaine 2 ; {{ran2}} courus en semaine 2, au moins {{week3}} en semaine 3."
+        "explanation": "{{sport}} seulement, en distance réelle. Chaque semaine, il faut faire au moins la distance de la semaine précédente plus X km, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
+        "example": "Exemple avec X = {{step}} : {{week1}} en semaine 1, il faut au moins {{week2}} en semaine 2 ; {{ran2}} en semaine 2, au moins {{week3}} en semaine 3.",
+        "add": "Ajouter l'élimination"
       }
     },
     "recap": {
@@ -391,7 +398,7 @@
       "period": "Période",
       "categories": "Catégories",
       "step": "Incrément X : {{step}}",
-      "final": "Les catégories ne pourront plus être modifiées après la création.",
+      "final": "Les catégories, le sport de référence et leurs réglages ne pourront plus être modifiés après la création.",
       "referenceFactor": "{{sport}} {{factor}} (référence)"
     },
     "submit": {

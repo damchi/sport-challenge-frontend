@@ -14,6 +14,9 @@ const valid = {
   weeks: 4,
   start_date: '2026-11-23',
   timezone: 'America/Toronto',
+  reference_sport: 'run',
+  cumulative_distance: true,
+  elimination: true,
   elimination_step_km: 2,
   factors: { ride: 0.3 },
 };
@@ -40,9 +43,30 @@ describe('challengeCreateSchema', () => {
       weeks: 4,
       start_date: '2026-11-23',
       timezone: 'America/Toronto',
+      reference_sport: 'run',
+      cumulative_distance: true,
+      elimination: true,
       elimination_step_km: 2,
       factors: { ride: 0.3 },
     });
+  });
+
+  it('accepts the cumulative time alone, without X nor factors to check', () => {
+    expect(
+      firstMessage({
+        cumulative_distance: false,
+        elimination: false,
+        elimination_step_km: Number.NaN,
+        factors: { ride: Number.NaN },
+      }),
+    ).toBeUndefined();
+    expect(firstMessage({ elimination: false, elimination_step_km: undefined })).toBeUndefined();
+  });
+
+  it('asks for a reference sport', () => {
+    expect(firstMessage({ reference_sport: '' })).toBe(
+      'challengeCreate.fields.referenceSport.required',
+    );
   });
 
   describe('title', () => {
@@ -157,7 +181,7 @@ describe('challengeCreateSchema', () => {
       expect(firstMessage({ elimination_step_km: km })).toBeUndefined();
     });
 
-    it.each([0, -1, 100.1, 2.25, Number.NaN])('refuses %d km', (km) => {
+    it.each([0, -1, 100.1, 2.25, Number.NaN, undefined])('refuses %s km', (km) => {
       expect(firstMessage({ elimination_step_km: km })).toBe(
         'challengeCreate.fields.eliminationStep.range',
       );
@@ -175,6 +199,12 @@ describe('challengeCreateSchema', () => {
         ['challengeCreate.fields.factors.range', ['factors', 'rowing']],
       ]);
     });
+
+    it('leaves out the reference, which keeps no field', () => {
+      expect(
+        firstMessage({ reference_sport: 'ride', factors: { ride: Number.NaN, run: 1 } }),
+      ).toBeUndefined();
+    });
   });
 
   it('only gives messages that exist in French and English', () => {
@@ -183,6 +213,7 @@ describe('challengeCreateSchema', () => {
       { title: 'a\nb\nc', description: '\u200b', start_date: '', timezone: '' },
       { start_date: '2020-01-01' },
       { elimination_step_km: 0, factors: { ride: 3 } },
+      { reference_sport: '' },
     ];
     const messages = wrong.flatMap(
       (input) =>
@@ -197,7 +228,7 @@ describe('challengeCreateSchema', () => {
           texts,
         );
 
-    expect(new Set(messages).size).toBe(11);
+    expect(new Set(messages).size).toBe(12);
     for (const message of messages) {
       expect(typeof lookup(fr, message), message).toBe('string');
       expect(typeof lookup(en, message), message).toBe('string');

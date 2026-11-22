@@ -343,6 +343,11 @@
           "Other": "Other"
         }
       },
+      "referenceSport": {
+        "label": "Reference sport",
+        "hint": "The distances of the other sports are brought back to it, and the elimination is played in this sport.",
+        "required": "Choose the reference sport."
+      },
       "eliminationStep": {
         "label": "Increment X (in km)",
         "hint": "More than 0 km, 100 km at most, one decimal at most.",
@@ -350,10 +355,9 @@
       },
       "factors": {
         "label": "Distance factors",
-        "hint": "Suggested by the app; you can change them, from 0.1 to 2. Running always counts {{run}}.",
+        "hint": "Suggested by the app from the reference sport; you can change them, from 0.1 to 2.",
         "suggested": "Suggested: {{factor}}",
-        "range": "The factor must be from 0.1 to 2, with two decimals at most.",
-        "waiting": "The factors must show before you go on: wait or try again."
+        "range": "The factor must be from 0.1 to 2, with two decimals at most."
       },
       "serverInvalid": "Value refused. Check it, then send the challenge again."
     },
@@ -365,19 +369,22 @@
       "weeks_other": "{{count}} weeks"
     },
     "categories": {
-      "fixed": "A challenge always has these 3 categories, each with its podium. You only set the distance factors and the increment X.",
+      "intro": "The total time is always part of the challenge. Add the total distance and the elimination if you like: each category has its podium.",
+      "waiting": "The sports must show before you go on: wait or try again.",
       "time": {
         "name": "Total time",
-        "explanation": "The total time of all activities, every sport included."
+        "explanation": "The total time of all activities, every sport included.",
+        "always": "Always included"
       },
       "distance": {
         "name": "Total distance",
-        "explanation": "The km of distance activities, brought back to a running distance: a km of cycling at ×0.3 counts for 0.3 km."
+        "explanation": "The km of distance activities, brought back to the reference sport: a km at ×0.5 counts for 0.5 km.",
+        "add": "Add the total distance"
       },
       "elimination": {
-        "name": "Running with elimination",
-        "explanation": "Running only. Each week, you must run at least the previous week's distance plus X km, or you are eliminated from this category. No elimination in week 1.",
-        "example": "Example with X = {{step}}: {{week1}} run in week 1, at least {{week2}} needed in week 2; {{ran2}} run in week 2, at least {{week3}} in week 3."
+        "explanation": "{{sport}} only, in real distance. Each week, you must do at least the previous week's distance plus X km, or you are eliminated from this category. No elimination in week 1.",
+        "example": "Example with X = {{step}}: {{week1}} in week 1, at least {{week2}} needed in week 2; {{ran2}} in week 2, at least {{week3}} in week 3.",
+        "add": "Add the elimination"
       }
     },
     "recap": {
@@ -388,7 +395,7 @@
       "period": "Period",
       "categories": "Categories",
       "step": "Increment X: {{step}}",
-      "final": "The categories cannot be changed once the challenge is created.",
+      "final": "The categories, the reference sport and their settings cannot be changed once the challenge is created.",
       "referenceFactor": "{{sport}} {{factor}} (reference)"
     },
     "submit": {

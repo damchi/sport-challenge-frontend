@@ -63,24 +63,44 @@ export function challengeCreateSchema(now: Date) {
         .max(52, 'challengeCreate.fields.weeks.range'),
       start_date: z.string().refine(isCalendarDate, 'challengeCreate.fields.startDate.required'),
       timezone: z.string().refine(isTimeZone, 'challengeCreate.fields.timezone.required'),
-      // Increment X of the run elimination, in km with one decimal: sent in
-      // meters (1 to 100 000).
-      elimination_step_km: z
-        .number('challengeCreate.fields.eliminationStep.range')
-        .refine(
-          (km) => km > 0 && km <= 100 && hasDecimals(km, 1),
-          'challengeCreate.fields.eliminationStep.range',
-        ),
+      // A sport of the catalogue whose distance is required: the server
+      // checks it against the catalogue.
+      reference_sport: z.string().min(1, 'challengeCreate.fields.referenceSport.required'),
+      // The cumulative time is always there; these two are chosen.
+      cumulative_distance: z.boolean(),
+      elimination: z.boolean(),
+      // Increment X of the elimination, in km with one decimal: sent in
+      // meters (1 to 100 000). Checked below, with the elimination only: an
+      // empty field reads NaN.
+      elimination_step_km: z.union([z.number(), z.nan()]).optional(),
       // Distance factor by sport code, 0.1 to 2 with two decimals at most.
-      factors: z.record(
-        z.string(),
-        z
-          .number('challengeCreate.fields.factors.range')
-          .refine(
-            (factor) => factor >= 0.1 && factor <= 2 && hasDecimals(factor, 2),
-            'challengeCreate.fields.factors.range',
-          ),
-      ),
+      // Checked below, with the cumulative distance only.
+      factors: z.record(z.string(), z.union([z.number(), z.nan()])),
+    })
+    .superRefine((values, context) => {
+      const km = values.elimination_step_km;
+      if (
+        values.elimination &&
+        (km === undefined || !(km > 0 && km <= 100 && hasDecimals(km, 1)))
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['elimination_step_km'],
+          message: 'challengeCreate.fields.eliminationStep.range',
+        });
+      }
+      if (!values.cumulative_distance) return;
+      for (const [code, factor] of Object.entries(values.factors)) {
+        // The reference keeps no field: it always counts ×1.
+        if (code === values.reference_sport) continue;
+        if (!(factor >= 0.1 && factor <= 2 && hasDecimals(factor, 2))) {
+          context.addIssue({
+            code: 'custom',
+            path: ['factors', code],
+            message: 'challengeCreate.fields.factors.range',
+          });
+        }
+      }
     })
     .refine(({ start_date: startDate, timezone }) => isStartDateInRange(startDate, timezone, now), {
       path: ['start_date'],

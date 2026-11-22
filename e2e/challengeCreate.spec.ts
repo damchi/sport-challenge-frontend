@@ -16,6 +16,10 @@ test('a user creates a challenge and lands on its page', async ({ page }) => {
   await page.getByRole('button', { name: 'Suivant' }).click();
 
   await expect(page.getByRole('heading', { level: 2, name: 'Catégories' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Sport de référence' }).selectOption('ride');
+  await page.getByRole('checkbox', { name: 'Ajouter la distance cumulée' }).check();
+  await expect(page.getByRole('spinbutton', { name: 'Course' })).toHaveValue('1');
+  await page.getByRole('checkbox', { name: "Ajouter l'élimination" }).check();
   await page.getByRole('spinbutton', { name: 'Incrément X (en km)' }).fill('2');
   await page.getByRole('button', { name: 'Suivant' }).click();
 
@@ -31,6 +35,8 @@ test('a user creates a challenge and lands on its page', async ({ page }) => {
     weeks: 4,
     start_date: '2026-11-23',
     timezone: 'America/Toronto',
+    reference_sport: 'ride',
+    categories: { cumulative_distance: {}, elimination: { step_meters: 2000 } },
   });
   // The mocks answer the creation with the id of their first challenge.
   await expect(page).toHaveURL('/challenges/00000000-0000-4000-8000-000000000001');
