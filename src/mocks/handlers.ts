@@ -189,10 +189,12 @@ function mockRanking(
             status: null,
             eliminated_week: null,
             minimum_meters: null,
-            run_meters: 0,
+            distance_meters: 0,
             week_ends_at: null,
           }
         : null,
+    // In the points category only.
+    provisional_points: null,
   }));
   for (const participant of mockParticipants.filter((p) => p.status === 'abandoned')) {
     entries.push({
@@ -201,6 +203,7 @@ function mockRanking(
       value: null,
       abandoned: true,
       elimination: null,
+      provisional_points: null,
     });
   }
   return { type, entries };

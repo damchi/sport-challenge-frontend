@@ -8,6 +8,7 @@ import { formatKm } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
 import { useSportName } from '../challenges/create/useSportName';
 import { EliminationProgress } from './EliminationProgress';
+import { ProvisionalPoints } from './ProvisionalPoints';
 
 type CategoryType = Leaderboard['categories'][number]['type'];
 
@@ -59,14 +60,15 @@ function useEntryName(entry: LeaderboardEntry, me: boolean): string {
 }
 
 /**
- * The value of a category: h:mm, km equivalent to the reference sport, or
- * km done in the reference sport (elimination).
+ * The value of a category: h:mm, km equivalent to the reference sport, km
+ * done in the reference sport (elimination), or points acquired.
  */
 function useEntryValue(type: CategoryType, value: number | null, referenceSport: string): string {
   const { t, i18n } = useTranslation();
   const sportName = useSportName();
   if (value === null) return '';
   if (type === 'cumulative_time') return formatDuration(value);
+  if (type === 'points') return t('leaderboard.points', { count: value });
   const locale = i18n.resolvedLanguage ?? 'fr';
   const distance = formatKm(value / 1000, locale);
   if (type !== 'cumulative_distance') return distance;
@@ -95,7 +97,10 @@ export function PodiumCard({ entry, type, me, href, tied, referenceSport }: Rank
       <span className="w-full truncate font-semibold" title={name}>
         {name}
       </span>
-      <span className="text-sm font-bold tabular-nums">{value}</span>
+      <span className="text-sm font-bold tabular-nums">
+        {value}
+        <ProvisionalPoints points={entry.provisional_points} />
+      </span>
     </EntryBox>
   );
 }
@@ -125,7 +130,10 @@ export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: 
         </span>
         {entry.elimination && <EliminationProgress progress={entry.elimination} />}
       </span>
-      <span className="shrink-0 font-bold tabular-nums">{value}</span>
+      <span className="shrink-0 text-right font-bold tabular-nums">
+        {value}
+        <ProvisionalPoints points={entry.provisional_points} />
+      </span>
     </EntryBox>
   );
 }

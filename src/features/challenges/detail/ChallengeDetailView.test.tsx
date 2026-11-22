@@ -555,6 +555,66 @@ describe('ChallengeDetailView', () => {
     expect(within(section).queryByText('Vélo ×1')).not.toBeInTheDocument();
   });
 
+  it('shows the criteria, the scale and the minimum of the points, with their factors', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        {
+          type: 'points',
+          position: 4,
+          params: {
+            criteria: ['longest_distance', 'session_count'],
+            podium: 10,
+            min_session_seconds: 1200,
+            factors: { run: 1, ride: 0.3 },
+          },
+        },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await screen.findByRole('region', { name: 'Catégories' });
+    const points = within(section).getAllByRole('listitem')[1] as HTMLElement;
+    expect(points).toHaveTextContent(/^Points/);
+    for (const text of [
+      'Séance la plus longue en distance équivalente',
+      'Nombre de séances',
+      'Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point',
+      'Une séance compte à partir de 20 min',
+      'Course ×1 (référence)',
+      'Vélo ×0,3',
+    ]) {
+      expect(within(points).getByText(text)).toBeInTheDocument();
+    }
+  });
+
+  it('lists the factors once, under the total distance, and no minimum without the sessions', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'cumulative_distance', position: 2, params: { factors: { run: 1, ride: 0.3 } } },
+        {
+          type: 'points',
+          position: 4,
+          params: {
+            criteria: ['longest_duration', 'longest_distance'],
+            podium: 5,
+            min_session_seconds: 1200,
+            factors: { run: 1, ride: 0.3 },
+          },
+        },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await screen.findByRole('region', { name: 'Catégories' });
+    expect(within(section).getAllByText('Vélo ×0,3')).toHaveLength(1);
+    expect(
+      within(section).getByText('Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points'),
+    ).toBeInTheDocument();
+    expect(within(section).queryByText(/Une séance compte/)).not.toBeInTheDocument();
+  });
+
   it('names the elimination in English after the reference sport', async () => {
     server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
     answer({

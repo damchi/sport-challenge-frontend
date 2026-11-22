@@ -276,7 +276,8 @@
       "upcoming": "À venir",
       "ongoing": "En cours",
       "finished": "Terminé"
-    }
+    },
+    "rank": "{{rank}} sur {{count}}"
   },
   "wizard": {
     "progress": "Étape {{current}} sur {{total}}",
@@ -428,7 +429,19 @@
     "categories": {
       "title": "Catégories",
       "frozen": "Fixées à la création, elles ne changent plus.",
-      "elimination": "{{sport}} avec élimination"
+      "elimination": "{{sport}} avec élimination",
+      "points": "Points",
+      "eliminationGeneric": "Élimination",
+      "pointsParams": {
+        "criteria": {
+          "longest_duration": "Séance la plus longue en temps",
+          "longest_distance": "Séance la plus longue en distance équivalente",
+          "session_count": "Nombre de séances"
+        },
+        "podium_5": "Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points",
+        "podium_10": "Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point",
+        "minSession": "Une séance compte à partir de {{minutes}} min"
+      }
     },
     "tabs": {
       "label": "Sections du défi",
@@ -545,6 +558,13 @@
     "you": "Toi",
     "tied": "ex æquo",
     "equivalent": "{{distance}} éq. {{sport}}",
+    "points_one": "{{count}} pt",
+    "points_many": "{{count}} pts",
+    "points_other": "{{count}} pts",
+    "provisional_one": "+ {{count}} pt provisoire",
+    "provisional_many": "+ {{count}} pts provisoires",
+    "provisional_other": "+ {{count}} pts provisoires",
+    "pointsRule": "Les points d'une semaine sont acquis à 7 h le premier jour de la semaine suivante, heure du défi ({{zone}}). D'ici là, ils sont provisoires et ne comptent pas dans le rang.",
     "empty": "Personne n'est encore classé dans ce défi.",
     "final": "Résultats définitifs : le défi s'est terminé le {{date}}",
     "final_zone": "Résultats définitifs : le défi s'est terminé le {{date}}, {{zone}}",

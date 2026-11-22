@@ -11,6 +11,7 @@ import {
   challengeLastDay,
   challengeTime,
   otherTimeZoneName,
+  timeZoneName,
 } from '../../domain/format/challengeDates';
 import { sharedRanks } from '../../domain/format/rank';
 import { useCategoryName } from '../challenges/detail/categoryNames';
@@ -28,7 +29,7 @@ const SEGMENT_OFF = 'text-muted';
 const OFFSCREEN_ROW = '-m-1 p-1 [content-visibility:auto] [contain-intrinsic-size:auto_4rem]';
 
 /**
- * Leaderboard tab of a challenge: one category at a time, among the 1 to 3
+ * Leaderboard tab of a challenge: one category at a time, among the 1 to 4
  * the challenge has (its choice lives in the address, ?category=; no choice
  * with a single category), with its podium (ranks 1 to 3, ties included),
  * its full ranking and, apart, the participants who abandoned or, in the
@@ -130,6 +131,15 @@ export function ChallengeLeaderboard() {
           })}
         </p>
       )}
+
+      {/* While the server still gives provisional points: until the last
+          week locks, after the challenge's end too. */}
+      {category.type === 'points' &&
+        category.entries.some((entry) => entry.provisional_points !== null) && (
+          <p className="mt-4 text-sm text-muted">
+            {t('leaderboard.pointsRule', { zone: timeZoneName(timezone, locale) })}
+          </p>
+        )}
 
       {/* Only during the weeks of the challenge: the minimum then applies. */}
       {category.type === 'elimination' && challenge.data.current_week !== null && (

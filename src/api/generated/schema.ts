@@ -172,8 +172,8 @@ export interface paths {
         /**
          * Create a challenge
          * @description Creates a challenge with its categories: the cumulative time always,
-         *     the cumulative distance and the elimination when chosen in
-         *     `categories`; the creator becomes its first participant. Requires a
+         *     the cumulative distance, the elimination and the points when chosen
+         *     in `categories`; the creator becomes its first participant. Requires a
          *     complete profile (`profile_incomplete`).
          *     The window starts at local midnight of `start_date` in `timezone` and
          *     lasts `weeks` local weeks. Distance factors not given keep the
@@ -337,6 +337,13 @@ export interface paths {
          *     (the day of `week_ends_at`): until
          *     then nobody is eliminated for it, and the minimum of the current
          *     week may still rise.
+         *
+         *     In the `points` category, `value` is the points acquired: those of
+         *     the weeks locked (7 am on the first day of the next week), the rank
+         *     being on them alone. `provisional_points` gives apart the points of
+         *     the weeks started but not locked yet, computed the same way from the
+         *     activities of the moment; null once every started week is locked,
+         *     and in the frozen results.
          */
         get: operations["getLeaderboard"];
         put?: never;
@@ -395,8 +402,8 @@ export interface paths {
          *     it when the activity counts in it (never for a participant who
          *     abandoned: empty), and `locked` is true once its week is locked in
          *     it (7 am, local time of the challenge, on the first day of the next
-         *     week),
-         *     where it counts (never for a participant who abandoned). The
+         *     week), where it counts; for a participant who abandoned, only when
+         *     the week was already locked when they left. The
          *     author's own listing (`/me/activities`) may still show an activity
          *     locked by another challenge.
          */
@@ -532,7 +539,9 @@ export interface paths {
          *     its week is locked in one of those challenges, finished ones
          *     included: a week locks at 7 am, local time of the challenge, on the
          *     first day of the next week (the day of `week_ends_at`; the last one
-         *     on the day of the challenge's `ends_at`). Its end
+         *     on the day of the challenge's `ends_at`). A challenge the user left
+         *     (abandoned or excluded) still locks the weeks already locked when
+         *     they left: their points there no longer move. Its end
          *     (`started_at` plus `duration_seconds`) is never in the future (5
          *     minutes of tolerance) and `started_at` never before 2000-01-01
          *     (`validation_failed`). It never overlaps another activity of the user
@@ -567,7 +576,9 @@ export interface paths {
          * Delete an activity
          * @description Author only, as for the update (404 `activity_not_found`). The
          *     activity stops counting at once; it is refused (`week_locked`) when
-         *     its week is locked in a challenge where it counts. Deleting it again
+         *     its week is locked in a challenge where it counts, or was already
+         *     locked when the user left a challenge (as at the creation). Deleting
+         *     it again
          *     answers 404.
          */
         delete: operations["deleteActivity"];
@@ -582,7 +593,9 @@ export interface paths {
          *     (`sport_label`, `distance_meters`). The source and the
          *     `Idempotency-Key` of the creation stay. It is refused
          *     (`week_locked`) when the week of the current `started_at`, or of the
-         *     new one, is locked in a challenge where the activity counts, and
+         *     new one, is locked in a challenge where the activity counts, or was
+         *     already locked when the user left a challenge (as at the creation),
+         *     and
          *     (`activity_overlap`) when it would overlap another activity of the
          *     user.
          */
@@ -722,10 +735,11 @@ export interface components {
             /** @enum {string} */
             visibility: "public" | "private";
             /**
-             * @description Whether participants may invite people, not only creators.
-             * @default false
+             * @description Whether participants may invite people, not only creators. `false`
+             *     when absent; `null` is refused (no default in the schema, which
+             *     would replace it).
              */
-            members_can_invite: boolean;
+            members_can_invite?: boolean;
             /**
              * @description IANA time zone of the place the challenge is run from; the weeks are cut in it.
              * @example America/Toronto
@@ -751,9 +765,10 @@ export interface components {
             reference_sport?: string;
             /**
              * @description Factors chosen by the creator, by sport code (distance sports only,
-             *     0.1 to 2, two decimals at most), for the cumulative distance:
-             *     without that category, sending them answers 400
-             *     `validation_failed` on `distance_factors`. Send only the factors the creator
+             *     0.1 to 2, two decimals at most), for the cumulative distance and
+             *     the `longest_distance` criterion of the points category: without
+             *     either, sending them answers 400 `validation_failed` on
+             *     `distance_factors`. Send only the factors the creator
              *     changed: sports not given keep their suggested factor brought back
              *     to the reference sport, min(1, factor / factor of the reference),
              *     rounded to two decimals and never under 0.1. The reference sport is
@@ -774,6 +789,7 @@ export interface components {
         CategoriesCreate: {
             cumulative_distance?: components["schemas"]["CumulativeDistanceCreate"];
             elimination?: components["schemas"]["EliminationCreate"];
+            points?: components["schemas"]["PointsCreate"];
         };
         /** @description Cumulative distance, with the factors of `distance_factors`; no settings of its own. */
         CumulativeDistanceCreate: Record<string, never>;
@@ -781,6 +797,29 @@ export interface components {
         EliminationCreate: {
             /** @description Increment X, in meters. */
             step_meters: number;
+        };
+        /**
+         * @description Points: each week, each criterion ranks the participants, and the top
+         *     of each of these weekly rankings scores the points of the scale.
+         */
+        PointsCreate: {
+            /**
+             * @description The longest session by duration (every sport), the longest
+             *     session by equivalent distance (with the factors of
+             *     `distance_factors`), the number of sessions of at least
+             *     `min_session_minutes`. At least one, each once.
+             */
+            criteria: ("longest_duration" | "longest_distance" | "session_count")[];
+            /**
+             * @description Top 5 (10, 8, 6, 4, 2) or top 10 (25, 18, 15, 12, 10, 8, 6, 4, 2, 1).
+             * @enum {integer}
+             */
+            podium: 5 | 10;
+            /**
+             * @description Minimum duration of a session counted by `session_count`, in minutes.
+             * @default 20
+             */
+            min_session_minutes: number;
         };
         Challenge: {
             /** Format: uuid */
@@ -808,14 +847,17 @@ export interface components {
         };
         Category: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination";
-            /** @description Fixed by type, gaps left by the missing categories (cumulative_time 1, cumulative_distance 2, elimination 3). */
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
+            /** @description Fixed by type, gaps left by the missing categories (cumulative_time 1, cumulative_distance 2, elimination 3, points 4). */
             position: number;
             params: components["schemas"]["CategoryParams"];
         };
         /** @description Frozen settings of the category. */
         CategoryParams: {
-            /** @description cumulative_distance only, distance factor by sport code. */
+            /**
+             * @description cumulative_distance, and points with the `longest_distance`
+             *     criterion: distance factor by sport code.
+             */
             factors?: {
                 [key: string]: number;
             };
@@ -823,6 +865,15 @@ export interface components {
             sport?: string;
             /** @description Elimination category only, increment X in meters. */
             step_meters?: number;
+            /** @description Points category only, its criteria in the order chosen. */
+            criteria?: ("longest_duration" | "longest_distance" | "session_count")[];
+            /**
+             * @description Points category only, the size of the top that scores.
+             * @enum {integer}
+             */
+            podium?: 5 | 10;
+            /** @description Points category only, minimum duration of a session counted by `session_count`, in seconds. */
+            min_session_seconds?: number;
         };
         ChallengePage: {
             items: components["schemas"]["ChallengeSummary"][];
@@ -874,11 +925,12 @@ export interface components {
         };
         CategoryRanking: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination";
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
             /**
              * @description Every participant but the deleted accounts. Ranked ones first,
-             *     best first; abandoned ones last. `value` is in seconds for `cumulative_time` and in meters
-             *     for the other two.
+             *     best first; abandoned ones last. `value` is in seconds for
+             *     `cumulative_time`, in meters for `cumulative_distance` and
+             *     `elimination`, in points acquired for `points`.
              */
             entries: components["schemas"]["LeaderboardEntry"][];
         };
@@ -891,6 +943,13 @@ export interface components {
             abandoned: boolean;
             /** @description Only in the `elimination` category, and null for a participant who abandoned. */
             elimination: components["schemas"]["EliminationProgress"] | null;
+            /**
+             * @description Only in the `points` category: the points of the weeks started but
+             *     not locked yet, not counted in `value` nor in the rank. Null in the
+             *     other categories, for a participant who abandoned, once every
+             *     started week is locked, and in the frozen results.
+             */
+            provisional_points: number | null;
         };
         LeaderboardUser: {
             /** Format: uuid */
@@ -917,8 +976,8 @@ export interface components {
             eliminated_week: number | null;
             /** @description The distance the current week needs; null in week 1, when eliminated, or outside the weeks. Until the week before locks, it may still rise. */
             minimum_meters: number | null;
-            /** @description The distance already run in the current week; 0 when eliminated or outside the weeks. */
-            run_meters: number;
+            /** @description The distance already covered in the reference sport in the current week; 0 when eliminated or outside the weeks. */
+            distance_meters: number;
             /**
              * Format: date-time
              * @description The end of the current week; null when eliminated or outside the weeks.
@@ -970,13 +1029,19 @@ export interface components {
         };
         MyRanking: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination";
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
             /** @description The user's rank, as in the leaderboard; equal values share it (1, 1, 3). */
             rank: number;
             /** @description How many participants are ranked in the category, abandoned ones and deleted accounts left out. */
             ranked_count: number;
             /** @description Only in the `elimination` category, as in the leaderboard; null in the other categories. */
             elimination: components["schemas"]["EliminationProgress"] | null;
+            /**
+             * @description Only in the `points` category, as in the leaderboard: the points of
+             *     the weeks started but not locked yet; null in the other categories
+             *     and once every started week is locked.
+             */
+            provisional_points: number | null;
         };
         ChallengeDetail: {
             /** Format: uuid */
@@ -1169,7 +1234,9 @@ export interface components {
             /**
              * @description True once the week of the activity is locked in a challenge where
              *     it counts, at 7 am, local time of the challenge, on the first day
-             *     of the next week: it can no longer be changed nor deleted.
+             *     of the next week, or was already locked when the user left a
+             *     challenge (abandoned or excluded): it can no longer be changed nor
+             *     deleted.
              */
             locked: boolean;
         };
@@ -2123,7 +2190,8 @@ export interface operations {
              *     a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), the activity overlaps another of the
              *     user (`activity_overlap`), or the week of `started_at` is locked
-             *     in a challenge where the activity counts (`week_locked`).
+             *     in a challenge where the activity counts, or was already locked
+             *     when the user left a challenge (`week_locked`).
              */
             422: {
                 headers: {
@@ -2158,7 +2226,7 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["ActivityNotFound"];
-            /** @description The week of the activity is locked in a challenge where it counts (`week_locked`). */
+            /** @description The week of the activity is locked in a challenge where it counts, or was already locked when the user left a challenge (`week_locked`). */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -2203,7 +2271,8 @@ export interface operations {
              *     (`distance_not_allowed`), it would overlap another activity of
              *     the user (`activity_overlap`), or the week of the current or the
              *     new `started_at` is locked in a challenge where the activity
-             *     counts (`week_locked`).
+             *     counts, or was already locked when the user left a challenge
+             *     (`week_locked`).
              */
             422: {
                 headers: {
