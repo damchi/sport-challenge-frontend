@@ -2,22 +2,9 @@ import { Ellipsis } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
+import { challengeActions, type ChallengeAction } from '../../../domain/challenge';
 
-export type MenuAction = 'edit' | 'delete' | 'abandon';
-
-/**
- * The actions of the user's role, as the server gives it: a creator edits
- * and deletes; an active participant (creator included) abandons a
- * challenge not finished yet.
- */
-function menuActions(challenge: ChallengeDetail): MenuAction[] {
-  const actions: MenuAction[] = [];
-  if (challenge.my_role === 'creator') actions.push('edit', 'delete');
-  if (challenge.my_status === 'active' && challenge.status !== 'finished') {
-    actions.push('abandon');
-  }
-  return actions;
-}
+export type MenuAction = ChallengeAction;
 
 const LABELS: Record<MenuAction, string> = {
   edit: 'challengeDetail.edit.button',
@@ -46,7 +33,7 @@ export function ChallengeMenu({
   const root = useRef<HTMLDivElement>(null);
   const first = useRef<HTMLButtonElement>(null);
   const listId = useId();
-  const actions = menuActions(challenge);
+  const actions = challengeActions(challenge);
 
   useEffect(() => {
     if (!open) return;

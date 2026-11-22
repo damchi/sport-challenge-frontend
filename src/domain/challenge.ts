@@ -52,3 +52,43 @@ export type ChallengeRole = 'creator' | 'participant' | 'abandoned' | 'invited' 
 export function canSeeParticipantActivities(role: ChallengeRole): boolean {
   return role === 'creator' || role === 'participant' || role === 'abandoned';
 }
+
+/** An action of the challenge page's menu. */
+export type ChallengeAction = 'edit' | 'delete' | 'abandon';
+
+/**
+ * The actions of the user's role in a challenge, read from the server's
+ * my_role, my_status and status: a creator edits and deletes; an active
+ * participant (creator included) abandons a challenge not finished yet
+ * (decision of 2026-11-20: the contract has no can_abandon).
+ */
+export function challengeActions(challenge: {
+  my_role: ChallengeRole;
+  my_status: 'active' | 'abandoned' | null;
+  status: ChallengeStatus;
+}): ChallengeAction[] {
+  const actions: ChallengeAction[] = [];
+  if (challenge.my_role === 'creator') actions.push('edit', 'delete');
+  if (challenge.my_status === 'active' && challenge.status !== 'finished') actions.push('abandon');
+  return actions;
+}
+
+/** Distance factors by sport code, as the contract gives them. */
+export type DistanceFactors = Record<string, number>;
+
+/**
+ * The distance factors a challenge shows: those of its total distance, else
+ * those of its points when a criterion uses them (the longest session by
+ * distance), else none.
+ */
+export function shownFactors(
+  categories: readonly {
+    type: string;
+    params: { factors?: DistanceFactors; criteria?: readonly string[] };
+  }[],
+): DistanceFactors | undefined {
+  const distance = categories.find((category) => category.type === 'cumulative_distance');
+  if (distance) return distance.params.factors;
+  const points = categories.find((category) => category.type === 'points')?.params;
+  return points?.criteria?.includes('longest_distance') ? points.factors : undefined;
+}

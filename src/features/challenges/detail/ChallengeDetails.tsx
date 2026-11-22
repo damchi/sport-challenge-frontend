@@ -1,25 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
+import { shownFactors } from '../../../domain/challenge';
 import { sortSportsByName } from '../../../domain/challengeCreate';
 import { challengePeriod, timeZoneName } from '../../../domain/format/challengeDates';
 import { formatFactor } from '../../../domain/format/distance';
 import { useSportName } from '../create/useSportName';
 
-type Category = ChallengeDetail['categories'][number];
-
 const CARD = 'rounded-card border border-border bg-surface p-4 lg:p-5';
-
-/**
- * The factors of the challenge: those of its total distance, else those of
- * its points when a criterion uses them (the longest session by distance).
- */
-function factorsOf(categories: Category[]): Record<string, number> | undefined {
-  const points = categories.find((category) => category.type === 'points')?.params;
-  return (
-    categories.find((category) => category.type === 'cumulative_distance')?.params.factors ??
-    (points?.criteria?.includes('longest_distance') ? points.factors : undefined)
-  );
-}
 
 /**
  * « Détails »: period, duration (the server's week_count), time zone,
@@ -36,7 +23,7 @@ export function ChallengeDetails({ challenge }: { challenge: ChallengeDetail }) 
     challenge.timezone,
     locale,
   );
-  const factors = factorsOf(challenge.categories);
+  const factors = shownFactors(challenge.categories);
   const reference = challenge.reference_sport;
   const rows = [
     [t('challengeCreate.recap.period'), t('challenges.period', period)],
