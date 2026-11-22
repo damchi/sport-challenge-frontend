@@ -9,7 +9,7 @@ description: Règles d'affichage et de saisie des challenges du frontend Sport C
 
 Source de vérité : le `README.md` du backend (§2) et le §2 du README du frontend. Principe : **le serveur décide, l'interface reflète**. Si un champ manque dans le contrat, demande-le (skill `api-client-sync`) au lieu de recalculer la règle.
 
-## Les catégories (1 à 3, décision du 2026-11-20)
+## Les catégories (1 à 4, décision du 2026-11-20)
 
 | # | Catégorie | Présence | Classement affiché |
 |---|---|---|---|
@@ -20,7 +20,7 @@ Source de vérité : le `README.md` du backend (§2) et le §2 du README du fron
 - Le **sport de référence** (`reference_sport`) est choisi à la création parmi les sports à distance obligatoire, **course par défaut** ; il vaut toujours ×1.
 - Affiche les catégories que le serveur renvoie, dans leur ordre, sans supposer qu'il y en a 3 : un onglet par catégorie, chacune avec son podium.
 - Un participant apparaît dans toutes les catégories du challenge.
-- La catégorie Points viendra avec SC-WEB-058 et SC-WEB-059.
+- La catégorie Points (`points` dans l'API) s'affiche « Grand prix » (EN « Grand Prix ») ; elle se crée avec SC-WEB-058 et s'affiche avec SC-WEB-059.
 
 ## Création et édition
 

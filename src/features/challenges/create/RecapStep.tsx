@@ -3,7 +3,11 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSports } from '../../../api/hooks/useSports';
-import { factorSports, sortSportsByName } from '../../../domain/challengeCreate';
+import {
+  factorSports,
+  sortSportsByName,
+  usesDistanceFactors,
+} from '../../../domain/challengeCreate';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { useSportName } from './useSportName';
@@ -78,22 +82,7 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
         <Item label={t('challengeCreate.recap.categories')}>
           <ol className="flex flex-col gap-1">
             <li>{t('challengeCreate.categories.time.name')}</li>
-            {values.cumulative_distance && (
-              <li>
-                {t('challengeCreate.categories.distance.name')}
-                <ul className="mt-1 text-sm text-muted">
-                  <li>
-                    {t('challengeCreate.recap.referenceFactor', {
-                      sport: sportName(reference),
-                      factor: formatFactor(1, locale),
-                    })}
-                  </li>
-                  {factors.map(({ code, text }) => (
-                    <li key={code}>{text}</li>
-                  ))}
-                </ul>
-              </li>
-            )}
+            {values.cumulative_distance && <li>{t('challengeCreate.categories.distance.name')}</li>}
             {values.elimination && values.elimination_step_km !== undefined && (
               <li>
                 {t('challengeDetail.categories.elimination', { sport: sportName(reference) })}
@@ -104,8 +93,45 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
                 </span>
               </li>
             )}
+            {values.points && values.points_podium && (
+              <li>
+                {t('challengeDetail.categories.points')}
+                <ul className="mt-1 text-sm text-muted">
+                  {values.points_criteria.map((criterion) => (
+                    <li key={criterion}>
+                      {t(`challengeDetail.categories.pointsParams.criteria.${criterion}`)}
+                    </li>
+                  ))}
+                  {values.points_criteria.includes('session_count') && (
+                    <li>
+                      {t('challengeDetail.categories.pointsParams.minSession', {
+                        minutes: values.points_min_session_minutes,
+                      })}
+                    </li>
+                  )}
+                  <li>
+                    {t(`challengeDetail.categories.pointsParams.podium_${values.points_podium}`)}
+                  </li>
+                </ul>
+              </li>
+            )}
           </ol>
         </Item>
+        {usesDistanceFactors(values) && (
+          <Item label={t('challengeCreate.fields.factors.label')}>
+            <ul className="flex flex-col gap-1">
+              <li>
+                {t('challengeCreate.recap.referenceFactor', {
+                  sport: sportName(reference),
+                  factor: formatFactor(1, locale),
+                })}
+              </li>
+              {factors.map(({ code, text }) => (
+                <li key={code}>{text}</li>
+              ))}
+            </ul>
+          </Item>
+        )}
       </dl>
 
       <p

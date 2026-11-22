@@ -774,7 +774,7 @@ describe('ChallengeLeaderboard, points', () => {
     fireEvent.click(
       within(await screen.findByRole('group', { name: 'Catégorie du classement' })).getByRole(
         'button',
-        { name: 'Points' },
+        { name: 'Grand prix' },
       ),
     );
   }

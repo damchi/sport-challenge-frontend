@@ -358,11 +358,24 @@
       },
       "factors": {
         "label": "Distance factors",
-        "hint": "Suggested by the app from the reference sport; you can change them, from 0.1 to 2.",
+        "hint": "Used for the total distance and the longest session by distance. The app suggests them from the reference sport; you can change them, from 0.1 to 2.",
         "suggested": "Suggested: {{factor}}",
         "range": "The factor must be from 0.1 to 2, with two decimals at most."
       },
-      "serverInvalid": "Value refused. Check it, then send the challenge again."
+      "serverInvalid": "Value refused. Check it, then send the challenge again.",
+      "pointsCriteria": {
+        "label": "Criteria",
+        "required": "Tick at least one criterion."
+      },
+      "pointsPodium": {
+        "label": "Scale",
+        "required": "Choose a scale."
+      },
+      "minSession": {
+        "label": "Minimum session length (in min)",
+        "hint": "From 1 to 180 min: a shorter session does not count.",
+        "range": "The minimum length must be a whole number of minutes, from 1 to 180."
+      }
     },
     "preview": {
       "title": "Preview",
@@ -372,7 +385,7 @@
       "weeks_other": "{{count}} weeks"
     },
     "categories": {
-      "intro": "The total time is always part of the challenge. Add the total distance and the elimination if you like: each category has its podium.",
+      "intro": "The total time is always part of the challenge. Add the total distance, the elimination and the Grand Prix if you like: each category has its podium.",
       "waiting": "The sports must show before you go on: wait or try again.",
       "time": {
         "name": "Total time",
@@ -388,6 +401,10 @@
         "explanation": "{{sport}} only, in real distance. Each week, you must do at least the previous week's distance plus X km, or you are eliminated from this category. No elimination in week 1.",
         "example": "Example with X = {{step}}: {{week1}} in week 1, at least {{week2}} needed in week 2; {{ran2}} in week 2, at least {{week3}} in week 3.",
         "add": "Add the elimination"
+      },
+      "points": {
+        "explanation": "Each week, each criterion chosen gives a ranking of the week: the first ones score points by the scale. The total of the secured points makes the ranking.",
+        "add": "Add the Grand Prix"
       }
     },
     "recap": {
@@ -427,7 +444,7 @@
       "title": "Categories",
       "frozen": "Set at creation, they no longer change.",
       "elimination": "{{sport}} with elimination",
-      "points": "Points",
+      "points": "Grand Prix",
       "eliminationGeneric": "Elimination",
       "pointsParams": {
         "criteria": {

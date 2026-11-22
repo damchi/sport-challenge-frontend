@@ -575,7 +575,7 @@ describe('ChallengeDetailView', () => {
 
     const section = await screen.findByRole('region', { name: 'Catégories' });
     const points = within(section).getAllByRole('listitem')[1] as HTMLElement;
-    expect(points).toHaveTextContent(/^Points/);
+    expect(points).toHaveTextContent(/^Grand prix/);
     for (const text of [
       'Séance la plus longue en distance équivalente',
       'Nombre de séances',

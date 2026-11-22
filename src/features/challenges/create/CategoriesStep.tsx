@@ -8,9 +8,10 @@ import {
   rebaseFactors,
   referenceSports,
   sortSportsByName,
+  usesDistanceFactors,
 } from '../../../domain/challengeCreate';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
-import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
+import { POINTS_CRITERIA, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { FieldError } from './FieldError';
 import { describedBy, inputClass } from './fields';
 import { useSportName } from './useSportName';
@@ -25,9 +26,10 @@ const EXAMPLE_ABOVE_MINIMUM_KM = 3;
 
 /**
  * Step 3 of the creation: the reference sport, then the categories. The
- * cumulative time is always there; the cumulative distance, with its
- * factors, and the elimination, with its increment X, are added at will.
- * The factors start at the catalogue's suggestions brought back to the
+ * cumulative time is always there; the cumulative distance, the elimination,
+ * with its increment X, and the points, with their criteria and scale, are
+ * added at will. The distance factors show once the cumulative distance or
+ * the longest session by distance is chosen. They start at the catalogue's suggestions brought back to the
  * reference, and follow it when it changes, unless the creator set them.
  * `sportsWaiting`: Next was pressed before the sports could be shown, which
  * the step explains.
@@ -68,18 +70,24 @@ function Categories({ sports }: { sports: Sports }) {
     setValue,
     formState: { errors },
   } = useFormContext<ChallengeCreateInput>();
-  const [reference, distance, elimination, stepKm] = useWatch({
+  const [reference, distance, elimination, stepKm, points, criteria] = useWatch({
     control,
-    name: ['reference_sport', 'cumulative_distance', 'elimination', 'elimination_step_km'],
+    name: [
+      'reference_sport',
+      'cumulative_distance',
+      'elimination',
+      'elimination_step_km',
+      'points',
+      'points_criteria',
+    ],
   });
   const exampleKm = stepKm !== undefined && stepKm > 0 && stepKm <= 100 ? stepKm : EXAMPLE_STEP_KM;
   const week2DoneKm = EXAMPLE_WEEK1_KM + exampleKm + EXAMPLE_ABOVE_MINIMUM_KM;
   const referenceError = errors.reference_sport?.message;
   const stepError = errors.elimination_step_km?.message;
-  // Refused as a whole by the server. Typed as a sport's error too, the
-  // factors being keyed by code.
-  const factorsMessage = errors.factors?.message;
-  const factorsError = typeof factorsMessage === 'string' ? factorsMessage : undefined;
+  const criteriaError = errors.points_criteria?.message;
+  const podiumError = errors.points_podium?.message;
+  const minSessionError = errors.points_min_session_minutes?.message;
 
   return (
     <>
@@ -146,64 +154,6 @@ function Categories({ sports }: { sports: Sports }) {
             />
             {t('challengeCreate.categories.distance.add')}
           </label>
-          {distance && (
-            <fieldset
-              className="mt-2"
-              aria-describedby={factorsError ? 'factors-hint factors-error' : 'factors-hint'}
-            >
-              <legend className="text-sm font-semibold">
-                {t('challengeCreate.fields.factors.label')}
-              </legend>
-              <p id="factors-hint" className="mt-1 text-sm text-muted">
-                {t('challengeCreate.fields.factors.hint')}
-              </p>
-              <FieldError id="factors-error" message={factorsError} />
-              <ul className="mt-3 flex max-w-sm flex-col gap-3">
-                <li className="flex min-h-11 items-center">
-                  {t('challengeCreate.recap.referenceFactor', {
-                    sport: sportName(reference),
-                    factor: formatFactor(1, locale),
-                  })}
-                </li>
-                {sortSportsByName(factorSports(sports, reference), sportName, locale).map(
-                  ({ code, suggested }) => {
-                    const id = `factor-${code}`;
-                    const error = errors.factors?.[code]?.message;
-                    return (
-                      <li key={code}>
-                        <div className="flex items-center gap-3">
-                          <label htmlFor={id} className="min-w-0 flex-1">
-                            {sportName(code)}
-                          </label>
-                          <input
-                            id={id}
-                            type="number"
-                            inputMode="decimal"
-                            min={0.1}
-                            max={2}
-                            step={0.01}
-                            // Read by the form when the field first registers:
-                            // the suggestion until the creator changes it.
-                            defaultValue={suggested}
-                            aria-invalid={error ? true : undefined}
-                            aria-describedby={describedBy(id, error)}
-                            className={`${inputClass} mt-0 h-11 w-24 flex-none text-right`}
-                            {...register(`factors.${code}`, { valueAsNumber: true })}
-                          />
-                        </div>
-                        <p id={`${id}-hint`} className="mt-1 text-sm text-muted">
-                          {t('challengeCreate.fields.factors.suggested', {
-                            factor: formatFactor(suggested, locale),
-                          })}
-                        </p>
-                        <FieldError id={`${id}-error`} message={error} />
-                      </li>
-                    );
-                  },
-                )}
-              </ul>
-            </fieldset>
-          )}
         </li>
 
         <li className="rounded-row border border-border bg-surface p-4">
@@ -256,7 +206,163 @@ function Categories({ sports }: { sports: Sports }) {
             </div>
           )}
         </li>
+        <li className="rounded-row border border-border bg-surface p-4">
+          <h3 className="font-display font-bold">{t('challengeDetail.categories.points')}</h3>
+          <p id="points-explanation" className="mt-1 text-sm text-muted">
+            {t('challengeCreate.categories.points.explanation')}
+          </p>
+          <label className="mt-2 flex min-h-11 items-center gap-3 font-semibold">
+            <input type="checkbox" aria-describedby="points-explanation" {...register('points')} />
+            {t('challengeCreate.categories.points.add')}
+          </label>
+          {points && (
+            <div className="mt-2 flex flex-col gap-4">
+              <fieldset aria-describedby={criteriaError ? 'points_criteria-error' : undefined}>
+                <legend className="text-sm font-semibold">
+                  {t('challengeCreate.fields.pointsCriteria.label')}
+                </legend>
+                <FieldError id="points_criteria-error" message={criteriaError} />
+                {POINTS_CRITERIA.map((criterion) => (
+                  <label key={criterion} className="flex min-h-11 items-center gap-3">
+                    <input
+                      type="checkbox"
+                      value={criterion}
+                      aria-invalid={criteriaError ? true : undefined}
+                      {...register('points_criteria')}
+                    />
+                    {t(`challengeDetail.categories.pointsParams.criteria.${criterion}`)}
+                  </label>
+                ))}
+              </fieldset>
+              {criteria.includes('session_count') && (
+                <div>
+                  <label
+                    htmlFor="points_min_session_minutes"
+                    className="block text-sm font-semibold"
+                  >
+                    {t('challengeCreate.fields.minSession.label')}
+                  </label>
+                  <input
+                    id="points_min_session_minutes"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={180}
+                    step={1}
+                    aria-invalid={minSessionError ? true : undefined}
+                    aria-describedby={describedBy('points_min_session_minutes', minSessionError)}
+                    className={`${inputClass} block h-11 w-24`}
+                    {...register('points_min_session_minutes', { valueAsNumber: true })}
+                  />
+                  <p id="points_min_session_minutes-hint" className="mt-1 text-sm text-muted">
+                    {t('challengeCreate.fields.minSession.hint')}
+                  </p>
+                  <FieldError id="points_min_session_minutes-error" message={minSessionError} />
+                </div>
+              )}
+              <fieldset aria-describedby={podiumError ? 'points_podium-error' : undefined}>
+                <legend className="text-sm font-semibold">
+                  {t('challengeCreate.fields.pointsPodium.label')}
+                </legend>
+                <FieldError id="points_podium-error" message={podiumError} />
+                {(['5', '10'] as const).map((podium) => (
+                  <label key={podium} className="flex min-h-11 items-center gap-3">
+                    <input
+                      type="radio"
+                      value={podium}
+                      aria-invalid={podiumError ? true : undefined}
+                      {...register('points_podium')}
+                    />
+                    {t(`challengeDetail.categories.pointsParams.podium_${podium}`)}
+                  </label>
+                ))}
+              </fieldset>
+            </div>
+          )}
+        </li>
       </ol>
+
+      {usesDistanceFactors({
+        cumulative_distance: distance,
+        points,
+        points_criteria: criteria,
+      }) && <DistanceFactors sports={sports} reference={reference} />}
     </>
+  );
+}
+
+/**
+ * The distance factors, for every category that uses them: the reference
+ * counts ×1, the other distance sports start at their suggestion.
+ */
+function DistanceFactors({ sports, reference }: { sports: Sports; reference: string }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const sportName = useSportName();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<ChallengeCreateInput>();
+  // Refused as a whole by the server. Typed as a sport's error too, the
+  // factors being keyed by code.
+  const factorsMessage = errors.factors?.message;
+  const factorsError = typeof factorsMessage === 'string' ? factorsMessage : undefined;
+
+  return (
+    <div className="rounded-row border border-border bg-surface p-4">
+      <fieldset aria-describedby={factorsError ? 'factors-hint factors-error' : 'factors-hint'}>
+        <legend className="text-sm font-semibold">
+          {t('challengeCreate.fields.factors.label')}
+        </legend>
+        <p id="factors-hint" className="mt-1 text-sm text-muted">
+          {t('challengeCreate.fields.factors.hint')}
+        </p>
+        <FieldError id="factors-error" message={factorsError} />
+        <ul className="mt-3 flex max-w-sm flex-col gap-3">
+          <li className="flex min-h-11 items-center">
+            {t('challengeCreate.recap.referenceFactor', {
+              sport: sportName(reference),
+              factor: formatFactor(1, locale),
+            })}
+          </li>
+          {sortSportsByName(factorSports(sports, reference), sportName, locale).map(
+            ({ code, suggested }) => {
+              const id = `factor-${code}`;
+              const error = errors.factors?.[code]?.message;
+              return (
+                <li key={code}>
+                  <div className="flex items-center gap-3">
+                    <label htmlFor={id} className="min-w-0 flex-1">
+                      {sportName(code)}
+                    </label>
+                    <input
+                      id={id}
+                      type="number"
+                      inputMode="decimal"
+                      min={0.1}
+                      max={2}
+                      step={0.01}
+                      // Read by the form when the field first registers:
+                      // the suggestion until the creator changes it.
+                      defaultValue={suggested}
+                      aria-invalid={error ? true : undefined}
+                      aria-describedby={describedBy(id, error)}
+                      className={`${inputClass} mt-0 h-11 w-24 flex-none text-right`}
+                      {...register(`factors.${code}`, { valueAsNumber: true })}
+                    />
+                  </div>
+                  <p id={`${id}-hint`} className="mt-1 text-sm text-muted">
+                    {t('challengeCreate.fields.factors.suggested', {
+                      factor: formatFactor(suggested, locale),
+                    })}
+                  </p>
+                  <FieldError id={`${id}-error`} message={error} />
+                </li>
+              );
+            },
+          )}
+        </ul>
+      </fieldset>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { Wizard } from '../../../components/Wizard';
 import {
   challengeCreateRequest,
+  DEFAULT_MIN_SESSION_MINUTES,
   DEFAULT_REFERENCE_SPORT,
   formFieldOf,
 } from '../../../domain/challengeCreate';
@@ -30,7 +31,17 @@ import { useSportName } from './useSportName';
 const STEP_FIELDS = [
   ['title', 'description', 'visibility', 'members_can_invite'],
   ['weeks', 'start_date', 'timezone'],
-  ['reference_sport', 'cumulative_distance', 'elimination', 'elimination_step_km', 'factors'],
+  [
+    'reference_sport',
+    'cumulative_distance',
+    'elimination',
+    'elimination_step_km',
+    'points',
+    'points_criteria',
+    'points_podium',
+    'points_min_session_minutes',
+    'factors',
+  ],
 ] as const;
 
 // Translation key of the label of each field, for the refused ones.
@@ -45,6 +56,9 @@ const FIELD_LABELS: Record<string, string> = {
   reference_sport: 'challengeCreate.fields.referenceSport.label',
   factors: 'challengeCreate.fields.factors.label',
   elimination_step_km: 'challengeCreate.fields.eliminationStep.label',
+  points_criteria: 'challengeCreate.fields.pointsCriteria.label',
+  points_podium: 'challengeCreate.fields.pointsPodium.label',
+  points_min_session_minutes: 'challengeCreate.fields.minSession.label',
 };
 
 // Montréal's time zone (IANA names it after Toronto): the product's default.
@@ -95,6 +109,9 @@ export function ChallengeCreateWizard({
       // Added at will: the cumulative time alone until then.
       cumulative_distance: false,
       elimination: false,
+      points: false,
+      points_criteria: [],
+      points_min_session_minutes: DEFAULT_MIN_SESSION_MINUTES,
       factors: {},
     },
   });

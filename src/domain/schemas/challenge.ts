@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { usesDistanceFactors } from '../challengeCreate';
 import { isCalendarDate, isStartDateInRange, isTimeZone } from '../challengeWindow';
 import {
   characterCount,
@@ -16,6 +17,9 @@ function hasDecimals(value: number, decimals: number): boolean {
   const scaled = value * 10 ** decimals;
   return Math.abs(scaled - Math.round(scaled)) < 1e-9;
 }
+
+/** The weekly rankings of the points category (API contract, PointsCreate). */
+export const POINTS_CRITERIA = ['longest_duration', 'longest_distance', 'session_count'] as const;
 
 const TITLE_MAX_LENGTH = 80;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -73,8 +77,16 @@ export function challengeCreateSchema(now: Date) {
       // meters (1 to 100 000). Checked below, with the elimination only: an
       // empty field reads NaN.
       elimination_step_km: z.union([z.number(), z.nan()]).optional(),
+      points: z.boolean(),
+      // Checked below, with the points only: at least one criterion, a
+      // scale, and the minimum session with the number of sessions alone.
+      points_criteria: z.array(z.enum(POINTS_CRITERIA)),
+      // A radio's value: no default, the creator chooses it.
+      points_podium: z.enum(['5', '10']).nullish(),
+      // Whole minutes, 1 to 180; an empty field reads NaN.
+      points_min_session_minutes: z.union([z.number(), z.nan()]),
       // Distance factor by sport code, 0.1 to 2 with two decimals at most.
-      // Checked below, with the cumulative distance only.
+      // Checked below, when a category uses them.
       factors: z.record(z.string(), z.union([z.number(), z.nan()])),
     })
     .superRefine((values, context) => {
@@ -89,7 +101,34 @@ export function challengeCreateSchema(now: Date) {
           message: 'challengeCreate.fields.eliminationStep.range',
         });
       }
-      if (!values.cumulative_distance) return;
+      if (values.points) {
+        if (values.points_criteria.length === 0) {
+          context.addIssue({
+            code: 'custom',
+            path: ['points_criteria'],
+            message: 'challengeCreate.fields.pointsCriteria.required',
+          });
+        }
+        if (!values.points_podium) {
+          context.addIssue({
+            code: 'custom',
+            path: ['points_podium'],
+            message: 'challengeCreate.fields.pointsPodium.required',
+          });
+        }
+        const minutes = values.points_min_session_minutes;
+        if (
+          values.points_criteria.includes('session_count') &&
+          !(Number.isInteger(minutes) && minutes >= 1 && minutes <= 180)
+        ) {
+          context.addIssue({
+            code: 'custom',
+            path: ['points_min_session_minutes'],
+            message: 'challengeCreate.fields.minSession.range',
+          });
+        }
+      }
+      if (!usesDistanceFactors(values)) return;
       for (const [code, factor] of Object.entries(values.factors)) {
         // The reference keeps no field: it always counts ×1.
         if (code === values.reference_sport) continue;

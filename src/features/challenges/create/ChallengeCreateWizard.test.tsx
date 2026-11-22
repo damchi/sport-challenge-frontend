@@ -74,6 +74,12 @@ const addDistance = async () =>
   fireEvent.click(await screen.findByRole('checkbox', { name: 'Ajouter la distance cumulée' }));
 const addElimination = async () =>
   fireEvent.click(await screen.findByRole('checkbox', { name: "Ajouter l'élimination" }));
+const addPoints = async () =>
+  fireEvent.click(await screen.findByRole('checkbox', { name: 'Ajouter le Grand prix' }));
+const criterion = (name: string) => screen.getByRole('checkbox', { name });
+const minSession = () =>
+  screen.queryByRole('spinbutton', { name: "Durée minimale d'une séance (en min)" });
+const top10 = () => screen.getByRole('radio', { name: /^Top 10/ });
 const send = () => fireEvent.click(screen.getByRole('button', { name: 'Créer le défi' }));
 
 /** Up to the recap, with both optional categories unless told otherwise. */
@@ -455,6 +461,99 @@ describe('ChallengeCreateWizard', () => {
       expect(screen.queryAllByRole('spinbutton')).toHaveLength(0);
     });
 
+    it('sets the points: criteria, scale, and the minimum session with the number of sessions', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+
+      expect(screen.getByRole('heading', { level: 3, name: 'Grand prix' })).toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Critères' })).not.toBeInTheDocument();
+      await addPoints();
+
+      for (const name of [
+        'Séance la plus longue en temps',
+        'Séance la plus longue en distance équivalente',
+        'Nombre de séances',
+      ]) {
+        expect(criterion(name)).not.toBeChecked();
+      }
+      // The scale shows its points; the creator chooses it.
+      expect(
+        screen.getByRole('radio', {
+          name: 'Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points',
+        }),
+      ).not.toBeChecked();
+      expect(top10()).toHaveAccessibleName(
+        'Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point',
+      );
+      expect(top10()).not.toBeChecked();
+      expect(minSession()).not.toBeInTheDocument();
+
+      fireEvent.click(criterion('Nombre de séances'));
+      expect(minSession()).toHaveValue(20);
+      expect(minSession()).toHaveAccessibleDescription(
+        'De 1 à 180 min : une séance plus courte ne compte pas.',
+      );
+      fireEvent.click(criterion('Nombre de séances'));
+      expect(minSession()).not.toBeInTheDocument();
+    });
+
+    it('asks for a criterion, a scale and a valid minimum session', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+
+      next();
+      expect(await screen.findByText('Coche au moins un critère.')).toBeInTheDocument();
+      expect(screen.getByText('Choisis un barème.')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'Catégories' })).toBeInTheDocument();
+
+      // Checked once left, as every field.
+      for (const choice of [criterion('Nombre de séances'), top10()]) {
+        fireEvent.click(choice);
+        fireEvent.blur(choice);
+      }
+      const field = minSession();
+      if (!field) throw new Error('no minimum session');
+      type(field, '181');
+      expect(
+        await screen.findByText(
+          'La durée minimale doit être un nombre entier de minutes, de 1 à 180.',
+        ),
+      ).toBeInTheDocument();
+      expect(field).toHaveAttribute('aria-invalid', 'true');
+      expect(screen.queryByText('Coche au moins un critère.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Choisis un barème.')).not.toBeInTheDocument();
+    });
+
+    it('shows the factors for the total distance or the longest session by distance', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+      const factors = () => screen.queryByRole('group', { name: 'Coefficients de distance' });
+
+      expect(factors()).not.toBeInTheDocument();
+      fireEvent.click(criterion('Séance la plus longue en temps'));
+      expect(factors()).not.toBeInTheDocument();
+
+      fireEvent.click(criterion('Séance la plus longue en distance équivalente'));
+      expect(factors()).toBeInTheDocument();
+      expect(factor('Vélo')).toHaveValue(0.3);
+
+      await addDistance();
+      fireEvent.click(criterion('Séance la plus longue en distance équivalente'));
+      expect(factors()).toBeInTheDocument();
+      await addDistance();
+      expect(factors()).not.toBeInTheDocument();
+
+      // The criterion counts with the points only.
+      fireEvent.click(criterion('Séance la plus longue en distance équivalente'));
+      await addPoints();
+      expect(factors()).not.toBeInTheDocument();
+    });
+
     it('brings the suggestions back to a new reference, the changed factors staying', async () => {
       renderWizard();
       await fillInfoStep();
@@ -651,6 +750,111 @@ describe('ChallengeCreateWizard', () => {
       expect(bodies[0]).not.toHaveProperty('categories');
       expect(bodies[0]).not.toHaveProperty('distance_factors');
       expect(bodies[0]?.reference_sport).toBe('run');
+    });
+
+    it('sums up and sends the points, with the factors of the longest session by distance', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+      fireEvent.click(criterion('Séance la plus longue en distance équivalente'));
+      fireEvent.click(criterion('Nombre de séances'));
+      const field = minSession();
+      if (!field) throw new Error('no minimum session');
+      type(field, '30');
+      fireEvent.click(top10());
+      type(factor('Vélo'), '0.25');
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Récapitulatif' });
+
+      expect(screen.getByText('Grand prix')).toBeInTheDocument();
+      expect(screen.getByText('Séance la plus longue en distance équivalente')).toBeInTheDocument();
+      expect(screen.getByText('Nombre de séances')).toBeInTheDocument();
+      expect(screen.getByText('Une séance compte à partir de 30 min')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Distance cumulée')).not.toBeInTheDocument();
+      expect(screen.getByText('Vélo ×0,25')).toBeInTheDocument();
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.categories).toEqual({
+        points: {
+          criteria: ['longest_distance', 'session_count'],
+          podium: 10,
+          min_session_minutes: 30,
+        },
+      });
+      expect(bodies[0]?.distance_factors).toEqual({ ride: 0.25 });
+    });
+
+    it('sums up the points without a minimum session when the sessions are not counted', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+      fireEvent.click(criterion('Séance la plus longue en temps'));
+      fireEvent.click(screen.getByRole('radio', { name: /^Top 5/ }));
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Récapitulatif' });
+
+      expect(screen.getByText('Séance la plus longue en temps')).toBeInTheDocument();
+      expect(screen.queryByText(/Une séance compte à partir de/)).not.toBeInTheDocument();
+      expect(screen.queryByText('Coefficients de distance')).not.toBeInTheDocument();
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.categories).toEqual({
+        points: { criteria: ['longest_duration'], podium: 5, min_session_minutes: 20 },
+      });
+      expect(bodies[0]).not.toHaveProperty('distance_factors');
+    });
+
+    it('shows the refused points settings on their fields', async () => {
+      answerCreation(() =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 'validation_failed',
+              params: {
+                fields:
+                  'categories.points.criteria,categories.points.podium,categories.points.min_session_minutes',
+              },
+            },
+          },
+          { status: 400 },
+        ),
+      );
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+      fireEvent.click(criterion('Nombre de séances'));
+      fireEvent.click(top10());
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Récapitulatif' });
+
+      send();
+
+      expect(
+        await screen.findByText(
+          "Certaines informations ont été refusées : Critères, Barème, Durée minimale d'une séance (en min). Corrige-les, puis réessaie.",
+        ),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+      const refused = expect.stringContaining('Valeur refusée. Vérifie-la, puis renvoie le défi.');
+      expect(await screen.findByRole('group', { name: 'Critères' })).toHaveAccessibleDescription(
+        refused,
+      );
+      expect(screen.getByRole('group', { name: 'Barème' })).toHaveAccessibleDescription(refused);
+      expect(minSession()).toHaveAttribute('aria-invalid', 'true');
     });
 
     it('sends the factors changed from the suggestions of the reference chosen', async () => {

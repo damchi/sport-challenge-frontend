@@ -103,7 +103,7 @@ describe('ChallengeCard', () => {
     expect(elimination).toHaveTextContent('À risque');
     expect(elimination).toHaveTextContent('18 km sur 25 km cette semaine');
     expect(elimination).toHaveTextContent('5e sur 8');
-    expect(points).toHaveTextContent('Points2e sur 6 + 12 pts provisoires');
+    expect(points).toHaveTextContent('Grand prix2e sur 6 + 12 pts provisoires');
   });
 
   it('says the week of the elimination instead of a rank once eliminated', () => {

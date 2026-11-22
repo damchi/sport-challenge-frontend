@@ -29,6 +29,10 @@ const VALUES = {
   cumulative_distance: true,
   elimination: true,
   elimination_step_km: 2.5,
+  points: false,
+  points_criteria: [],
+  points_podium: undefined,
+  points_min_session_minutes: 20,
   factors: { ride: 0.3, rowing: 0.5, swim: 1 },
 };
 
@@ -194,6 +198,66 @@ describe('challengeCreateRequest', () => {
     ).toEqual({ swim: 0.8 });
   });
 
+  it('sends the points, the minimum session with the number of sessions', () => {
+    expect(
+      challengeCreateRequest(
+        {
+          ...VALUES,
+          cumulative_distance: false,
+          elimination: false,
+          points: true,
+          points_criteria: ['session_count', 'longest_duration'],
+          points_podium: '10',
+          points_min_session_minutes: 45,
+        },
+        SPORTS,
+      ),
+    ).toEqual({
+      ...BASE,
+      categories: {
+        points: {
+          criteria: ['session_count', 'longest_duration'],
+          podium: 10,
+          min_session_minutes: 45,
+        },
+      },
+    });
+  });
+
+  it('sends the default minimum session without the number of sessions', () => {
+    expect(
+      challengeCreateRequest(
+        {
+          ...VALUES,
+          points: true,
+          points_criteria: ['longest_duration'],
+          points_podium: '5',
+          points_min_session_minutes: Number.NaN,
+        },
+        SPORTS,
+      ).categories?.points,
+    ).toEqual({ criteria: ['longest_duration'], podium: 5, min_session_minutes: 20 });
+  });
+
+  it('sends the factors for the longest session by distance, without the total distance', () => {
+    const values = {
+      ...VALUES,
+      cumulative_distance: false,
+      elimination: false,
+      points: true,
+      points_podium: '5' as const,
+      factors: { ride: 0.25 },
+    };
+    expect(
+      challengeCreateRequest({ ...values, points_criteria: ['longest_distance'] }, SPORTS)
+        .distance_factors,
+    ).toEqual({ ride: 0.25 });
+    expect(
+      challengeCreateRequest({ ...values, points_criteria: ['longest_duration'] }, SPORTS)
+        .distance_factors,
+    ).toBeUndefined();
+  });
+
   it('rounds X to the meter', () => {
     expect(
       challengeCreateRequest({ ...VALUES, elimination_step_km: 0.1 + 0.2 }, SPORTS).categories
@@ -210,6 +274,9 @@ describe('formFieldOf', () => {
     ['distance_factors.ride', 'factors.ride'],
     ['distance_factors', 'factors'],
     ['reference_sport', 'reference_sport'],
+    ['categories.points.criteria', 'points_criteria'],
+    ['categories.points.podium', 'points_podium'],
+    ['categories.points.min_session_minutes', 'points_min_session_minutes'],
     ['categories', undefined],
   ])('maps %s to %s', (server, form) => {
     expect(formFieldOf(server)).toBe(form);
