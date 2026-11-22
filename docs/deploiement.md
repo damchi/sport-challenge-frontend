@@ -139,7 +139,7 @@ Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publique
    | `VITE_AUTH0_AUDIENCE` | identifiant de l'API de production dans Auth0 |
    | `VITE_SENTRY_DSN` | facultatif : DSN du projet Sentry du web |
 
-3. **Règle de la branche `main`** (Settings > Rules > Rulesets, `main: pull request required`) : pull request obligatoire, sans liste de contournement. Aucun push direct ne part ainsi en production sans pull request ni CI. Aucune approbation n'est exigée : le dépôt n'a qu'un mainteneur, qui doit pouvoir fusionner ses propres pull requests.
+3. **Règle de la branche `main`** (Settings > Rules > Rulesets, `main: pull request required`) : pull request obligatoire, vérifications `typecheck, lint, test, build` et `end-to-end (Playwright)` vertes pour fusionner, push forcé et suppression de la branche interdits, sans liste de contournement. Aucun push direct ne part ainsi en production sans pull request ni CI. La relecture Claude n'est pas exigée : elle commente sans bloquer, et une panne de son service bloquerait toutes les fusions. Aucune approbation n'est exigée : le dépôt n'a qu'un mainteneur, qui doit pouvoir fusionner ses propres pull requests.
 4. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et la fédération d'identité en place. Tant qu'elle ne vaut pas `true`, les deux jobs sont ignorés :
    ```
    gh variable set DEPLOY_PRODUCTION --body true
