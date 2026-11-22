@@ -51,6 +51,7 @@ function mockRole(index: number): Role {
 /** Challenges of the mocks: a few of each kind, enough for two pages. */
 export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_, index) => {
   const role = mockRole(index);
+  const status = index % 3 === 0 ? 'upcoming' : index % 3 === 1 ? 'ongoing' : 'finished';
   return {
     id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
     title: `Défi ${index + 1}`,
@@ -63,7 +64,10 @@ export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_,
     participant_count: (index % 7) + 1,
     my_role: role,
     my_status: role === 'abandoned' ? 'abandoned' : role === 'outsider' ? null : 'active',
-    status: index % 3 === 0 ? 'upcoming' : index % 3 === 1 ? 'ongoing' : 'finished',
+    status,
+    // Week 3 of 4 when ongoing, as the detail (mockChallengeDetail).
+    current_week: status === 'ongoing' ? 3 : null,
+    week_ends_at: status === 'ongoing' ? '2026-11-23T05:00:00Z' : null,
     my_week: null,
     week_count: 4,
     // A frozen rank for the active participants of a finished challenge.
