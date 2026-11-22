@@ -399,10 +399,12 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
 
-      const outcome = await screen.findByRole('status');
-      expect(outcome).toHaveTextContent(
+      const outcome = await screen.findByText(
         "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
       );
+      expect(outcome).toHaveAttribute('role', 'status');
+      // Sent: no longer said to be on its way.
+      expect(screen.queryByText('Abandon en cours…')).not.toBeInTheDocument();
       // The button is gone: the focus moves to the outcome.
       expect(outcome).toHaveFocus();
       expect(screen.queryByText('Tu participes')).not.toBeInTheDocument();
@@ -425,6 +427,8 @@ describe('ChallengeDetailView', () => {
       const dialog = await openConfirmation();
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
       await vi.waitFor(() => expect(abandons).toBe(1));
+      // Said while it is sent.
+      expect(await screen.findByText('Abandon en cours…')).toHaveAttribute('role', 'status');
 
       // Asked again from the menu while it is sent: nothing more is sent.
       const again = await openConfirmation(false);

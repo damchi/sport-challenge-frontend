@@ -490,6 +490,7 @@
     },
     "abandon": {
       "button": "Abandon the challenge",
+      "busy": "Abandoning…",
       "title": "Abandon “{{title}}”?",
       "message": "This is final: you are eliminated from every category and shown as “Abandoned” in the leaderboards, off the podium. You won't be able to join this challenge again.",
       "confirm": "Abandon",
@@ -543,6 +544,7 @@
     },
     "delete": {
       "button": "Delete the challenge",
+      "busy": "Deleting…",
       "title": "Delete “{{title}}”?",
       "message": "This is final: the challenge and its leaderboards disappear for all its participants. No one will be able to open it again.",
       "typeTitle": "To confirm, type the challenge's title: “{{title}}”",

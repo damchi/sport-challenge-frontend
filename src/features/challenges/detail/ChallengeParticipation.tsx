@@ -70,6 +70,12 @@ export function ChallengeParticipation({
             {t(abandonError.key, abandonError.values)}
           </p>
         )}
+        {/* The dialog is closed: the abandon being sent is said, and announced. */}
+        {abandon.isPending && (
+          <p role="status" className="mt-4 text-sm text-muted">
+            {t('challengeDetail.abandon.busy')}
+          </p>
+        )}
         {showsReason && (
           <p
             ref={(element) => {

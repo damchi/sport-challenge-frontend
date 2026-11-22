@@ -47,6 +47,12 @@ export function ChallengeDelete({
 
   return (
     <>
+      {/* The dialog is closed: the deletion being sent is said, and announced. */}
+      {remove.isPending && (
+        <p role="status" className="mt-3 text-sm text-muted">
+          {t('challengeDetail.delete.busy')}
+        </p>
+      )}
       {message && !open && (
         // The dialog is closed: the refusal takes the focus, once (a new
         // attempt hides it first).

@@ -30,7 +30,7 @@ function answer(detail: Partial<ChallengeDetail> = {}) {
 }
 
 let deletes = 0;
-function deleteAnswers(response: () => Response) {
+function deleteAnswers(response: () => Response | Promise<Response>) {
   server.use(
     http.delete('*/api/v1/challenges/:challengeId', () => {
       deletes += 1;
@@ -144,6 +144,26 @@ describe('ChallengeDelete', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer le défi' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+  });
+
+  it('says the deletion is being sent once the dialog is closed', async () => {
+    answer();
+    let release: () => void = () => undefined;
+    const sent = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    deleteAnswers(async () => {
+      await sent;
+      return new HttpResponse(null, { status: 204 });
+    });
+    renderAt();
+    const dialog = await openConfirmation();
+    fireEvent.change(within(dialog).getByRole('textbox'), { target: { value: summary.title } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer le défi' }));
+
+    // A creator's page has an empty status already, the edit's: found by its text.
+    expect(await screen.findByText('Suppression en cours…')).toHaveAttribute('role', 'status');
+    release();
   });
 
   it('says why the deletion was refused and stays on the challenge', async () => {

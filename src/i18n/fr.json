@@ -494,6 +494,7 @@
     },
     "abandon": {
       "button": "Abandonner le défi",
+      "busy": "Abandon en cours…",
       "title": "Abandonner « {{title}} » ?",
       "message": "C'est définitif : tu es éliminé de toutes les catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
       "confirm": "Abandonner",
@@ -547,6 +548,7 @@
     },
     "delete": {
       "button": "Supprimer le défi",
+      "busy": "Suppression en cours…",
       "title": "Supprimer « {{title}} » ?",
       "message": "C'est définitif : le défi et ses classements disparaissent pour tous ses participants. Personne ne pourra plus l'ouvrir.",
       "typeTitle": "Pour confirmer, écris le titre du défi : « {{title}} »",
