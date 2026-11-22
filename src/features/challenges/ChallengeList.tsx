@@ -14,7 +14,6 @@ import {
   type ChallengeStatus,
 } from '../../domain/challenge';
 import { ChallengeCard } from './ChallengeCard';
-import { CreateChallengeLink } from './CreateChallengeLink';
 
 const SEGMENT = 'h-11 flex-1 rounded-tab text-sm font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
@@ -85,13 +84,8 @@ export function ChallengeList() {
   } else if (!counts) {
     body = <ErrorState error={counted.error} onRetry={() => void counted.refetch()} />;
   } else if (total === 0) {
-    body = (
-      <EmptyState
-        message={t(`challenges.empty.${scope}`)}
-        // A phone has the floating button already.
-        action={<CreateChallengeLink display="hidden md:inline-flex" />}
-      />
-    );
+    // « Créer un défi » is the page's own button (beside the title, floating on a phone).
+    body = <EmptyState message={t(`challenges.empty.${scope}`)} />;
   } else {
     body = SECTIONS.filter((section) => counts[section] > 0).map((section) => (
       <ChallengeSection key={section} scope={scope} status={section} />

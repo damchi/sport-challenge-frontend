@@ -214,15 +214,13 @@ describe('ChallengeList', () => {
     expect(await screen.findByRole('heading', { name: 'Page 2' })).toBeInTheDocument();
   });
 
-  it('suggests creating a challenge when I have none', async () => {
+  it('says I have no challenge yet', async () => {
     answerWith({}, { ongoing: 0, upcoming: 0, finished: 0 });
     renderList();
 
     expect(await screen.findByText(/Tu ne participes encore à aucun défi/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Créer un défi' })).toHaveAttribute(
-      'href',
-      '/challenges/new',
-    );
+    // The page's own button creates one: no second link in the list.
+    expect(screen.queryByRole('link', { name: 'Créer un défi' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'En cours' })).not.toBeInTheDocument();
   });
 
