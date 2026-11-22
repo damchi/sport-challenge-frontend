@@ -1076,6 +1076,21 @@ export interface components {
             /** @description Number of weeks of the challenge, whatever its status, as `week_count` of the detail. */
             week_count: number;
             /**
+             * @description Number of the current week; null before the start and after the
+             *     end. As `current_week` of the detail, for everyone, whatever
+             *     `my_role` and `my_status`; equal to `my_week.week` when `my_week`
+             *     is given.
+             */
+            current_week: number | null;
+            /**
+             * Format: date-time
+             * @description End of the current week; null before the start and after the end.
+             *     As `week_ends_at` of the detail, for everyone, whatever `my_role`
+             *     and `my_status`; equal to `my_week.week_ends_at` when `my_week` is
+             *     given.
+             */
+            week_ends_at: string | null;
+            /**
              * @description Only in `mine`, for an ongoing challenge where the user is an
              *     active participant; null otherwise (`public`, upcoming or
              *     finished, abandoned).

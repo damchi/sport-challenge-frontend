@@ -20,8 +20,8 @@ const CARD_HOVER = '[@media(hover:hover)]:hover:border-muted';
 
 /**
  * A challenge of the home page, as its status (the server's) shows it.
- * Ongoing: the week and its end, then the user's line in each category
- * while they take part (my_week). Upcoming: the start and the days left.
+ * Ongoing: the week and its end for everyone, then the user's line in each
+ * category while they take part (my_week). Upcoming: the start and the days left.
  * Finished: the user's best frozen rank (best_result). Every card ends with
  * its visibility, participants and the user's role; its dates are in the
  * challenge's time zone, named when the user's differs.
@@ -97,35 +97,40 @@ function Meta({ challenge, first }: { challenge: ChallengeSummary; first?: strin
   return <p className="mt-2 text-sm text-muted">{parts.join(' · ')}</p>;
 }
 
-/** The week of the challenge (the user's my_week) in a dark banner, then the user's lines. */
+/**
+ * The current week of the challenge in a dark banner, for everyone (the
+ * server's current_week and week_ends_at), then the user's lines while they
+ * take part (my_week).
+ */
 function OngoingBody({ challenge }: { challenge: ChallengeSummary }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
-  const week = challenge.my_week;
+  const { current_week: week, week_ends_at: weekEndsAt } = challenge;
   const banner = (weekday: 'long' | 'short') =>
-    week &&
+    week !== null &&
+    weekEndsAt !== null &&
     t(weekday === 'long' ? 'challenges.card.week' : 'challenges.card.weekShort', {
-      week: week.week,
+      week,
       count: challenge.week_count,
-      date: challengeWeekEnd(week.week_ends_at, challenge.timezone, locale, weekday),
+      date: challengeWeekEnd(weekEndsAt, challenge.timezone, locale, weekday),
     });
   return (
     <>
       <Meta challenge={challenge} />
-      {week && (
-        <>
-          <p className="mt-4 flex items-start gap-3 rounded-row border border-raised-border bg-surface-raised px-4 py-3 text-sm font-bold text-on-raised">
-            <Timer
-              aria-hidden="true"
-              size={18}
-              strokeWidth={2}
-              className="mt-0.5 flex-none text-accent"
-            />
-            <span className="md:hidden">{banner('short')}</span>
-            <span className="hidden md:inline">{banner('long')}</span>
-          </p>
-          <MyWeekRows week={week} referenceSport={challenge.reference_sport} />
-        </>
+      {week !== null && weekEndsAt !== null && (
+        <p className="mt-4 flex items-start gap-3 rounded-row border border-raised-border bg-surface-raised px-4 py-3 text-sm font-bold text-on-raised">
+          <Timer
+            aria-hidden="true"
+            size={18}
+            strokeWidth={2}
+            className="mt-0.5 flex-none text-accent"
+          />
+          <span className="md:hidden">{banner('short')}</span>
+          <span className="hidden md:inline">{banner('long')}</span>
+        </p>
+      )}
+      {challenge.my_week && (
+        <MyWeekRows week={challenge.my_week} referenceSport={challenge.reference_sport} />
       )}
     </>
   );

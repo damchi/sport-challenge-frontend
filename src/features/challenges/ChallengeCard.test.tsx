@@ -31,6 +31,8 @@ function ongoing(week: number, rankings: Ranking[]): ChallengeSummary {
     ...base,
     status: 'ongoing',
     week_count: 4,
+    current_week: week,
+    week_ends_at: '2026-11-28T05:00:00Z',
     my_week: { week, week_ends_at: '2026-11-28T05:00:00Z', rankings },
   };
 }
@@ -143,13 +145,29 @@ describe('ChallengeCard', () => {
     expect(within(card).getByRole('listitem')).toHaveTextContent('Éliminé en semaine 3');
   });
 
-  it('shows no week for an ongoing challenge without my week', () => {
-    const card = renderCard({ ...base, status: 'ongoing', my_week: null, my_role: 'outsider' });
+  it('shows the week to someone outside the challenge, in its time zone, without lines', () => {
+    const card = renderCard(
+      { ...ongoing(3, []), my_role: 'outsider', my_status: null, my_week: null },
+      'Europe/Paris',
+    );
 
-    expect(card).not.toHaveTextContent('Semaine');
+    // Midnight in Montréal, not 6 a.m. in Paris.
+    expect(card).toHaveTextContent('Semaine 3 sur 4 · se termine samedi 28 nov., 00 h');
     expect(within(card).queryByRole('list')).not.toBeInTheDocument();
     expect(card).toHaveTextContent('Public · 8 participants');
     expect(card).not.toHaveTextContent('tu ');
+  });
+
+  it('shows no week when the server gives no current week', () => {
+    const card = renderCard({
+      ...ongoing(3, []),
+      current_week: null,
+      week_ends_at: null,
+      my_week: null,
+    });
+
+    expect(card).not.toHaveTextContent('Semaine');
+    expect(card).not.toHaveTextContent('Sem.');
   });
 
   it('counts the days before an upcoming challenge, and says I abandoned it', () => {
@@ -215,17 +233,17 @@ describe('ChallengeCard', () => {
     expect(card).toHaveTextContent('1er en Grand prix');
   });
 
-  it('says I abandoned an ongoing challenge, without my week', () => {
+  it('says I abandoned an ongoing challenge, with its week but without my lines', () => {
     const card = renderCard({
-      ...base,
-      status: 'ongoing',
+      ...ongoing(2, []),
       my_role: 'abandoned',
       my_status: 'abandoned',
       my_week: null,
     });
 
     expect(within(card).getByText('Tu as abandonné')).toBeInTheDocument();
-    expect(card).not.toHaveTextContent('Semaine');
+    expect(card).toHaveTextContent('Semaine 2 sur 4 · se termine samedi 28 nov., 00 h');
+    expect(within(card).queryByRole('list')).not.toBeInTheDocument();
     expect(card).not.toHaveTextContent('tu ');
   });
 
