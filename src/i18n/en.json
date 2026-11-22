@@ -478,12 +478,12 @@
         "cancel": "Cancel",
         "gone": "This person no longer takes part in this challenge.",
         "creator": {
-          "button": "Make creator",
-          "buttonNamed": "Make {{name}} a creator",
-          "busy": "Making creator…",
-          "title": "Make {{name}} a creator?",
-          "message": "Like you, this person will be able to edit the title and description, invite friends, make other creators, exclude participants and delete the challenge.",
-          "confirm": "Make creator",
+          "button": "Add as creator",
+          "buttonNamed": "Add as creator {{name}}",
+          "busy": "Adding…",
+          "title": "Add {{name}} as a creator?",
+          "message": "Like you, this person will be able to edit the title and description, invite friends, add other creators, exclude participants and delete the challenge.",
+          "confirm": "Add as creator",
           "done": "{{name}} now has creator rights."
         },
         "exclude": {

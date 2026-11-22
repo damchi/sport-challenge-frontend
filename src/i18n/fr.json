@@ -481,12 +481,12 @@
         "cancel": "Annuler",
         "gone": "Cette personne ne participe plus à ce défi.",
         "creator": {
-          "button": "Nommer créateur",
-          "buttonNamed": "Nommer créateur {{name}}",
-          "busy": "Nomination…",
-          "title": "Nommer {{name}} créateur ?",
-          "message": "Cette personne pourra, comme toi, modifier le titre et la description, inviter des amis, nommer d'autres créateurs, exclure des participants et supprimer le défi.",
-          "confirm": "Nommer créateur",
+          "button": "Ajouter comme créateur",
+          "buttonNamed": "Ajouter comme créateur {{name}}",
+          "busy": "Ajout…",
+          "title": "Ajouter {{name}} comme créateur ?",
+          "message": "Cette personne pourra, comme toi, modifier le titre et la description, inviter des amis, ajouter d'autres créateurs, exclure des participants et supprimer le défi.",
+          "confirm": "Ajouter comme créateur",
           "done": "{{name}} a maintenant les droits de créateur."
         },
         "exclude": {

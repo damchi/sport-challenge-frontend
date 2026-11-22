@@ -86,7 +86,9 @@ describe('ParticipantActions', () => {
     renderAt();
 
     const sam = await rowOf('sam');
-    expect(within(sam).getByRole('button', { name: 'Nommer créateur sam' })).toBeInTheDocument();
+    expect(
+      within(sam).getByRole('button', { name: 'Ajouter comme créateur sam' }),
+    ).toBeInTheDocument();
     expect(within(sam).getByRole('button', { name: 'Exclure sam' })).toBeInTheDocument();
     const lea = await rowOf('lea');
     expect(within(lea).getByText('Créateur')).toBeInTheDocument();
@@ -163,6 +165,33 @@ describe('ParticipantActions', () => {
       expect(screen.queryByRole('button', { name: 'Exclure sam' })).not.toBeInTheDocument();
     });
 
+    it('sends the exclusion once while it is sent', async () => {
+      let release: () => void = () => undefined;
+      const sent = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      server.use(
+        http.delete('*/api/v1/challenges/:challengeId/participants/:userId', async ({ params }) => {
+          excluded.push(String(params.userId));
+          await sent;
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderAt();
+      fireEvent.click(within(await rowOf('sam')).getByRole('button', { name: 'Exclure sam' }));
+      fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Exclure' }));
+
+      const busy = await screen.findByRole('button', { name: 'Exclusion…' });
+      expect(busy).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(busy);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(excluded).toEqual([SAM]);
+      release();
+      expect(await within(await list()).findByRole('status')).toHaveTextContent(
+        'sam ne participe plus au défi.',
+      );
+    });
+
     it.each([
       ['cannot_exclude_creator', 422, 'Un créateur ne peut pas être exclu du défi.'],
       ['challenge_ended', 422, 'Ce défi est terminé.'],
@@ -205,14 +234,14 @@ describe('ParticipantActions', () => {
       );
       renderAt();
       fireEvent.click(
-        within(await rowOf('sam')).getByRole('button', { name: 'Nommer créateur sam' }),
+        within(await rowOf('sam')).getByRole('button', { name: 'Ajouter comme créateur sam' }),
       );
-      const dialog = screen.getByRole('dialog', { name: 'Nommer sam créateur ?' });
+      const dialog = screen.getByRole('dialog', { name: 'Ajouter sam comme créateur ?' });
       expect(dialog).toHaveAccessibleDescription(
-        "Cette personne pourra, comme toi, modifier le titre et la description, inviter des amis, nommer d'autres créateurs, exclure des participants et supprimer le défi.",
+        "Cette personne pourra, comme toi, modifier le titre et la description, inviter des amis, ajouter d'autres créateurs, exclure des participants et supprimer le défi.",
       );
       listing([participant({ is_creator: true }), ...people.slice(1)]);
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Nommer créateur' }));
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Ajouter comme créateur' }));
 
       const outcome = await within(await list()).findByRole('status');
       expect(outcome).toHaveTextContent('sam a maintenant les droits de créateur.');
@@ -232,10 +261,10 @@ describe('ParticipantActions', () => {
       );
       renderAt();
       fireEvent.click(
-        within(await rowOf('sam')).getByRole('button', { name: 'Nommer créateur sam' }),
+        within(await rowOf('sam')).getByRole('button', { name: 'Ajouter comme créateur sam' }),
       );
       fireEvent.click(
-        within(screen.getByRole('dialog')).getByRole('button', { name: 'Nommer créateur' }),
+        within(screen.getByRole('dialog')).getByRole('button', { name: 'Ajouter comme créateur' }),
       );
 
       expect(await screen.findByRole('alert')).toHaveTextContent(
