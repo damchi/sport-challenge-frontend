@@ -21,7 +21,6 @@ import { countdown } from '../../domain/format/countdown';
  */
 export function ChallengeWeekBanner({ challenge }: { challenge: ChallengeDetail }) {
   const { t, i18n } = useTranslation();
-  const leaderboard = useLeaderboard(challenge.id);
   const locale = i18n.resolvedLanguage ?? 'fr';
   const { timezone } = challenge;
   const zone = otherTimeZoneName(
@@ -44,7 +43,35 @@ export function ChallengeWeekBanner({ challenge }: { challenge: ChallengeDetail 
     );
   }
   if (challenge.current_week === null || challenge.week_ends_at === null) return null;
+  return (
+    <WeekBanner
+      challenge={challenge}
+      week={challenge.current_week}
+      weekEndsAt={challenge.week_ends_at}
+      zone={zone}
+    />
+  );
+}
 
+/**
+ * The current week and its end, then when the leaderboards were computed:
+ * the leaderboard is read only here, for an ongoing challenge.
+ */
+function WeekBanner({
+  challenge,
+  week,
+  weekEndsAt,
+  zone,
+}: {
+  challenge: ChallengeDetail;
+  week: number;
+  weekEndsAt: string;
+  zone: string | undefined;
+}) {
+  const { t, i18n } = useTranslation();
+  const leaderboard = useLeaderboard(challenge.id);
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const { timezone } = challenge;
   const computedAt = leaderboard.data?.computed_at;
   return (
     <div className="mt-5 flex items-start gap-3 rounded-row border border-raised-border bg-surface-raised px-4 py-3 text-on-raised">
@@ -57,8 +84,8 @@ export function ChallengeWeekBanner({ challenge }: { challenge: ChallengeDetail 
       <div className="flex min-w-0 flex-1 flex-col gap-x-4 gap-y-1 lg:flex-row lg:items-center lg:justify-between">
         <p className="font-bold">
           {t('challengeDetail.weekBanner', {
-            week: challenge.current_week,
-            date: challengeInstant(challenge.week_ends_at, timezone, locale),
+            week,
+            date: challengeInstant(weekEndsAt, timezone, locale),
             zone,
             context: zone && 'zone',
           })}
@@ -92,7 +119,8 @@ function useNow(): Date {
  * in its time zone (named when the user's differs), how many weeks it lasts
  * (the server's week_count) until its last day, its weeks, and that only the
  * activities from the start will count. Once the start is reached, it says
- * so and reads the challenge again: the server says when it is ongoing.
+ * so and reads the challenge again at each tick of the clock, until the
+ * server says it is ongoing (this banner is then gone).
  */
 function ChallengeStartBanner({ challenge }: { challenge: ChallengeDetail }) {
   const { t, i18n } = useTranslation();
@@ -109,7 +137,7 @@ function ChallengeStartBanner({ challenge }: { challenge: ChallengeDetail }) {
   const started = now.getTime() >= new Date(challenge.starts_at).getTime();
   useEffect(() => {
     if (started) void reload();
-  }, [started, reload]);
+  }, [started, now, reload]);
   const { end } = challengePeriod(challenge.starts_at, challenge.ends_at, timezone, locale);
   const weeks = Array.from({ length: challenge.week_count }, (_, index) => index + 1);
   // Read whole by screen readers: "7 jours, 1 heure et 31 minutes".

@@ -655,6 +655,23 @@ describe('ChallengeDetailView', () => {
     ).toEqual(['Course ×1', 'Vélo ×0,3']);
   });
 
+  it('lists no factors for points that do not use the distance', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        {
+          type: 'points',
+          position: 4,
+          params: { criteria: ['session_count'], podium: 5, factors: { run: 1, ride: 0.3 } },
+        },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(within(details).queryByText('Coefficients de distance')).not.toBeInTheDocument();
+  });
+
   it('gives no minimum session without the number of sessions', async () => {
     answer({
       categories: [

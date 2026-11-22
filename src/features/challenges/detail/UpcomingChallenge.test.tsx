@@ -152,6 +152,39 @@ describe('UpcomingChallenge', () => {
     await vi.waitFor(() => expect(reads).toBeGreaterThan(1));
   });
 
+  it('reads the challenge again at each tick while the server still says upcoming', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(new Date('2026-11-29T05:00:10Z'));
+    let reads = 0;
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId', () => {
+        reads += 1;
+        return HttpResponse.json<ChallengeDetail>(upcoming);
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    expect(await screen.findByText('Le défi commence…')).toBeInTheDocument();
+    await vi.waitFor(() => expect(reads).toBe(2));
+    act(() => vi.advanceTimersByTime(30_000));
+    await vi.waitFor(() => expect(reads).toBe(3));
+  });
+
+  it('does not load the leaderboard before the start', async () => {
+    let leaderboards = 0;
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', () => {
+        leaderboards += 1;
+        return HttpResponse.json({ computed_at: '2026-11-18T15:00:00Z', categories: [] });
+      }),
+    );
+    answer();
+    renderAt(`/challenges/${id}`);
+
+    expect(await screen.findByRole('region', { name: 'Détails' })).toBeInTheDocument();
+    expect(leaderboards).toBe(0);
+  });
+
   it('says one day in the singular', async () => {
     vi.setSystemTime(new Date('2026-11-28T03:00:00Z'));
     answer();

@@ -9,11 +9,15 @@ type Category = ChallengeDetail['categories'][number];
 
 const CARD = 'rounded-card border border-border bg-surface p-4 lg:p-5';
 
-/** The factors of the challenge, given by its total distance or its points. */
+/**
+ * The factors of the challenge: those of its total distance, else those of
+ * its points when a criterion uses them (the longest session by distance).
+ */
 function factorsOf(categories: Category[]): Record<string, number> | undefined {
+  const points = categories.find((category) => category.type === 'points')?.params;
   return (
     categories.find((category) => category.type === 'cumulative_distance')?.params.factors ??
-    categories.find((category) => category.type === 'points')?.params.factors
+    (points?.criteria?.includes('longest_distance') ? points.factors : undefined)
   );
 }
 
