@@ -30,15 +30,14 @@ Le job `production` lit en plus les variables de l'Environment `production` (`GC
 
 ## 2. Déployer
 
-**Prérequis** : la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5, étape 3). Sinon les deux jobs du workflow sont ignorés, à la fusion comme à la main : rien n'est publié et rien n'échoue.
+**Prérequis** : la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5, étape 4). Sinon les deux jobs du workflow sont ignorés, à la fusion comme à la main : rien n'est publié et rien n'échoue.
 
-**Cas normal** : fusionner la pull request dans `main`. Une fois la CI verte, le workflow Deploy construit le site puis attend l'approbation de l'Environment `production`.
+**Cas normal** : fusionner la pull request dans `main`. Une fois la CI verte, le workflow Deploy construit et publie le site, sans approbation : fusionner, c'est mettre en production.
 
-1. Actions > Deploy > le run du commit > **Review deployments** > `production` > Approve.
-2. Attendre la fin du job `production` : son test de fumée vérifie que le site sert ce build, avec la politique de contenu, `X-Frame-Options: DENY`, `sw.js` en `no-cache` et un 404 pour un fichier absent.
-3. Ouvrir le site, se connecter, ouvrir un challenge.
+1. Attendre la fin du job `production` (Actions > Deploy > le run du commit) : son test de fumée vérifie que le site sert ce build, avec la politique de contenu, `X-Frame-Options: DENY`, `sw.js` en `no-cache` et un 404 pour un fichier absent.
+2. Ouvrir le site, se connecter, ouvrir un challenge.
 
-Un run dont l'approbation arrive après une fusion plus récente est sauté (avis dans le journal) : c'est le run de la fusion suivante qui publie.
+Un run qui démarre après une fusion plus récente (en attente derrière un autre déploiement, ou relancé) est sauté (avis dans le journal) : c'est le run de la fusion suivante qui publie.
 
 **À la main** (variable changée, redéploiement de la tête de `main`) :
 
@@ -46,7 +45,7 @@ Un run dont l'approbation arrive après une fusion plus récente est sauté (avi
 gh workflow run deploy.yml --ref main
 ```
 
-puis approuver comme ci-dessus.
+Le run publie directement, sans approbation.
 
 **En cas d'échec** :
 
@@ -65,7 +64,7 @@ puis approuver comme ci-dessus.
 gh workflow run deploy.yml --ref main -f ref=<SHA complet d'un commit de main>
 ```
 
-puis approuver. Le SHA doit être complet (40 caractères) et appartenir à `main`, sinon le build s'arrête.
+Le run publie directement. Le SHA doit être complet (40 caractères) et appartenir à `main`, sinon le build s'arrête.
 
 Dans les deux cas :
 
@@ -121,4 +120,4 @@ Conséquences :
 - [ ] Le test de fumée du dernier déploiement est vert et le site répond avec ses en-têtes (`curl -sI https://sport-challenge-prod.web.app/`).
 - [ ] Adresses Auth0 (§4) et origine CORS du backend déclarées pour l'adresse réelle du site ; une connexion de bout en bout réussit en production, sur téléphone.
 - [ ] Si `VITE_SENTRY_DSN` est renseignée : une erreur de test arrive dans Sentry sans nom, e-mail, jeton (d'accès ou d'invitation : l'adresse `/invite#…` arrive sans son fragment) ni adresse IP (option « Prevent Storing of IP Addresses » active sur le projet).
-- [ ] L'Environment `production` exige un reviewer, est limité à `main`, sans contournement par les administrateurs, et la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5).
+- [ ] La règle de `main` exige une pull request et la CI verte, interdit le push forcé et la suppression, sans contournement ; l'Environment `production` est limité à `main`, sans reviewer (déploiement automatique), sans contournement par les administrateurs, et la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5).

@@ -1,8 +1,10 @@
 name: Deploy
 
 # Once the CI is green on main, the web app goes to production (Firebase
-# Hosting), after the approval of the `production` GitHub Environment. A
-# rollback redeploys an older commit of main by hand. See docs/deploiement.md.
+# Hosting) automatically, without approval: the merge of the pull request is
+# the only gate. The `production` GitHub Environment stays (restricted to main,
+# it is the subject of the OIDC token). A rollback redeploys an older commit of
+# main by hand. See docs/deploiement.md.
 #
 # The infrastructure is never changed here: it is set up by hand
 # (docs/deploiement.md); this only builds and publishes the site.
@@ -32,8 +34,8 @@ jobs:
     # A push to main of this repository whose CI passed, or a run by hand on
     # main; never a pull request (a fork's branch may be called main too).
     # Opt-in (Settings > Secrets and variables > Actions > Variables):
-    # DEPLOY_PRODUCTION is set to "true" once the Environment and its required
-    # reviewers exist, so that a merge does not fail before then.
+    # DEPLOY_PRODUCTION is set to "true" once the Environment and the identity
+    # federation exist, so that a merge does not fail before then.
     if: >-
       github.ref == 'refs/heads/main' && vars.DEPLOY_PRODUCTION == 'true' &&
       (github.event_name == 'workflow_dispatch' ||
@@ -125,9 +127,10 @@ jobs:
           sparse-checkout: ci/firebase
           persist-credentials: false
 
-      # The approval can come late: when main has moved on, the newer merge
-      # deploys instead (never an older release after a newer one). A rollback
-      # is deliberate: only its commit must be on main (checked by the build).
+      # A run can start late (queued behind another deployment, or re-run):
+      # when main has moved on, the newer merge deploys instead (never an older
+      # release after a newer one). A rollback is deliberate: only its commit
+      # must be on main (checked by the build).
       - name: Commit to deploy
         id: plan
         shell: bash
