@@ -65,6 +65,12 @@ export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_,
     my_status: role === 'abandoned' ? 'abandoned' : role === 'outsider' ? null : 'active',
     status: index % 3 === 0 ? 'upcoming' : index % 3 === 1 ? 'ongoing' : 'finished',
     my_week: null,
+    week_count: 4,
+    // A frozen rank for the active participants of a finished challenge.
+    best_result:
+      index % 3 === 2 && role !== 'abandoned' && role !== 'outsider'
+        ? { type: 'cumulative_distance', rank: 1, ranked_count: (index % 7) + 1 }
+        : null,
   };
 });
 
@@ -110,6 +116,7 @@ function mockCategories(
 }
 
 const PAGE_SIZE = 20;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * A challenge of the list as the detail route answers it. The server fields
@@ -137,6 +144,12 @@ export function mockChallengeDetail(summary: ChallengeSummary): ChallengeDetail 
     current_week: ongoing ? 3 : null,
     week_ends_at: ongoing ? '2026-11-23T05:00:00Z' : null,
     week_count: 4,
+    // Four whole weeks from the start (no time change in them).
+    weeks: Array.from({ length: 4 }, (_, index) => ({
+      number: index + 1,
+      starts_at: new Date(Date.parse(summary.starts_at) + index * WEEK_MS).toISOString(),
+      ends_at: new Date(Date.parse(summary.starts_at) + (index + 1) * WEEK_MS).toISOString(),
+    })),
   };
 }
 
@@ -295,7 +308,9 @@ export const handlers = [
     const from = Number(query.get('cursor') ?? 0);
     const items = filtered.slice(from, from + PAGE_SIZE);
     const next = from + PAGE_SIZE < filtered.length ? String(from + PAGE_SIZE) : null;
-    return HttpResponse.json<ChallengePage>({ items, next_cursor: next });
+    const counts = { upcoming: 0, ongoing: 0, finished: 0 };
+    for (const challenge of all) counts[challenge.status] += 1;
+    return HttpResponse.json<ChallengePage>({ items, next_cursor: next, counts });
   }),
   // An unknown id answers like a deleted or hidden challenge.
   http.get('*/api/v1/challenges/:challengeId', ({ params }) => {

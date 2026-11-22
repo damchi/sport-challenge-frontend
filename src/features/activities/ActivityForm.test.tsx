@@ -160,6 +160,7 @@ describe('ActivityForm', () => {
             status: 'ongoing',
           })),
           next_cursor: null,
+          counts: { upcoming: 0, ongoing: timeZones.length, finished: 0 },
         }),
       ),
     );
@@ -223,6 +224,7 @@ describe('ActivityForm', () => {
             },
           ],
           next_cursor: second ? null : 'next',
+          counts: { upcoming: 0, ongoing: 2, finished: 0 },
         });
       }),
     );

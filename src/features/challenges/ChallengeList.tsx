@@ -1,6 +1,6 @@
-import { Plus } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { useChallenges } from '../../api/hooks/useChallenges';
 import { LoadMore } from '../../components/LoadMore';
 import { EmptyState } from '../../components/states/EmptyState';
@@ -8,34 +8,48 @@ import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import {
   CHALLENGE_SCOPES,
-  CHALLENGE_STATUSES,
   isChallengeScope,
   isChallengeStatus,
+  type ChallengeScope,
+  type ChallengeStatus,
 } from '../../domain/challenge';
 import { ChallengeCard } from './ChallengeCard';
+import { CreateChallengeLink } from './CreateChallengeLink';
 
 const SEGMENT = 'h-11 flex-1 rounded-tab text-sm font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
 const SEGMENT_OFF = 'text-muted';
 
-const CHIP = 'h-11 shrink-0 rounded-full border px-4 text-sm font-semibold';
+const CHIP =
+  'flex h-11 shrink-0 items-center gap-2 rounded-full border pr-2 pl-4 text-sm font-bold';
 const CHIP_ON = 'border-accent bg-accent-soft text-accent';
 const CHIP_OFF = 'border-border bg-surface text-muted';
+const COUNT = 'min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs tabular-nums';
+const COUNT_ON = 'bg-accent text-on-accent';
+const COUNT_OFF = 'bg-segment text-ink';
+
+/** The sections of « Tous », in the mockup's order. */
+const SECTIONS: readonly ChallengeStatus[] = ['ongoing', 'upcoming', 'finished'];
 
 /**
- * Challenges of the home page: public ones or mine (tabs), filtered by the
- * status the server computes, page by page. The choices live in the address
- * (?scope=&status=), so going back keeps them. A tile to create a challenge
- * ends the list.
+ * Challenges of the home page: mine (the default) or the public ones (tabs),
+ * filtered by the status the server computes, each status with its count
+ * (the server's, whatever the filter). Without a filter, one section per
+ * status, each read page by page on its own. The choices live in the
+ * address (?scope=&status=), so going back keeps them.
  */
 export function ChallengeList() {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const scopeParam = params.get('scope');
   const statusParam = params.get('status');
-  const scope = isChallengeScope(scopeParam) ? scopeParam : 'public';
+  const scope = isChallengeScope(scopeParam) ? scopeParam : 'mine';
   const status = isChallengeStatus(statusParam) ? statusParam : undefined;
-  const challenges = useChallenges(scope, status);
+  // Every page gives the counts of the scope: the first section's (or the
+  // filter's) query, shared with that section.
+  const counted = useChallenges(scope, status ?? SECTIONS[0]);
+  const counts = counted.data?.pages[0]?.counts;
+  const total = counts ? counts.upcoming + counts.ongoing + counts.finished : undefined;
 
   const choose = (name: 'scope' | 'status', value: string | undefined) => {
     const next = new URLSearchParams(params);
@@ -44,103 +58,152 @@ export function ChallengeList() {
     setParams(next, { replace: true });
   };
 
-  const items = challenges.data?.pages.flatMap((page) => page.items) ?? [];
+  let body: ReactNode;
+  if (status) {
+    body = (
+      <ChallengeSection
+        scope={scope}
+        status={status}
+        empty={
+          <EmptyState
+            message={t('challenges.empty.filtered')}
+            action={
+              <button
+                type="button"
+                onClick={() => choose('status', undefined)}
+                className="h-11 rounded-full border border-border bg-surface px-5 font-bold"
+              >
+                {t('challenges.showAll')}
+              </button>
+            }
+          />
+        }
+      />
+    );
+  } else if (counted.isPending) {
+    body = <LoadingState />;
+  } else if (!counts) {
+    body = <ErrorState error={counted.error} onRetry={() => void counted.refetch()} />;
+  } else if (total === 0) {
+    body = (
+      <EmptyState
+        message={t(`challenges.empty.${scope}`)}
+        // A phone has the floating button already.
+        action={<CreateChallengeLink display="hidden md:inline-flex" />}
+      />
+    );
+  } else {
+    body = SECTIONS.filter((section) => counts[section] > 0).map((section) => (
+      <ChallengeSection key={section} scope={scope} status={section} />
+    ));
+  }
 
   return (
     <section className="mt-6" aria-label={t('challenges.listLabel')}>
-      <div className="flex rounded-row bg-segment p-1 md:max-w-sm">
-        {CHALLENGE_SCOPES.map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={scope === value}
-            onClick={() => choose('scope', value === 'public' ? undefined : value)}
-            className={`${SEGMENT} ${scope === value ? SEGMENT_ON : SEGMENT_OFF}`}
-          >
-            {t(`challenges.scope.${value}`)}
-          </button>
-        ))}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex rounded-row bg-segment p-1 md:w-80">
+          {CHALLENGE_SCOPES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={scope === value}
+              onClick={() => choose('scope', value === 'mine' ? undefined : value)}
+              className={`${SEGMENT} ${scope === value ? SEGMENT_ON : SEGMENT_OFF}`}
+            >
+              {t(`challenges.scope.${value}`)}
+            </button>
+          ))}
+        </div>
+
+        {/* The padding keeps the focus ring whole inside the scrolling row; relative
+            keeps the hidden words of the counts inside it too. */}
+        <div
+          role="group"
+          aria-label={t('challenges.status.label')}
+          className="relative -mx-5 flex min-w-0 gap-2 overflow-x-auto px-5 py-1 md:mx-0 md:px-0.5"
+        >
+          {[undefined, ...SECTIONS].map((value) => {
+            const on = status === value;
+            const count = counts && (value ? counts[value] : total);
+            return (
+              <button
+                key={value ?? 'all'}
+                type="button"
+                aria-pressed={on}
+                onClick={() => choose('status', value)}
+                className={`${CHIP} ${on ? CHIP_ON : CHIP_OFF}`}
+              >
+                {t(`challenges.status.${value ?? 'all'}`)}
+                {count !== undefined && ' '}
+                {count !== undefined && (
+                  <span className={`${COUNT} ${on ? COUNT_ON : COUNT_OFF}`}>
+                    {count}
+                    {/* Read as "En cours 2 défis", the visible text first. */}
+                    <span className="sr-only"> {t('challenges.status.unit', { count })}</span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div
-        role="group"
-        aria-label={t('challenges.status.label')}
-        className="mt-4 flex gap-2 overflow-x-auto px-0.5 py-1"
-      >
-        {[undefined, ...CHALLENGE_STATUSES].map((value) => (
-          <button
-            key={value ?? 'all'}
-            type="button"
-            aria-pressed={status === value}
-            onClick={() => choose('status', value)}
-            className={`${CHIP} ${status === value ? CHIP_ON : CHIP_OFF}`}
-          >
-            {t(`challenges.status.${value ?? 'all'}`)}
-          </button>
-        ))}
-      </div>
+      {/* Room for the floating button of a phone below the last card. */}
+      <div className="pb-20 md:pb-0">{body}</div>
+    </section>
+  );
+}
 
-      <div className="mt-5">
-        {challenges.isPending ? (
-          <LoadingState />
-        ) : !challenges.data ? (
-          // Nothing loaded: the whole list failed (a failed "load more" keeps it).
-          <ErrorState error={challenges.error} onRetry={() => void challenges.refetch()} />
-        ) : items.length === 0 ? (
-          status ? (
-            <EmptyState
-              message={t('challenges.empty.filtered')}
-              action={
-                <button
-                  type="button"
-                  onClick={() => choose('status', undefined)}
-                  className="h-11 rounded-full border border-border bg-surface px-5 font-bold"
-                >
-                  {t('challenges.showAll')}
-                </button>
-              }
-            />
-          ) : (
-            <EmptyState
-              message={t(`challenges.empty.${scope}`)}
-              action={
-                <Link
-                  to="/challenges/new"
-                  className="inline-flex h-13 items-center rounded-full bg-accent px-6 text-button font-bold text-on-accent"
-                >
-                  {t('challenges.create')}
-                </Link>
-              }
-            />
-          )
-        ) : (
-          <>
-            <ul className="grid grid-cols-1 gap-3 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:gap-4">
-              {items.map((challenge) => (
-                <li key={challenge.id}>
-                  <ChallengeCard challenge={challenge} showStatus={!status} />
-                </li>
-              ))}
-              {/* Creating stays at hand once the list is not empty. */}
-              <li>
-                <Link
-                  to="/challenges/new"
-                  className="flex h-full min-h-30 items-center justify-center gap-2 rounded-card border-2 border-dashed border-border-dashed p-4 font-bold text-accent"
-                >
-                  <Plus aria-hidden="true" size={22} strokeWidth={2} />
-                  {t('challenges.create')}
-                </Link>
-              </li>
-            </ul>
-            <LoadMore
-              hasMore={challenges.hasNextPage}
-              loading={challenges.isFetchingNextPage}
-              failed={challenges.isFetchNextPageError}
-              onLoadMore={() => void challenges.fetchNextPage()}
-            />
-          </>
-        )}
-      </div>
+/**
+ * The challenges of one status, under its heading, page by page: its own
+ * loading, error (with a retry) and "load more".
+ */
+function ChallengeSection({
+  scope,
+  status,
+  empty,
+}: {
+  scope: ChallengeScope;
+  status: ChallengeStatus;
+  empty?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const challenges = useChallenges(scope, status);
+  const items = challenges.data?.pages.flatMap((page) => page.items) ?? [];
+  const id = `challenges-${status}`;
+
+  let content: ReactNode;
+  if (challenges.isPending) content = <LoadingState />;
+  else if (!challenges.data) {
+    // Nothing loaded: the whole section failed (a failed "load more" keeps it).
+    content = <ErrorState error={challenges.error} onRetry={() => void challenges.refetch()} />;
+  } else if (items.length === 0) content = empty ?? null;
+  else {
+    content = (
+      <>
+        <ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[repeat(auto-fill,minmax(18rem,21.25rem))] md:gap-4">
+          {items.map((challenge) => (
+            <li key={challenge.id}>
+              <ChallengeCard challenge={challenge} />
+            </li>
+          ))}
+        </ul>
+        <LoadMore
+          hasMore={challenges.hasNextPage}
+          loading={challenges.isFetchingNextPage}
+          failed={challenges.isFetchNextPageError}
+          onLoadMore={() => void challenges.fetchNextPage()}
+        />
+      </>
+    );
+  }
+
+  return (
+    <section aria-labelledby={id} className="mt-6">
+      <h2 id={id} className="font-display text-xl font-bold">
+        {t(`challenges.status.${status}`)}
+      </h2>
+      {content}
     </section>
   );
 }

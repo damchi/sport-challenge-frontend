@@ -280,7 +280,11 @@ paths:
         In `mine`, `my_week` gives where the user stands in each ongoing
         challenge they take part in: their lines of the leaderboard
         (`GET /challenges/{challengeId}/leaderboard`), computed at the
-        instant the status is.
+        instant the status is; `best_result` gives their best frozen rank in
+        each finished one.
+
+        `counts` gives how many challenges of the scope have each status,
+        whatever the `status` filter: the same on every page.
       tags: [challenges]
       parameters:
         - name: scope
@@ -806,6 +810,72 @@ paths:
             A missing, deleted or hidden challenge (`challenge_not_found`), or
             an actor or a `userId` who never joined it, or a deleted account
             (`not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/activities:
+    get:
+      operationId: listChallengeActivities
+      summary: List the activities of all the participants
+      description: |
+        The activities of every participant of the challenge (abandoned or
+        excluded ones included) started in its window, deleted ones left
+        out, most recent first (`started_at`, then `id`), each with its
+        author. A deleted account is never listed, nor are its activities.
+        Visible to the participants of the challenge (abandoned or excluded
+        ones included) and its creators, as the list of a participant
+        (`listParticipantActivities`). A challenge the user may not see
+        answers 404 `challenge_not_found`; a visible one the user never
+        joined (a public challenge shows them its leaderboard only)
+        answers 404 `not_found`.
+        `contributions` and `locked` are those of the list of the author
+        (`listParticipantActivities`): read from this challenge only, never
+        from the other challenges of the author; `contributions` is empty
+        for a participant who abandoned.
+        A page may hold fewer than `limit` items (an account deleted while
+        it was read) and still have a `next_cursor`: only a null
+        `next_cursor` ends the list.
+      tags: [activities]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          description: The `next_cursor` of the previous page, as is.
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        "200":
+          description: A page of activities with their authors.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeActivityPage"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: |
+            A missing, deleted or hidden challenge (`challenge_not_found`), or
+            an actor who never joined it (`not_found`).
           content:
             application/json:
               schema:
@@ -1672,7 +1742,7 @@ components:
           description: Points category only, minimum duration of a session counted by `session_count`, in seconds.
     ChallengePage:
       type: object
-      required: [items, next_cursor]
+      required: [items, next_cursor, counts]
       additionalProperties: false
       properties:
         items:
@@ -1683,6 +1753,28 @@ components:
           type: string
           nullable: true
           description: Pass it as `cursor` for the next page; null on the last page.
+        counts:
+          $ref: "#/components/schemas/ChallengeCounts"
+    ChallengeCounts:
+      type: object
+      required: [upcoming, ongoing, finished]
+      additionalProperties: false
+      description: |
+        How many challenges of the requested `scope` have each status, at the
+        instant the statuses of the page are: whatever the `status` filter and
+        the cursor, with the visibility rules of the scope (a private
+        challenge never counts in `public`). Their sum is every challenge of
+        the scope.
+      properties:
+        upcoming:
+          type: integer
+          minimum: 0
+        ongoing:
+          type: integer
+          minimum: 0
+        finished:
+          type: integer
+          minimum: 0
     ParticipantPage:
       type: object
       required: [items, next_cursor]
@@ -1877,7 +1969,7 @@ components:
           description: The end of the current week; null when eliminated or outside the weeks.
     ChallengeSummary:
       type: object
-      required: [id, title, visibility, timezone, reference_sport, starts_at, ends_at, participant_count, my_role, my_status, status, my_week]
+      required: [id, title, visibility, timezone, reference_sport, starts_at, ends_at, participant_count, my_role, my_status, status, week_count, my_week, best_result]
       additionalProperties: false
       properties:
         id:
@@ -1915,6 +2007,10 @@ components:
         status:
           type: string
           enum: [upcoming, ongoing, finished]
+        week_count:
+          type: integer
+          minimum: 1
+          description: Number of weeks of the challenge, whatever its status, as `week_count` of the detail.
         my_week:
           type: object
           nullable: true
@@ -1924,6 +2020,38 @@ components:
             Only in `mine`, for an ongoing challenge where the user is an
             active participant; null otherwise (`public`, upcoming or
             finished, abandoned).
+        best_result:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/BestResult"
+          description: |
+            Only in `mine`, for a finished challenge whose results are frozen
+            (at the lock of its last week) and where the user is an active
+            participant ranked in at least one category; null otherwise
+            (`public`, upcoming or ongoing, results not frozen yet, abandoned
+            or excluded).
+    BestResult:
+      type: object
+      required: [type, rank, ranked_count]
+      additionalProperties: false
+      description: |
+        The user's best frozen rank among the categories of the challenge, as
+        the leaderboard serves it once the challenge is over (deleted accounts
+        left out, the others moving up). Between categories of the same rank,
+        the first one in the order of the challenge's categories.
+      properties:
+        type:
+          type: string
+          enum: [cumulative_time, cumulative_distance, elimination, points]
+        rank:
+          type: integer
+          minimum: 1
+          description: The user's rank in the category; equal values share it (1, 1, 3).
+        ranked_count:
+          type: integer
+          minimum: 1
+          description: How many participants are ranked in the category, abandoned ones and deleted accounts left out.
     MyWeek:
       type: object
       required: [week, week_ends_at, rankings]
@@ -1974,7 +2102,7 @@ components:
             and once every started week is locked.
     ChallengeDetail:
       type: object
-      required: [id, title, description, visibility, members_can_invite, timezone, reference_sport, starts_at, ends_at, categories, participant_count, my_role, my_status, status, can_join, registration_deadline, current_week, week_ends_at, week_count]
+      required: [id, title, description, visibility, members_can_invite, timezone, reference_sport, starts_at, ends_at, categories, participant_count, my_role, my_status, status, can_join, registration_deadline, current_week, week_ends_at, week_count, weeks]
       additionalProperties: false
       properties:
         id:
@@ -2048,6 +2176,32 @@ components:
             Number of weeks of the challenge, whatever its status: the last
             value `current_week` takes. The last week may be shorter than 7
             days.
+        weeks:
+          type: array
+          description: |
+            The weeks of the challenge, in order, whatever its status: as many
+            as `week_count`. Each one starts at local midnight in the
+            challenge's time zone (the first instant of the day where a time
+            change skips midnight), in UTC like `starts_at`; the last one may
+            be shorter than 7 days and ends with the challenge. The current
+            week ends at `week_ends_at`.
+          items:
+            $ref: "#/components/schemas/ChallengeWeek"
+    ChallengeWeek:
+      type: object
+      required: [number, starts_at, ends_at]
+      additionalProperties: false
+      properties:
+        number:
+          type: integer
+          minimum: 1
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          description: Excluded, the start of the next week (or the end of the challenge).
     ChallengeUpdate:
       type: object
       additionalProperties: false
@@ -2270,6 +2424,74 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Activity"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass it as `cursor` for the next page; null on the last page.
+    ChallengeActivity:
+      type: object
+      description: |
+        An activity in the list of a challenge: the fields of `Activity`,
+        `contributions` and `locked` read from this challenge only, plus its
+        author.
+      required: [id, sport_code, sport_label, started_at, duration_seconds, distance_meters, source, speed_mps, pace_seconds_per_km, contributions, locked, user]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        sport_code:
+          type: string
+        sport_label:
+          type: string
+          nullable: true
+          description: Label of the sport `other`, cleaned; null for the others.
+        started_at:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: integer
+        distance_meters:
+          type: integer
+          nullable: true
+        source:
+          type: string
+          enum: [manual]
+        speed_mps:
+          type: number
+          format: double
+          nullable: true
+          description: Speed in meters per second, computed; null without distance.
+        pace_seconds_per_km:
+          type: number
+          format: double
+          nullable: true
+          description: Pace in seconds per kilometer, computed; null without distance.
+        contributions:
+          type: array
+          description: |
+            What the activity brings, now, to this challenge when it counts
+            in it: at most one item, none for an author who abandoned.
+          items:
+            $ref: "#/components/schemas/ActivityContribution"
+        locked:
+          type: boolean
+          description: |
+            True once the week of the activity is locked in this challenge,
+            where it counts, at 7 am, local time of the challenge, on the
+            first day of the next week; for an author who abandoned, only
+            when the week was already locked when they left.
+        user:
+          $ref: "#/components/schemas/LeaderboardUser"
+    ChallengeActivityPage:
+      type: object
+      required: [items, next_cursor]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChallengeActivity"
         next_cursor:
           type: string
           nullable: true
