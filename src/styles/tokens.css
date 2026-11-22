@@ -24,6 +24,8 @@
   --color-segment-active: #ffffff;
   --color-accent: #c2410c;
   --color-on-accent: #ffffff;
+  --color-danger: #b91c1c;
+  --color-on-danger: #ffffff;
   --color-accent-soft: #fff4eb;
   --color-risk-bg: #ffedd5;
   --color-risk-fg: #9a3412;
@@ -97,6 +99,8 @@
   --color-segment-active: #343943;
   --color-accent: #fb923c;
   --color-on-accent: #16181d;
+  --color-danger: #f87171;
+  --color-on-danger: #16181d;
   --color-accent-soft: #2a1d14;
   --color-risk-bg: #3b2414;
   --color-risk-fg: #fdba74;

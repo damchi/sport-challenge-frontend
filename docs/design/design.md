@@ -93,6 +93,8 @@ jamais en dur dans les composants.
 | `--color-segment-active` | `#FFFFFF` | `#343943` | onglet actif du sélecteur (ombre légère en clair, aucune en sombre) |
 | `--color-accent` | `#C2410C` | `#FB923C` | couleur d'accent : bouton principal, onglet actif, ma ligne, liens d'action ; l'orange foncé manque de contraste sur fond sombre |
 | `--color-on-accent` | `#FFFFFF` | `#16181D` | texte du bouton principal : foncé en sombre |
+| `--color-danger` | `#B91C1C` | `#F87171` | bouton de confirmation d'une action définitive (supprimer, abandonner, exclure), distinct de l'accent (décision du 2026-11-21) |
+| `--color-on-danger` | `#FFFFFF` | `#16181D` | texte du bouton danger : foncé en sombre (6,4:1 dans les deux thèmes) |
 | `--color-accent-soft` | `#FFF4EB` | `#2A1D14` | fond de « ma ligne » dans un classement, onglet actif de la barre de navigation web |
 | `--color-risk-bg` | `#FFEDD5` | `#3B2414` | fond du badge « À risque » |
 | `--color-risk-fg` | `#9A3412` | `#FDBA74` | texte et icône du badge « À risque » |
@@ -294,6 +296,13 @@ venir » en pointillés).
   liste, au style de la tuile « Créer un défi » (bordure pointillée, icône
   `plus` et texte en accent, hauteur minimale 120 px) (décisions du
   2026-11-20).
+- **Danger** ✅ (décision du 2026-11-21) : forme du bouton principal, fond
+  `--color-danger`, texte `--color-on-danger`. Réservé au bouton de
+  confirmation d'une action définitive sur des données enregistrées
+  (supprimer une activité, un défi ou le compte, abandonner un défi, exclure
+  un participant). Quitter l'assistant de création garde le style principal.
+  Le libellé dit l'action (« Supprimer », « Abandonner ») : la couleur n'est
+  jamais le seul signal, et le focus initial reste sur « Annuler ».
 - **Secondaire** : fond `--color-surface`, bordure `--color-border`, hauteur
   40–44 px (« Inviter » en mobile, « Inviter des amis » en web).
 - **Icône seule** : 44 × 44, rond.

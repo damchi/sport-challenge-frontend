@@ -143,6 +143,8 @@ describe('ParticipantActions', () => {
       expect(dialog).toHaveAccessibleDescription(
         "C'est définitif : cette personne est éliminée de toutes les catégories et apparaît « A abandonné » dans les classements, hors podium. Elle ne pourra plus rejoindre ce défi.",
       );
+      // A final action: the confirmation is red.
+      expect(within(dialog).getByRole('button', { name: 'Exclure' })).toHaveClass('bg-danger');
       fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(excluded).toEqual([]);
@@ -239,6 +241,10 @@ describe('ParticipantActions', () => {
       const dialog = screen.getByRole('dialog', { name: 'Ajouter sam comme créateur ?' });
       expect(dialog).toHaveAccessibleDescription(
         "Cette personne pourra, comme toi, modifier le titre et la description, inviter des amis, ajouter d'autres créateurs, exclure des participants et supprimer le défi.",
+      );
+      // Not a final action: the confirmation keeps the main style.
+      expect(within(dialog).getByRole('button', { name: 'Ajouter comme créateur' })).toHaveClass(
+        'bg-accent',
       );
       listing([participant({ is_creator: true }), ...people.slice(1)]);
       fireEvent.click(within(dialog).getByRole('button', { name: 'Ajouter comme créateur' }));

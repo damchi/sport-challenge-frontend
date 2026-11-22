@@ -6,6 +6,8 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
  * inside and makes the rest of the page inert. A heavier confirmation adds
  * `details` (read with the message) and `children` above the buttons (a
  * checkbox), with `confirmDisabled` until the user has gone through them.
+ * `variant="danger"` marks a final action (deleting, abandoning) in red; its
+ * label still says what happens, the colour is never the only signal.
  */
 export function ConfirmDialog({
   open,
@@ -18,6 +20,7 @@ export function ConfirmDialog({
   details,
   children,
   confirmDisabled = false,
+  variant = 'default',
 }: {
   open: boolean;
   title: string;
@@ -25,6 +28,7 @@ export function ConfirmDialog({
   details?: ReactNode;
   children?: ReactNode;
   confirmDisabled?: boolean;
+  variant?: 'default' | 'danger';
   confirmLabel: string;
   cancelLabel: string;
   onConfirm: () => void;
@@ -77,7 +81,9 @@ export function ConfirmDialog({
           onClick={() => {
             if (!confirmDisabled) onConfirm();
           }}
-          className="h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60"
+          className={`h-13 rounded-full px-6 text-button font-bold aria-disabled:opacity-60 ${
+            variant === 'danger' ? 'bg-danger text-on-danger' : 'bg-accent text-on-accent'
+          }`}
         >
           {confirmLabel}
         </button>

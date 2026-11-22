@@ -88,6 +88,7 @@ export function CreatorActionDialog({ actions }: { actions: CreatorActions }) {
       message={t(`${prefix}.message`)}
       confirmLabel={t(`${prefix}.confirm`)}
       cancelLabel={t('challengeDetail.participants.manage.cancel')}
+      variant={(target?.action ?? 'exclude') === 'exclude' ? 'danger' : 'default'}
       onConfirm={actions.confirm}
       onCancel={actions.cancel}
     />

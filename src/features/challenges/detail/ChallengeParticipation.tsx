@@ -92,6 +92,7 @@ export function ChallengeParticipation({ challenge }: { challenge: ChallengeDeta
               </button>
               <ConfirmDialog
                 open={confirming === 'abandon'}
+                variant="danger"
                 title={t('challengeDetail.abandon.title', { title: challenge.title })}
                 message={t('challengeDetail.abandon.message')}
                 confirmLabel={t('challengeDetail.abandon.confirm')}
