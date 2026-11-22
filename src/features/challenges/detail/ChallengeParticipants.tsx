@@ -1,4 +1,4 @@
-import { ChevronRight, Flag, UserCheck } from 'lucide-react';
+import { ChevronRight, Crown, Flag, UserCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { useChallenge, useParticipants, type Participant } from '../../../api/hooks/useChallenges';
@@ -11,24 +11,36 @@ import { LoadingState } from '../../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../../domain/challenge';
 import { displayName } from '../../../domain/displayName';
 import { challengeDay } from '../../../domain/format/challengeDates';
+import {
+  CreatorActionDialog,
+  CreatorActionOutcome,
+  ParticipantActions,
+} from './ParticipantActions';
+import { useCreatorActions } from './useCreatorActions';
 
-const ROW = 'flex min-h-14 items-center gap-3 rounded-row border px-3 py-2';
+const ROW = 'rounded-row border';
+// Rounded too: the focus ring follows the row.
+const ROW_CONTENT = 'flex min-h-14 items-center gap-3 rounded-row px-3 py-2';
 const ROW_ACTIVE = 'border-border bg-surface';
 // Out of the challenge: dashed and muted, like an eliminated participant (design.md).
 const ROW_ABANDONED = 'border-dashed border-border-dashed text-muted';
 
 /**
  * Participants tab of a challenge, in order of registration, page by page:
- * avatar, name, status and day of registration (in the challenge's time
- * zone). Those who may see the activities of the others (creators and
- * participants) open them from a row. Rendered under the challenge page,
- * which has already loaded the challenge.
+ * avatar, name, creator role, status and day of registration (in the
+ * challenge's time zone). Those who may see the activities of the others
+ * (creators and participants) open them from a row. The creators of a
+ * challenge not finished (the server's role and status) can make an active
+ * participant a creator, or exclude them, after a confirmation; a creator is
+ * never offered either. Rendered under the challenge page, which has already
+ * loaded the challenge.
  */
 export function ChallengeParticipants() {
   const { challengeId = '' } = useParams();
   const { t } = useTranslation();
   const challenge = useChallenge(challengeId);
   const participants = useParticipants(challengeId);
+  const actions = useCreatorActions(challengeId);
 
   if (!challenge.data) return null;
   if (participants.isPending) return <LoadingState />;
@@ -40,8 +52,11 @@ export function ChallengeParticipants() {
   if (items.length === 0) return <EmptyState message={t('challengeDetail.participants.empty')} />;
 
   const linked = canSeeParticipantActivities(challenge.data.my_role);
+  // The server refuses both on a finished challenge (challenge_ended).
+  const manages = challenge.data.my_role === 'creator' && challenge.data.status !== 'finished';
   return (
     <section aria-label={t('challengeDetail.participants.label')}>
+      <CreatorActionOutcome actions={actions} />
       <ul className="grid grid-cols-1 gap-2">
         {items.map((participant) => {
           const row = `${ROW} ${participant.status === 'abandoned' ? ROW_ABANDONED : ROW_ACTIVE}`;
@@ -49,22 +64,26 @@ export function ChallengeParticipants() {
             <ParticipantRow participant={participant} timeZone={challenge.data.timezone} />
           );
           return (
-            <li key={participant.user_id}>
+            <li key={participant.user_id} className={row}>
               {linked ? (
                 <Link
                   to={`/challenges/${challengeId}/participants/${participant.user_id}`}
-                  className={row}
+                  className={ROW_CONTENT}
                 >
                   {content}
                   <ChevronRight aria-hidden="true" size={20} className="shrink-0 text-muted" />
                 </Link>
               ) : (
-                <div className={row}>{content}</div>
+                <div className={ROW_CONTENT}>{content}</div>
+              )}
+              {manages && participant.status === 'active' && !participant.is_creator && (
+                <ParticipantActions participant={participant} actions={actions} />
               )}
             </li>
           );
         })}
       </ul>
+      <CreatorActionDialog actions={actions} />
       <LoadMore
         hasMore={participants.hasNextPage}
         loading={participants.isFetchingNextPage}
@@ -95,11 +114,16 @@ function ParticipantRow({ participant, timeZone }: { participant: Participant; t
             })}
           </p>
         </div>
-        <StatusPill
-          label={t(`challengeDetail.participants.status.${participant.status}`)}
-          Icon={abandoned ? Flag : UserCheck}
-          tone={abandoned ? 'out' : 'neutral'}
-        />
+        <div className="flex flex-wrap gap-1">
+          {participant.is_creator && (
+            <StatusPill label={t('challenges.role.creator')} Icon={Crown} tone="neutral" />
+          )}
+          <StatusPill
+            label={t(`challengeDetail.participants.status.${participant.status}`)}
+            Icon={abandoned ? Flag : UserCheck}
+            tone={abandoned ? 'out' : 'neutral'}
+          />
+        </div>
       </div>
     </>
   );

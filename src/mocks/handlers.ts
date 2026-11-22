@@ -404,6 +404,37 @@ export const handlers = [
       can_join: false,
     });
   }),
+  // Deleted at once; an unknown id answers like a challenge already deleted.
+  http.delete('*/api/v1/challenges/:challengeId', ({ params }) => {
+    if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+  // The challenge as the creator who added another one sees it.
+  http.post('*/api/v1/challenges/:challengeId/creators', ({ params }) => {
+    const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<ChallengeDetail>(mockChallengeDetail(summary));
+  }),
+  // Excluded (or already out).
+  http.delete('*/api/v1/challenges/:challengeId/participants/:userId', ({ params }) => {
+    if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
   // A link valid until the end of week 1 of the challenge.
   http.post('*/api/v1/challenges/:challengeId/invitations', ({ params }) => {
     const summary = mockChallenges.find((challenge) => challenge.id === params.challengeId);

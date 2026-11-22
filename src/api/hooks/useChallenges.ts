@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
 import { useApiClient } from '../ApiClientContext';
+import { ApiError } from '../errors';
 import type { components } from '../generated/schema';
 import { staleTimes } from '../queryClient';
 import { queryKeys } from '../queryKeys';
@@ -195,6 +196,84 @@ export function useAbandonChallenge(challengeId: string) {
       queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
       return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
     },
+    onError: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
+  });
+}
+
+/**
+ * Deletes a challenge (creators only), at any time: it disappears for
+ * everyone. Deleting it again answers 404, as for a missing challenge: a
+ * retry after a lost answer counts as deleted. Every challenge query is then
+ * marked stale without being reloaded here (the deleted one would answer
+ * 404 while its page is still on screen): the lists reload once shown. Its
+ * errors are shown by the page, not the global banner.
+ */
+export function useDeleteChallenge(challengeId: string) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async () => {
+      try {
+        await client.DELETE('/api/v1/challenges/{challengeId}', {
+          params: { path: { challengeId } },
+        });
+      } catch (error) {
+        if (!(error instanceof ApiError && error.code === 'challenge_not_found')) throw error;
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all, refetchType: 'none' }),
+  });
+}
+
+/**
+ * Makes an active participant a creator (creators only): the challenge's
+ * page shows the answer and its participants reload with the new role. Its
+ * errors (not an active participant, challenge finished) are shown by the
+ * participants tab, not the global banner; the participants then reload, so
+ * the tab shows them as they now are.
+ */
+export function useAddCreator(challengeId: string) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async (userId: string) => {
+      const { data } = await client.POST('/api/v1/challenges/{challengeId}/creators', {
+        params: { path: { challengeId } },
+        body: { user_id: userId },
+      });
+      if (!data) throw new Error('Empty challenge response');
+      return data;
+    },
+    onSuccess: (challenge) => {
+      queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+    },
+    onError: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
+  });
+}
+
+/**
+ * Excludes a participant (creators only), for good: they are then listed and
+ * ranked as abandoned, so the challenge, its participants and leaderboards
+ * reload. Its errors (a creator, challenge finished) are shown by the
+ * participants tab, not the global banner; the participants then reload.
+ */
+export function useExcludeParticipant(challengeId: string) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    meta: { handlesError: true },
+    mutationFn: async (userId: string) => {
+      await client.DELETE('/api/v1/challenges/{challengeId}/participants/{userId}', {
+        params: { path: { challengeId, userId } },
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
     onError: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
   });

@@ -8,6 +8,7 @@ import { isChallengeId } from '../../../domain/challenge';
 import { isWithin, usePendingPath } from '../../../lib/pendingNavigation';
 import { ChallengeInvite } from '../../invitations/ChallengeInvite';
 import { ChallengeCategories } from './ChallengeCategories';
+import { ChallengeDelete } from './ChallengeDelete';
 import { ChallengeEdit } from './ChallengeEdit';
 import { ChallengeHeader } from './ChallengeHeader';
 import { ChallengeNotFound } from './ChallengeNotFound';
@@ -72,6 +73,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
           className="flex-[1_1_300px]"
         />
       </div>
+      <ChallengeDelete challenge={challenge.data} />
     </>
   );
 }
