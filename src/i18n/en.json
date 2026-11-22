@@ -159,7 +159,9 @@
     "label": "Participant's activities",
     "empty": "No activity from this participant in this challenge yet.",
     "notFound": "These activities aren't available.",
-    "toParticipants": "See the participants"
+    "toParticipants": "See the participants",
+    "title": "Activities of {{name}}",
+    "mine": "Your activities"
   },
   "activityForm": {
     "title": "Add an activity",
@@ -433,7 +435,14 @@
   },
   "challengeDetail": {
     "title": "Challenge",
-    "back": "Challenges",
+    "back": "My challenges",
+    "menu": "More actions",
+    "participating": "You're in",
+    "categoryCount_one": "{{count}} category",
+    "categoryCount_other": "{{count}} categories",
+    "weekOf": "Week {{week}} of {{count}}",
+    "weekBanner": "Week {{week}} · ends {{date}}",
+    "weekBanner_zone": "Week {{week}} · ends {{date}}, {{zone}}",
     "timeZone": "Challenge time zone: {{zone}}",
     "week": "Week {{week}}",
     "weekEnds": "Week ends {{date}}",
@@ -441,8 +450,7 @@
     "registrationOpen": "Registration open until {{date}}.",
     "registrationOpen_zone": "Registration open until {{date}}, {{zone}}.",
     "categories": {
-      "title": "Categories",
-      "frozen": "Set at creation, they no longer change.",
+      "reference": "Reference: {{sport}} ({{factor}}).",
       "elimination": "{{sport}} with elimination",
       "points": "Grand Prix",
       "eliminationGeneric": "Elimination",
@@ -543,6 +551,53 @@
       "typeTitleHint": "The delete button turns on once the title matches.",
       "confirm": "Delete the challenge",
       "cancel": "Cancel"
+    },
+    "upcoming": {
+      "startsIn": "Starts in",
+      "days_one": "day",
+      "days_other": "days",
+      "hours": "h",
+      "minutes": "min",
+      "left": "{{days}}, {{hours}} and {{minutes}}",
+      "daysLong_one": "{{count}} day",
+      "daysLong_other": "{{count}} days",
+      "hoursLong_one": "{{count}} hour",
+      "hoursLong_other": "{{count}} hours",
+      "minutesLong_one": "{{count}} minute",
+      "minutesLong_other": "{{count}} minutes",
+      "starting": "The challenge is starting…",
+      "startsAt": "Starts {{date}}",
+      "startsAt_zone": "Starts {{date}}, {{zone}}",
+      "duration_one": "{{count}} week, until {{date}} included",
+      "duration_other": "{{count}} weeks, until {{date}} included",
+      "weeks": "Weeks of the challenge",
+      "week": "W{{week}}",
+      "note": "Only the activities done from the start will count. The leaderboards open then.",
+      "creator": {
+        "title": "You created this challenge",
+        "text": "You can change the title and the description at any time. The rest is set at creation.",
+        "edit": "Edit the challenge"
+      },
+      "howToWin": {
+        "title": "How to win",
+        "intro_one": "{{count}} category, with its leaderboard and its podium. Set at creation.",
+        "intro_other": "{{count}} categories, each with its leaderboard and its podium. Set at creation.",
+        "wins": {
+          "cumulative_time": "The most total time, all sports together, wins",
+          "cumulative_distance": "The most equivalent km wins",
+          "elimination": "The most km among those still in wins",
+          "points": "The most points wins"
+        }
+      },
+      "details": {
+        "title": "Details",
+        "duration": "Duration",
+        "weeks_one": "{{count}} week",
+        "weeks_other": "{{count}} weeks",
+        "zone": "Time zone",
+        "reference": "Reference sport",
+        "factors": "Distance factors"
+      }
     }
   },
   "sports": {
@@ -560,10 +615,10 @@
     "strength": "Strength training"
   },
   "leaderboard": {
-    "label": "Challenge leaderboard",
     "categories": "Leaderboard category",
+    "title": "Leaderboard · {{category}}",
     "podium": "Podium",
-    "ranking": "Full ranking",
+    "ranking": "Rest of the ranking",
     "rank_ordinal_one": "{{count}}st",
     "rank_ordinal_two": "{{count}}nd",
     "rank_ordinal_few": "{{count}}rd",
@@ -582,8 +637,8 @@
     "empty": "No one is ranked in this challenge yet.",
     "final": "Final results: the challenge ended on {{date}}",
     "final_zone": "Final results: the challenge ended on {{date}}, {{zone}}",
-    "updated": "Updated {{date}}",
-    "updated_zone": "Updated {{date}}, {{zone}}",
+    "updated": "Leaderboards updated {{date}}",
+    "updated_zone": "Leaderboards updated {{date}}, {{zone}}",
     "elimination": {
       "reached": "Goal reached",
       "in_progress": "In progress",
@@ -592,6 +647,14 @@
       "firstWeek": "No elimination in week 1: the first minimum applies in week 2.",
       "rule": "Next week's minimum = your distance this week + {{step}}. Go beyond the minimum and your distance becomes the new base."
     }
+  },
+  "standings": {
+    "title": "Where you stand",
+    "time": "all sports together",
+    "distance": "in {{sport}} equivalent",
+    "elimination": "{{sport}} only",
+    "eliminationWeek": "{{sport}} only, this week",
+    "eliminationValue": "{{done}} / {{minimum}}"
   },
   "invitations": {
     "button": "Invite friends",

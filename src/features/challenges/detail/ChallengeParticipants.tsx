@@ -26,10 +26,11 @@ const ROW_ACTIVE = 'border-border bg-surface';
 const ROW_ABANDONED = 'border-dashed border-border-dashed text-muted';
 
 /**
- * Participants tab of a challenge, in order of registration, page by page:
+ * Participants of a challenge (its tab, or the card of an upcoming one), in
+ * order of registration, page by page:
  * avatar, name, creator role, status and day of registration (in the
  * challenge's time zone). Those who may see the activities of the others
- * (creators and participants) open them from a row. The creators of a
+ * (creators and participants) open them from a row, once it has started. The creators of a
  * challenge not finished (the server's role and status) can make an active
  * participant a creator, or exclude them, after a confirmation; a creator is
  * never offered either. Rendered under the challenge page, which has already
@@ -51,7 +52,9 @@ export function ChallengeParticipants() {
   const items = participants.data.pages.flatMap((page) => page.items);
   if (items.length === 0) return <EmptyState message={t('challengeDetail.participants.empty')} />;
 
-  const linked = canSeeParticipantActivities(challenge.data.my_role);
+  // Before the start, no one has activities to open yet.
+  const linked =
+    canSeeParticipantActivities(challenge.data.my_role) && challenge.data.status !== 'upcoming';
   // The server refuses both on a finished challenge (challenge_ended).
   const manages = challenge.data.my_role === 'creator' && challenge.data.status !== 'finished';
   return (

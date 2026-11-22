@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Activity } from '../../api/hooks/useActivities';
 import type { ChallengeDetail } from '../../api/hooks/useChallenges';
 import type { components } from '../../api/generated/schema';
-import { mockChallengeDetail, mockChallenges } from '../../mocks/handlers';
+import { mockChallengeDetail, mockChallenges, mockMe } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { routes } from '../../routes/routes';
 import { AppProviders } from '../../test/AppProviders';
@@ -111,6 +111,47 @@ const list = () => screen.findByRole('region', { name: 'Activités du participan
 describe('ParticipantActivities', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('is titled with the name of the participant, with a way back to the participants', async () => {
+    answer();
+    listing([run]);
+    const router = renderAt(path);
+
+    // The name comes from the leaderboard: the activities route gives none.
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Activités de jean.luc1' }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: 'Voir les participants' }));
+    await vi.waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/challenges/${id}/participants`),
+    );
+  });
+
+  it('says "Tes activités" for the user', async () => {
+    answer();
+    listing([run]);
+    renderAt(`/challenges/${id}/participants/${mockMe.id}`);
+
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Tes activités' }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps a neutral title while the name is not known', async () => {
+    answer();
+    listing([run]);
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', () =>
+        HttpResponse.json({ computed_at: '2026-11-18T15:00:00Z', categories: [] }),
+      ),
+    );
+    renderAt(path);
+
+    await list();
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Activités du participant' }),
+    ).toBeInTheDocument();
   });
 
   it('does not name the time zone when the device shares it', async () => {

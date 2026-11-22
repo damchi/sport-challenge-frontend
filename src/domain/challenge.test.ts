@@ -1,4 +1,11 @@
-import { canSeeParticipantActivities, challengeIdList, isChallengeId, isUserId } from './challenge';
+import {
+  canSeeParticipantActivities,
+  challengeIdList,
+  isChallengeId,
+  isUserId,
+  challengeActions,
+  shownFactors,
+} from './challenge';
 
 describe('isChallengeId', () => {
   it('accepts a UUID', () => {
@@ -48,5 +55,41 @@ describe('canSeeParticipantActivities', () => {
   it('keeps the others out', () => {
     expect(canSeeParticipantActivities('invited')).toBe(false);
     expect(canSeeParticipantActivities('outsider')).toBe(false);
+  });
+});
+
+describe('challengeActions', () => {
+  it.each([
+    [{ my_role: 'creator', my_status: 'active', status: 'ongoing' }, ['edit', 'delete', 'abandon']],
+    [{ my_role: 'creator', my_status: 'abandoned', status: 'ongoing' }, ['edit', 'delete']],
+    [{ my_role: 'creator', my_status: null, status: 'upcoming' }, ['edit', 'delete']],
+    [{ my_role: 'creator', my_status: 'active', status: 'finished' }, ['edit', 'delete']],
+    [{ my_role: 'participant', my_status: 'active', status: 'upcoming' }, ['abandon']],
+    [{ my_role: 'participant', my_status: 'active', status: 'finished' }, []],
+    [{ my_role: 'abandoned', my_status: 'abandoned', status: 'ongoing' }, []],
+    [{ my_role: 'outsider', my_status: null, status: 'ongoing' }, []],
+  ] as const)('gives %o the actions %o', (challenge, actions) => {
+    expect(challengeActions(challenge)).toEqual(actions);
+  });
+});
+
+describe('shownFactors', () => {
+  const distance = { type: 'cumulative_distance', params: { factors: { run: 1, ride: 0.3 } } };
+  const points = (criteria: string[]) => ({
+    type: 'points',
+    params: { criteria, factors: { run: 1, walk: 0.5 } },
+  });
+
+  it('gives the factors of the total distance first', () => {
+    expect(shownFactors([points(['longest_distance']), distance])).toEqual({ run: 1, ride: 0.3 });
+  });
+
+  it('gives those of the points when a criterion uses the distance', () => {
+    expect(shownFactors([points(['longest_distance'])])).toEqual({ run: 1, walk: 0.5 });
+  });
+
+  it('gives none otherwise', () => {
+    expect(shownFactors([points(['session_count'])])).toBeUndefined();
+    expect(shownFactors([{ type: 'cumulative_time', params: {} }])).toBeUndefined();
   });
 });

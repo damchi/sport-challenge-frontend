@@ -159,7 +159,9 @@
     "label": "Activités du participant",
     "empty": "Ce participant n'a pas encore d'activité dans ce défi.",
     "notFound": "Ces activités ne sont pas disponibles.",
-    "toParticipants": "Voir les participants"
+    "toParticipants": "Voir les participants",
+    "title": "Activités de {{name}}",
+    "mine": "Tes activités"
   },
   "activityForm": {
     "title": "Ajouter une activité",
@@ -436,7 +438,15 @@
   },
   "challengeDetail": {
     "title": "Défi",
-    "back": "Défis",
+    "back": "Mes défis",
+    "menu": "Plus d'actions",
+    "participating": "Tu participes",
+    "categoryCount_one": "{{count}} catégorie",
+    "categoryCount_many": "{{count}} catégories",
+    "categoryCount_other": "{{count}} catégories",
+    "weekOf": "Semaine {{week}} sur {{count}}",
+    "weekBanner": "Semaine {{week}} · se termine {{date}}",
+    "weekBanner_zone": "Semaine {{week}} · se termine {{date}}, {{zone}}",
     "timeZone": "Fuseau du défi : {{zone}}",
     "week": "Semaine {{week}}",
     "weekEnds": "Fin de la semaine : {{date}}",
@@ -444,8 +454,7 @@
     "registrationOpen": "Inscriptions ouvertes jusqu'au {{date}}.",
     "registrationOpen_zone": "Inscriptions ouvertes jusqu'au {{date}}, {{zone}}.",
     "categories": {
-      "title": "Catégories",
-      "frozen": "Fixées à la création, elles ne changent plus.",
+      "reference": "Référence : {{sport}} ({{factor}}).",
       "elimination": "{{sport}} avec élimination",
       "points": "Grand prix",
       "eliminationGeneric": "Élimination",
@@ -485,7 +494,7 @@
     },
     "abandon": {
       "button": "Abandonner le défi",
-      "busy": "Abandon…",
+      "busy": "Abandon en cours…",
       "title": "Abandonner « {{title}} » ?",
       "message": "C'est définitif : tu es éliminé de toutes les catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
       "confirm": "Abandonner",
@@ -539,13 +548,67 @@
     },
     "delete": {
       "button": "Supprimer le défi",
-      "busy": "Suppression…",
+      "busy": "Suppression en cours…",
       "title": "Supprimer « {{title}} » ?",
       "message": "C'est définitif : le défi et ses classements disparaissent pour tous ses participants. Personne ne pourra plus l'ouvrir.",
       "typeTitle": "Pour confirmer, écris le titre du défi : « {{title}} »",
       "typeTitleHint": "Le bouton de suppression s'active quand le titre correspond.",
       "confirm": "Supprimer le défi",
       "cancel": "Annuler"
+    },
+    "upcoming": {
+      "startsIn": "Départ dans",
+      "days_one": "jour",
+      "days_many": "jours",
+      "days_other": "jours",
+      "hours": "h",
+      "minutes": "min",
+      "left": "{{days}}, {{hours}} et {{minutes}}",
+      "daysLong_one": "{{count}} jour",
+      "daysLong_many": "{{count}} jours",
+      "daysLong_other": "{{count}} jours",
+      "hoursLong_one": "{{count}} heure",
+      "hoursLong_many": "{{count}} heures",
+      "hoursLong_other": "{{count}} heures",
+      "minutesLong_one": "{{count}} minute",
+      "minutesLong_many": "{{count}} minutes",
+      "minutesLong_other": "{{count}} minutes",
+      "starting": "Le défi commence…",
+      "startsAt": "Départ {{date}}",
+      "startsAt_zone": "Départ {{date}}, {{zone}}",
+      "duration_one": "{{count}} semaine, jusqu'au {{date}} inclus",
+      "duration_many": "{{count}} semaines, jusqu'au {{date}} inclus",
+      "duration_other": "{{count}} semaines, jusqu'au {{date}} inclus",
+      "weeks": "Semaines du défi",
+      "week": "S{{week}}",
+      "note": "Seules les activités faites à partir du départ compteront. Les classements s'ouvriront à ce moment-là.",
+      "creator": {
+        "title": "Tu as créé ce défi",
+        "text": "Tu peux changer le titre et la description à tout moment. Le reste est fixé à la création.",
+        "edit": "Modifier le défi"
+      },
+      "howToWin": {
+        "title": "Comment on gagne",
+        "intro_one": "{{count}} catégorie, avec son classement et son podium. Fixée à la création.",
+        "intro_many": "{{count}} catégories, chacune avec son classement et son podium. Fixées à la création.",
+        "intro_other": "{{count}} catégories, chacune avec son classement et son podium. Fixées à la création.",
+        "wins": {
+          "cumulative_time": "Le plus de temps cumulé, tous sports confondus, gagne",
+          "cumulative_distance": "Le plus de km équivalents gagne",
+          "elimination": "Le plus de km cumulés, parmi ceux encore en lice, gagne",
+          "points": "Le plus de points gagne"
+        }
+      },
+      "details": {
+        "title": "Détails",
+        "duration": "Durée",
+        "weeks_one": "{{count}} semaine",
+        "weeks_many": "{{count}} semaines",
+        "weeks_other": "{{count}} semaines",
+        "zone": "Fuseau",
+        "reference": "Sport de référence",
+        "factors": "Coefficients de distance"
+      }
     }
   },
   "sports": {
@@ -563,10 +626,10 @@
     "strength": "Renforcement musculaire"
   },
   "leaderboard": {
-    "label": "Classement du défi",
     "categories": "Catégorie du classement",
+    "title": "Classement · {{category}}",
     "podium": "Podium",
-    "ranking": "Classement complet",
+    "ranking": "Suite du classement",
     "rank_ordinal_one": "{{count}}er",
     "rank_ordinal_other": "{{count}}e",
     "out": "Éliminés",
@@ -585,8 +648,8 @@
     "empty": "Personne n'est encore classé dans ce défi.",
     "final": "Résultats définitifs : le défi s'est terminé le {{date}}",
     "final_zone": "Résultats définitifs : le défi s'est terminé le {{date}}, {{zone}}",
-    "updated": "Mis à jour : {{date}}",
-    "updated_zone": "Mis à jour : {{date}}, {{zone}}",
+    "updated": "Classements mis à jour : {{date}}",
+    "updated_zone": "Classements mis à jour : {{date}}, {{zone}}",
     "elimination": {
       "reached": "Objectif atteint",
       "in_progress": "En cours",
@@ -595,6 +658,14 @@
       "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
       "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu fais plus que le minimum, ta distance devient la nouvelle base."
     }
+  },
+  "standings": {
+    "title": "Où tu en es",
+    "time": "tous sports confondus",
+    "distance": "en équivalent {{sport}}",
+    "elimination": "en {{sport}}",
+    "eliminationWeek": "en {{sport}}, cette semaine",
+    "eliminationValue": "{{done}} / {{minimum}}"
   },
   "invitations": {
     "button": "Inviter des amis",

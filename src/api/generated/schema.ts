@@ -927,6 +927,12 @@ export interface components {
             /** @enum {string} */
             type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
             /**
+             * @description How many participants are ranked in the category, abandoned ones
+             *     and deleted accounts left out: the `ranked_count` of `MyRanking`,
+             *     frozen with the results once the challenge is over.
+             */
+            ranked_count: number;
+            /**
              * @description Every participant but the deleted accounts. Ranked ones first,
              *     best first; abandoned ones last. `value` is in seconds for
              *     `cumulative_time`, in meters for `cumulative_distance` and
@@ -991,6 +997,11 @@ export interface components {
             /** @enum {string} */
             visibility: "public" | "private";
             timezone: string;
+            /**
+             * @description Code of the sport the distances are brought back to and the elimination is run in.
+             * @example ride
+             */
+            reference_sport: string;
             /** Format: date-time */
             starts_at: string;
             /** Format: date-time */
@@ -1092,6 +1103,12 @@ export interface components {
              * @description End of the current week; null before the start and after the end.
              */
             week_ends_at: string | null;
+            /**
+             * @description Number of weeks of the challenge, whatever its status: the last
+             *     value `current_week` takes. The last week may be shorter than 7
+             *     days.
+             */
+            week_count: number;
         };
         ChallengeUpdate: {
             /**

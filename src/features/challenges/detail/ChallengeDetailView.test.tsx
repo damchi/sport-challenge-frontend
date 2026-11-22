@@ -62,6 +62,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   // Unmount first: a mounted page would apply its profile language again.
   cleanup();
   await i18n.changeLanguage('fr');
@@ -92,7 +93,7 @@ describe('ChallengeDetailView', () => {
     expect(await screen.findByText('first section')).toBeInTheDocument();
 
     act(() => void router.navigate(`/challenges/${id}/participants`));
-    expect(await screen.findByRole('status')).toHaveTextContent(/^Chargement…$/);
+    expect(await screen.findByRole('status', { busy: true })).toHaveTextContent(/^Chargement…$/);
     expect(screen.queryByText('first section')).not.toBeInTheDocument();
     expect(await title()).toBeInTheDocument();
 
@@ -100,61 +101,65 @@ describe('ChallengeDetailView', () => {
     expect(await screen.findByText('participants section')).toBeInTheDocument();
   });
 
-  it('shows the header in the challenge time zone', async () => {
-    answer({ visibility: 'private', description: 'Bougez !' });
+  it('shows the header: facts, week of the weeks, description, and the week in a banner', async () => {
+    answer({ description: 'Bougez !', participant_count: 8 });
     renderAt(`/challenges/${id}`);
 
     expect(await title()).toBeInTheDocument();
-    expect(screen.getByText('Du 2 nov. au 29 nov.')).toBeInTheDocument();
-    expect(screen.getByText('Privé')).toBeInTheDocument();
-    expect(screen.getByText('En cours')).toBeInTheDocument();
+    // The server's numbers: participants, categories, current and total weeks.
+    expect(screen.getByText('8 participants')).toBeInTheDocument();
+    expect(screen.getByText('3 catégories')).toBeInTheDocument();
+    expect(screen.getByText('Semaine 3 sur 4')).toBeInTheDocument();
+    expect(screen.getByText('Tu participes')).toBeInTheDocument();
     expect(screen.getByText('Bougez !')).toBeInTheDocument();
-    expect(screen.getByText('Semaine 3')).toBeInTheDocument();
-    expect(screen.getByText('Fin de la semaine : lundi 23 novembre à 00 h')).toBeInTheDocument();
-    expect(screen.queryByText(/Fuseau du défi/)).not.toBeInTheDocument();
+    // In the challenge time zone, the device's here: not named.
+    expect(screen.getByText('Semaine 3 · se termine lundi 23 novembre à 00 h')).toBeInTheDocument();
+    expect(await screen.findByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+    // Gone from the header: the status and role pills.
+    expect(screen.queryByText('En cours')).not.toBeInTheDocument();
+    expect(screen.queryByText('Participant')).not.toBeInTheDocument();
   });
 
-  it('names the challenge time zone when the device is elsewhere', async () => {
+  it('names the challenge time zone in the banner when the device is elsewhere', async () => {
     answer({});
     renderAt(`/challenges/${id}`, 'Europe/Paris');
 
     expect(await title()).toBeInTheDocument();
-    expect(screen.getByText(/^Fuseau du défi : /)).toBeInTheDocument();
     // Still the hour of Montréal, not of Paris, and said so.
     expect(
-      screen.getByText(/^Fin de la semaine : lundi 23 novembre à 00 h, \S/),
+      screen.getByText(/^Semaine 3 · se termine lundi 23 novembre à 00 h, \S/),
     ).toBeInTheDocument();
   });
 
-  it.each(['upcoming', 'finished'] as const)('shows no week when %s', async (status) => {
-    answer({ status, current_week: null, week_ends_at: null });
+  it('says the results are final in place of the banner once finished', async () => {
+    answer({ status: 'finished', current_week: null, week_ends_at: null });
     renderAt(`/challenges/${id}`);
 
-    expect(await title()).toBeInTheDocument();
-    expect(screen.queryByText(/^Semaine/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Fin de la semaine/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/^Résultats définitifs/)).toBeInTheDocument();
+    expect(screen.queryByText(/se termine/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Semaine \d sur/)).not.toBeInTheDocument();
+  });
+
+  it('names a single category in the singular', async () => {
+    answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
+    renderAt(`/challenges/${id}`);
+
+    expect(await screen.findByText('1 catégorie')).toBeInTheDocument();
   });
 
   it.each([
-    ['creator', 'active', ['Créateur']],
-    ['participant', 'active', ['Participant']],
-    ['abandoned', 'abandoned', ['A abandonné']],
-    ['creator', 'abandoned', ['Créateur', 'A abandonné']],
-  ] as const)('shows the role %s (%s)', async (role, status, pills) => {
+    ['participant', 'active', true],
+    ['creator', 'active', true],
+    ['abandoned', 'abandoned', false],
+    ['creator', 'abandoned', false],
+    ['outsider', null, false],
+  ] as const)('shows « Tu participes » to a %s (%s): %s', async (role, status, shown) => {
     answer({ my_role: role, my_status: status });
     renderAt(`/challenges/${id}`);
 
     expect(await title()).toBeInTheDocument();
-    for (const pill of pills) expect(screen.getByText(pill)).toBeInTheDocument();
-  });
-
-  it('shows no role to an outsider', async () => {
-    answer({ my_role: 'outsider', my_status: null });
-    renderAt(`/challenges/${id}`);
-
-    expect(await title()).toBeInTheDocument();
-    expect(screen.queryByText('Participant')).not.toBeInTheDocument();
-    expect(screen.queryByText('Créateur')).not.toBeInTheDocument();
+    if (shown) expect(screen.getByText('Tu participes')).toBeInTheDocument();
+    else expect(screen.queryByText('Tu participes')).not.toBeInTheDocument();
   });
 
   it('says the registration is open only when the server allows joining', async () => {
@@ -169,8 +174,6 @@ describe('ChallengeDetailView', () => {
   });
 
   it.each([
-    ['participant', 'active', 'Tu participes à ce défi.'],
-    ['creator', 'active', 'Tu participes à ce défi.'],
     [
       'abandoned',
       'abandoned',
@@ -254,11 +257,12 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
 
-      const outcome = await screen.findByRole('status');
-      expect(outcome).toHaveTextContent('Tu participes à ce défi.');
+      // Found by its text: the abandon's status, empty, is on the page too.
+      const outcome = await screen.findByText('Tu participes à ce défi.');
+      await vi.waitFor(() => expect(outcome).toHaveAttribute('role', 'status'));
       // The button is gone: the focus moves to the outcome.
       expect(outcome).toHaveFocus();
-      expect(screen.getByText('Participant')).toBeInTheDocument();
+      expect(screen.getByText('Tu participes')).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Rejoindre le défi' })).not.toBeInTheDocument();
       expect(joins).toBe(1);
       // Every challenge query is invalidated: the page's, so the lists and
@@ -354,11 +358,12 @@ describe('ChallengeDetailView', () => {
     }
 
     // An arrow, not a hoisted function, so that `summary` stays narrowed.
-    const openConfirmation = async () => {
+    const openConfirmation = async (render = true) => {
       // A section without statuses of its own (the leaderboard and the
       // participants show theirs), so the outcome is the only one.
-      renderAt(`/challenges/${id}/activities`);
-      fireEvent.click(await screen.findByRole('button', { name: 'Abandonner le défi' }));
+      if (render) renderAt(`/challenges/${id}/activities`);
+      fireEvent.click(await screen.findByRole('button', { name: "Plus d'actions" }));
+      fireEvent.click(screen.getByRole('button', { name: 'Abandonner le défi' }));
       return screen.getByRole('dialog', { name: `Abandonner « ${summary.title} » ?` });
     };
 
@@ -372,6 +377,8 @@ describe('ChallengeDetailView', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(abandons).toBe(0);
+      // The focus is back on the menu's button.
+      expect(screen.getByRole('button', { name: "Plus d'actions" })).toHaveFocus();
     });
 
     it('abandons on confirmation and reloads the challenge, its lists and leaderboards', async () => {
@@ -382,14 +389,19 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
 
-      const outcome = await screen.findByRole('status');
-      expect(outcome).toHaveTextContent(
+      // The reloaded challenge may say it first: it becomes the announced
+      // outcome once the abandon has answered.
+      const outcome = await screen.findByText(
         "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
       );
+      await vi.waitFor(() => expect(outcome).toHaveAttribute('role', 'status'));
+      // Sent: no longer said to be on its way.
+      expect(screen.queryByText('Abandon en cours…')).not.toBeInTheDocument();
       // The button is gone: the focus moves to the outcome.
       expect(outcome).toHaveFocus();
-      expect(screen.getByText('A abandonné')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Tu participes')).not.toBeInTheDocument();
+      // A participant has no other action: the menu is gone.
+      expect(screen.queryByRole('button', { name: "Plus d'actions" })).not.toBeInTheDocument();
       expect(abandons).toBe(1);
       // The lists and the leaderboards (same root key) reload too.
       await vi.waitFor(() => expect(requests).toBeGreaterThan(before));
@@ -406,11 +418,13 @@ describe('ChallengeDetailView', () => {
       });
       const dialog = await openConfirmation();
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
+      await vi.waitFor(() => expect(abandons).toBe(1));
+      // Said while it is sent.
+      expect(await screen.findByText('Abandon en cours…')).toHaveAttribute('role', 'status');
 
-      const busy = await screen.findByRole('button', { name: 'Abandon…' });
-      expect(busy).toHaveAttribute('aria-disabled', 'true');
-      expect(busy).toBeEnabled();
-      fireEvent.click(busy);
+      // Asked again from the menu while it is sent: nothing more is sent.
+      const again = await openConfirmation(false);
+      fireEvent.click(within(again).getByRole('button', { name: 'Abandonner' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(abandons).toBe(1);
       answer(abandoned);
@@ -433,14 +447,12 @@ describe('ChallengeDetailView', () => {
 
       const alert = await screen.findByRole('alert');
       expect(alert).toHaveTextContent('Ce défi est terminé.');
-      // The reloaded challenge is finished: the button is gone, the focus
-      // moves to the message.
-      await vi.waitFor(() =>
-        expect(
-          screen.queryByRole('button', { name: 'Abandonner le défi' }),
-        ).not.toBeInTheDocument(),
-      );
+      // The dialog is closed: the focus moves to the message; the reloaded
+      // challenge is finished, the menu is gone.
       expect(screen.getByRole('alert')).toHaveFocus();
+      await vi.waitFor(() =>
+        expect(screen.queryByRole('button', { name: "Plus d'actions" })).not.toBeInTheDocument(),
+      );
       expect(screen.queryByText('Raw')).not.toBeInTheDocument();
     });
 
@@ -462,8 +474,9 @@ describe('ChallengeDetailView', () => {
           ),
         ).toHaveAttribute('role', 'status'),
       );
-      expect(screen.getByText('Créateur')).toBeInTheDocument();
-      expect(screen.getByText('A abandonné')).toBeInTheDocument();
+      // Still a creator: the menu keeps editing and deleting, not abandoning.
+      fireEvent.click(screen.getByRole('button', { name: "Plus d'actions" }));
+      expect(screen.getByRole('button', { name: 'Supprimer le défi' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
     });
 
@@ -474,6 +487,7 @@ describe('ChallengeDetailView', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Connexion impossible.');
+      fireEvent.click(screen.getByRole('button', { name: "Plus d'actions" }));
       expect(screen.getByRole('button', { name: 'Abandonner le défi' })).toBeInTheDocument();
     });
 
@@ -486,32 +500,86 @@ describe('ChallengeDetailView', () => {
       renderAt(`/challenges/${id}`);
 
       expect(await title()).toBeInTheDocument();
+      const menu = screen.queryByRole('button', { name: "Plus d'actions" });
+      if (menu) fireEvent.click(menu);
       expect(screen.queryByRole('button', { name: 'Abandonner le défi' })).not.toBeInTheDocument();
     });
   });
 
-  it('shows the categories read only, with their frozen settings', async () => {
+  /** « Comment on gagne » of the page. */
+  async function howToWin(name = 'Comment on gagne') {
+    return (await screen.findByRole('heading', { name })).parentElement as HTMLElement;
+  }
+
+  /** The names of the categories, in their order. */
+  const categoryNames = (section: HTMLElement) =>
+    within(section)
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent);
+
+  /** The rows of « Détails », as [term, value]. */
+  const detailRows = (section: HTMLElement) =>
+    within(section)
+      .getAllByRole('term')
+      .map((term) => [term.textContent, term.nextElementSibling?.textContent]);
+
+  it('says how each category is won, with its frozen settings, below the sections', async () => {
     answer({});
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Catégories' });
-    const items = within(section).getAllByRole('listitem');
-    expect(items[0]).toHaveTextContent('Temps cumulé');
-    expect(within(section).getByText('Distance cumulée')).toBeInTheDocument();
-    expect(within(section).getByText('Course ×1 (référence)')).toBeInTheDocument();
-    expect(within(section).getByText('Vélo ×0,3')).toBeInTheDocument();
+    const section = await howToWin();
+    expect(categoryNames(section)).toEqual([
+      'Temps cumulé',
+      'Distance cumulée',
+      'Course avec élimination',
+    ]);
+    expect(
+      within(section).getByText('Le plus de temps cumulé, tous sports confondus, gagne'),
+    ).toBeInTheDocument();
     expect(within(section).getByText('Incrément X : 2 km')).toBeInTheDocument();
-    expect(within(section).queryByRole('textbox')).not.toBeInTheDocument();
-    expect(within(section).queryByRole('button')).not.toBeInTheDocument();
+    // Listed once, in the details.
+    expect(within(section).queryByText(/×0,3/)).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Sections du défi' })).toBeInTheDocument();
+  });
+
+  it('shows the details of an ongoing challenge, read only, with its factors', async () => {
+    answer({ visibility: 'private' });
+    renderAt(`/challenges/${id}`);
+
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(detailRows(details)).toEqual([
+      ['Période', 'Du 2 nov. au 29 nov.'],
+      ['Durée', '4 semaines'],
+      ['Fuseau', 'heure de l’Est nord-américain'],
+      ['Visibilité', 'Privé'],
+      ['Invitations', 'Les participants peuvent inviter'],
+      ['Sport de référence', 'Course'],
+    ]);
+    expect(
+      within(details)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Course ×1', 'Aviron ×0,5', 'Marche ×1', 'Vélo ×0,3']);
+    expect(within(details).getByText('Référence : course (×1).')).toBeInTheDocument();
+    expect(within(details).queryByRole('textbox')).not.toBeInTheDocument();
   });
 
   it('shows only the cumulative time of a challenge that has no other category', async () => {
     answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Catégories' });
-    const items = within(section).getAllByRole('listitem');
-    expect(items.map((item) => item.textContent)).toEqual(['Temps cumulé']);
+    const section = await howToWin();
+    expect(categoryNames(section)).toEqual(['Temps cumulé']);
+    expect(
+      within(section).getByText(
+        '1 catégorie, avec son classement et son podium. Fixée à la création.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(await screen.findByRole('region', { name: 'Détails' })).queryByText(
+        'Coefficients de distance',
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('shows two categories in their order, without the missing one', async () => {
@@ -523,13 +591,9 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Catégories' });
-    const items = within(section).getAllByRole('listitem');
-    expect(items).toHaveLength(2);
-    expect(items[0]).toHaveTextContent('Temps cumulé');
-    expect(items[1]).toHaveTextContent('Course avec élimination');
-    expect(items[1]).toHaveTextContent('Incrément X : 3 km');
-    expect(within(section).queryByText('Distance cumulée')).not.toBeInTheDocument();
+    const section = await howToWin();
+    expect(categoryNames(section)).toEqual(['Temps cumulé', 'Course avec élimination']);
+    expect(within(section).getByText('Incrément X : 3 km')).toBeInTheDocument();
   });
 
   it('names the reference sport of a cycling challenge, in the elimination and the factors', async () => {
@@ -547,15 +611,15 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Catégories' });
+    const section = await howToWin();
     expect(within(section).getByText('Vélo avec élimination')).toBeInTheDocument();
-    expect(within(section).getByText('Vélo ×1 (référence)')).toBeInTheDocument();
-    expect(within(section).getByText('Course ×1')).toBeInTheDocument();
-    // The reference is listed once, as the reference.
-    expect(within(section).queryByText('Vélo ×1')).not.toBeInTheDocument();
+    expect(within(section).getByText(/^Vélo seulement, en distance réelle/)).toBeInTheDocument();
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(within(details).getByText('Référence : vélo (×1).')).toBeInTheDocument();
+    expect(within(details).getAllByRole('listitem')[0]).toHaveTextContent('Vélo ×1');
   });
 
-  it('shows the criteria, the scale and the minimum of the points, with their factors', async () => {
+  it('shows the criteria, the scale and the minimum of the points, and their factors', async () => {
     answer({
       categories: [
         { type: 'cumulative_time', position: 1, params: {} },
@@ -573,26 +637,45 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Catégories' });
-    const points = within(section).getAllByRole('listitem')[1] as HTMLElement;
-    expect(points).toHaveTextContent(/^Grand prix/);
+    const section = await howToWin();
     for (const text of [
       'Séance la plus longue en distance équivalente',
       'Nombre de séances',
       'Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point',
       'Une séance compte à partir de 20 min',
-      'Course ×1 (référence)',
-      'Vélo ×0,3',
     ]) {
-      expect(within(points).getByText(text)).toBeInTheDocument();
+      expect(within(section).getByText(text)).toBeInTheDocument();
     }
+    // The factors of the points, without a total distance: in the details.
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(
+      within(details)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Course ×1', 'Vélo ×0,3']);
   });
 
-  it('lists the factors once, under the total distance, and no minimum without the sessions', async () => {
+  it('lists no factors for points that do not use the distance', async () => {
     answer({
       categories: [
         { type: 'cumulative_time', position: 1, params: {} },
-        { type: 'cumulative_distance', position: 2, params: { factors: { run: 1, ride: 0.3 } } },
+        {
+          type: 'points',
+          position: 4,
+          params: { criteria: ['session_count'], podium: 5, factors: { run: 1, ride: 0.3 } },
+        },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(within(details).queryByText('Coefficients de distance')).not.toBeInTheDocument();
+  });
+
+  it('gives no minimum session without the number of sessions', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
         {
           type: 'points',
           position: 4,
@@ -607,8 +690,7 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Catégories' });
-    expect(within(section).getAllByText('Vélo ×0,3')).toHaveLength(1);
+    const section = await howToWin();
     expect(
       within(section).getByText('Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points'),
     ).toBeInTheDocument();
@@ -626,7 +708,7 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Categories' });
+    const section = await howToWin('How to win');
     expect(within(section).getByText('Cycling with elimination')).toBeInTheDocument();
   });
 

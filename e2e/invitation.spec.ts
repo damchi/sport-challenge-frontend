@@ -37,7 +37,7 @@ test('a friend opens an invitation link, signs in and joins the challenge', asyn
   await page.getByRole('button', { name: "Accepter l'invitation" }).click();
 
   await expect(page).toHaveURL(`/challenges/${mockInvitedChallengeId}`);
-  await expect(page.getByText('Tu participes à ce défi.')).toBeVisible();
+  await expect(page.getByText('Tu participes', { exact: true })).toBeVisible();
   expect(joined).toBe(true);
 });
 

@@ -28,3 +28,11 @@ export function useCategoryName(
       : t('challengeDetail.categories.elimination', { sport: sportName(referenceSport) });
   };
 }
+
+/** Translation key of the sentence that says what a category ranks (its {{sport}}: the reference sport). */
+export const CATEGORY_EXPLANATIONS: Record<CategoryType, string> = {
+  cumulative_time: 'challengeCreate.categories.time.explanation',
+  cumulative_distance: 'challengeCreate.categories.distance.explanation',
+  elimination: 'challengeCreate.categories.elimination.explanation',
+  points: 'challengeCreate.categories.points.explanation',
+};

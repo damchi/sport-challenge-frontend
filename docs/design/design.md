@@ -349,9 +349,10 @@ Les réglages (langue, thème, déconnexion) sont dans l'onglet Profil ; le thè
 
 ## Écrans de référence
 
-Captures dans `docs/design/maquettes/` : `accueil.png`, `defi.png`,
-`classement.png` (mobile clair), `*-sombre.png` (mobile sombre),
-`*-web.png` (web à 1280 px).
+Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
+(mobile clair), `*-sombre.png` (mobile sombre), `*-web.png` (web à
+1280 px) ; page d'un défi : `Web · Page d'un défi · catégories@2x.png` et
+`Mobile · Page d'un défi · catégories@2x.png`.
 
 1. **Accueil « Mes défis »**
    - Mobile : salutation + titre (bouton notifications en V3) ; bandeau de
@@ -365,17 +366,58 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `defi.png`,
      (même ordre) terminée par « Créer un défi » ; colonne latérale = bandeau
      de clôture puis carte « Dernières activités » (les trois dernières, avec
      le défi concerné et la contribution, lien « Tout voir »).
-2. **Page d'un défi**
-   - Mobile : retour, bouton « Inviter » ; titre et méta (participants,
-     sports, « Semaine 3 sur 4 ») ; bloc « Ta semaine » ; classement de la
-     semaine (top 5, ma ligne visible même si je suis plus bas, lien « Tout
-     voir ») ; tuiles « Tes semaines ».
-   - Web : lien « ‹ Mes défis » ; titre et méta à gauche, « Inviter des
-     amis » à droite ; colonne de gauche = bloc « Ta semaine » puis tuiles
-     « Tes semaines » ; colonne de droite = **classement complet** (pas un
-     top 5) dans une carte, avec le sélecteur « Semaine N » / « Général », la
-     phrase de contexte, toutes les lignes en course, puis « N éliminés » et
-     le lien « Tableau complet » vers la page Classement.
+2. **Page d'un défi** (maquettes `Web · Page d'un défi · catégories@2x.png`
+   et `Mobile · Page d'un défi · catégories@2x.png`, décisions du 2026-11-21)
+   - En-tête : retour (flèche seule en mobile, « ‹ Mes défis » à partir de
+     `md`) ; titre ; à droite « Inviter des amis » (bouton secondaire, rond à
+     icône seule en mobile, selon les droits d'invitation) et un bouton rond
+     « … » (menu des actions du rôle : Modifier et Supprimer pour un
+     créateur, Abandonner pour un participant actif d'un défi non terminé ;
+     absent s'il est vide) ; méta « 8 participants · 4 catégories · Semaine 3
+     sur 4 » (`participant_count`, `categories`, `current_week`,
+     `week_count`) et pastille « Tu participes » (participant actif) ;
+     description. Plus de pastilles de statut ni de rôle.
+   - Bandeau de clôture pleine largeur (défi en cours) : « Semaine 3 · se
+     termine samedi 28 novembre à 0 h » (fuseau du défi, nommé s'il diffère)
+     et « Classements mis à jour : … » (`computed_at`). Défi terminé : la
+     ligne « Résultats définitifs » à sa place. Défi à venir : rien.
+   - « Où tu en es » (participant actif d'un défi commencé) : une carte par
+     catégorie dans leur ordre (grille en web, défilement horizontal en
+     mobile) : libellé en majuscules avec icône, grand chiffre, sous-titre,
+     rang « 4e sur 8 » (`ranked_count`) ; élimination : « 18 km / 25 km »,
+     barre, badge de statut, bordure à risque ; Grand prix : points et
+     points provisoires. Chaque carte est un lien qui choisit la catégorie
+     du classement ; celle affichée a la bordure accent et le fond accent
+     léger.
+   - Colonne de gauche : onglets Classement / Participants / Activités ;
+     carte « Classement · <catégorie> » avec la phrase de la catégorie,
+     podium (3 colonnes, ex æquo compris), « Suite du classement » et
+     « Éliminés ». Sans cartes (visiteur, abandon, défi à venir), un
+     sélecteur à onglets choisit la catégorie.
+   - Sous les onglets, « Comment on gagne » (une carte par catégorie : règle,
+     réglages figés, « Le plus de … gagne ») ; colonne de droite, « Détails »
+     (période, durée, fuseau, visibilité, invitations, sport de référence,
+     coefficients en pastilles) ; en mobile, dans cet ordre sous le classement.
+     Mêmes encarts que la page d'un défi à venir (décision du 2026-11-22).
+2 bis. **Page d'un défi à venir** (maquettes `Web · Défi à venir@2x.png` et
+   `mobile defis a venir.png`, décisions du 2026-11-22)
+   - En-tête : pastilles « À venir · Public/Privé · Tu participes » au-dessus
+     du titre, description ; « Inviter des amis » en bouton principal et
+     menu « … » à droite. Pas de ligne de faits.
+   - Bandeau « Départ dans » (fond `--color-surface-raised`) : compte à
+     rebours jours / h / min, départ dans le fuseau du défi (nommé s'il
+     diffère), « N semaines, jusqu'au … inclus » (`week_count`), frise
+     S1…Sn (dates de chaque semaine : à venir du backend, SC-API-143), phrase
+     « Seules les activités faites à partir du départ compteront ».
+   - Pas d'onglets avant le départ. Colonne principale : carte
+     « Participants » (inscrits seulement : invitations par lien), « Comment
+     on gagne » (une carte par catégorie : icône, règle, « Le plus de … gagne »).
+     Colonne latérale : « Détails » (période, durée, fuseau, visibilité,
+     invitations, sport de référence, coefficients en pastilles, la
+     référence en accent) puis, pour un créateur, la carte pointillée « Tu as
+     créé ce défi » (titre et description modifiables) avec « Modifier le
+     défi ». En mobile, tout s'empile dans cet ordre.
+   - L'encart du lien d'invitation de la maquette n'est pas fait.
 3. **Classement**
    - Mobile : retour, titre et nom du défi ; sélecteur « Semaine N » /
      « Général » ; phrase de contexte (objectif, clôture et fuseau) ; liste

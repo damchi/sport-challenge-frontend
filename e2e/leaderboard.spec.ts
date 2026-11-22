@@ -12,8 +12,8 @@ test('a participant reads the leaderboard and the statuses', async ({ page }) =>
   await signInAt(page, `/challenges/${CHALLENGE_ID}`);
 
   await expect(page.getByRole('heading', { level: 1, name: summary.title })).toBeVisible();
-  await expect(page.getByText('En cours', { exact: true })).toBeVisible();
-  await expect(page.getByText('Semaine 3', { exact: true })).toBeVisible();
+  await expect(page.getByText('Semaine 3 sur 4', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Semaine 3 · se termine /)).toBeVisible();
   const podium = page.getByRole('region', { name: 'Podium' });
   // Tied participants share the rank: 1, 1, 3.
   await expect(podium.getByRole('link', { name: /^1er ex æquo / })).toHaveCount(2);
@@ -22,14 +22,17 @@ test('a participant reads the leaderboard and the statuses', async ({ page }) =>
   // Those who abandoned stay off the podium, listed in the full ranking only.
   await expect(podium.getByRole('link')).toHaveCount(3);
   await expect(podium.getByText('A abandonné')).toHaveCount(0);
-  const leaderboard = page.getByRole('region', { name: 'Classement du défi' });
+  const leaderboard = page.getByRole('region', { name: 'Classement · Temps cumulé' });
   await expect(leaderboard.getByText('A abandonné').first()).toBeVisible();
 
-  await leaderboard.getByRole('button', { name: 'Vélo avec élimination' }).click();
-  await expect(leaderboard.getByRole('button', { name: 'Vélo avec élimination' })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  );
+  // The cards of « Où tu en es » choose the category.
+  const standings = page.getByRole('region', { name: 'Où tu en es' });
+  const card = standings.getByRole('link', { name: /Vélo avec élimination/ });
+  await card.click();
+  await expect(card).toHaveAttribute('aria-current', 'true');
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Classement · Vélo avec élimination' }),
+  ).toBeVisible();
 });
 
 test('a participant abandons the challenge for good', async ({ network, page }) => {
@@ -49,6 +52,7 @@ test('a participant abandons the challenge for good', async ({ network, page }) 
   );
   await signInAt(page, `/challenges/${CHALLENGE_ID}`);
 
+  await page.getByRole('button', { name: "Plus d'actions" }).click();
   await page.getByRole('button', { name: 'Abandonner le défi' }).click();
   const dialog = page.getByRole('dialog', { name: `Abandonner « ${summary.title} » ?` });
   await dialog.getByRole('button', { name: 'Abandonner', exact: true }).click();
@@ -56,6 +60,6 @@ test('a participant abandons the challenge for good', async ({ network, page }) 
   await expect(
     page.getByText("Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre."),
   ).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Abandonner le défi' })).toBeHidden();
+  await expect(page.getByRole('button', { name: "Plus d'actions" })).toBeHidden();
   expect(abandoned).toBe(true);
 });

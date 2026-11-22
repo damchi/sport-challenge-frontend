@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../../api/errors';
@@ -21,50 +21,41 @@ function isEditField(field: string): field is (typeof EDIT_FIELDS)[number] {
 
 /**
  * Edition of a challenge's title and description, for its creators (the
- * server's role), at any time. The rest is frozen at creation: the form says
- * so and shows the dates (with the challenge's zone when the user's differs),
- * the visibility and the categories read only. Once saved or
- * cancelled, the focus comes back to the button that opened it.
+ * server's role), at any time, opened from the page's menu (`open`). The
+ * rest is frozen at creation: the form says so and shows the dates (with the
+ * challenge's zone when the user's differs), the visibility and the
+ * categories read only. Saved or cancelled, `onClose` gives the focus back.
  */
-export function ChallengeEdit({ challenge }: { challenge: ChallengeDetail }) {
+export function ChallengeEdit({
+  challenge,
+  open,
+  onClose,
+}: {
+  challenge: ChallengeDetail;
+  open: boolean;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
-  const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
-  const openButton = useRef<HTMLButtonElement>(null);
-  const closed = useRef(false);
-
-  useEffect(() => {
-    if (!editing && closed.current) {
-      closed.current = false;
-      openButton.current?.focus();
-    }
-  }, [editing]);
+  // A new edition: the previous confirmation goes away.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSaved(false);
+  }
 
   if (challenge.my_role !== 'creator') return null;
 
   return (
     <div className="mt-4">
-      {editing ? (
+      {open && (
         <ChallengeEditForm
           challenge={challenge}
           onClose={(didSave) => {
-            closed.current = true;
             setSaved(didSave);
-            setEditing(false);
+            onClose();
           }}
         />
-      ) : (
-        <button
-          ref={openButton}
-          type="button"
-          onClick={() => {
-            setSaved(false);
-            setEditing(true);
-          }}
-          className="h-11 rounded-full border border-border bg-surface px-4 text-sm font-bold"
-        >
-          {t('challengeDetail.edit.button')}
-        </button>
       )}
       <p role="status" className="mt-1 text-sm text-muted">
         {saved && t('challengeDetail.edit.saved')}
