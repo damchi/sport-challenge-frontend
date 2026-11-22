@@ -87,7 +87,7 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 | # | Point | Proposition utilisée dans le backlog | Tickets |
 |---|---|---|---|
 | FD1 ✅ | Bibliothèque d'interface | **Tailwind CSS v4** et polices Fontsource, validés au ticket 003 ; composants de type shadcn/ui, ajoutés un par un à l'usage, encore à valider | 003 |
-| FD2 ✅ | Hébergement du web | **Firebase Hosting**, production seule comme le backend (pas de staging), déployé après chaque fusion sur `main` avec approbation ; validé au ticket 047 (2026-11-21) | 047 |
+| FD2 ✅ | Hébergement du web | **Firebase Hosting**, production seule comme le backend (pas de staging), déployé après chaque fusion sur `main`, automatiquement sans approbation depuis le ticket 066 ; validé au ticket 047 (2026-11-21) | 047 |
 | FD3 ✅ | Structure du dépôt | **Une seule application Vite**, sans monorepo en V1 ; passage en monorepo pnpm en V2, à l'arrivée du mobile | 001 |
 | FD4 ✅ | État local | Aucune bibliothèque d'état global : TanStack Query pour les données, contextes React pour la session, la langue et les messages ; validé au ticket 009 | 009, 016 |
 | FD5 ✅ | Champs date et heure | **Champs HTML natifs** (`date`, `datetime-local`) ; fuseaux via `Intl` ; validé au ticket 022 | 022, 034 |
@@ -959,7 +959,7 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
   - politique de contenu : `worker-src 'self'`, `manifest-src 'self'`, `img-src 'self'` pour les icônes, et une empreinte (hash) pour le script de thème en ligne de `index.html` ;
   - procédure d'urgence documentée : un `sw.js` vide qui vide les caches et se désinscrit.
 - [ ] Adresses de production documentées pour Auth0 (rappel, déconnexion, origines) et pour la configuration CORS du backend (`docs/deploiement.md`).
-- [ ] Déploiement en production par la CI après chaque fusion sur `main`, **après l'approbation** de l'Environment GitHub `production` ; retour arrière à la main.
+- [ ] Déploiement en production par la CI après chaque fusion sur `main`, **après l'approbation** de l'Environment GitHub `production` ; retour arrière à la main. _(Approbation retirée par SC-WEB-066 : déploiement automatique.)_
 
 **Revue** : `security-reviewer`.
 **Commit** : `chore(deploy): add web hosting configuration and production pipeline`

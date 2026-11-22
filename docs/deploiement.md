@@ -32,9 +32,11 @@ Une adresse qui change (API, Auth0, Sentry) se change donc seulement dans les va
 
 | Événement | Production |
 |---|---|
-| Fusion dans `main`, CI verte | part **après l'approbation** de l'Environment `production` |
-| `workflow_dispatch` sans `ref` | redéploie la tête de `main`, avec la même approbation |
-| `workflow_dispatch` avec `ref` (retour arrière) | redéploie ce commit de `main`, avec la même approbation |
+| Fusion dans `main`, CI verte | part **automatiquement**, sans approbation |
+| `workflow_dispatch` sans `ref` | redéploie la tête de `main` |
+| `workflow_dispatch` avec `ref` (retour arrière) | redéploie ce commit de `main` |
+
+La seule barrière avant la production est la fusion de la pull request (CI verte, relectures). L'Environment `production` reste : limité à `main`, il porte les variables du job de publication et c'est lui que la fédération d'identité autorise (`environment:production`).
 
 Deux jobs, pour que le code de l'application et de ses dépendances ne s'exécute jamais avec des droits GCP :
 
@@ -42,8 +44,8 @@ Deux jobs, pour que le code de l'application et de ses dépendances ne s'exécut
    - vérifie que `ref` est un SHA complet et que le commit appartient à `main`, avant d'exécuter le moindre code du commit ;
    - `pnpm build` avec les variables `VITE_*` du dépôt, `pnpm bundle:check`, puis `pnpm hosting:config` ;
    - garde `dist/` et `firebase.json` comme artefact.
-2. **`production`**, dans l'Environment `production`, après l'approbation ; seul job à pouvoir obtenir le jeton OIDC (`id-token: write`) :
-   - si l'approbation arrive après une fusion plus récente, ce déploiement est sauté : celui de la fusion suivante le remplace (jamais une version plus ancienne après une plus récente). Un retour arrière n'est pas concerné ;
+2. **`production`**, dans l'Environment `production` ; seul job à pouvoir obtenir le jeton OIDC (`id-token: write`) :
+   - si le job démarre après une fusion plus récente (en attente derrière un autre déploiement, ou relancé), ce déploiement est sauté : celui de la fusion suivante le remplace (jamais une version plus ancienne après une plus récente). Un retour arrière n'est pas concerné ;
    - installe la CLI Firebase depuis `ci/firebase/` (`--frozen-lockfile --ignore-scripts`, sans cache de dépendances), puis récupère l'artefact dans un dossier à part (`site/`) : l'artefact ne peut écraser ni la CLI ni le fichier d'identifiants ;
    - vérifie `firebase.json` **avant** l'authentification : seules les clés que `scripts/hostingConfig.ts` écrit sont acceptées, `public` vaut `dist`, les réécritures mènent à un fichier. Un build compromis ne peut ainsi ni faire exécuter une commande (`predeploy`) avec les droits GCP, ni publier autre chose que `dist/` ;
    - authentification à GCP par **Workload Identity Federation** : le jeton OIDC du job est échangé contre les droits du compte `sc-web-deploy`. Aucune clé JSON, aucun secret ;
@@ -124,7 +126,7 @@ Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publique
    | `GCP_WEB_DEPLOY_SERVICE_ACCOUNT` | `sc-web-deploy@sport-challenge-prod.iam.gserviceaccount.com` |
    | `WEB_URL` | `https://sport-challenge-prod.web.app` (sans `/` final) |
 
-   **Deployment branches = Selected branches, `main` seulement**, et **Required reviewers**. Décocher **Allow administrators to bypass configured protection rules** et, si possible, cocher **Prevent self-review**.
+   **Deployment branches = Selected branches, `main` seulement**, sans **Required reviewers** (déploiement automatique, SC-WEB-066). Décocher **Allow administrators to bypass configured protection rules**.
 2. **Variables du dépôt** (Settings > Secrets and variables > Actions > Variables), lues par le job `build`, qui n'a pas d'Environment :
 
    | Variable | Valeur |
@@ -135,7 +137,7 @@ Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publique
    | `VITE_AUTH0_AUDIENCE` | identifiant de l'API de production dans Auth0 |
    | `VITE_SENTRY_DSN` | facultatif : DSN du projet Sentry du web |
 
-3. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et ses reviewers en place. Tant qu'elle ne vaut pas `true`, les deux jobs sont ignorés :
+3. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et la fédération d'identité en place. Tant qu'elle ne vaut pas `true`, les deux jobs sont ignorés :
    ```
    gh variable set DEPLOY_PRODUCTION --body true
    ```
