@@ -61,6 +61,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
         action={<ChallengeInvite challenge={challenge.data} />}
       />
       <ChallengeEdit challenge={challenge.data} />
+      <ChallengeDelete challenge={challenge.data} />
       <ChallengeParticipation challenge={challenge.data} />
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <div className="min-w-0 flex-[999_1_560px]">
@@ -73,7 +74,6 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
           className="flex-[1_1_300px]"
         />
       </div>
-      <ChallengeDelete challenge={challenge.data} />
     </>
   );
 }

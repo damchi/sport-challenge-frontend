@@ -36,7 +36,7 @@ export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
   const matches = typed.trim() === challenge.title.trim();
 
   return (
-    <div className="mt-8 flex flex-col gap-3 md:items-start">
+    <div className="mt-3 flex flex-col items-start gap-3">
       <button
         type="button"
         // Not `disabled`: the focus comes back here when the dialog closes,
@@ -49,7 +49,7 @@ export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
           setTyped('');
           setConfirming(true);
         }}
-        className="h-11 rounded-full border border-border bg-surface px-6 text-button font-bold aria-disabled:opacity-60"
+        className="h-11 rounded-full border border-border bg-surface px-4 text-sm font-bold aria-disabled:opacity-60"
       >
         {remove.isPending ? t('challengeDetail.delete.busy') : t('challengeDetail.delete.button')}
       </button>
