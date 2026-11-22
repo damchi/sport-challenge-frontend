@@ -152,7 +152,8 @@ function StandingCard({
         <Icon aria-hidden="true" size={16} strokeWidth={2} className="flex-none" />
         {categoryName(category.type)}
       </span>
-      <span className="mt-1 font-display text-3xl font-bold tabular-nums">{value}</span>
+      {/* No value only for one who abandoned, who has no cards: nothing shown. */}
+      {value && <span className="mt-1 font-display text-3xl font-bold tabular-nums">{value}</span>}
       {detail && <span className="text-sm text-muted">{detail}</span>}
       {status && elimination && elimination.minimum_meters !== null && (
         // The figures are written above.
