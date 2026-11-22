@@ -36,7 +36,7 @@ Une adresse qui change (API, Auth0, Sentry) se change donc seulement dans les va
 | `workflow_dispatch` sans `ref` | redéploie la tête de `main` |
 | `workflow_dispatch` avec `ref` (retour arrière) | redéploie ce commit de `main` |
 
-**Aucune validation humaine** avant la production (décision du 2026-11-21, SC-WEB-066) : un déploiement part dès qu'une personne ayant le droit d'écriture sur le dépôt fusionne dans `main` (ou y pousse, `main` n'étant pas protégée) ou lance le workflow à la main, y compris vers un ancien commit de `main` (retour arrière). Ce risque est accepté parce que le dépôt n'a qu'un mainteneur ; le droit d'écriture est donc la vraie barrière, à réserver à des personnes de confiance. Pour remettre une validation, rétablir les **Required reviewers** de l'Environment (§5).
+**Aucune validation humaine** avant la production (décision du 2026-11-21, SC-WEB-066) : un déploiement part dès qu'une personne ayant le droit d'écriture sur le dépôt fusionne une pull request dans `main` ou lance le workflow à la main, y compris vers un ancien commit de `main` (retour arrière). Ce risque est accepté parce que le dépôt n'a qu'un mainteneur ; le droit d'écriture est donc la vraie barrière, à réserver à des personnes de confiance. Pour remettre une validation, rétablir les **Required reviewers** de l'Environment (§5).
 
 L'Environment `production` reste : limité à `main`, il porte les variables du job de publication et c'est lui que la fédération d'identité autorise (`environment:production`).
 
@@ -139,7 +139,8 @@ Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publique
    | `VITE_AUTH0_AUDIENCE` | identifiant de l'API de production dans Auth0 |
    | `VITE_SENTRY_DSN` | facultatif : DSN du projet Sentry du web |
 
-3. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et la fédération d'identité en place. Tant qu'elle ne vaut pas `true`, les deux jobs sont ignorés :
+3. **Règle de la branche `main`** (Settings > Rules > Rulesets, `main: pull request required`) : pull request obligatoire, sans liste de contournement. Aucun push direct ne part ainsi en production sans pull request ni CI. Aucune approbation n'est exigée : le dépôt n'a qu'un mainteneur, qui doit pouvoir fusionner ses propres pull requests.
+4. **Variable du dépôt** `DEPLOY_PRODUCTION=true`, une fois l'Environment et la fédération d'identité en place. Tant qu'elle ne vaut pas `true`, les deux jobs sont ignorés :
    ```
    gh variable set DEPLOY_PRODUCTION --body true
    ```

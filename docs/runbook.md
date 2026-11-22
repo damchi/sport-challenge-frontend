@@ -30,7 +30,7 @@ Le job `production` lit en plus les variables de l'Environment `production` (`GC
 
 ## 2. Déployer
 
-**Prérequis** : la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5, étape 3). Sinon les deux jobs du workflow sont ignorés, à la fusion comme à la main : rien n'est publié et rien n'échoue.
+**Prérequis** : la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5, étape 4). Sinon les deux jobs du workflow sont ignorés, à la fusion comme à la main : rien n'est publié et rien n'échoue.
 
 **Cas normal** : fusionner la pull request dans `main`. Une fois la CI verte, le workflow Deploy construit et publie le site, sans approbation : fusionner, c'est mettre en production.
 
@@ -120,4 +120,4 @@ Conséquences :
 - [ ] Le test de fumée du dernier déploiement est vert et le site répond avec ses en-têtes (`curl -sI https://sport-challenge-prod.web.app/`).
 - [ ] Adresses Auth0 (§4) et origine CORS du backend déclarées pour l'adresse réelle du site ; une connexion de bout en bout réussit en production, sur téléphone.
 - [ ] Si `VITE_SENTRY_DSN` est renseignée : une erreur de test arrive dans Sentry sans nom, e-mail, jeton (d'accès ou d'invitation : l'adresse `/invite#…` arrive sans son fragment) ni adresse IP (option « Prevent Storing of IP Addresses » active sur le projet).
-- [ ] L'Environment `production` est limité à `main`, sans reviewer (déploiement automatique), sans contournement par les administrateurs, et la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5).
+- [ ] La règle de `main` exige une pull request, sans contournement ; l'Environment `production` est limité à `main`, sans reviewer (déploiement automatique), sans contournement par les administrateurs, et la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5).
