@@ -30,12 +30,15 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
   // The steps before were checked: the values are valid.
   const values = useFormContext<ChallengeCreateInput>().getValues();
   const period = windowPreview(values.start_date, values.weeks, values.timezone, now, locale);
-  const factors = sortSportsByName(factorSports(sports.data ?? []), sportName, locale).map(
-    ({ code, suggested_factor: suggested }) => ({
-      code,
-      text: `${sportName(code)} ${formatFactor(values.factors[code] ?? suggested, locale)}`,
-    }),
-  );
+  const reference = values.reference_sport;
+  const factors = sortSportsByName(
+    factorSports(sports.data ?? [], reference),
+    sportName,
+    locale,
+  ).map(({ code, suggested }) => ({
+    code,
+    text: `${sportName(code)} ${formatFactor(values.factors[code] ?? suggested, locale)}`,
+  }));
   // A failed sending disables then frees the button: the focus goes to the
   // error, so the keyboard is not lost.
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -71,32 +74,36 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
             })}{' '}
           {t('challengeCreate.preview.weeks', { count: values.weeks })}
         </Item>
+        <Item label={t('challengeCreate.fields.referenceSport.label')}>{sportName(reference)}</Item>
         <Item label={t('challengeCreate.recap.categories')}>
           <ol className="flex flex-col gap-1">
             <li>{t('challengeCreate.categories.time.name')}</li>
-            <li>
-              {t('challengeCreate.categories.distance.name')}
-              <ul className="mt-1 text-sm text-muted">
-                <li>
-                  {/* The form keeps the run as reference until SC-WEB-057. */}
-                  {t('challengeCreate.recap.referenceFactor', {
-                    sport: sportName('run'),
-                    factor: formatFactor(1, locale),
+            {values.cumulative_distance && (
+              <li>
+                {t('challengeCreate.categories.distance.name')}
+                <ul className="mt-1 text-sm text-muted">
+                  <li>
+                    {t('challengeCreate.recap.referenceFactor', {
+                      sport: sportName(reference),
+                      factor: formatFactor(1, locale),
+                    })}
+                  </li>
+                  {factors.map(({ code, text }) => (
+                    <li key={code}>{text}</li>
+                  ))}
+                </ul>
+              </li>
+            )}
+            {values.elimination && values.elimination_step_km !== undefined && (
+              <li>
+                {t('challengeDetail.categories.elimination', { sport: sportName(reference) })}
+                <span className="block text-sm text-muted">
+                  {t('challengeCreate.recap.step', {
+                    step: formatKm(values.elimination_step_km, locale),
                   })}
-                </li>
-                {factors.map(({ code, text }) => (
-                  <li key={code}>{text}</li>
-                ))}
-              </ul>
-            </li>
-            <li>
-              {t('challengeCreate.categories.elimination.name')}
-              <span className="block text-sm text-muted">
-                {t('challengeCreate.recap.step', {
-                  step: formatKm(values.elimination_step_km, locale),
-                })}
-              </span>
-            </li>
+                </span>
+              </li>
+            )}
           </ol>
         </Item>
       </dl>

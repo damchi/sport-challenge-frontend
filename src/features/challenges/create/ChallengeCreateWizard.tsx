@@ -8,7 +8,11 @@ import { useCreateChallenge } from '../../../api/hooks/useChallenges';
 import { useSports } from '../../../api/hooks/useSports';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { Wizard } from '../../../components/Wizard';
-import { challengeCreateRequest, formFieldOf } from '../../../domain/challengeCreate';
+import {
+  challengeCreateRequest,
+  DEFAULT_REFERENCE_SPORT,
+  formFieldOf,
+} from '../../../domain/challengeCreate';
 import {
   challengeCreateSchema,
   type ChallengeCreateInput,
@@ -26,7 +30,7 @@ import { useSportName } from './useSportName';
 const STEP_FIELDS = [
   ['title', 'description', 'visibility', 'members_can_invite'],
   ['weeks', 'start_date', 'timezone'],
-  ['elimination_step_km', 'factors'],
+  ['reference_sport', 'cumulative_distance', 'elimination', 'elimination_step_km', 'factors'],
 ] as const;
 
 // Translation key of the label of each field, for the refused ones.
@@ -38,6 +42,8 @@ const FIELD_LABELS: Record<string, string> = {
   weeks: 'challengeCreate.fields.weeks.label',
   start_date: 'challengeCreate.fields.startDate.label',
   timezone: 'challengeCreate.fields.timezone.label',
+  reference_sport: 'challengeCreate.fields.referenceSport.label',
+  factors: 'challengeCreate.fields.factors.label',
   elimination_step_km: 'challengeCreate.fields.eliminationStep.label',
 };
 
@@ -65,8 +71,8 @@ export function ChallengeCreateWizard({
   const createChallenge = useCreateChallenge();
   const [createdId, setCreatedId] = useState<string>();
   const [submitError, setSubmitError] = useState<string>();
-  // Next was pressed before the factors could be shown.
-  const [factorsWaiting, setFactorsWaiting] = useState(false);
+  // Next was pressed before the sports could be shown.
+  const [sportsWaiting, setSportsWaiting] = useState(false);
   // Set at once, unlike the mutation's state: a second click in the same
   // instant sends nothing.
   const sending = useRef(false);
@@ -85,6 +91,10 @@ export function ChallengeCreateWizard({
       members_can_invite: false,
       start_date: '',
       timezone: DEFAULT_TIME_ZONE,
+      reference_sport: DEFAULT_REFERENCE_SPORT,
+      // Added at will: the cumulative time alone until then.
+      cumulative_distance: false,
+      elimination: false,
       factors: {},
     },
   });
@@ -164,10 +174,10 @@ export function ChallengeCreateWizard({
   const validateStep = async (index: number) => {
     const fields = STEP_FIELDS[index];
     const valid = fields ? await form.trigger(fields, { shouldFocus: true }) : true;
-    // The factors are seen before going on: not while the catalogue is
-    // loading or failed. The step then says why it stays.
-    if (fields?.some((field) => field === 'factors') && !sports.isSuccess) {
-      setFactorsWaiting(true);
+    // The reference and the factors are seen before going on: not while
+    // the catalogue is loading or failed. The step then says why it stays.
+    if (fields?.some((field) => field === 'reference_sport') && !sports.isSuccess) {
+      setSportsWaiting(true);
       return false;
     }
     return valid;
@@ -184,7 +194,7 @@ export function ChallengeCreateWizard({
           },
           {
             title: t('challengeCreate.steps.categories'),
-            content: <CategoriesStep factorsWaiting={factorsWaiting} />,
+            content: <CategoriesStep sportsWaiting={sportsWaiting} />,
           },
           {
             title: t('challengeCreate.steps.recap'),
