@@ -8,6 +8,7 @@ import { isChallengeId } from '../../../domain/challenge';
 import { isWithin, usePendingPath } from '../../../lib/pendingNavigation';
 import { ChallengeInvite } from '../../invitations/ChallengeInvite';
 import { ChallengeCategories } from './ChallengeCategories';
+import { ChallengeDelete } from './ChallengeDelete';
 import { ChallengeEdit } from './ChallengeEdit';
 import { ChallengeHeader } from './ChallengeHeader';
 import { ChallengeNotFound } from './ChallengeNotFound';
@@ -60,6 +61,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
         action={<ChallengeInvite challenge={challenge.data} />}
       />
       <ChallengeEdit challenge={challenge.data} />
+      <ChallengeDelete challenge={challenge.data} />
       <ChallengeParticipation challenge={challenge.data} />
       <div className="mt-6 flex flex-wrap items-start gap-6">
         <div className="min-w-0 flex-[999_1_560px]">

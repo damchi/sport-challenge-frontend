@@ -11,6 +11,7 @@
     "activity_overlap": "This activity overlaps another of your activities. Check the start and the duration.",
     "already_participant": "You are already taking part in this challenge.",
     "app_unavailable": "The app is temporarily unavailable.",
+    "cannot_exclude_creator": "A creator can't be excluded from the challenge.",
     "challenge_ended": "This challenge is over.",
     "challenge_not_found": "This challenge doesn't exist or you don't have access to it.",
     "distance_not_allowed": "This sport takes no distance.",
@@ -21,6 +22,7 @@
     "invitation_invalid": "This invitation link is not valid or has expired.",
     "last_creator": "You're the last creator of a challenge in progress. Add another creator or delete the challenge.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
+    "not_active_participant": "Only an active participant can become a creator.",
     "not_found": "This page doesn't exist or was removed.",
     "participation_abandoned": "You abandoned this challenge: you can't join it again.",
     "profile_incomplete": "Enter your first and last name in your profile first.",
@@ -471,7 +473,39 @@
       "status": {
         "active": "Active",
         "abandoned": "Abandoned"
+      },
+      "manage": {
+        "cancel": "Cancel",
+        "gone": "This person no longer takes part in this challenge.",
+        "creator": {
+          "button": "Add as creator",
+          "buttonNamed": "Add as creator {{name}}",
+          "busy": "Adding…",
+          "title": "Add {{name}} as a creator?",
+          "message": "Like you, this person will be able to edit the title and description, invite friends, add other creators, exclude participants and delete the challenge.",
+          "confirm": "Add as creator",
+          "done": "{{name}} now has creator rights."
+        },
+        "exclude": {
+          "button": "Exclude",
+          "buttonNamed": "Exclude {{name}}",
+          "busy": "Excluding…",
+          "title": "Exclude {{name}}?",
+          "message": "This is final: this person is eliminated from every category and shown as “Abandoned” in the leaderboards, off the podium. They won't be able to join this challenge again.",
+          "confirm": "Exclude",
+          "done": "{{name}} no longer takes part in the challenge."
+        }
       }
+    },
+    "delete": {
+      "button": "Delete the challenge",
+      "busy": "Deleting…",
+      "title": "Delete “{{title}}”?",
+      "message": "This is final: the challenge and its leaderboards disappear for all its participants. No one will be able to open it again.",
+      "typeTitle": "To confirm, type the challenge's title: “{{title}}”",
+      "typeTitleHint": "The delete button turns on once the title matches.",
+      "confirm": "Delete the challenge",
+      "cancel": "Cancel"
     }
   },
   "sports": {

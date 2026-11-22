@@ -11,6 +11,7 @@
     "activity_overlap": "Cette activité chevauche une autre de tes activités. Vérifie le début et la durée.",
     "already_participant": "Tu participes déjà à ce défi.",
     "app_unavailable": "L'application est momentanément indisponible.",
+    "cannot_exclude_creator": "Un créateur ne peut pas être exclu du défi.",
     "challenge_ended": "Ce défi est terminé.",
     "challenge_not_found": "Ce défi n'existe pas ou tu n'y as pas accès.",
     "distance_not_allowed": "Ce sport ne prend pas de distance.",
@@ -21,6 +22,7 @@
     "invitation_invalid": "Ce lien d'invitation n'est pas valide ou a expiré.",
     "last_creator": "Tu es le dernier créateur d'un défi en cours. Ajoute un autre créateur ou supprime ce défi.",
     "network_error": "Connexion impossible. Vérifie ta connexion internet, puis réessaie.",
+    "not_active_participant": "Seul un participant actif peut devenir créateur.",
     "not_found": "Cette page n'existe pas ou plus.",
     "participation_abandoned": "Tu as abandonné ce défi : tu ne peux plus le rejoindre.",
     "profile_incomplete": "Indique d'abord ton prénom et ton nom dans ton profil.",
@@ -474,7 +476,39 @@
       "status": {
         "active": "Actif",
         "abandoned": "A abandonné"
+      },
+      "manage": {
+        "cancel": "Annuler",
+        "gone": "Cette personne ne participe plus à ce défi.",
+        "creator": {
+          "button": "Ajouter comme créateur",
+          "buttonNamed": "Ajouter comme créateur {{name}}",
+          "busy": "Ajout…",
+          "title": "Ajouter {{name}} comme créateur ?",
+          "message": "Cette personne pourra, comme toi, modifier le titre et la description, inviter des amis, ajouter d'autres créateurs, exclure des participants et supprimer le défi.",
+          "confirm": "Ajouter comme créateur",
+          "done": "{{name}} a maintenant les droits de créateur."
+        },
+        "exclude": {
+          "button": "Exclure",
+          "buttonNamed": "Exclure {{name}}",
+          "busy": "Exclusion…",
+          "title": "Exclure {{name}} ?",
+          "message": "C'est définitif : cette personne est éliminée de toutes les catégories et apparaît « A abandonné » dans les classements, hors podium. Elle ne pourra plus rejoindre ce défi.",
+          "confirm": "Exclure",
+          "done": "{{name}} ne participe plus au défi."
+        }
       }
+    },
+    "delete": {
+      "button": "Supprimer le défi",
+      "busy": "Suppression…",
+      "title": "Supprimer « {{title}} » ?",
+      "message": "C'est définitif : le défi et ses classements disparaissent pour tous ses participants. Personne ne pourra plus l'ouvrir.",
+      "typeTitle": "Pour confirmer, écris le titre du défi : « {{title}} »",
+      "typeTitleHint": "Le bouton de suppression s'active quand le titre correspond.",
+      "confirm": "Supprimer le défi",
+      "cancel": "Annuler"
     }
   },
   "sports": {
