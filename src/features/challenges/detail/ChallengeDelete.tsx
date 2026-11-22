@@ -4,12 +4,8 @@ import { useNavigate } from 'react-router';
 import { ApiError, errorMessage } from '../../../api/errors';
 import { useDeleteChallenge, type ChallengeDetail } from '../../../api/hooks/useChallenges';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
+import { focusOnMount } from '../../../lib/focusOnMount';
 import { inputClass } from '../create/fields';
-
-// Stable: called once per element, not again on each render.
-function focusOnMount(element: HTMLElement | null) {
-  element?.focus();
-}
 
 /**
  * Deletes a challenge, for its creators (the server's role), at any time,

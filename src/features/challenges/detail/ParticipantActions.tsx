@@ -3,12 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { Participant } from '../../../api/hooks/useChallenges';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { displayName } from '../../../domain/displayName';
+import { focusOnMount } from '../../../lib/focusOnMount';
 import type { Action, CreatorActions, Target } from './useCreatorActions';
-
-// Stable: called once per element, not again on each render.
-function focusOnMount(element: HTMLElement | null) {
-  element?.focus();
-}
 
 /**
  * Outcome of the last action, announced. Once done, the row's buttons are
