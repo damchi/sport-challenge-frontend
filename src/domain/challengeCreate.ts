@@ -25,12 +25,15 @@ export function referenceSports<S extends CatalogueSport>(sports: readonly S[]):
 /**
  * Suggested factor of a sport brought back to the reference, the backend's
  * rule: min(1, factor / factor of the reference), two decimals (half up),
- * never under 0.1. The catalogue's factors are against the run.
+ * never under 0.1. The catalogue's factors are against the run. Computed in
+ * hundredths, in integers, as the backend does, so the rounding is the same.
  */
 export function relativeFactor(factor: number, referenceFactor: number): number {
-  const ratio = Math.min(1, factor / referenceFactor);
-  // The epsilon keeps a half that floating point puts just under it.
-  return Math.max(0.1, Math.round(ratio * 100 + 1e-9) / 100);
+  const hundredths = Math.round(factor * 100);
+  const reference = Math.round(referenceFactor * 100) > 0 ? Math.round(referenceFactor * 100) : 100;
+  // Half up: floor(100 f / ref + 1/2).
+  const ratio = Math.floor((200 * hundredths + reference) / (2 * reference));
+  return Math.min(Math.max(ratio, 10), 100) / 100;
 }
 
 /** A sport whose factor the creator may change, with its suggestion. */

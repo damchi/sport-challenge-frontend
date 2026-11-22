@@ -141,7 +141,10 @@ function Categories({ sports }: { sports: Sports }) {
             {t('challengeCreate.categories.distance.add')}
           </label>
           {distance && (
-            <fieldset className="mt-2" aria-describedby="factors-hint">
+            <fieldset
+              className="mt-2"
+              aria-describedby={factorsError ? 'factors-hint factors-error' : 'factors-hint'}
+            >
               <legend className="text-sm font-semibold">
                 {t('challengeCreate.fields.factors.label')}
               </legend>

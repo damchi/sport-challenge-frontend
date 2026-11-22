@@ -779,8 +779,10 @@ describe('ChallengeCreateWizard', () => {
         'aria-invalid',
         'true',
       );
-      expect(screen.getByRole('group', { name: 'Coefficients de distance' })).toHaveTextContent(
-        'Valeur refusée. Vérifie-la, puis renvoie le défi.',
+      expect(
+        screen.getByRole('group', { name: 'Coefficients de distance' }),
+      ).toHaveAccessibleDescription(
+        expect.stringContaining('Valeur refusée. Vérifie-la, puis renvoie le défi.'),
       );
     });
 
