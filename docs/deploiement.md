@@ -128,7 +128,7 @@ Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publique
    | `GCP_WEB_DEPLOY_SERVICE_ACCOUNT` | `sc-web-deploy@sport-challenge-prod.iam.gserviceaccount.com` |
    | `WEB_URL` | `https://sport-challenge-prod.web.app` (sans `/` final) |
 
-   **Deployment branches = Selected branches, `main` seulement**, sans **Required reviewers** (déploiement automatique, SC-WEB-066). L'Environment ne contrôle donc plus que la branche : il ne demande aucune validation, et **Allow administrators to bypass configured protection rules** (décoché) ne protège plus que cette restriction à `main`.
+   **Deployment branches = Selected branches, `main` seulement**, sans **Required reviewers** (déploiement automatique, SC-WEB-066). L'Environment ne contrôle donc plus que la branche et ne demande aucune validation. Laisser **Allow administrators to bypass configured protection rules** décoché : un administrateur ne peut ainsi pas déployer depuis une autre branche que `main`.
 2. **Variables du dépôt** (Settings > Secrets and variables > Actions > Variables), lues par le job `build`, qui n'a pas d'Environment :
 
    | Variable | Valeur |
