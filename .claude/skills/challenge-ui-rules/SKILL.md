@@ -16,11 +16,12 @@ Source de vérité : le `README.md` du backend (§2) et le §2 du README du fron
 | 1 | Temps cumulé (tous sports) | toujours | durée totale |
 | 2 | Distance cumulée (ramenée au sport de référence si le sport est plus rapide) | au choix | km équivalents (« 12,5 km éq. vélo ») |
 | 3 | Élimination, nommée d'après le sport de référence (« Course avec élimination », « Vélo avec élimination ») | au choix | survivants par km cumulés, puis éliminés |
+| 4 | Grand prix (`points` dans l'API, EN « Grand Prix ») : critères de la semaine, barème top 5 ou top 10 | au choix | total des points acquis (« 43 pts + 12 pts provisoires ») |
 
 - Le **sport de référence** (`reference_sport`) est choisi à la création parmi les sports à distance obligatoire, **course par défaut** ; il vaut toujours ×1.
-- Affiche les catégories que le serveur renvoie, dans leur ordre, sans supposer qu'il y en a 3 : un onglet par catégorie, chacune avec son podium.
+- Affiche les catégories que le serveur renvoie, dans leur ordre, sans supposer qu'il y en a un nombre fixe : un onglet par catégorie, chacune avec son podium.
 - Un participant apparaît dans toutes les catégories du challenge.
-- La catégorie Points (`points` dans l'API) s'affiche « Grand prix » (EN « Grand Prix ») ; elle se crée avec SC-WEB-058 et s'affiche avec SC-WEB-059.
+- Le Grand prix se crée avec SC-WEB-058 et s'affiche avec SC-WEB-059 ; son nom affiché a été choisi le 2026-11-21.
 
 ## Création et édition
 
