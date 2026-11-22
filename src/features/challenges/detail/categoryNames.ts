@@ -8,6 +8,7 @@ type CategoryType = ChallengeDetail['categories'][number]['type'];
 const CATEGORY_NAMES: Record<Exclude<CategoryType, 'elimination'>, string> = {
   cumulative_time: 'challengeCreate.categories.time.name',
   cumulative_distance: 'challengeCreate.categories.distance.name',
+  points: 'challengeDetail.categories.points',
 };
 
 /**

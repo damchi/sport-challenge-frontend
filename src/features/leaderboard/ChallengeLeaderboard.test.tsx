@@ -47,6 +47,7 @@ function entry(
     value,
     abandoned: rank === null,
     elimination: null,
+    provisional_points: null,
   };
 }
 
@@ -77,7 +78,7 @@ function runner(pseudo: string, rank: number, value: number, elimination: Partia
       status: null,
       eliminated_week: null,
       minimum_meters: null,
-      run_meters: 0,
+      distance_meters: 0,
       week_ends_at: '2026-11-23T05:00:00Z',
       ...elimination,
     },
@@ -536,17 +537,17 @@ describe('ChallengeLeaderboard, elimination', () => {
           runner('julie', 1, 30_000, {
             status: 'reached',
             minimum_meters: 10_000,
-            run_meters: 12_000,
+            distance_meters: 12_000,
           }),
           runner('marc', 2, 25_000, {
             status: 'in_progress',
             minimum_meters: 10_000,
-            run_meters: 4_500,
+            distance_meters: 4_500,
           }),
           runner('sofia', 3, 20_000, {
             status: 'at_risk',
             minimum_meters: 9_000,
-            run_meters: 2_000,
+            distance_meters: 2_000,
           }),
         ],
       },
@@ -620,7 +621,7 @@ describe('ChallengeLeaderboard, elimination', () => {
     leaderboard([
       {
         type: 'elimination',
-        entries: [runner('julie', 1, 6_000, { run_meters: 6_000 })],
+        entries: [runner('julie', 1, 6_000, { distance_meters: 6_000 })],
       },
     ]);
     renderAt(at);
@@ -683,7 +684,7 @@ describe('ChallengeLeaderboard, elimination', () => {
             ...runner('marie_92', 1, 9_000, {
               status: 'at_risk',
               minimum_meters: 9_000,
-              run_meters: 3_000,
+              distance_meters: 3_000,
             }),
             user: { ...entry('marie_92', 1, 0).user, id: mockMe.id },
           },

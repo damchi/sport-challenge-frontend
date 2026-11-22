@@ -19,8 +19,9 @@ const STATUSES: Record<
 };
 
 /**
- * The week of a survivor in the elimination: status, distance run against
- * the minimum of the week, and a bar. Every value is the server's.
+ * The week of a survivor in the elimination: status, distance done in the
+ * reference sport against the minimum of the week, and a bar. Every value
+ * is the server's.
  */
 export function EliminationProgress({ progress }: { progress: Progress }) {
   const { t, i18n } = useTranslation();
@@ -29,14 +30,14 @@ export function EliminationProgress({ progress }: { progress: Progress }) {
   if (!status || status === 'eliminated' || progress.minimum_meters === null) return null;
   const { Icon, tone, bar } = STATUSES[status];
   const minimum = progress.minimum_meters;
-  const share = minimum === 0 ? 1 : Math.min(progress.run_meters / minimum, 1);
+  const share = minimum === 0 ? 1 : Math.min(progress.distance_meters / minimum, 1);
   return (
     <span className="mt-1 flex flex-col gap-1">
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <StatusPill label={t(`leaderboard.elimination.${status}`)} Icon={Icon} tone={tone} />
         <span className="text-sm text-muted tabular-nums">
           {t('leaderboard.elimination.progress', {
-            done: formatKm(progress.run_meters / 1000, locale),
+            done: formatKm(progress.distance_meters / 1000, locale),
             minimum: formatKm(minimum / 1000, locale),
           })}
         </span>

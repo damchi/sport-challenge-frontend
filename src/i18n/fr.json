@@ -419,7 +419,8 @@
     "categories": {
       "title": "Catégories",
       "frozen": "Fixées à la création, elles ne changent plus.",
-      "elimination": "{{sport}} avec élimination"
+      "elimination": "{{sport}} avec élimination",
+      "points": "Points"
     },
     "tabs": {
       "label": "Sections du défi",

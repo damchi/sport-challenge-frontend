@@ -416,7 +416,8 @@
     "categories": {
       "title": "Categories",
       "frozen": "Set at creation, they no longer change.",
-      "elimination": "{{sport}} with elimination"
+      "elimination": "{{sport}} with elimination",
+      "points": "Points"
     },
     "tabs": {
       "label": "Challenge sections",
