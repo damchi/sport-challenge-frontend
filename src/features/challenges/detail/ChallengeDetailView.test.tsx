@@ -399,10 +399,12 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Abandonner' }));
 
+      // The reloaded challenge may say it first: it becomes the announced
+      // outcome once the abandon has answered.
       const outcome = await screen.findByText(
         "Tu as abandonné ce défi : c'est définitif, tu ne peux plus le rejoindre.",
       );
-      expect(outcome).toHaveAttribute('role', 'status');
+      await vi.waitFor(() => expect(outcome).toHaveAttribute('role', 'status'));
       // Sent: no longer said to be on its way.
       expect(screen.queryByText('Abandon en cours…')).not.toBeInTheDocument();
       // The button is gone: the focus moves to the outcome.
