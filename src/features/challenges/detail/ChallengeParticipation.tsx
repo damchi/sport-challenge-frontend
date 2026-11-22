@@ -13,16 +13,26 @@ import { useJoinCopy } from './useJoinCopy';
  * The user's participation in a challenge. Joining, as the server allows it
  * (can_join): the deadline and the button, which asks for a confirmation
  * saying the activities will be seen by the other participants. Otherwise,
- * why the user cannot join, read from their participation: in, abandoned for
+ * why the user cannot join, read from their participation: abandoned for
  * good, or registration closed (the only reason left to a user who sees the
- * challenge). An active participant of a challenge not finished can abandon
- * it, after a confirmation saying it is final.
+ * challenge); an active participant reads it in the header's pill, and here
+ * only right after joining. Abandoning, asked from the page's menu
+ * (`abandoning`), takes a confirmation saying it is final; `onAbandonClose`
+ * gives the focus back.
  */
-export function ChallengeParticipation({ challenge }: { challenge: ChallengeDetail }) {
+export function ChallengeParticipation({
+  challenge,
+  abandoning,
+  onAbandonClose,
+}: {
+  challenge: ChallengeDetail;
+  abandoning: boolean;
+  onAbandonClose: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const join = useJoinChallenge(challenge.id);
   const abandon = useAbandonChallenge(challenge.id);
-  const [confirming, setConfirming] = useState<'join' | 'abandon' | null>(null);
+  const [joining, setJoining] = useState(false);
   // Each outcome takes the focus once, not again on each refresh. One ref is
   // enough: a join and an abandon never show their outcomes together.
   const focusedOutcome = useRef<string | null>(null);
@@ -40,72 +50,58 @@ export function ChallengeParticipation({ challenge }: { challenge: ChallengeDeta
   };
 
   if (!challenge.can_join) {
-    // The status is the server's: a finished challenge cannot be abandoned.
-    const canAbandon = challenge.my_status === 'active' && challenge.status !== 'finished';
-    // After a join or an abandon, the button is gone: the focus moves to the
-    // outcome, which is announced. A refused join is said by the reloaded
-    // challenge's reason, in place of the error, which would repeat it.
+    // After a join or an abandon, the focus moves to the outcome, which is
+    // announced. A refused join is said by the reloaded challenge's reason,
+    // in place of the error, which would repeat it.
     const answered = join.isSuccess || join.isError || abandon.isSuccess;
     // A refused abandon (challenge ended) says why: the reloaded challenge
-    // would not. The error takes the focus once the button is gone.
+    // would not. It takes the focus once the dialog is closed.
     const abandonError = translateError(abandon.error);
+    const showsReason = challenge.my_status !== 'active' || answered;
     return (
       <>
         {abandonError && (
           <p
-            ref={(element) => {
-              if (!canAbandon) focusOnce(element, 'abandonError');
-            }}
-            tabIndex={canAbandon ? undefined : -1}
+            ref={(element) => focusOnce(element, 'abandonError')}
+            tabIndex={-1}
             role="alert"
             className="mt-4 font-semibold"
           >
             {t(abandonError.key, abandonError.values)}
           </p>
         )}
-        <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {showsReason && (
           <p
             ref={(element) => {
               if (answered) focusOnce(element, abandon.isSuccess ? 'abandon' : 'join');
             }}
             tabIndex={answered ? -1 : undefined}
             role={join.isError ? 'alert' : answered ? 'status' : undefined}
-            className="text-sm text-muted"
+            className="mt-4 text-sm text-muted"
           >
             {reason}
           </p>
-          {canAbandon && (
-            <>
-              <button
-                type="button"
-                // Not `disabled`: the focus comes back here when the dialog
-                // closes, and a disabled button would drop it while sending.
-                aria-disabled={abandon.isPending}
-                onClick={() => {
-                  if (!abandon.isPending) setConfirming('abandon');
-                }}
-                className="h-13 flex-none rounded-full border border-border bg-surface px-6 font-bold aria-disabled:opacity-60"
-              >
-                {abandon.isPending
-                  ? t('challengeDetail.abandon.busy')
-                  : t('challengeDetail.abandon.button')}
-              </button>
-              <ConfirmDialog
-                open={confirming === 'abandon'}
-                variant="danger"
-                title={t('challengeDetail.abandon.title', { title: challenge.title })}
-                message={t('challengeDetail.abandon.message')}
-                confirmLabel={t('challengeDetail.abandon.confirm')}
-                cancelLabel={t('challengeDetail.abandon.cancel')}
-                onConfirm={() => {
-                  setConfirming(null);
-                  abandon.mutate();
-                }}
-                onCancel={() => setConfirming(null)}
-              />
-            </>
-          )}
-        </div>
+        )}
+        <ConfirmDialog
+          open={abandoning}
+          variant="danger"
+          title={t('challengeDetail.abandon.title', { title: challenge.title })}
+          message={t('challengeDetail.abandon.message')}
+          confirmLabel={t('challengeDetail.abandon.confirm')}
+          cancelLabel={t('challengeDetail.abandon.cancel')}
+          onConfirm={() => {
+            onAbandonClose();
+            if (abandon.isPending) return;
+            // A new attempt: its refusal takes the focus again.
+            focusedOutcome.current = null;
+            abandon.mutate();
+          }}
+          onCancel={() => {
+            // Given up: a previous refusal goes away, as for the deletion.
+            if (!abandon.isPending) abandon.reset();
+            onAbandonClose();
+          }}
+        />
       </>
     );
   }
@@ -127,23 +123,23 @@ export function ChallengeParticipation({ challenge }: { challenge: ChallengeDeta
           // and a disabled button would drop it while the join is sent.
           aria-disabled={join.isPending}
           onClick={() => {
-            if (!join.isPending) setConfirming('join');
+            if (!join.isPending) setJoining(true);
           }}
           className="h-13 flex-none rounded-full bg-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60"
         >
           {join.isPending ? t('challengeDetail.join.busy') : t('challengeDetail.join.button')}
         </button>
         <ConfirmDialog
-          open={confirming === 'join'}
+          open={joining}
           title={t('challengeDetail.join.title', { title: challenge.title })}
           message={t('challengeDetail.join.message')}
           confirmLabel={t('challengeDetail.join.confirm')}
           cancelLabel={t('challengeDetail.join.cancel')}
           onConfirm={() => {
-            setConfirming(null);
+            setJoining(false);
             join.mutate();
           }}
-          onCancel={() => setConfirming(null)}
+          onCancel={() => setJoining(false)}
         />
       </div>
     </>

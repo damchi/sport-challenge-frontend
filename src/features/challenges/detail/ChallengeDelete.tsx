@@ -11,14 +11,28 @@ import { inputClass } from '../create/fields';
  * Deletes a challenge, for its creators (the server's role), at any time,
  * finished included. The confirmation says that everything disappears for
  * every participant, and asks to type the challenge's title before it
- * deletes. Deleted: back to the home page.
+ * deletes. Opened from the page's menu (`open`); `onClose` gives the focus
+ * back. Deleted: back to the home page.
  */
-export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
+export function ChallengeDelete({
+  challenge,
+  open,
+  onClose,
+}: {
+  challenge: ChallengeDetail;
+  open: boolean;
+  onClose: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const remove = useDeleteChallenge(challenge.id);
-  const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState('');
+  // A new attempt: the title typed before and the previous refusal go away.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setTyped('');
+  }
   const inputId = useId();
 
   if (challenge.my_role !== 'creator') return null;
@@ -32,37 +46,21 @@ export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
   const matches = typed.trim() === challenge.title.trim();
 
   return (
-    <div className="mt-3 flex flex-col items-start gap-3">
-      <button
-        type="button"
-        // Not `disabled`: the focus comes back here when the dialog closes,
-        // and a disabled button would drop it while the deletion is sent.
-        aria-disabled={remove.isPending}
-        onClick={() => {
-          if (remove.isPending) return;
-          // A new attempt: the previous refusal goes away.
-          remove.reset();
-          setTyped('');
-          setConfirming(true);
-        }}
-        className="h-11 rounded-full border border-border bg-surface px-4 text-sm font-bold aria-disabled:opacity-60"
-      >
-        {remove.isPending ? t('challengeDetail.delete.busy') : t('challengeDetail.delete.button')}
-      </button>
-      {message && (
+    <>
+      {message && !open && (
         // The dialog is closed: the refusal takes the focus, once (a new
-        // attempt clears it first).
+        // attempt hides it first).
         <p
           ref={focusOnMount}
           tabIndex={-1}
           role="alert"
-          className="text-sm font-semibold text-risk-fg"
+          className="mt-3 text-sm font-semibold text-risk-fg"
         >
           {t(message.key, message.values)}
         </p>
       )}
       <ConfirmDialog
-        open={confirming}
+        open={open}
         title={t('challengeDetail.delete.title', { title: challenge.title })}
         message={t('challengeDetail.delete.message')}
         confirmDisabled={!matches}
@@ -70,12 +68,16 @@ export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
         confirmLabel={t('challengeDetail.delete.confirm')}
         cancelLabel={t('challengeDetail.delete.cancel')}
         onConfirm={() => {
-          setConfirming(false);
+          onClose();
+          if (remove.isPending) return;
           remove.mutate(undefined, {
             onSuccess: () => void navigate('/', { replace: true }),
           });
         }}
-        onCancel={() => setConfirming(false)}
+        onCancel={() => {
+          remove.reset();
+          onClose();
+        }}
       >
         <div className="mt-4">
           <label htmlFor={inputId} className="block text-sm font-semibold text-ink break-words">
@@ -96,6 +98,6 @@ export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
           </p>
         </div>
       </ConfirmDialog>
-    </div>
+    </>
   );
 }

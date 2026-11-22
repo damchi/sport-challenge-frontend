@@ -56,6 +56,8 @@ export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_,
     title: `Défi ${index + 1}`,
     visibility: index % 4 === 3 ? 'private' : 'public',
     timezone: 'America/Montreal',
+    // The ride challenge (mockRideChallengeId) is run in cycling.
+    reference_sport: index === 4 ? 'ride' : 'run',
     starts_at: '2026-11-02T05:00:00Z',
     ends_at: '2026-11-30T05:00:00Z',
     participant_count: (index % 7) + 1,
@@ -134,6 +136,7 @@ export function mockChallengeDetail(summary: ChallengeSummary): ChallengeDetail 
     registration_deadline: '2026-11-09T05:00:00Z',
     current_week: ongoing ? 3 : null,
     week_ends_at: ongoing ? '2026-11-23T05:00:00Z' : null,
+    week_count: 4,
   };
 }
 
@@ -206,7 +209,7 @@ function mockRanking(
       provisional_points: null,
     });
   }
-  return { type, entries };
+  return { type, ranked_count: ranked.length, entries };
 }
 
 /** The leaderboard of every mock challenge, with ties in each category. */

@@ -436,7 +436,15 @@
   },
   "challengeDetail": {
     "title": "Défi",
-    "back": "Défis",
+    "back": "Mes défis",
+    "menu": "Plus d'actions",
+    "participating": "Tu participes",
+    "categoryCount_one": "{{count}} catégorie",
+    "categoryCount_many": "{{count}} catégories",
+    "categoryCount_other": "{{count}} catégories",
+    "weekOf": "Semaine {{week}} sur {{count}}",
+    "weekBanner": "Semaine {{week}} · se termine {{date}}",
+    "weekBanner_zone": "Semaine {{week}} · se termine {{date}}, {{zone}}",
     "timeZone": "Fuseau du défi : {{zone}}",
     "week": "Semaine {{week}}",
     "weekEnds": "Fin de la semaine : {{date}}",
@@ -444,8 +452,9 @@
     "registrationOpen": "Inscriptions ouvertes jusqu'au {{date}}.",
     "registrationOpen_zone": "Inscriptions ouvertes jusqu'au {{date}}, {{zone}}.",
     "categories": {
-      "title": "Catégories",
-      "frozen": "Fixées à la création, elles ne changent plus.",
+      "title": "Règles des catégories",
+      "frozen": "Fixées à la création du défi, elles ne changent plus.",
+      "reference": "Référence : {{sport}} ({{factor}}).",
       "elimination": "{{sport}} avec élimination",
       "points": "Grand prix",
       "eliminationGeneric": "Élimination",
@@ -485,7 +494,6 @@
     },
     "abandon": {
       "button": "Abandonner le défi",
-      "busy": "Abandon…",
       "title": "Abandonner « {{title}} » ?",
       "message": "C'est définitif : tu es éliminé de toutes les catégories et tu apparais « A abandonné » dans les classements, hors podium. Tu ne pourras plus rejoindre ce défi.",
       "confirm": "Abandonner",
@@ -539,7 +547,6 @@
     },
     "delete": {
       "button": "Supprimer le défi",
-      "busy": "Suppression…",
       "title": "Supprimer « {{title}} » ?",
       "message": "C'est définitif : le défi et ses classements disparaissent pour tous ses participants. Personne ne pourra plus l'ouvrir.",
       "typeTitle": "Pour confirmer, écris le titre du défi : « {{title}} »",
@@ -563,10 +570,10 @@
     "strength": "Renforcement musculaire"
   },
   "leaderboard": {
-    "label": "Classement du défi",
     "categories": "Catégorie du classement",
+    "title": "Classement · {{category}}",
     "podium": "Podium",
-    "ranking": "Classement complet",
+    "ranking": "Suite du classement",
     "rank_ordinal_one": "{{count}}er",
     "rank_ordinal_other": "{{count}}e",
     "out": "Éliminés",
@@ -585,8 +592,7 @@
     "empty": "Personne n'est encore classé dans ce défi.",
     "final": "Résultats définitifs : le défi s'est terminé le {{date}}",
     "final_zone": "Résultats définitifs : le défi s'est terminé le {{date}}, {{zone}}",
-    "updated": "Mis à jour : {{date}}",
-    "updated_zone": "Mis à jour : {{date}}, {{zone}}",
+    "updated": "Classements mis à jour : {{date}}",
     "elimination": {
       "reached": "Objectif atteint",
       "in_progress": "En cours",
@@ -595,6 +601,14 @@
       "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
       "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu fais plus que le minimum, ta distance devient la nouvelle base."
     }
+  },
+  "standings": {
+    "title": "Où tu en es",
+    "time": "tous sports confondus",
+    "distance": "en équivalent {{sport}}",
+    "elimination": "en {{sport}}",
+    "eliminationWeek": "en {{sport}}, cette semaine",
+    "eliminationValue": "{{done}} / {{minimum}}"
   },
   "invitations": {
     "button": "Inviter des amis",

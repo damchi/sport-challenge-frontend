@@ -349,9 +349,10 @@ Les réglages (langue, thème, déconnexion) sont dans l'onglet Profil ; le thè
 
 ## Écrans de référence
 
-Captures dans `docs/design/maquettes/` : `accueil.png`, `defi.png`,
-`classement.png` (mobile clair), `*-sombre.png` (mobile sombre),
-`*-web.png` (web à 1280 px).
+Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
+(mobile clair), `*-sombre.png` (mobile sombre), `*-web.png` (web à
+1280 px) ; page d'un défi : `Web · Page d'un défi · catégories@2x.png` et
+`Mobile · Page d'un défi · catégories@2x.png`.
 
 1. **Accueil « Mes défis »**
    - Mobile : salutation + titre (bouton notifications en V3) ; bandeau de
@@ -365,17 +366,38 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `defi.png`,
      (même ordre) terminée par « Créer un défi » ; colonne latérale = bandeau
      de clôture puis carte « Dernières activités » (les trois dernières, avec
      le défi concerné et la contribution, lien « Tout voir »).
-2. **Page d'un défi**
-   - Mobile : retour, bouton « Inviter » ; titre et méta (participants,
-     sports, « Semaine 3 sur 4 ») ; bloc « Ta semaine » ; classement de la
-     semaine (top 5, ma ligne visible même si je suis plus bas, lien « Tout
-     voir ») ; tuiles « Tes semaines ».
-   - Web : lien « ‹ Mes défis » ; titre et méta à gauche, « Inviter des
-     amis » à droite ; colonne de gauche = bloc « Ta semaine » puis tuiles
-     « Tes semaines » ; colonne de droite = **classement complet** (pas un
-     top 5) dans une carte, avec le sélecteur « Semaine N » / « Général », la
-     phrase de contexte, toutes les lignes en course, puis « N éliminés » et
-     le lien « Tableau complet » vers la page Classement.
+2. **Page d'un défi** (maquettes `Web · Page d'un défi · catégories@2x.png`
+   et `Mobile · Page d'un défi · catégories@2x.png`, décisions du 2026-11-21)
+   - En-tête : retour (flèche seule en mobile, « ‹ Mes défis » à partir de
+     `md`) ; titre ; à droite « Inviter des amis » (bouton secondaire, rond à
+     icône seule en mobile, selon les droits d'invitation) et un bouton rond
+     « … » (menu des actions du rôle : Modifier et Supprimer pour un
+     créateur, Abandonner pour un participant actif d'un défi non terminé ;
+     absent s'il est vide) ; méta « 8 participants · 4 catégories · Semaine 3
+     sur 4 » (`participant_count`, `categories`, `current_week`,
+     `week_count`) et pastille « Tu participes » (participant actif) ;
+     description. Plus de pastilles de statut ni de rôle.
+   - Bandeau de clôture pleine largeur (défi en cours) : « Semaine 3 · se
+     termine samedi 28 novembre à 0 h » (fuseau du défi, nommé s'il diffère)
+     et « Classements mis à jour : … » (`computed_at`). Défi terminé : la
+     ligne « Résultats définitifs » à sa place. Défi à venir : rien.
+   - « Où tu en es » (participant actif d'un défi commencé) : une carte par
+     catégorie dans leur ordre (grille en web, défilement horizontal en
+     mobile) : libellé en majuscules avec icône, grand chiffre, sous-titre,
+     rang « 4e sur 8 » (`ranked_count`) ; élimination : « 18 km / 25 km »,
+     barre, badge de statut, bordure à risque ; Grand prix : points et
+     points provisoires. Chaque carte est un lien qui choisit la catégorie
+     du classement ; celle affichée a la bordure accent et le fond accent
+     léger.
+   - Colonne de gauche : onglets Classement / Participants / Activités ;
+     carte « Classement · <catégorie> » avec la phrase de la catégorie,
+     podium (3 colonnes, ex æquo compris), « Suite du classement » et
+     « Éliminés ». Sans cartes (visiteur, abandon, défi à venir), un
+     sélecteur à onglets choisit la catégorie.
+   - Colonne de droite : carte « Règles des catégories » (période et
+     visibilité en tête, puis la règle et les réglages de chaque catégorie,
+     coefficients en deux colonnes et sport de référence) ; en mobile, une
+     section repliable sous le classement.
 3. **Classement**
    - Mobile : retour, titre et nom du défi ; sélecteur « Semaine N » /
      « Général » ; phrase de contexte (objectif, clôture et fuseau) ; liste

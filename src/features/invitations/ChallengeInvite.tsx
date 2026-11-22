@@ -18,8 +18,8 @@ const BUTTON =
  * creates a link, valid until the end of week 1: the user copies it, or
  * shares it with the system's share sheet where the browser has one. When
  * the copy fails, the link is selected for a copy by hand. Made for the
- * header's wrapping row: the button sits next to the title, the link below
- * it, on a line of its own. Tests give `now`.
+ * header's grid: the button is a cell (round, its icon alone, on a phone),
+ * the link a row of its own below. Tests give `now`.
  */
 export function ChallengeInvite({
   challenge,
@@ -56,7 +56,7 @@ export function ChallengeInvite({
 
   if (!created) {
     return (
-      <div className="flex-none">
+      <div>
         <button
           type="button"
           // Not `disabled`: a disabled button would drop the focus while sending.
@@ -64,13 +64,15 @@ export function ChallengeInvite({
           onClick={() => {
             if (!create.isPending) create.mutate();
           }}
-          className={BUTTON}
+          className={`${BUTTON} w-11 px-0 md:w-auto md:px-4`}
         >
           <UserPlus aria-hidden="true" size={20} strokeWidth={2} />
-          {create.isPending ? t('invitations.busy') : t('invitations.button')}
+          <span className="sr-only md:not-sr-only">
+            {create.isPending ? t('invitations.busy') : t('invitations.button')}
+          </span>
         </button>
         {errorKey && (
-          <p role="alert" className="mt-2 max-w-xs font-semibold">
+          <p role="alert" className="mt-2 max-w-48 text-sm font-semibold md:max-w-xs">
             {t(errorKey.key, errorKey.values)}
           </p>
         )}
@@ -121,7 +123,7 @@ export function ChallengeInvite({
   return (
     <section
       aria-labelledby={headingId}
-      className="basis-full rounded-card border border-border bg-surface p-4"
+      className="col-span-full rounded-card border border-border bg-surface p-4"
     >
       <h2 id={headingId} className="font-display text-lg font-bold">
         {t('invitations.heading')}

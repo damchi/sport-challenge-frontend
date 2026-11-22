@@ -1,4 +1,3 @@
-import { Flag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
 import { useChallenge, useLeaderboard, type LeaderboardEntry } from '../../api/hooks/useChallenges';
@@ -7,16 +6,13 @@ import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../domain/challenge';
-import {
-  challengeLastDay,
-  challengeTime,
-  otherTimeZoneName,
-  timeZoneName,
-} from '../../domain/format/challengeDates';
+import { timeZoneName } from '../../domain/format/challengeDates';
 import { sharedRanks } from '../../domain/format/rank';
-import { useCategoryName } from '../challenges/detail/categoryNames';
+import { useSportName } from '../challenges/create/useSportName';
+import { CATEGORY_EXPLANATIONS, useCategoryName } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
 import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
+import { hasStandings, myLines, shownCategory } from './shownCategory';
 
 const SEGMENT =
   'min-h-11 min-w-fit flex-1 rounded-tab px-2 py-1 text-sm leading-tight font-semibold';
@@ -30,13 +26,14 @@ const OFFSCREEN_ROW = '-m-1 p-1 [content-visibility:auto] [contain-intrinsic-siz
 
 /**
  * Leaderboard tab of a challenge: one category at a time, among the 1 to 4
- * the challenge has (its choice lives in the address, ?category=; no choice
- * with a single category), with its podium (ranks 1 to 3, ties included),
- * its full ranking and, apart, the participants who abandoned or, in the
- * elimination, were eliminated. Ranks, order and statuses are the server's.
- * The user's row stands out and stays on screen. No live update in V1: it
- * says when the server computed it. Once the challenge is finished (the
- * server's status), its results are final: it says so, with its last day and year.
+ * the challenge has (its choice lives in the address, ?category=, set by
+ * the cards of « Où tu en es »; without them, by a selector here, and no
+ * choice with a single category), with what it ranks, its podium (ranks 1
+ * to 3, ties included), the rest of its ranking and, apart, the
+ * participants who abandoned or, in the elimination, were eliminated.
+ * Ranks, order and statuses are the server's. The user's row stands out
+ * and stays on screen. No live update in V1: the page's banner says when
+ * the server computed it, or that the results are final.
  * Rendered under the challenge page, which has already loaded the challenge.
  */
 export function ChallengeLeaderboard() {
@@ -49,6 +46,7 @@ export function ChallengeLeaderboard() {
   // A hook comes before the early returns; the name is only read once the
   // challenge has loaded, so the fallback never shows.
   const categoryName = useCategoryName(challenge.data?.reference_sport ?? 'run');
+  const sportName = useSportName();
 
   if (!challenge.data) return null;
   if (leaderboard.isPending) return <LoadingState />;
@@ -56,18 +54,15 @@ export function ChallengeLeaderboard() {
     return <ErrorState error={leaderboard.error} onRetry={() => void leaderboard.refetch()} />;
   }
 
-  const { categories, computed_at: computedAt } = leaderboard.data;
-  const category =
-    categories.find((candidate) => candidate.type === params.get('category')) ?? categories[0];
+  const { categories } = leaderboard.data;
+  const category = shownCategory(categories, params.get('category'));
   if (!category) return <EmptyState message={t('leaderboard.empty')} />;
 
   const locale = i18n.resolvedLanguage ?? 'fr';
   const { timezone } = challenge.data;
-  const zone = otherTimeZoneName(
-    timezone,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    locale,
-  );
+  const name = categoryName(category.type);
+  // The cards of « Où tu en es », when the page shows them, choose the category.
+  const cardsChoose = hasStandings(challenge.data) && myLines(categories, me.data?.id).length > 0;
 
   const choose = (type: string) => {
     const next = new URLSearchParams(params);
@@ -79,7 +74,9 @@ export function ChallengeLeaderboard() {
     entry.abandoned || (entry.elimination?.eliminated_week ?? null) !== null;
   const ranked = category.entries.filter((entry) => !isOut(entry));
   const out = category.entries.filter(isOut);
-  const podium = ranked.filter((entry) => entry.rank !== null && entry.rank <= 3);
+  const onPodium = (entry: LeaderboardEntry) => entry.rank !== null && entry.rank <= 3;
+  const podium = ranked.filter(onPodium);
+  const rest = ranked.filter((entry) => !onPodium(entry));
   const ties = sharedRanks(ranked.map((entry) => entry.rank));
   const linked = canSeeParticipantActivities(challenge.data.my_role);
   const rowProps = (userId: string) => ({
@@ -89,13 +86,16 @@ export function ChallengeLeaderboard() {
   });
 
   return (
-    <section aria-label={t('leaderboard.label')}>
-      {categories.length > 1 ? (
+    <section
+      aria-labelledby="leaderboard-title"
+      className="rounded-card border border-border bg-surface p-3 md:p-4 lg:p-5"
+    >
+      {categories.length > 1 && !cardsChoose && (
         <div
           role="group"
           aria-label={t('leaderboard.categories')}
           // The categories share a line, and wrap when the text is enlarged.
-          className="flex flex-wrap rounded-row bg-segment p-1"
+          className="mb-4 flex flex-wrap rounded-row bg-segment p-1"
         >
           {categories.map(({ type }) => (
             <button
@@ -109,28 +109,15 @@ export function ChallengeLeaderboard() {
             </button>
           ))}
         </div>
-      ) : (
-        <p className="font-semibold">{categoryName(category.type)}</p>
       )}
-
-      {challenge.data.status === 'finished' ? (
-        <p className="mt-3 flex items-start gap-2 text-sm font-semibold text-ink">
-          <Flag aria-hidden="true" size={16} strokeWidth={2} className="mt-0.5 flex-none" />
-          {t('leaderboard.final', {
-            date: challengeLastDay(challenge.data.ends_at, timezone, locale),
-            zone,
-            context: zone && 'zone',
-          })}
-        </p>
-      ) : (
-        <p className="mt-2 text-xs text-muted">
-          {t('leaderboard.updated', {
-            date: challengeTime(computedAt, timezone, locale),
-            zone,
-            context: zone && 'zone',
-          })}
-        </p>
-      )}
+      <h2 id="leaderboard-title" className="font-display text-lg font-bold">
+        {t('leaderboard.title', { category: name })}
+      </h2>
+      <p className="mt-1 text-sm text-muted">
+        {t(CATEGORY_EXPLANATIONS[category.type], {
+          sport: sportName(challenge.data.reference_sport),
+        })}
+      </p>
 
       {/* While the server still gives provisional points: until the last
           week locks, after the challenge's end too. */}
@@ -143,7 +130,7 @@ export function ChallengeLeaderboard() {
 
       {/* Only during the weeks of the challenge: the minimum then applies. */}
       {category.type === 'elimination' && challenge.data.current_week !== null && (
-        <EliminationContext challenge={challenge.data} weekEndsAt={challenge.data.week_ends_at} />
+        <EliminationContext challenge={challenge.data} />
       )}
 
       {category.entries.length === 0 ? (
@@ -154,15 +141,15 @@ export function ChallengeLeaderboard() {
         <>
           {podium.length > 0 && (
             <section aria-labelledby="leaderboard-podium" className="mt-5">
-              <h2 id="leaderboard-podium" className="text-sm font-bold text-muted uppercase">
+              <h3 id="leaderboard-podium" className="text-sm font-bold text-muted uppercase">
                 {t('leaderboard.podium')}
-              </h2>
-              <ol className="mt-2 flex flex-wrap gap-2">
+              </h3>
+              <ol className="mt-2 grid grid-cols-3 gap-2">
                 {podium.map((entry) => (
                   <li
                     key={entry.user.id}
-                    // Three cards side by side at 360 px; ties add more, which wrap.
-                    className="flex min-w-0 flex-[1_1_6rem]"
+                    // Three cards side by side at 360 px; ties add more, on a new row.
+                    className="flex min-w-0"
                   >
                     <PodiumCard
                       entry={entry}
@@ -176,13 +163,13 @@ export function ChallengeLeaderboard() {
             </section>
           )}
 
-          {ranked.length > 0 && (
+          {rest.length > 0 && (
             <section aria-labelledby="leaderboard-ranking" className="mt-6">
-              <h2 id="leaderboard-ranking" className="text-sm font-bold text-muted uppercase">
+              <h3 id="leaderboard-ranking" className="text-sm font-bold text-muted uppercase">
                 {t('leaderboard.ranking')}
-              </h2>
+              </h3>
               <ol className="mt-2 grid grid-cols-1 gap-2">
-                {ranked.map((entry) => {
+                {rest.map((entry) => {
                   const props = rowProps(entry.user.id);
                   return (
                     <li
@@ -209,9 +196,9 @@ export function ChallengeLeaderboard() {
 
           {out.length > 0 && (
             <section aria-labelledby="leaderboard-out" className="mt-6">
-              <h2 id="leaderboard-out" className="text-sm font-bold text-muted uppercase">
+              <h3 id="leaderboard-out" className="text-sm font-bold text-muted uppercase">
                 {t('leaderboard.out')}
-              </h2>
+              </h3>
               <ul className="mt-2 grid grid-cols-1 gap-2">
                 {out.map((entry) => (
                   <li key={entry.user.id} className={OFFSCREEN_ROW}>

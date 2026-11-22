@@ -25,6 +25,7 @@ const base: ChallengeDetail = {
 };
 
 const OPEN = 'Modifier le titre et la description';
+const MENU = "Plus d'actions";
 
 let updates: ChallengeUpdate[] = [];
 
@@ -59,9 +60,15 @@ function renderChallenge(deviceTimeZone = 'America/Montreal') {
   );
 }
 
+/** The edit button, in the header's menu, opened. */
+async function editButton() {
+  fireEvent.click(await screen.findByRole('button', { name: MENU }));
+  return screen.getByRole('button', { name: OPEN });
+}
+
 async function openForm() {
   renderChallenge();
-  fireEvent.click(await screen.findByRole('button', { name: OPEN }));
+  fireEvent.click(await editButton());
   return screen.getByRole('form', { name: 'Modifier le défi' });
 }
 
@@ -81,7 +88,7 @@ describe('ChallengeEdit', () => {
       answer({ status });
       renderChallenge();
 
-      expect(await screen.findByRole('button', { name: OPEN })).toBeInTheDocument();
+      expect(await editButton()).toBeInTheDocument();
     },
   );
 
@@ -94,6 +101,9 @@ describe('ChallengeEdit', () => {
       expect(
         await screen.findByRole('heading', { level: 1, name: 'Défi de novembre' }),
       ).toBeInTheDocument();
+      // A participant's menu has abandoning only; the others have no menu.
+      const menu = screen.queryByRole('button', { name: MENU });
+      if (menu) fireEvent.click(menu);
       expect(screen.queryByRole('button', { name: OPEN })).not.toBeInTheDocument();
     },
   );
@@ -126,7 +136,7 @@ describe('ChallengeEdit', () => {
 
   it('names the challenge time zone by its dates when the device is elsewhere', async () => {
     renderChallenge('Europe/Paris');
-    fireEvent.click(await screen.findByRole('button', { name: OPEN }));
+    fireEvent.click(await editButton());
     const form = screen.getByRole('form', { name: 'Modifier le défi' });
 
     expect(within(form).getByText(/^Fuseau du défi : /)).toBeInTheDocument();
@@ -188,10 +198,11 @@ describe('ChallengeEdit', () => {
     expect(updates).toEqual([{ title: 'Défi de décembre', description: '' }]);
     expect(screen.queryByRole('form')).not.toBeInTheDocument();
     expect(screen.queryByText('Bougez !')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: OPEN })).toHaveFocus();
+    // The focus is back on the menu's button.
+    expect(screen.getByRole('button', { name: MENU })).toHaveFocus();
   });
 
-  it('closes without sending on cancel, the focus back on the button', async () => {
+  it('closes without sending on cancel, the focus back on the menu', async () => {
     const form = await openForm();
 
     fireEvent.change(within(form).getByRole('textbox', { name: 'Titre' }), {
@@ -201,7 +212,8 @@ describe('ChallengeEdit', () => {
 
     expect(screen.queryByRole('form')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Défi de novembre' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: OPEN })).toHaveFocus();
+    // The focus is back on the menu's button.
+    expect(screen.getByRole('button', { name: MENU })).toHaveFocus();
     expect(updates).toHaveLength(0);
   });
 

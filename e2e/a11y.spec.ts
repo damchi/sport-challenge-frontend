@@ -68,8 +68,17 @@ test('the empty state has no serious accessibility violation', async ({ network,
   expect(await seriousViolations(page)).toEqual([]);
 });
 
+test('the menu of a challenge has no serious accessibility violation', async ({ page }) => {
+  await signInAt(page, `/challenges/${CHALLENGE_ID}`);
+  await page.getByRole('button', { name: "Plus d'actions" }).click();
+  await expect(page.getByRole('button', { name: 'Abandonner le défi' })).toBeVisible();
+
+  expect(await seriousViolations(page)).toEqual([]);
+});
+
 test('the abandon dialog has no serious accessibility violation', async ({ page }) => {
   await signInAt(page, `/challenges/${CHALLENGE_ID}`);
+  await page.getByRole('button', { name: "Plus d'actions" }).click();
   await page.getByRole('button', { name: 'Abandonner le défi' }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
 

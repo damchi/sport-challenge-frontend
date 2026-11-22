@@ -49,8 +49,14 @@ function renderAt(path = `/challenges/${id}/activities`) {
   return router;
 }
 
+/** The delete button, in the header's menu, opened. */
+const deleteButton = async () => {
+  fireEvent.click(await screen.findByRole('button', { name: "Plus d'actions" }));
+  return screen.getByRole('button', { name: 'Supprimer le défi' });
+};
+
 const openConfirmation = async () => {
-  fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le défi' }));
+  fireEvent.click(await deleteButton());
   return screen.getByRole('dialog', { name: `Supprimer « ${summary.title} » ?` });
 };
 
@@ -66,6 +72,9 @@ describe('ChallengeDelete', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: summary.title }),
     ).toBeInTheDocument();
+    // A participant's menu has abandoning only.
+    fireEvent.click(screen.getByRole('button', { name: "Plus d'actions" }));
+    expect(screen.getByRole('button', { name: 'Abandonner le défi' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Supprimer le défi' })).not.toBeInTheDocument();
   });
 
@@ -73,7 +82,7 @@ describe('ChallengeDelete', () => {
     answer({ my_status: 'abandoned' });
     renderAt();
 
-    expect(await screen.findByRole('button', { name: 'Supprimer le défi' })).toBeInTheDocument();
+    expect(await deleteButton()).toBeInTheDocument();
   });
 
   it('warns that everything disappears and waits for the typed title', async () => {

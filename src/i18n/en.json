@@ -433,7 +433,14 @@
   },
   "challengeDetail": {
     "title": "Challenge",
-    "back": "Challenges",
+    "back": "My challenges",
+    "menu": "More actions",
+    "participating": "You're in",
+    "categoryCount_one": "{{count}} category",
+    "categoryCount_other": "{{count}} categories",
+    "weekOf": "Week {{week}} of {{count}}",
+    "weekBanner": "Week {{week}} · ends {{date}}",
+    "weekBanner_zone": "Week {{week}} · ends {{date}}, {{zone}}",
     "timeZone": "Challenge time zone: {{zone}}",
     "week": "Week {{week}}",
     "weekEnds": "Week ends {{date}}",
@@ -441,8 +448,9 @@
     "registrationOpen": "Registration open until {{date}}.",
     "registrationOpen_zone": "Registration open until {{date}}, {{zone}}.",
     "categories": {
-      "title": "Categories",
-      "frozen": "Set at creation, they no longer change.",
+      "title": "Category rules",
+      "frozen": "Set when the challenge was created, they no longer change.",
+      "reference": "Reference: {{sport}} ({{factor}}).",
       "elimination": "{{sport}} with elimination",
       "points": "Grand Prix",
       "eliminationGeneric": "Elimination",
@@ -482,7 +490,6 @@
     },
     "abandon": {
       "button": "Abandon the challenge",
-      "busy": "Abandoning…",
       "title": "Abandon “{{title}}”?",
       "message": "This is final: you are eliminated from every category and shown as “Abandoned” in the leaderboards, off the podium. You won't be able to join this challenge again.",
       "confirm": "Abandon",
@@ -536,7 +543,6 @@
     },
     "delete": {
       "button": "Delete the challenge",
-      "busy": "Deleting…",
       "title": "Delete “{{title}}”?",
       "message": "This is final: the challenge and its leaderboards disappear for all its participants. No one will be able to open it again.",
       "typeTitle": "To confirm, type the challenge's title: “{{title}}”",
@@ -560,10 +566,10 @@
     "strength": "Strength training"
   },
   "leaderboard": {
-    "label": "Challenge leaderboard",
     "categories": "Leaderboard category",
+    "title": "Leaderboard · {{category}}",
     "podium": "Podium",
-    "ranking": "Full ranking",
+    "ranking": "Rest of the ranking",
     "rank_ordinal_one": "{{count}}st",
     "rank_ordinal_two": "{{count}}nd",
     "rank_ordinal_few": "{{count}}rd",
@@ -582,8 +588,7 @@
     "empty": "No one is ranked in this challenge yet.",
     "final": "Final results: the challenge ended on {{date}}",
     "final_zone": "Final results: the challenge ended on {{date}}, {{zone}}",
-    "updated": "Updated {{date}}",
-    "updated_zone": "Updated {{date}}, {{zone}}",
+    "updated": "Leaderboards updated {{date}}",
     "elimination": {
       "reached": "Goal reached",
       "in_progress": "In progress",
@@ -592,6 +597,14 @@
       "firstWeek": "No elimination in week 1: the first minimum applies in week 2.",
       "rule": "Next week's minimum = your distance this week + {{step}}. Go beyond the minimum and your distance becomes the new base."
     }
+  },
+  "standings": {
+    "title": "Where you stand",
+    "time": "all sports together",
+    "distance": "in {{sport}} equivalent",
+    "elimination": "{{sport}} only",
+    "eliminationWeek": "{{sport}} only, this week",
+    "eliminationValue": "{{done}} / {{minimum}}"
   },
   "invitations": {
     "button": "Invite friends",

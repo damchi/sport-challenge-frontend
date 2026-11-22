@@ -87,9 +87,9 @@ function runner(pseudo: string, rank: number, value: number, elimination: Partia
 }
 
 const threeCategories: Leaderboard['categories'] = [
-  { type: 'cumulative_time', entries: time },
-  { type: 'cumulative_distance', entries: [entry('nina', 1, 12_500)] },
-  { type: 'elimination', entries: [entry('hugo', 1, 8_000)] },
+  { type: 'cumulative_time', ranked_count: 0, entries: time },
+  { type: 'cumulative_distance', ranked_count: 0, entries: [entry('nina', 1, 12_500)] },
+  { type: 'elimination', ranked_count: 0, entries: [entry('hugo', 1, 8_000)] },
 ];
 
 function renderAt(path: string) {
@@ -126,13 +126,9 @@ describe('ChallengeLeaderboard', () => {
     expect(third).not.toHaveTextContent('ex æquo');
     expect(within(third).getByText('1:05')).toBeInTheDocument();
 
-    const rows = within(await section('Classement complet')).getAllByRole('listitem');
-    expect(rows.map((row) => row.querySelector('span')?.textContent)).toEqual([
-      '1 ex æquo',
-      '1 ex æquo',
-      '3',
-      '4',
-    ]);
+    // The podium's ranks are not repeated below it.
+    const rows = within(await section('Suite du classement')).getAllByRole('listitem');
+    expect(rows.map((row) => row.querySelector('span')?.textContent)).toEqual(['4']);
   });
 
   it('highlights the user, named Toi, and keeps the row on screen', async () => {
@@ -140,12 +136,11 @@ describe('ChallengeLeaderboard', () => {
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
-    const rows = within(await section('Classement complet')).getAllByRole('listitem');
-    const mine = rows[3];
+    const rows = within(await section('Suite du classement')).getAllByRole('listitem');
+    const mine = rows[0];
     expect(mine).toHaveTextContent('Toi');
     expect(mine).toHaveTextContent('0:45');
     expect(mine).toHaveClass('sticky');
-    expect(rows[0]).not.toHaveClass('sticky');
   });
 
   it('leaves the rows off screen to the browser, the sticky row of the user aside', async () => {
@@ -156,14 +151,16 @@ describe('ChallengeLeaderboard', () => {
     leaderboard([
       {
         type: 'cumulative_time',
+        ranked_count: 0,
         entries: [...many, entry('marie_92', 31, 1_000, mockMe.id), entry('leo', null, null)],
       },
     ]);
     renderAt(`/challenges/${id}`);
 
-    const rows = within(await section('Classement complet')).getAllByRole('listitem');
-    // Skipped, not removed: the browser's find and screen readers reach every row.
-    expect(rows).toHaveLength(31);
+    const rows = within(await section('Suite du classement')).getAllByRole('listitem');
+    // Skipped, not removed: the browser's find and screen readers reach every
+    // row (the first three are on the podium).
+    expect(rows).toHaveLength(28);
     const mine = rows.at(-1);
     expect(mine).toHaveTextContent('Toi');
     expect(mine).toHaveClass('sticky');
@@ -185,7 +182,7 @@ describe('ChallengeLeaderboard', () => {
     expect(within(out).getByText('leo')).toBeInTheDocument();
     expect(within(out).getByText('A abandonné')).toBeInTheDocument();
     expect(within(await section('Podium')).queryByText('leo')).not.toBeInTheDocument();
-    expect(within(await section('Classement complet')).queryByText('leo')).not.toBeInTheDocument();
+    expect(within(await section('Suite du classement')).queryByText('leo')).not.toBeInTheDocument();
   });
 
   it('puts every participant of the first three ranks on the podium, ties included', async () => {
@@ -193,6 +190,7 @@ describe('ChallengeLeaderboard', () => {
     leaderboard([
       {
         type: 'cumulative_time',
+        ranked_count: 0,
         entries: [
           entry('julie', 1, 9_000),
           entry('marc', 2, 8_000),
@@ -214,6 +212,7 @@ describe('ChallengeLeaderboard', () => {
     leaderboard([
       {
         type: 'cumulative_time',
+        ranked_count: 0,
         entries: [entry('julie', 1, 9_000), entry('marie_92', null, null, mockMe.id)],
       },
     ]);
@@ -222,21 +221,25 @@ describe('ChallengeLeaderboard', () => {
     const out = await section('Éliminés');
     expect(within(out).getByText('Toi')).toBeInTheDocument();
     expect(within(await section('Podium')).queryByText('Toi')).not.toBeInTheDocument();
-    expect(within(await section('Classement complet')).queryByText('Toi')).not.toBeInTheDocument();
+    // Julie alone is ranked, on the podium: nothing follows.
+    expect(screen.queryByRole('region', { name: 'Suite du classement' })).not.toBeInTheDocument();
   });
 
   it('shows only the participants who abandoned when no one is ranked', async () => {
     answer();
-    leaderboard([{ type: 'cumulative_time', entries: [entry('leo', null, null)] }]);
+    leaderboard([
+      { type: 'cumulative_time', ranked_count: 0, entries: [entry('leo', null, null)] },
+    ]);
     renderAt(`/challenges/${id}`);
 
     expect(within(await section('Éliminés')).getByText('leo')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Podium' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Classement complet' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Suite du classement' })).not.toBeInTheDocument();
   });
 
   it('shows each category with its own value, the choice kept in the address', async () => {
-    answer();
+    // No « Où tu en es » for a visitor: a selector chooses the category.
+    answer({ my_role: 'outsider', my_status: null });
     leaderboard(threeCategories);
     const router = renderAt(`/challenges/${id}`);
 
@@ -258,6 +261,8 @@ describe('ChallengeLeaderboard', () => {
 
   it('names the reference sport of a cycling challenge in its tabs and values', async () => {
     answer({
+      my_role: 'outsider',
+      my_status: null,
       reference_sport: 'ride',
       categories: [
         { type: 'cumulative_time', position: 1, params: {} },
@@ -274,10 +279,10 @@ describe('ChallengeLeaderboard', () => {
   });
 
   it('shows two categories only, as the challenge has them', async () => {
-    answer();
+    answer({ my_role: 'outsider', my_status: null });
     leaderboard([
-      { type: 'cumulative_time', entries: time },
-      { type: 'elimination', entries: [entry('hugo', 1, 8_000)] },
+      { type: 'cumulative_time', ranked_count: 0, entries: time },
+      { type: 'elimination', ranked_count: 0, entries: [entry('hugo', 1, 8_000)] },
     ]);
     renderAt(`/challenges/${id}`);
 
@@ -292,7 +297,7 @@ describe('ChallengeLeaderboard', () => {
 
   it('offers no category choice when the challenge has the cumulative time only', async () => {
     answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
-    leaderboard([{ type: 'cumulative_time', entries: time }]);
+    leaderboard([{ type: 'cumulative_time', ranked_count: 0, entries: time }]);
     // A category the challenge lacks falls back on its first one.
     renderAt(`/challenges/${id}?category=elimination`);
 
@@ -300,9 +305,9 @@ describe('ChallengeLeaderboard', () => {
     expect(
       screen.queryByRole('group', { name: 'Catégorie du classement' }),
     ).not.toBeInTheDocument();
-    // Named once, above its ranking.
+    // Named in the title of its ranking.
     expect(
-      within(await section('Classement du défi')).getByText('Temps cumulé'),
+      screen.getByRole('heading', { level: 2, name: 'Classement · Temps cumulé' }),
     ).toBeInTheDocument();
   });
 
@@ -311,9 +316,7 @@ describe('ChallengeLeaderboard', () => {
     leaderboard(threeCategories);
     const router = renderAt(`/challenges/${id}?category=elimination`);
 
-    fireEvent.click(
-      within(await section('Classement complet')).getByRole('link', { name: /hugo/ }),
-    );
+    fireEvent.click(within(await section('Podium')).getByRole('link', { name: /hugo/ }));
     // Once the code of the participant's page has loaded.
     await waitFor(() =>
       expect(router.state.location.pathname).toMatch(
@@ -327,7 +330,7 @@ describe('ChallengeLeaderboard', () => {
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
-    const ranking = await section('Classement complet');
+    const ranking = await section('Classement · Temps cumulé');
     expect(within(ranking).getByText('julie')).toBeInTheDocument();
     expect(within(ranking).queryByRole('link')).not.toBeInTheDocument();
   });
@@ -335,9 +338,9 @@ describe('ChallengeLeaderboard', () => {
   it('says when no one is ranked yet', async () => {
     answer();
     leaderboard([
-      { type: 'cumulative_time', entries: [] },
-      { type: 'cumulative_distance', entries: [] },
-      { type: 'elimination', entries: [] },
+      { type: 'cumulative_time', ranked_count: 0, entries: [] },
+      { type: 'cumulative_distance', ranked_count: 0, entries: [] },
+      { type: 'elimination', ranked_count: 0, entries: [] },
     ]);
     renderAt(`/challenges/${id}`);
 
@@ -411,7 +414,7 @@ describe('ChallengeLeaderboard, refresh', () => {
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
-    expect(await screen.findByText('Mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+    expect(await screen.findByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
   });
 
   it('names the challenge time zone when the device is elsewhere', async () => {
@@ -420,9 +423,13 @@ describe('ChallengeLeaderboard, refresh', () => {
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
+    // Named once, with the end of the week.
     expect(
-      await screen.findByText('Mis à jour : 18 nov., 10:00, heure de l’Est nord-américain'),
+      await screen.findByText(
+        'Semaine 3 · se termine lundi 23 novembre à 00 h, heure de l’Est nord-américain',
+      ),
     ).toBeInTheDocument();
+    expect(await screen.findByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
   });
 
   it('reloads when the page comes back into view, not before it is stale', async () => {
@@ -443,7 +450,7 @@ describe('ChallengeLeaderboard, refresh', () => {
       }),
     );
     renderAt(`/challenges/${id}`);
-    expect(await screen.findByText('Mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+    expect(await screen.findByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
     expect(calls).toBe(1);
 
     const comeBack = () =>
@@ -453,11 +460,11 @@ describe('ChallengeLeaderboard, refresh', () => {
     // Still fresh: no request, the time stays.
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(calls).toBe(1);
-    expect(screen.getByText('Mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+    expect(screen.getByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
 
     vi.setSystemTime(new Date('2026-11-18T15:20:30Z'));
     comeBack();
-    expect(await screen.findByText('Mis à jour : 18 nov., 10:20')).toBeInTheDocument();
+    expect(await screen.findByText('Classements mis à jour : 18 nov., 10:20')).toBeInTheDocument();
     expect(calls).toBe(2);
   });
 });
@@ -479,7 +486,7 @@ describe('ChallengeLeaderboard, finished challenge', () => {
       await screen.findByText("Résultats définitifs : le défi s'est terminé le 29 nov. 2026"),
     ).toBeInTheDocument();
     // Frozen: no update time to follow.
-    expect(screen.queryByText(/Mis à jour/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/mis à jour/)).not.toBeInTheDocument();
     expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(3);
   });
 
@@ -516,7 +523,7 @@ describe('ChallengeLeaderboard, finished challenge', () => {
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
-    expect(await screen.findByText(/Mis à jour/)).toBeInTheDocument();
+    expect(await screen.findByText(/mis à jour/)).toBeInTheDocument();
     expect(screen.queryByText(/Résultats définitifs/)).not.toBeInTheDocument();
   });
 });
@@ -527,25 +534,26 @@ describe('ChallengeLeaderboard, elimination', () => {
   });
 
   const at = `/challenges/${id}?category=elimination`;
-  const board = () => screen.findByRole('region', { name: 'Classement du défi' });
+  const board = () => section('Classement · Course avec élimination');
 
   it('shows each live status with its icon, the minimum, the distance run and the week end', async () => {
     answer({ current_week: 3 });
     leaderboard([
       {
         type: 'elimination',
+        ranked_count: 0,
         entries: [
-          runner('julie', 1, 30_000, {
+          runner('julie', 4, 30_000, {
             status: 'reached',
             minimum_meters: 10_000,
             distance_meters: 12_000,
           }),
-          runner('marc', 2, 25_000, {
+          runner('marc', 5, 25_000, {
             status: 'in_progress',
             minimum_meters: 10_000,
             distance_meters: 4_500,
           }),
-          runner('sofia', 3, 20_000, {
+          runner('sofia', 6, 20_000, {
             status: 'at_risk',
             minimum_meters: 9_000,
             distance_meters: 2_000,
@@ -555,7 +563,7 @@ describe('ChallengeLeaderboard, elimination', () => {
     ]);
     renderAt(at);
 
-    const rows = within(await section('Classement complet')).getAllByRole('listitem');
+    const rows = within(await section('Suite du classement')).getAllByRole('listitem');
     const [reached, running, risk] = rows as [HTMLElement, HTMLElement, HTMLElement];
     for (const [row, label, progress] of [
       [reached, 'Objectif atteint', '12 km sur 10 km cette semaine'],
@@ -570,14 +578,14 @@ describe('ChallengeLeaderboard, elimination', () => {
     expect(risk.firstElementChild).toHaveClass('border-risk-border');
     expect(reached.firstElementChild).not.toHaveClass('border-risk-border');
     expect(
-      // The hour of the challenge's time zone, whatever the device's.
-      within(await board()).getByText(/^Fin de la semaine : lundi 23 novembre à 00 h/),
+      // The hour of the challenge's time zone, whatever the device's, in the page's banner.
+      screen.getByText(/^Semaine 3 · se termine lundi 23 novembre à 00 h/),
     ).toBeInTheDocument();
   });
 
   it.each([
-    ['America/Montreal', /^Fin de la semaine : lundi 23 novembre à 00 h$/],
-    ['Europe/Paris', /^Fin de la semaine : lundi 23 novembre à 00 h, \S/],
+    ['America/Montreal', /^Semaine 3 · se termine lundi 23 novembre à 00 h$/],
+    ['Europe/Paris', /^Semaine 3 · se termine lundi 23 novembre à 00 h, \S/],
   ])(
     'names the time zone of the week end only when the device is elsewhere (%s)',
     async (device, text) => {
@@ -591,12 +599,13 @@ describe('ChallengeLeaderboard, elimination', () => {
       leaderboard([
         {
           type: 'elimination',
+          ranked_count: 0,
           entries: [runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 })],
         },
       ]);
       renderAt(at);
 
-      expect(within(await board()).getByText(text)).toBeInTheDocument();
+      expect(await screen.findByText(text)).toBeInTheDocument();
     },
   );
 
@@ -605,6 +614,7 @@ describe('ChallengeLeaderboard, elimination', () => {
     leaderboard([
       {
         type: 'elimination',
+        ranked_count: 0,
         entries: [runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 })],
       },
     ]);
@@ -622,7 +632,8 @@ describe('ChallengeLeaderboard, elimination', () => {
     leaderboard([
       {
         type: 'elimination',
-        entries: [runner('julie', 1, 6_000, { distance_meters: 6_000 })],
+        ranked_count: 0,
+        entries: [runner('julie', 4, 6_000, { distance_meters: 6_000 })],
       },
     ]);
     renderAt(at);
@@ -632,7 +643,7 @@ describe('ChallengeLeaderboard, elimination', () => {
         "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
       ),
     ).toBeInTheDocument();
-    const ranking = await section('Classement complet');
+    const ranking = await section('Suite du classement');
     expect(within(ranking).queryByText(/cette semaine/)).not.toBeInTheDocument();
     expect(
       within(ranking).queryByText(/Objectif atteint|En cours|À risque/),
@@ -643,9 +654,10 @@ describe('ChallengeLeaderboard, elimination', () => {
     answer({ current_week: 3 });
     const hugo = '10000000-0000-4000-8000-000000000999';
     leaderboard([
-      { type: 'cumulative_time', entries: [entry('hugo', 1, 9_000, hugo)] },
+      { type: 'cumulative_time', ranked_count: 0, entries: [entry('hugo', 1, 9_000, hugo)] },
       {
         type: 'elimination',
+        ranked_count: 0,
         entries: [
           runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 }),
           {
@@ -668,11 +680,11 @@ describe('ChallengeLeaderboard, elimination', () => {
       expect.stringContaining('A abandonné'),
     ]);
     expect(out[0]).toHaveTextContent('hugo');
-    expect(within(await section('Classement complet')).queryByText('hugo')).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Suite du classement' })).not.toBeInTheDocument();
     expect(within(await section('Podium')).queryByText('hugo')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Temps cumulé' }));
-    expect(within(await section('Classement complet')).getByText('hugo')).toBeInTheDocument();
+    expect(within(await section('Podium')).getByText('hugo')).toBeInTheDocument();
   });
 
   it('keeps the at risk status of the user, whose row is highlighted', async () => {
@@ -680,21 +692,22 @@ describe('ChallengeLeaderboard, elimination', () => {
     leaderboard([
       {
         type: 'elimination',
+        ranked_count: 0,
         entries: [
           {
-            ...runner('marie_92', 1, 9_000, {
+            ...runner('marie_92', 4, 9_000, {
               status: 'at_risk',
               minimum_meters: 9_000,
               distance_meters: 3_000,
             }),
-            user: { ...entry('marie_92', 1, 0).user, id: mockMe.id },
+            user: { ...entry('marie_92', 4, 0).user, id: mockMe.id },
           },
         ],
       },
     ]);
     renderAt(at);
 
-    const [mine] = within(await section('Classement complet')).getAllByRole('listitem');
+    const [mine] = within(await section('Suite du classement')).getAllByRole('listitem');
     expect(mine).toHaveTextContent('Toi');
     expect(within(mine as HTMLElement).getByText('À risque')).toBeInTheDocument();
   });
@@ -704,6 +717,7 @@ describe('ChallengeLeaderboard, elimination', () => {
     leaderboard([
       {
         type: 'elimination',
+        ranked_count: 0,
         entries: [
           runner('julie', 1, 30_000, { status: 'reached', minimum_meters: 10_000 }),
           {
@@ -723,7 +737,8 @@ describe('ChallengeLeaderboard, elimination', () => {
     expect(mine).toHaveTextContent('Toi');
     expect(mine).toHaveTextContent('Éliminé en semaine 2');
     expect(mine).not.toHaveClass('sticky');
-    expect(within(await section('Classement complet')).queryByText('Toi')).not.toBeInTheDocument();
+    // Julie alone is ranked, on the podium: nothing follows.
+    expect(screen.queryByRole('region', { name: 'Suite du classement' })).not.toBeInTheDocument();
   });
 
   it('shows neither status nor week end outside the weeks of the challenge', async () => {
@@ -731,15 +746,42 @@ describe('ChallengeLeaderboard, elimination', () => {
     leaderboard([
       {
         type: 'elimination',
-        entries: [runner('julie', 1, 30_000, { week_ends_at: null })],
+        ranked_count: 0,
+        entries: [runner('julie', 4, 30_000, { week_ends_at: null })],
       },
     ]);
     renderAt(at);
 
-    const ranking = await section('Classement complet');
+    const ranking = await section('Suite du classement');
     expect(within(ranking).queryByText(/cette semaine/)).not.toBeInTheDocument();
-    expect(within(await board()).queryByText(/Fin de la semaine/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/se termine/)).not.toBeInTheDocument();
     expect(within(await board()).queryByText(/Le minimum de la semaine/)).not.toBeInTheDocument();
+  });
+});
+
+describe('ChallengeLeaderboard, eliminated after the end', () => {
+  it('keeps the eliminated off the podium once the challenge is finished', async () => {
+    answer({ status: 'finished', current_week: null, week_ends_at: null });
+    leaderboard([
+      {
+        type: 'elimination',
+        ranked_count: 1,
+        entries: [
+          runner('julie', 1, 30_000, { week_ends_at: null }),
+          runner('hugo', 2, 40_000, {
+            status: 'eliminated',
+            eliminated_week: 2,
+            week_ends_at: null,
+          }),
+        ],
+      },
+    ]);
+    renderAt(`/challenges/${id}?category=elimination`);
+
+    const podium = await section('Podium');
+    expect(within(podium).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(podium).queryByText('hugo')).not.toBeInTheDocument();
+    expect(within(await section('Éliminés')).getByText('hugo')).toBeInTheDocument();
   });
 });
 
@@ -755,8 +797,8 @@ describe('ChallengeLeaderboard, points', () => {
   });
 
   const withPoints = (entries: LeaderboardEntry[]): Leaderboard['categories'] => [
-    { type: 'cumulative_time', entries: time },
-    { type: 'points', entries },
+    { type: 'cumulative_time', ranked_count: 0, entries: time },
+    { type: 'points', ranked_count: 0, entries },
   ];
 
   const pointsDetail = {
@@ -770,15 +812,6 @@ describe('ChallengeLeaderboard, points', () => {
     ],
   } satisfies Partial<ChallengeDetail>;
 
-  async function openPoints() {
-    fireEvent.click(
-      within(await screen.findByRole('group', { name: 'Catégorie du classement' })).getByRole(
-        'button',
-        { name: 'Grand prix' },
-      ),
-    );
-  }
-
   it('shows the points acquired, ranked on them alone, and the provisional ones apart', async () => {
     deviceIn(summary.timezone);
     answer(pointsDetail);
@@ -791,9 +824,7 @@ describe('ChallengeLeaderboard, points', () => {
         entry('leo', null, null),
       ]),
     );
-    renderAt(`/challenges/${id}`);
-
-    await openPoints();
+    renderAt(`/challenges/${id}?category=points`);
 
     const podium = within(await section('Podium')).getAllByRole('listitem');
     const [first, second, third] = podium as [HTMLElement, HTMLElement, HTMLElement];
@@ -807,8 +838,7 @@ describe('ChallengeLeaderboard, points', () => {
     expect(third).toHaveTextContent('1 pt');
     expect(third).not.toHaveTextContent('provisoire');
 
-    const rows = within(await section('Classement complet')).getAllByRole('listitem');
-    expect(rows[0]).toHaveTextContent('43 pts + 12 pts provisoires');
+    expect(first).toHaveTextContent('43 pts + 12 pts provisoires');
     expect(within(await section('Éliminés')).getByText('A abandonné')).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -821,9 +851,7 @@ describe('ChallengeLeaderboard, points', () => {
     deviceIn(summary.timezone);
     answer({ ...pointsDetail, status: 'finished', current_week: null, week_ends_at: null });
     leaderboard(withPoints([scorer('julie', 1, 55, null), scorer('marc', 2, 40, null)]));
-    renderAt(`/challenges/${id}`);
-
-    await openPoints();
+    renderAt(`/challenges/${id}?category=points`);
 
     expect(within(await section('Podium')).getByText('55 pts')).toBeInTheDocument();
     expect(screen.queryByText(/provisoire/)).not.toBeInTheDocument();
@@ -833,9 +861,7 @@ describe('ChallengeLeaderboard, points', () => {
     deviceIn(summary.timezone);
     answer({ ...pointsDetail, status: 'finished', current_week: null, week_ends_at: null });
     leaderboard(withPoints([scorer('julie', 1, 43, 10), scorer('marc', 2, 40, null)]));
-    renderAt(`/challenges/${id}`);
-
-    await openPoints();
+    renderAt(`/challenges/${id}?category=points`);
 
     expect(within(await section('Podium')).getByText('+ 10 pts provisoires')).toBeInTheDocument();
     expect(screen.getByText(/^Les points d'une semaine sont acquis à 7 h/)).toBeInTheDocument();
