@@ -394,10 +394,30 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      podium (3 colonnes, ex æquo compris), « Suite du classement » et
      « Éliminés ». Sans cartes (visiteur, abandon, défi à venir), un
      sélecteur à onglets choisit la catégorie.
-   - Colonne de droite : carte « Règles des catégories » (période et
-     visibilité en tête, puis la règle et les réglages de chaque catégorie,
-     coefficients en deux colonnes et sport de référence) ; en mobile, une
-     section repliable sous le classement.
+   - Sous les onglets, « Comment on gagne » (une carte par catégorie : règle,
+     réglages figés, « Le plus de … gagne ») ; colonne de droite, « Détails »
+     (période, durée, fuseau, visibilité, invitations, sport de référence,
+     coefficients en pastilles) ; en mobile, dans cet ordre sous le classement.
+     Mêmes encarts que la page d'un défi à venir (décision du 2026-11-22).
+2 bis. **Page d'un défi à venir** (maquettes `Web · Défi à venir@2x.png` et
+   `mobile defis a venir.png`, décisions du 2026-11-22)
+   - En-tête : pastilles « À venir · Public/Privé · Tu participes » au-dessus
+     du titre, description ; « Inviter des amis » en bouton principal et
+     menu « … » à droite. Pas de ligne de faits.
+   - Bandeau « Départ dans » (fond `--color-surface-raised`) : compte à
+     rebours jours / h / min, départ dans le fuseau du défi (nommé s'il
+     diffère), « N semaines, jusqu'au … inclus » (`week_count`), frise
+     S1…Sn (dates de chaque semaine : à venir du backend, SC-API-143), phrase
+     « Seules les activités faites à partir du départ compteront ».
+   - Pas d'onglets avant le départ. Colonne principale : carte
+     « Participants » (inscrits seulement : invitations par lien), « Comment
+     on gagne » (une carte par catégorie : icône, règle, « Le plus de … gagne »).
+     Colonne latérale : « Détails » (période, durée, fuseau, visibilité,
+     invitations, sport de référence, coefficients en pastilles, la
+     référence en accent) puis, pour un créateur, la carte pointillée « Tu as
+     créé ce défi » (titre et description modifiables) avec « Modifier le
+     défi ». En mobile, tout s'empile dans cet ordre.
+   - L'encart du lien d'invitation de la maquette n'est pas fait.
 3. **Classement**
    - Mobile : retour, titre et nom du défi ; sélecteur « Semaine N » /
      « Général » ; phrase de contexte (objectif, clôture et fuseau) ; liste

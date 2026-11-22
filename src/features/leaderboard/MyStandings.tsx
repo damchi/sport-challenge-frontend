@@ -1,4 +1,3 @@
-import { Flag, Route, Star, Timer, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useMatch, useSearchParams } from 'react-router';
 import {
@@ -10,6 +9,7 @@ import {
 import { useMe } from '../../api/hooks/useMe';
 import { formatKm } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
+import { CATEGORY_ICONS } from '../challenges/detail/categoryIcons';
 import { useCategoryName } from '../challenges/detail/categoryNames';
 import { useSportName } from '../challenges/create/useSportName';
 import { EliminationStatusPill } from './EliminationProgress';
@@ -17,14 +17,6 @@ import { minimumShare, STATUS_BARS } from './eliminationWeek';
 import { hasStandings, myLines, shownCategory } from './shownCategory';
 
 type CategoryRanking = Leaderboard['categories'][number];
-type CategoryType = CategoryRanking['type'];
-
-const ICONS: Record<CategoryType, LucideIcon> = {
-  cumulative_time: Timer,
-  cumulative_distance: Route,
-  elimination: Flag,
-  points: Star,
-};
 
 const CARD = 'flex h-full min-h-40 flex-col gap-1 rounded-card p-4';
 const CARD_ON = 'border-2 border-accent bg-accent-soft';
@@ -105,7 +97,7 @@ function StandingCard({
   const sportName = useSportName();
   // Inside a sentence: "en équivalent course".
   const sport = sportName(referenceSport).toLocaleLowerCase(locale);
-  const Icon = ICONS[category.type];
+  const Icon = CATEGORY_ICONS[category.type];
   const elimination = entry.elimination;
   const status =
     elimination?.status && elimination.status !== 'eliminated' ? elimination.status : null;

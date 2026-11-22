@@ -234,7 +234,6 @@ describe('MyStandings', () => {
   it.each([
     ['a visitor', { my_role: 'outsider', my_status: null }],
     ['a participant who abandoned', { my_role: 'abandoned', my_status: 'abandoned' }],
-    ['an upcoming challenge', { status: 'upcoming', current_week: null, week_ends_at: null }],
   ] as const)('is not shown to %s', async (_, detail) => {
     answer(detail);
     leaderboard(fourRankings);

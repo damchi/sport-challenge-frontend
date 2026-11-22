@@ -10,8 +10,10 @@ import { inputClass } from '../challenges/create/fields';
 
 type Notice = 'copied' | 'copyFailed' | 'shareFailed';
 
-const BUTTON =
-  'inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-bold aria-disabled:opacity-60';
+const BUTTON_BASE =
+  'inline-flex h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold aria-disabled:opacity-60';
+const BUTTON = `${BUTTON_BASE} border border-border bg-surface`;
+const BUTTON_PRIMARY = `${BUTTON_BASE} bg-accent text-on-accent`;
 
 /**
  * Invitation to a challenge, for those who may invite (canInvite). The button
@@ -24,9 +26,12 @@ const BUTTON =
 export function ChallengeInvite({
   challenge,
   now: givenNow,
+  primary = false,
 }: {
   challenge: ChallengeDetail;
   now?: Date;
+  /** The page's main action (before the start): the accent button. */
+  primary?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const [now] = useState(() => givenNow ?? new Date());
@@ -64,7 +69,7 @@ export function ChallengeInvite({
           onClick={() => {
             if (!create.isPending) create.mutate();
           }}
-          className={`${BUTTON} w-11 px-0 md:w-auto md:px-4`}
+          className={`${primary ? BUTTON_PRIMARY : BUTTON} w-11 px-0 md:w-auto md:px-4`}
         >
           <UserPlus aria-hidden="true" size={20} strokeWidth={2} />
           <span className="sr-only md:not-sr-only">

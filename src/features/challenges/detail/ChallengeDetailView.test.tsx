@@ -131,17 +131,6 @@ describe('ChallengeDetailView', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows neither week nor banner before the start', async () => {
-    answer({ status: 'upcoming', current_week: null, week_ends_at: null });
-    renderAt(`/challenges/${id}`);
-
-    expect(await title()).toBeInTheDocument();
-    expect(screen.getByText('3 catégories')).toBeInTheDocument();
-    expect(screen.queryByText(/Semaine \d sur/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/se termine/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Résultats définitifs/)).not.toBeInTheDocument();
-  });
-
   it('says the results are final in place of the banner once finished', async () => {
     answer({ status: 'finished', current_week: null, week_ends_at: null });
     renderAt(`/challenges/${id}`);
@@ -517,13 +506,9 @@ describe('ChallengeDetailView', () => {
     });
   });
 
-  /** « Règles des catégories », unfolded: a section to open on a phone, as in tests. */
-  async function rules(name = 'Règles des catégories') {
-    const summary = await screen.findByText(name);
-    const details = summary.closest('details');
-    if (!details) throw new Error('No rules section');
-    fireEvent.click(summary);
-    return details;
+  /** « Comment on gagne » of the page. */
+  async function howToWin(name = 'Comment on gagne') {
+    return (await screen.findByRole('heading', { name })).parentElement as HTMLElement;
   }
 
   /** The names of the categories, in their order. */
@@ -532,61 +517,69 @@ describe('ChallengeDetailView', () => {
       .getAllByRole('heading', { level: 3 })
       .map((heading) => heading.textContent);
 
-  it('shows the rules read only, with the period, the visibility and the frozen settings', async () => {
-    answer({ visibility: 'private' });
+  /** The rows of « Détails », as [term, value]. */
+  const detailRows = (section: HTMLElement) =>
+    within(section)
+      .getAllByRole('term')
+      .map((term) => [term.textContent, term.nextElementSibling?.textContent]);
+
+  it('says how each category is won, with its frozen settings, below the sections', async () => {
+    answer({});
     renderAt(`/challenges/${id}`);
 
-    const section = await rules();
-    expect(within(section).getByText('Du 2 nov. au 29 nov.')).toBeInTheDocument();
-    expect(within(section).getByText('Privé')).toBeInTheDocument();
-    expect(within(section).queryByText(/Fuseau du défi/)).not.toBeInTheDocument();
+    const section = await howToWin();
     expect(categoryNames(section)).toEqual([
       'Temps cumulé',
       'Distance cumulée',
       'Course avec élimination',
     ]);
     expect(
-      within(section).getByText('Le temps total de toutes les activités, tous sports confondus.'),
+      within(section).getByText('Le plus de temps cumulé, tous sports confondus, gagne'),
     ).toBeInTheDocument();
-    const factors = within(section)
-      .getAllByRole('listitem')
-      .map((item) => item.textContent);
-    expect(factors).toEqual(expect.arrayContaining(['Course×1', 'Vélo×0,3']));
-    expect(within(section).getByText('Référence : course (×1).')).toBeInTheDocument();
     expect(within(section).getByText('Incrément X : 2 km')).toBeInTheDocument();
-    expect(within(section).queryByRole('textbox')).not.toBeInTheDocument();
+    // Listed once, in the details.
+    expect(within(section).queryByText(/×0,3/)).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Sections du défi' })).toBeInTheDocument();
   });
 
-  it('names the challenge time zone in the rules when the device is elsewhere', async () => {
-    answer({});
-    renderAt(`/challenges/${id}`, 'Europe/Paris');
-
-    expect(within(await rules()).getByText(/^Fuseau du défi : /)).toBeInTheDocument();
-  });
-
-  it('shows the rules as a side card on a wide screen', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      (query: string) =>
-        ({
-          matches: query === '(min-width: 1024px)',
-          addEventListener: () => undefined,
-          removeEventListener: () => undefined,
-        }) as unknown as MediaQueryList,
-    );
-    answer({});
+  it('shows the details of an ongoing challenge, read only, with its factors', async () => {
+    answer({ visibility: 'private' });
     renderAt(`/challenges/${id}`);
 
-    const section = await screen.findByRole('region', { name: 'Règles des catégories' });
-    expect(section.tagName).toBe('SECTION');
-    expect(categoryNames(section)).toHaveLength(3);
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(detailRows(details)).toEqual([
+      ['Période', 'Du 2 nov. au 29 nov.'],
+      ['Durée', '4 semaines'],
+      ['Fuseau', 'heure de l’Est nord-américain'],
+      ['Visibilité', 'Privé'],
+      ['Invitations', 'Les participants peuvent inviter'],
+      ['Sport de référence', 'Course'],
+    ]);
+    expect(
+      within(details)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Course ×1', 'Aviron ×0,5', 'Marche ×1', 'Vélo ×0,3']);
+    expect(within(details).getByText('Référence : course (×1).')).toBeInTheDocument();
+    expect(within(details).queryByRole('textbox')).not.toBeInTheDocument();
   });
 
   it('shows only the cumulative time of a challenge that has no other category', async () => {
     answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
     renderAt(`/challenges/${id}`);
 
-    expect(categoryNames(await rules())).toEqual(['Temps cumulé']);
+    const section = await howToWin();
+    expect(categoryNames(section)).toEqual(['Temps cumulé']);
+    expect(
+      within(section).getByText(
+        '1 catégorie, avec son classement et son podium. Fixée à la création.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(await screen.findByRole('region', { name: 'Détails' })).queryByText(
+        'Coefficients de distance',
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('shows two categories in their order, without the missing one', async () => {
@@ -598,7 +591,7 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await rules();
+    const section = await howToWin();
     expect(categoryNames(section)).toEqual(['Temps cumulé', 'Course avec élimination']);
     expect(within(section).getByText('Incrément X : 3 km')).toBeInTheDocument();
   });
@@ -618,13 +611,15 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await rules();
+    const section = await howToWin();
     expect(within(section).getByText('Vélo avec élimination')).toBeInTheDocument();
-    expect(within(section).getByText('Référence : vélo (×1).')).toBeInTheDocument();
     expect(within(section).getByText(/^Vélo seulement, en distance réelle/)).toBeInTheDocument();
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(within(details).getByText('Référence : vélo (×1).')).toBeInTheDocument();
+    expect(within(details).getAllByRole('listitem')[0]).toHaveTextContent('Vélo ×1');
   });
 
-  it('shows the criteria, the scale and the minimum of the points, with their factors', async () => {
+  it('shows the criteria, the scale and the minimum of the points, and their factors', async () => {
     answer({
       categories: [
         { type: 'cumulative_time', position: 1, params: {} },
@@ -642,24 +637,28 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await rules();
-    expect(categoryNames(section)).toEqual(['Temps cumulé', 'Grand prix']);
+    const section = await howToWin();
     for (const text of [
       'Séance la plus longue en distance équivalente',
       'Nombre de séances',
       'Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point',
       'Une séance compte à partir de 20 min',
-      'Référence : course (×1).',
     ]) {
       expect(within(section).getByText(text)).toBeInTheDocument();
     }
+    // The factors of the points, without a total distance: in the details.
+    const details = await screen.findByRole('region', { name: 'Détails' });
+    expect(
+      within(details)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Course ×1', 'Vélo ×0,3']);
   });
 
-  it('lists the factors once, under the total distance, and no minimum without the sessions', async () => {
+  it('gives no minimum session without the number of sessions', async () => {
     answer({
       categories: [
         { type: 'cumulative_time', position: 1, params: {} },
-        { type: 'cumulative_distance', position: 2, params: { factors: { run: 1, ride: 0.3 } } },
         {
           type: 'points',
           position: 4,
@@ -674,8 +673,7 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await rules();
-    expect(within(section).getAllByText('Référence : course (×1).')).toHaveLength(1);
+    const section = await howToWin();
     expect(
       within(section).getByText('Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points'),
     ).toBeInTheDocument();
@@ -693,7 +691,7 @@ describe('ChallengeDetailView', () => {
     });
     renderAt(`/challenges/${id}`);
 
-    const section = await rules('Category rules');
+    const section = await howToWin('How to win');
     expect(within(section).getByText('Cycling with elimination')).toBeInTheDocument();
   });
 
