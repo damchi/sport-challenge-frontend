@@ -30,6 +30,8 @@ Le job `production` lit en plus les variables de l'Environment `production` (`GC
 
 ## 2. Déployer
 
+**Prérequis** : la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5, étape 3). Sinon les deux jobs du workflow sont ignorés, à la fusion comme à la main : rien n'est publié et rien n'échoue.
+
 **Cas normal** : fusionner la pull request dans `main`. Une fois la CI verte, le workflow Deploy construit le site puis attend l'approbation de l'Environment `production`.
 
 1. Actions > Deploy > le run du commit > **Review deployments** > `production` > Approve.
@@ -111,7 +113,7 @@ Conséquences :
 - [ ] **Jeux de test de bout en bout verts** : le job `end-to-end (Playwright)` de la CI est vert sur le commit déployé (Actions > CI > run de `main`). Ils couvrent connexion et onboarding, création de challenge, invitation, activité, classement, suppression de compte, clavier et accessibilité, en taille téléphone et bureau.
 - [ ] **Suppression de compte testée** : couverte par `e2e/accountDeletion.spec.ts` (mocks) ; à faire aussi **une fois en production** avec un compte de test qui n'est le dernier créateur d'aucun challenge à venir ou en cours (sinon l'API refuse) : profil (`/me`) > « Supprimer mon compte », cocher la confirmation, écran « Compte supprimé », « Terminer » ramène à la connexion Auth0. Vérifier ensuite que l'utilisateur a disparu du tenant Auth0 (le backend le supprime, et rejoue l'appel en cas d'échec) et que le compte n'apparaît plus dans les challenges qu'il avait rejoints.
 - [ ] **Aucune variable secrète dans le bundle** :
-  - `grep -n 'secrets' .github/workflows/deploy.yml` ne renvoie rien : le build ne reçoit que des variables du dépôt ;
+  - `grep -nE 'secrets *[.:[]|\( *secrets' .github/workflows/deploy.yml` ne renvoie rien (ni `secrets.X`, ni `secrets: inherit`, ni `toJSON(secrets)`) : le build ne reçoit que des variables du dépôt ;
   - `git ls-files '.env*'` ne liste que `.env.example` : un `.env` ou un `.env.production` versionné serait lu par le build de la CI ;
   - les variables `VITE_*` du dépôt sont exactement celles du §1, avec des valeurs publiques (adresses, identifiants publics, DSN Sentry) ;
   - sur l'**artefact réellement publié** (pas un build local, qui lit les `.env*` du poste) : `gh run download <run du Deploy> -n site -D <dossier vide>`, puis `grep -ohE '\{BASE_URL:[^}]*\}' <dossier>/dist/assets/*.js` donne **exactement une** correspondance, qui ne contient que `BASE_URL`, `DEV`, `MODE`, `PROD`, `SSR` et les variables du §1. Aucune correspondance invalide le contrôle (la lecture de `import.meta.env` dans `src/lib/config.ts` a changé) : l'adapter avant de conclure.
@@ -119,4 +121,4 @@ Conséquences :
 - [ ] Le test de fumée du dernier déploiement est vert et le site répond avec ses en-têtes (`curl -sI https://sport-challenge-prod.web.app/`).
 - [ ] Adresses Auth0 (§4) et origine CORS du backend déclarées pour l'adresse réelle du site ; une connexion de bout en bout réussit en production, sur téléphone.
 - [ ] Si `VITE_SENTRY_DSN` est renseignée : une erreur de test arrive dans Sentry sans nom, e-mail, jeton (d'accès ou d'invitation : l'adresse `/invite#…` arrive sans son fragment) ni adresse IP (option « Prevent Storing of IP Addresses » active sur le projet).
-- [ ] L'Environment `production` exige un reviewer, est limité à `main`, sans contournement par les administrateurs (`docs/deploiement.md` §5).
+- [ ] L'Environment `production` exige un reviewer, est limité à `main`, sans contournement par les administrateurs, et la variable du dépôt `DEPLOY_PRODUCTION` vaut `true` (`docs/deploiement.md` §5).
