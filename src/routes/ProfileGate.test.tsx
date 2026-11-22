@@ -63,20 +63,35 @@ describe('ProfileGate', () => {
     expect(await screen.findByText('app page')).toBeInTheDocument();
   });
 
-  it('sends a complete profile away from /onboarding, to the page first asked for', async () => {
-    const router = renderGate({ pathname: '/onboarding', state: { returnTo: '/challenges/42' } });
+  it('sends a complete profile away from /onboarding, back to the invitation it broke into', async () => {
+    const router = renderGate({
+      pathname: '/onboarding',
+      state: { returnTo: '/invite#token-123' },
+    });
 
     expect(await screen.findByText('app page')).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/challenges/42');
+    expect(router.state.location.pathname).toBe('/invite');
+    expect(router.state.location.hash).toBe('#token-123');
   });
 
-  it.each([{ returnTo: 'https://evil.example' }, { returnTo: 42 }, null])(
-    'falls back on the home page for the state %j',
+  it.each([
+    { returnTo: '/challenges/new' },
+    { returnTo: '/challenges/42' },
+    { returnTo: '/invitex#token-123' },
+    { returnTo: '/invite/42' },
+    { returnTo: 'https://evil.example/invite#token-123' },
+    { returnTo: '//evil.example/invite' },
+    { returnTo: '/.//evil.example/invite' },
+    { returnTo: 42 },
+    null,
+  ])(
+    'sends a complete profile away from /onboarding, to the home page, for the state %j',
     async (state) => {
       const router = renderGate({ pathname: '/onboarding', state });
 
       expect(await screen.findByText('app page')).toBeInTheDocument();
       expect(router.state.location.pathname).toBe('/');
+      expect(router.state.location.hash).toBe('');
     },
   );
 

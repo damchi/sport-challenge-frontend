@@ -44,7 +44,9 @@ export function useAuth(): Auth {
  * Path to go back to after sign-in. Only a path of this app (`origin`): an
  * absolute or protocol-relative address would be an open redirect. The value
  * is resolved like the browser would (it drops tabs and newlines, reads `\\`
- * as `/`), and kept only if it stays on the app's origin.
+ * as `/`), and kept only if it stays on the app's origin and its path does
+ * not start with `//`: dot segments can resolve to one (`/.//evil.example`),
+ * which a later navigation would read as another host.
  */
 export function safeReturnTo(value: unknown, origin: string): string {
   if (typeof value !== 'string' || !value.startsWith('/')) return '/';
@@ -55,6 +57,6 @@ export function safeReturnTo(value: unknown, origin: string): string {
   } catch {
     return '/';
   }
-  if (url.origin !== origin) return '/';
+  if (url.origin !== origin || url.pathname.startsWith('//')) return '/';
   return `${url.pathname}${url.search}${url.hash}`;
 }

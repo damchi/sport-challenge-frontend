@@ -128,7 +128,7 @@ describe('profile onboarding', () => {
     expect(screen.getByLabelText('Pseudo (facultatif)')).not.toHaveAttribute('aria-invalid');
   });
 
-  it('saves the profile and opens the page first asked for', async () => {
+  it('saves the profile and opens the home page, whatever page was asked for', async () => {
     let sent: unknown;
     // Like the API: once saved, the profile reads back complete (a refetch
     // after the redirect must not send the user back to onboarding).
@@ -141,7 +141,7 @@ describe('profile onboarding', () => {
       }),
       http.get('*/api/v1/me', () => HttpResponse.json(saved ?? newProfile)),
     );
-    const router = renderApp('/challenges/42');
+    const router = renderApp('/challenges/new');
 
     await typePseudo('  jean.luc ');
     await type('Prénom', ' Marie-Ève ');
@@ -151,7 +151,7 @@ describe('profile onboarding', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'asked page' }),
     ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/challenges/42');
+    expect(router.state.location.pathname).toBe('/');
     expect(sent).toEqual({
       pseudo: 'jean.luc',
       first_name: 'Marie-Ève',
