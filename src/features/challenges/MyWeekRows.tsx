@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { ChallengeSummary } from '../../api/hooks/useChallenges';
 import { formatKm } from '../../domain/format/distance';
 import { EliminationStatusPill } from '../leaderboard/EliminationProgress';
-import { minimumShare, STATUS_BARS, type LiveStatus } from '../leaderboard/eliminationWeek';
+import { eliminationLine, STATUS_BARS } from '../leaderboard/eliminationWeek';
 import { useCategoryName } from './detail/categoryNames';
 
 type MyWeek = NonNullable<ChallengeSummary['my_week']>;
@@ -38,31 +38,20 @@ function RankingRow({ ranking, name }: { ranking: MyRanking; name: string }) {
     count: ranking.ranked_count,
   });
 
+  const line = elimination ? eliminationLine(elimination) : null;
   let value = rank;
-  let detail: string | null = null;
-  // A survivor's week against its minimum: its status and its bar.
-  let live: { status: LiveStatus; share: number } | null = null;
-  if (ranking.provisional_points) {
-    detail = t('leaderboard.provisional', { count: ranking.provisional_points });
-  }
-  if (elimination) {
-    const status =
-      elimination.status && elimination.status !== 'eliminated' ? elimination.status : null;
-    if (elimination.eliminated_week !== null) {
-      // Out of its ranking, as in the leaderboard.
-      value = t('leaderboard.eliminated', { week: elimination.eliminated_week });
-    } else if (status && elimination.minimum_meters !== null) {
-      value = t('standings.eliminationValue', {
-        done: km(elimination.distance_meters),
-        minimum: km(elimination.minimum_meters),
-      });
-      live = { status, share: minimumShare(elimination) };
-    } else {
-      // A survivor without a minimum in an ongoing challenge: week 1, as the
-      // server says with minimum_meters null. The distance of the week.
-      value = km(elimination.distance_meters);
-      if (elimination.minimum_meters === null) detail = t('challenges.card.noEliminationWeek1');
-    }
+  let detail: string | null = ranking.provisional_points
+    ? t('leaderboard.provisional', { count: ranking.provisional_points })
+    : null;
+  const live = line?.kind === 'live' ? line : null;
+  if (line?.kind === 'eliminated') {
+    // Out of its ranking, as in the leaderboard.
+    value = t('leaderboard.eliminated', { week: line.week });
+  } else if (line?.kind === 'live') {
+    value = t('standings.eliminationValue', { done: km(line.done), minimum: km(line.minimum) });
+  } else if (line?.kind === 'distance') {
+    value = km(line.done);
+    detail = t('challenges.card.noEliminationWeek1');
   }
 
   return (
