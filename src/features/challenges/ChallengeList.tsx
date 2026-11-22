@@ -177,8 +177,11 @@ function ChallengeSection({
   else if (!challenges.data) {
     // Nothing loaded: the whole section failed (a failed "load more" keeps it).
     content = <ErrorState error={challenges.error} onRetry={() => void challenges.refetch()} />;
-  } else if (items.length === 0) content = empty ?? null;
-  else {
+  } else if (items.length === 0) {
+    // A section of « Tous » left empty since it was counted: not shown at all.
+    if (!empty) return null;
+    content = empty;
+  } else {
     content = (
       <>
         <ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[repeat(auto-fill,minmax(18rem,21.25rem))] md:gap-4">

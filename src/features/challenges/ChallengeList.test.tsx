@@ -124,6 +124,16 @@ describe('ChallengeList', () => {
     expect(new Set(queries.map((query) => query.get('status')))).toEqual(new Set(['ongoing']));
   });
 
+  it('leaves out a counted section that comes back empty', async () => {
+    // The counts say one upcoming challenge, but it is gone when its page is read.
+    answerWith({ ongoing: onePage('ongoing', 'Seul') }, { ongoing: 1, upcoming: 1, finished: 0 });
+    renderList();
+
+    expect(await screen.findByRole('heading', { name: 'Seul' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    expect(screen.queryByRole('heading', { name: 'À venir' })).not.toBeInTheDocument();
+  });
+
   it('switches to the public challenges', async () => {
     const queries = answerWith({ ongoing: onePage('ongoing', 'Public') });
     const router = renderList();
