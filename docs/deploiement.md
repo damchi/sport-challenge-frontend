@@ -56,6 +56,8 @@ Mettre à jour la CLI Firebase : changer la version dans `ci/firebase/package.js
 
 Retour arrière rapide sans rebuild : la console Firebase (Hosting > Historique des versions > Restaurer). Le workflow suivant republie la tête de `main`.
 
+Procédures d'exploitation (déploiement, retour arrière, caches, liste de contrôle avant ouverture) : `docs/runbook.md`.
+
 ## Mise en place (à la main, une seule fois)
 
 ### 1. Firebase Hosting
@@ -74,6 +76,10 @@ gcloud iam service-accounts create sc-web-deploy --project=$P \
   --display-name="Déploiement du web (GitHub Actions)"
 gcloud projects add-iam-policy-binding $P --member=serviceAccount:$SA \
   --role=roles/firebasehosting.admin --condition=None
+# La CLI vérifie que l'API Firebase Hosting est activée avant de déployer
+# (sinon : 403 « Permission denied to get service [firebasehosting.googleapis.com] »)
+gcloud projects add-iam-policy-binding $P --member=serviceAccount:$SA \
+  --role=roles/serviceusage.serviceUsageConsumer --condition=None
 
 # Fournisseur du dépôt web, dans le pool du backend : le seul job de
 # l'Environment production, sur main, de ce dépôt (identifiant numérique compris),
@@ -92,8 +98,6 @@ gcloud iam service-accounts add-iam-policy-binding $SA --project=$P \
 ```
 
 Le dépôt utilise les sujets OIDC **immuables** de GitHub (`gh api repos/damchi/sport-challenge-frontend/actions/oidc/customization/sub`) : le sujet de la liaison doit être exactement celui-là.
-
-À vérifier au premier déploiement : si la CLI signale un droit manquant sur Service Usage, ajouter `roles/serviceusage.serviceUsageConsumer` au compte, sur le projet.
 
 ### 3. Auth0 (application web de production)
 
