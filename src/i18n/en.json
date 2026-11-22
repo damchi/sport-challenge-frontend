@@ -272,7 +272,8 @@
       "upcoming": "Upcoming",
       "ongoing": "Ongoing",
       "finished": "Finished"
-    }
+    },
+    "rank": "{{rank}} of {{count}}"
   },
   "wizard": {
     "progress": "Step {{current}} of {{total}}",
@@ -417,7 +418,18 @@
       "title": "Categories",
       "frozen": "Set at creation, they no longer change.",
       "elimination": "{{sport}} with elimination",
-      "points": "Points"
+      "points": "Points",
+      "eliminationGeneric": "Elimination",
+      "pointsParams": {
+        "criteria": {
+          "longest_duration": "Longest session by time",
+          "longest_distance": "Longest session by equivalent distance",
+          "session_count": "Number of sessions"
+        },
+        "podium_5": "Top 5 of each week and criterion: 10, 8, 6, 4 and 2 points",
+        "podium_10": "Top 10 of each week and criterion: 25, 18, 15, 12, 10, 8, 6, 4, 2 and 1 point",
+        "minSession": "A session counts from {{minutes}} min"
+      }
     },
     "tabs": {
       "label": "Challenge sections",
@@ -504,6 +516,11 @@
     "you": "You",
     "tied": "tied",
     "equivalent": "{{distance}} {{sport}} equiv.",
+    "points_one": "{{count}} pt",
+    "points_other": "{{count}} pts",
+    "provisional_one": "+ {{count}} pt provisional",
+    "provisional_other": "+ {{count}} pts provisional",
+    "pointsRule": "A week's points are secured at 7 am on the first day of the next week, challenge time ({{zone}}). Until then, they are provisional and do not count in the rank.",
     "empty": "No one is ranked in this challenge yet.",
     "final": "Final results: the challenge ended on {{date}}",
     "final_zone": "Final results: the challenge ended on {{date}}, {{zone}}",

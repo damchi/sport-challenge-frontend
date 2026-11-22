@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import type { ChallengeSummary } from '../../api/hooks/useChallenges';
 import { challengePeriod, otherTimeZoneName } from '../../domain/format/challengeDates';
 import { ChallengeStatusPill, RolePills } from './ChallengePills';
+import { MyWeekSummary } from './MyWeekSummary';
 
 interface ChallengeCardProps {
   challenge: ChallengeSummary;
@@ -13,7 +14,8 @@ interface ChallengeCardProps {
 
 /**
  * A challenge of a list: title, my role, status, visibility, period in the
- * challenge's time zone (named when the user is elsewhere) and participants.
+ * challenge's time zone (named when the user is elsewhere) and participants,
+ * then the user's week and ranks while they take part.
  */
 export function ChallengeCard({ challenge, showStatus }: ChallengeCardProps) {
   const { t, i18n } = useTranslation();
@@ -58,6 +60,10 @@ export function ChallengeCard({ challenge, showStatus }: ChallengeCardProps) {
         </span>
         <span>{t('challenges.participants', { count: challenge.participant_count })}</span>
       </p>
+      {/* Given by the server while the user takes part in an ongoing challenge. */}
+      {challenge.my_week && (
+        <MyWeekSummary week={challenge.my_week} timeZone={challenge.timezone} />
+      )}
     </Link>
   );
 }

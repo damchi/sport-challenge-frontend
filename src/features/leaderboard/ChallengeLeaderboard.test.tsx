@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
+import { timeZoneName } from '../../domain/format/challengeDates';
 import { mockChallengeDetail, mockChallenges, mockMe } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { routes } from '../../routes/routes';
@@ -739,5 +740,104 @@ describe('ChallengeLeaderboard, elimination', () => {
     expect(within(ranking).queryByText(/cette semaine/)).not.toBeInTheDocument();
     expect(within(await board()).queryByText(/Fin de la semaine/)).not.toBeInTheDocument();
     expect(within(await board()).queryByText(/Le minimum de la semaine/)).not.toBeInTheDocument();
+  });
+});
+
+describe('ChallengeLeaderboard, points', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** A participant of the points category, with their provisional points. */
+  const scorer = (pseudo: string, rank: number, points: number, provisional: number | null) => ({
+    ...entry(pseudo, rank, points),
+    provisional_points: provisional,
+  });
+
+  const withPoints = (entries: LeaderboardEntry[]): Leaderboard['categories'] => [
+    { type: 'cumulative_time', entries: time },
+    { type: 'points', entries },
+  ];
+
+  const pointsDetail = {
+    categories: [
+      { type: 'cumulative_time', position: 1, params: {} },
+      {
+        type: 'points',
+        position: 4,
+        params: { criteria: ['longest_duration'], podium: 5 },
+      },
+    ],
+  } satisfies Partial<ChallengeDetail>;
+
+  async function openPoints() {
+    fireEvent.click(
+      within(await screen.findByRole('group', { name: 'Catégorie du classement' })).getByRole(
+        'button',
+        { name: 'Points' },
+      ),
+    );
+  }
+
+  it('shows the points acquired, ranked on them alone, and the provisional ones apart', async () => {
+    deviceIn(summary.timezone);
+    answer(pointsDetail);
+    leaderboard(
+      withPoints([
+        // Ties on the points acquired (1, 1, 3), whatever the provisional ones.
+        scorer('julie', 1, 43, 12),
+        scorer('marc', 1, 43, 0),
+        scorer('sofia', 3, 1, null),
+        entry('leo', null, null),
+      ]),
+    );
+    renderAt(`/challenges/${id}`);
+
+    await openPoints();
+
+    const podium = within(await section('Podium')).getAllByRole('listitem');
+    const [first, second, third] = podium as [HTMLElement, HTMLElement, HTMLElement];
+    expect(first).toHaveTextContent('1er');
+    expect(first).toHaveTextContent('ex æquo');
+    expect(within(first).getByText('+ 12 pts provisoires')).toBeInTheDocument();
+    expect(first).toHaveTextContent('43 pts');
+    // No provisional points to show: nothing apart.
+    expect(second).toHaveTextContent('43 pts');
+    expect(second).not.toHaveTextContent('provisoire');
+    expect(third).toHaveTextContent('1 pt');
+    expect(third).not.toHaveTextContent('provisoire');
+
+    const rows = within(await section('Classement complet')).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent('43 pts + 12 pts provisoires');
+    expect(within(await section('Éliminés')).getByText('A abandonné')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `Les points d'une semaine sont acquis à 7 h le premier jour de la semaine suivante, heure du défi (${timeZoneName(summary.timezone, 'fr')}). D'ici là, ils sont provisoires et ne comptent pas dans le rang.`,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the final points alone once the challenge is finished', async () => {
+    deviceIn(summary.timezone);
+    answer({ ...pointsDetail, status: 'finished', current_week: null, week_ends_at: null });
+    leaderboard(withPoints([scorer('julie', 1, 55, null), scorer('marc', 2, 40, null)]));
+    renderAt(`/challenges/${id}`);
+
+    await openPoints();
+
+    expect(within(await section('Podium')).getByText('55 pts')).toBeInTheDocument();
+    expect(screen.queryByText(/provisoire/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the provisional points and their rule after the end, until the last week locks', async () => {
+    deviceIn(summary.timezone);
+    answer({ ...pointsDetail, status: 'finished', current_week: null, week_ends_at: null });
+    leaderboard(withPoints([scorer('julie', 1, 43, 10), scorer('marc', 2, 40, null)]));
+    renderAt(`/challenges/${id}`);
+
+    await openPoints();
+
+    expect(within(await section('Podium')).getByText('+ 10 pts provisoires')).toBeInTheDocument();
+    expect(screen.getByText(/^Les points d'une semaine sont acquis à 7 h/)).toBeInTheDocument();
   });
 });
