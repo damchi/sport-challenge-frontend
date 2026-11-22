@@ -370,10 +370,11 @@ describe('ChallengeLeaderboard', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: summary.title }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+    // The page's other statuses (an abandon being sent) are empty.
+    expect(screen.getByRole('status', { busy: true })).toBeInTheDocument();
     release();
     expect(await section('Podium')).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { busy: true })).not.toBeInTheDocument();
   });
 
   it('offers a retry when the leaderboard cannot load', async () => {

@@ -62,7 +62,9 @@ export function ChallengeLeaderboard() {
   const { timezone } = challenge.data;
   const name = categoryName(category.type);
   // The cards of « Où tu en es », when the page shows them, choose the category.
-  const cardsChoose = hasStandings(challenge.data) && myLines(categories, me.data?.id).length > 0;
+  // While the user loads, no selector: it would show, then give way to them.
+  const cardsChoose =
+    hasStandings(challenge.data) && (me.isPending || myLines(categories, me.data?.id).length > 0);
 
   const choose = (type: string) => {
     const next = new URLSearchParams(params);

@@ -93,7 +93,7 @@ describe('ChallengeDetailView', () => {
     expect(await screen.findByText('first section')).toBeInTheDocument();
 
     act(() => void router.navigate(`/challenges/${id}/participants`));
-    expect(await screen.findByRole('status')).toHaveTextContent(/^Chargement…$/);
+    expect(await screen.findByRole('status', { busy: true })).toHaveTextContent(/^Chargement…$/);
     expect(screen.queryByText('first section')).not.toBeInTheDocument();
     expect(await title()).toBeInTheDocument();
 
@@ -268,8 +268,9 @@ describe('ChallengeDetailView', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Rejoindre' }));
 
-      const outcome = await screen.findByRole('status');
-      expect(outcome).toHaveTextContent('Tu participes à ce défi.');
+      // Found by its text: the abandon's status, empty, is on the page too.
+      const outcome = await screen.findByText('Tu participes à ce défi.');
+      await vi.waitFor(() => expect(outcome).toHaveAttribute('role', 'status'));
       // The button is gone: the focus moves to the outcome.
       expect(outcome).toHaveFocus();
       expect(screen.getByText('Tu participes')).toBeInTheDocument();
