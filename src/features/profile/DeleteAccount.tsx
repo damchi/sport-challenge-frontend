@@ -94,6 +94,7 @@ export function DeleteAccount() {
           </ul>
         }
         confirmDisabled={!understood}
+        variant="danger"
         confirmLabel={t('profile.deleteAccount.confirm')}
         cancelLabel={t('profile.deleteAccount.cancel')}
         onConfirm={() => {

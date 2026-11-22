@@ -92,6 +92,7 @@ export function ActivityItem({
             cancelLabel={t('activities.deleteConfirm.cancel')}
             onConfirm={() => void remove()}
             onCancel={() => setConfirming(false)}
+            variant="danger"
           />
         </>
       )}

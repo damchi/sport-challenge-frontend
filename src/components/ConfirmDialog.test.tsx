@@ -63,6 +63,34 @@ describe('ConfirmDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('gives the confirmation the main style by default', () => {
+    renderDialog(true);
+
+    const confirm = screen.getByRole('button', { name: 'Leave' });
+    expect(confirm).toHaveClass('bg-accent', 'text-on-accent');
+    expect(confirm).not.toHaveClass('bg-danger');
+  });
+
+  it('marks a final action as danger, the focus still on the safe choice', () => {
+    render(
+      <ConfirmDialog
+        open
+        title="Delete?"
+        message="This is final."
+        variant="danger"
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const confirm = screen.getByRole('button', { name: 'Delete' });
+    expect(confirm).toHaveClass('bg-danger', 'text-on-danger');
+    expect(confirm).not.toHaveClass('bg-accent');
+    expect(screen.getByRole('button', { name: 'Keep' })).toHaveFocus();
+  });
+
   it('reads the details with the message and confirms only once allowed', () => {
     const onConfirm = vi.fn();
     const ui = (confirmDisabled: boolean) => (

@@ -80,7 +80,8 @@ export function CreatorActionDialog({ actions }: { actions: CreatorActions }) {
   const [shown, setShown] = useState<Target | null>(null);
   if (actions.confirming && actions.confirming !== shown) setShown(actions.confirming);
   const target = actions.confirming ?? shown;
-  const prefix = `challengeDetail.participants.manage.${target?.action ?? 'exclude'}`;
+  const action = target?.action ?? 'exclude';
+  const prefix = `challengeDetail.participants.manage.${action}`;
   return (
     <ConfirmDialog
       open={actions.confirming !== null}
@@ -88,6 +89,7 @@ export function CreatorActionDialog({ actions }: { actions: CreatorActions }) {
       message={t(`${prefix}.message`)}
       confirmLabel={t(`${prefix}.confirm`)}
       cancelLabel={t('challengeDetail.participants.manage.cancel')}
+      variant={action === 'exclude' ? 'danger' : 'default'}
       onConfirm={actions.confirm}
       onCancel={actions.cancel}
     />

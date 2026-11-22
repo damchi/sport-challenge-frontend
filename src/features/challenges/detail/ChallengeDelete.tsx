@@ -66,6 +66,7 @@ export function ChallengeDelete({ challenge }: { challenge: ChallengeDetail }) {
         title={t('challengeDetail.delete.title', { title: challenge.title })}
         message={t('challengeDetail.delete.message')}
         confirmDisabled={!matches}
+        variant="danger"
         confirmLabel={t('challengeDetail.delete.confirm')}
         cancelLabel={t('challengeDetail.delete.cancel')}
         onConfirm={() => {

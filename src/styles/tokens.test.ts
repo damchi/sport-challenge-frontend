@@ -55,6 +55,7 @@ const textPairs: [text: string, background: string][] = [
   ['accent', 'bg'],
   ['accent', 'accent-soft'],
   ['on-accent', 'accent'],
+  ['on-danger', 'danger'],
   ['ink', 'accent-soft'],
   ['muted', 'accent-soft'],
   ['risk-fg', 'risk-bg'],
