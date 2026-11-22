@@ -159,7 +159,9 @@
     "label": "Participant's activities",
     "empty": "No activity from this participant in this challenge yet.",
     "notFound": "These activities aren't available.",
-    "toParticipants": "See the participants"
+    "toParticipants": "See the participants",
+    "title": "Activities of {{name}}",
+    "mine": "Your activities"
   },
   "activityForm": {
     "title": "Add an activity",
