@@ -19,6 +19,8 @@ describe('safeReturnTo', () => {
     '/\\evil.example',
     '/\t/evil.example',
     '/\n/evil.example',
+    '/.//evil.example',
+    '/a/..//evil.example',
   ])('falls back on the home page for %j', (value) => {
     expect(safeReturnTo(value, origin)).toBe('/');
   });

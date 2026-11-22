@@ -7,13 +7,26 @@ import { safeReturnTo } from '../lib/auth/auth';
 import { Page } from '../components/Page';
 
 const ONBOARDING = '/onboarding';
+const INVITE = '/invite';
+
+/**
+ * Where a profile just completed goes: the home page, whatever page was first
+ * asked for, unless onboarding broke into an invitation, which opens again
+ * (its token in the fragment) to be accepted. The page asked for stays within
+ * the app either way.
+ */
+function afterOnboarding(returnTo: unknown): string {
+  const origin = window.location.origin;
+  const target = safeReturnTo(returnTo, origin);
+  return new URL(target, origin).pathname === INVITE ? target : '/';
+}
 
 /**
  * The app needs a complete profile, as the server says (first and last
- * name): until then every page leads to /onboarding, which then opens
- * the page first asked for. A profile made before the names were asked goes
- * back there too. Creating or joining a challenge is thus out of reach while
- * the profile is incomplete.
+ * name): until then every page leads to /onboarding, which then opens the
+ * home page, or the invitation it broke into. A profile made before the names
+ * were asked goes back there too. Creating or joining a challenge is thus out
+ * of reach while the profile is incomplete.
  */
 export function ProfileGate() {
   const { t, i18n } = useTranslation();
@@ -66,7 +79,7 @@ export function ProfileGate() {
     const state: unknown = location.state;
     const returnTo =
       typeof state === 'object' && state !== null && 'returnTo' in state ? state.returnTo : '/';
-    return <Navigate to={safeReturnTo(returnTo, window.location.origin)} replace />;
+    return <Navigate to={afterOnboarding(returnTo)} replace />;
   }
   return <Outlet />;
 }
