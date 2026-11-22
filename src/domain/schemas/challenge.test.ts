@@ -18,6 +18,10 @@ const valid = {
   cumulative_distance: true,
   elimination: true,
   elimination_step_km: 2,
+  points: true,
+  points_criteria: ['longest_duration', 'session_count'],
+  points_podium: '10',
+  points_min_session_minutes: 20,
   factors: { ride: 0.3 },
 };
 
@@ -47,6 +51,10 @@ describe('challengeCreateSchema', () => {
       cumulative_distance: true,
       elimination: true,
       elimination_step_km: 2,
+      points: true,
+      points_criteria: ['longest_duration', 'session_count'],
+      points_podium: '10',
+      points_min_session_minutes: 20,
       factors: { ride: 0.3 },
     });
   });
@@ -57,6 +65,10 @@ describe('challengeCreateSchema', () => {
         cumulative_distance: false,
         elimination: false,
         elimination_step_km: Number.NaN,
+        points: false,
+        points_criteria: [],
+        points_podium: null,
+        points_min_session_minutes: Number.NaN,
         factors: { ride: Number.NaN },
       }),
     ).toBeUndefined();
@@ -200,9 +212,73 @@ describe('challengeCreateSchema', () => {
       ]);
     });
 
+    it('checks them for the longest session by distance, without the total distance', () => {
+      const factors = { ride: 3 };
+      expect(
+        firstMessage({
+          cumulative_distance: false,
+          points_criteria: ['longest_distance'],
+          factors,
+        }),
+      ).toBe('challengeCreate.fields.factors.range');
+      expect(firstMessage({ cumulative_distance: false, factors })).toBeUndefined();
+      expect(
+        firstMessage({
+          cumulative_distance: false,
+          points: false,
+          points_criteria: ['longest_distance'],
+          factors,
+        }),
+      ).toBeUndefined();
+    });
+
     it('leaves out the reference, which keeps no field', () => {
       expect(
         firstMessage({ reference_sport: 'ride', factors: { ride: Number.NaN, run: 1 } }),
+      ).toBeUndefined();
+    });
+  });
+
+  describe('points', () => {
+    it('asks for at least one criterion', () => {
+      expect(firstMessage({ points_criteria: [] })).toBe(
+        'challengeCreate.fields.pointsCriteria.required',
+      );
+    });
+
+    it.each([undefined, null])('asks for a scale instead of %s', (podium) => {
+      expect(firstMessage({ points_podium: podium })).toBe(
+        'challengeCreate.fields.pointsPodium.required',
+      );
+    });
+
+    it.each([1, 20, 180])('accepts a minimum session of %d min', (minutes) => {
+      expect(firstMessage({ points_min_session_minutes: minutes })).toBeUndefined();
+    });
+
+    it.each([0, 181, 2.5, Number.NaN])('refuses a minimum session of %d min', (minutes) => {
+      expect(firstMessage({ points_min_session_minutes: minutes })).toBe(
+        'challengeCreate.fields.minSession.range',
+      );
+    });
+
+    it('checks the minimum session with the number of sessions alone', () => {
+      expect(
+        firstMessage({
+          points_criteria: ['longest_duration'],
+          points_min_session_minutes: Number.NaN,
+        }),
+      ).toBeUndefined();
+    });
+
+    it('checks nothing without the points', () => {
+      expect(
+        firstMessage({
+          points: false,
+          points_criteria: [],
+          points_podium: undefined,
+          points_min_session_minutes: 0,
+        }),
       ).toBeUndefined();
     });
   });
@@ -214,6 +290,8 @@ describe('challengeCreateSchema', () => {
       { start_date: '2020-01-01' },
       { elimination_step_km: 0, factors: { ride: 3 } },
       { reference_sport: '' },
+      { points_criteria: ['session_count'], points_podium: null, points_min_session_minutes: 0 },
+      { points_criteria: [] },
     ];
     const messages = wrong.flatMap(
       (input) =>
@@ -228,7 +306,7 @@ describe('challengeCreateSchema', () => {
           texts,
         );
 
-    expect(new Set(messages).size).toBe(12);
+    expect(new Set(messages).size).toBe(15);
     for (const message of messages) {
       expect(typeof lookup(fr, message), message).toBe('string');
       expect(typeof lookup(en, message), message).toBe('string');

@@ -11,6 +11,13 @@ export interface CatalogueSport {
   suggested_factor: number | null;
 }
 
+/**
+ * Minimum session of the points' number of sessions, in minutes, by default
+ * (API contract, `min_session_minutes`). Sent too when the number of sessions
+ * is not chosen: the request type requires it, and the server takes it.
+ */
+export const DEFAULT_MIN_SESSION_MINUTES = 20;
+
 /** The sport whose distances every other is brought back to, by default. */
 export const DEFAULT_REFERENCE_SPORT = 'run';
 
@@ -97,10 +104,26 @@ export function sortSportsByName<S extends { code: string }>(
 }
 
 /**
+ * Whether the distance factors count: for the cumulative distance and for
+ * the points' longest session by distance (API contract, `distance_factors`).
+ */
+export function usesDistanceFactors(values: {
+  cumulative_distance: boolean;
+  points: boolean;
+  points_criteria: readonly string[];
+}): boolean {
+  return (
+    values.cumulative_distance ||
+    (values.points && values.points_criteria.includes('longest_distance'))
+  );
+}
+
+/**
  * The creation request. The cumulative time is always there: only the
- * categories chosen are sent, X in meters. The factors go with the
- * cumulative distance alone, and only those the creator changed from the
- * suggestions brought back to the reference.
+ * categories chosen are sent, X in meters, the minimum session entered with
+ * the number of sessions alone (the default otherwise). The factors go with the categories that use
+ * them, and only those the creator changed from the suggestions brought back
+ * to the reference.
  */
 export function challengeCreateRequest(
   values: ChallengeCreateValues,
@@ -109,16 +132,28 @@ export function challengeCreateRequest(
   const suggested = new Map(
     factorSports(sports, values.reference_sport).map((sport) => [sport.code, sport.suggested]),
   );
-  const changed = values.cumulative_distance
+  const changed = usesDistanceFactors(values)
     ? Object.entries(values.factors).filter(
         ([code, factor]) => suggested.has(code) && suggested.get(code) !== factor,
       )
     : [];
   const stepKm = values.elimination_step_km;
+  const podium = values.points_podium;
+  const criteria = values.points_criteria;
   const categories = {
     ...(values.cumulative_distance && { cumulative_distance: {} }),
     ...(values.elimination &&
       stepKm !== undefined && { elimination: { step_meters: Math.round(stepKm * 1000) } }),
+    ...(values.points &&
+      podium && {
+        points: {
+          criteria: [...criteria],
+          podium: podium === '10' ? (10 as const) : (5 as const),
+          min_session_minutes: criteria.includes('session_count')
+            ? values.points_min_session_minutes
+            : DEFAULT_MIN_SESSION_MINUTES,
+        },
+      }),
   };
   return {
     title: values.title,
@@ -134,14 +169,24 @@ export function challengeCreateRequest(
   };
 }
 
+// The points' fields the server may refuse, with the form's.
+const POINTS_FIELDS: Record<string, string> = {
+  'categories.points.criteria': 'points_criteria',
+  'categories.points.podium': 'points_podium',
+  'categories.points.min_session_minutes': 'points_min_session_minutes',
+};
+
 /**
  * The form field of a field the server refused (`params.fields` of
  * validation_failed): "categories.elimination.step_meters" is X in km,
- * "distance_factors.ride" a factor, "distance_factors" the factors as a
- * whole. Undefined for a field the form lacks.
+ * "categories.points.*" a setting of the points, "distance_factors.ride" a
+ * factor, "distance_factors" the factors as a whole. Undefined for a field
+ * the form lacks.
  */
 export function formFieldOf(serverField: string): string | undefined {
   if (serverField === 'categories.elimination.step_meters') return 'elimination_step_km';
+  const points = POINTS_FIELDS[serverField];
+  if (points) return points;
   if (serverField === 'distance_factors') return 'factors';
   if (serverField.startsWith('distance_factors.')) {
     return `factors.${serverField.slice('distance_factors.'.length)}`;

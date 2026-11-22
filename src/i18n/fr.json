@@ -360,11 +360,24 @@
       },
       "factors": {
         "label": "Coefficients de distance",
-        "hint": "Proposés par l'application d'après le sport de référence ; tu peux les changer, de 0,1 à 2.",
+        "hint": "Utilisés pour la distance cumulée et la séance la plus longue en distance. L'application les propose d'après le sport de référence ; tu peux les changer, de 0,1 à 2.",
         "suggested": "Proposé : {{factor}}",
         "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus."
       },
-      "serverInvalid": "Valeur refusée. Vérifie-la, puis renvoie le défi."
+      "serverInvalid": "Valeur refusée. Vérifie-la, puis renvoie le défi.",
+      "pointsCriteria": {
+        "label": "Critères",
+        "required": "Coche au moins un critère."
+      },
+      "pointsPodium": {
+        "label": "Barème",
+        "required": "Choisis un barème."
+      },
+      "minSession": {
+        "label": "Durée minimale d'une séance (en min)",
+        "hint": "De 1 à 180 min : une séance plus courte ne compte pas.",
+        "range": "La durée minimale doit être un nombre entier de minutes, de 1 à 180."
+      }
     },
     "preview": {
       "title": "Aperçu",
@@ -375,7 +388,7 @@
       "weeks_other": "{{count}} semaines"
     },
     "categories": {
-      "intro": "Le temps cumulé fait toujours partie du défi. Ajoute si tu veux la distance cumulée et l'élimination : chaque catégorie a son podium.",
+      "intro": "Le temps cumulé fait toujours partie du défi. Ajoute si tu veux la distance cumulée, l'élimination et le Grand prix : chaque catégorie a son podium.",
       "waiting": "Les sports doivent s'afficher avant de continuer : patiente ou réessaie.",
       "time": {
         "name": "Temps cumulé",
@@ -391,6 +404,10 @@
         "explanation": "{{sport}} seulement, en distance réelle. Chaque semaine, il faut faire au moins la distance de la semaine précédente plus X km, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
         "example": "Exemple avec X = {{step}} : {{week1}} en semaine 1, il faut au moins {{week2}} en semaine 2 ; {{ran2}} en semaine 2, au moins {{week3}} en semaine 3.",
         "add": "Ajouter l'élimination"
+      },
+      "points": {
+        "explanation": "Chaque semaine, chaque critère choisi donne un classement de la semaine : les premiers marquent des points selon le barème. Le total des points acquis fait le classement.",
+        "add": "Ajouter le Grand prix"
       }
     },
     "recap": {
@@ -430,7 +447,7 @@
       "title": "Catégories",
       "frozen": "Fixées à la création, elles ne changent plus.",
       "elimination": "{{sport}} avec élimination",
-      "points": "Points",
+      "points": "Grand prix",
       "eliminationGeneric": "Élimination",
       "pointsParams": {
         "criteria": {
