@@ -187,7 +187,8 @@ export function ChallengeRules({
   return (
     <details className={`group rounded-card border border-border bg-surface ${className}`}>
       <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-        <span className="font-display text-lg font-bold">{title}</span>
+        {/* A heading may sit in a summary (HTML): the outline keeps its h2. */}
+        <h2 className="font-display text-lg font-bold">{title}</h2>
         <ChevronDown
           aria-hidden="true"
           size={20}

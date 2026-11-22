@@ -595,6 +595,7 @@
     "final": "Résultats définitifs : le défi s'est terminé le {{date}}",
     "final_zone": "Résultats définitifs : le défi s'est terminé le {{date}}, {{zone}}",
     "updated": "Classements mis à jour : {{date}}",
+    "updated_zone": "Classements mis à jour : {{date}}, {{zone}}",
     "elimination": {
       "reached": "Objectif atteint",
       "in_progress": "En cours",

@@ -423,13 +423,17 @@ describe('ChallengeLeaderboard, refresh', () => {
     leaderboard(threeCategories);
     renderAt(`/challenges/${id}`);
 
-    // Named once, with the end of the week.
+    // Named with the end of the week and with the time of the computation.
     expect(
       await screen.findByText(
         'Semaine 3 · se termine lundi 23 novembre à 00 h, heure de l’Est nord-américain',
       ),
     ).toBeInTheDocument();
-    expect(await screen.findByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        'Classements mis à jour : 18 nov., 10:00, heure de l’Est nord-américain',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('reloads when the page comes back into view, not before it is stale', async () => {

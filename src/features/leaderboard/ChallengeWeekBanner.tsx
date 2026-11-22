@@ -60,7 +60,11 @@ export function ChallengeWeekBanner({ challenge }: { challenge: ChallengeDetail 
         </p>
         {computedAt && (
           <p className="text-sm text-on-raised-muted">
-            {t('leaderboard.updated', { date: challengeTime(computedAt, timezone, locale) })}
+            {t('leaderboard.updated', {
+              date: challengeTime(computedAt, timezone, locale),
+              zone,
+              context: zone && 'zone',
+            })}
           </p>
         )}
       </div>

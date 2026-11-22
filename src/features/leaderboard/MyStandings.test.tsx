@@ -246,6 +246,8 @@ describe('MyStandings', () => {
     // Once the leaderboard is there.
     expect(await screen.findByRole('region', { name: 'Podium' })).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Où tu en es' })).not.toBeInTheDocument();
+    // Without cards, the leaderboard has its own category selector.
+    expect(screen.getByRole('group', { name: 'Catégorie du classement' })).toBeInTheDocument();
   });
 
   it('is shown once the challenge is finished, with the total of the elimination', async () => {

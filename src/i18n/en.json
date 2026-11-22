@@ -591,6 +591,7 @@
     "final": "Final results: the challenge ended on {{date}}",
     "final_zone": "Final results: the challenge ended on {{date}}, {{zone}}",
     "updated": "Leaderboards updated {{date}}",
+    "updated_zone": "Leaderboards updated {{date}}, {{zone}}",
     "elimination": {
       "reached": "Goal reached",
       "in_progress": "In progress",
