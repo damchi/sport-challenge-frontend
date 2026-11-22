@@ -959,10 +959,24 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
   - politique de contenu : `worker-src 'self'`, `manifest-src 'self'`, `img-src 'self'` pour les icônes, et une empreinte (hash) pour le script de thème en ligne de `index.html` ;
   - procédure d'urgence documentée : un `sw.js` vide qui vide les caches et se désinscrit.
 - [ ] Adresses de production documentées pour Auth0 (rappel, déconnexion, origines) et pour la configuration CORS du backend (`docs/deploiement.md`).
-- [ ] Déploiement en production par la CI après chaque fusion sur `main`, **après l'approbation** de l'Environment GitHub `production` ; retour arrière à la main. _(Approbation retirée par SC-WEB-066 : déploiement automatique.)_
+- [ ] Déploiement en production par la CI après chaque fusion sur `main`, **après l'approbation** de l'Environment GitHub `production` ; retour arrière à la main. _(Remplacé par SC-WEB-066 : déploiement automatique, sans approbation.)_
 
 **Revue** : `security-reviewer`.
 **Commit** : `chore(deploy): add web hosting configuration and production pipeline`
+**Statut** : À faire
+
+### SC-WEB-066 · Déploiement en production sans approbation manuelle
+`F9` · Ops · Phase 9 · Estimation 1 · Dépend de : 047 · Backend : —
+
+Décision du 2026-11-21 : le déploiement en production devient automatique après chaque fusion sur `main` (CI verte), sans approbation de l'Environment `production`. Remplace le critère « après l'approbation » de SC-WEB-047.
+
+**Critères d'acceptation**
+- [ ] L'Environment `production` est conservé (le jeton OIDC de la fédération d'identité est lié à `environment:production`) et toujours limité à `main`, mais sans **Required reviewers**.
+- [ ] `.github/workflows/deploy.yml` : commentaires mis à jour (plus d'approbation) ; la protection « main a avancé, la fusion plus récente déploie » et la file `concurrency` sans annulation restent.
+- [ ] `docs/deploiement.md`, `docs/runbook.md` (cas normal, liste de contrôle) et `README.md` §5 décrivent le déploiement automatique et le risque accepté (aucune validation humaine, y compris pour un lancement à la main).
+
+**Revue** : `security-reviewer`.
+**Commit** : `chore(deploy): deploy to production without manual approval`
 **Statut** : À faire
 
 ### SC-WEB-048 · Runbook et liste de contrôle de mise en production

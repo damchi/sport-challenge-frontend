@@ -36,7 +36,9 @@ Une adresse qui change (API, Auth0, Sentry) se change donc seulement dans les va
 | `workflow_dispatch` sans `ref` | redéploie la tête de `main` |
 | `workflow_dispatch` avec `ref` (retour arrière) | redéploie ce commit de `main` |
 
-La seule barrière avant la production est la fusion de la pull request (CI verte, relectures). L'Environment `production` reste : limité à `main`, il porte les variables du job de publication et c'est lui que la fédération d'identité autorise (`environment:production`).
+**Aucune validation humaine** avant la production (décision du 2026-11-21, SC-WEB-066) : un déploiement part dès qu'une personne ayant le droit d'écriture sur le dépôt fusionne dans `main` (ou y pousse, `main` n'étant pas protégée) ou lance le workflow à la main, y compris vers un ancien commit de `main` (retour arrière). Ce risque est accepté parce que le dépôt n'a qu'un mainteneur ; le droit d'écriture est donc la vraie barrière, à réserver à des personnes de confiance. Pour remettre une validation, rétablir les **Required reviewers** de l'Environment (§5).
+
+L'Environment `production` reste : limité à `main`, il porte les variables du job de publication et c'est lui que la fédération d'identité autorise (`environment:production`).
 
 Deux jobs, pour que le code de l'application et de ses dépendances ne s'exécute jamais avec des droits GCP :
 
@@ -126,7 +128,7 @@ Toutes ces valeurs sont des **variables**, pas des secrets : elles sont publique
    | `GCP_WEB_DEPLOY_SERVICE_ACCOUNT` | `sc-web-deploy@sport-challenge-prod.iam.gserviceaccount.com` |
    | `WEB_URL` | `https://sport-challenge-prod.web.app` (sans `/` final) |
 
-   **Deployment branches = Selected branches, `main` seulement**, sans **Required reviewers** (déploiement automatique, SC-WEB-066). Décocher **Allow administrators to bypass configured protection rules**.
+   **Deployment branches = Selected branches, `main` seulement**, sans **Required reviewers** (déploiement automatique, SC-WEB-066). L'Environment ne contrôle donc plus que la branche : il ne demande aucune validation, et **Allow administrators to bypass configured protection rules** (décoché) ne protège plus que cette restriction à `main`.
 2. **Variables du dépôt** (Settings > Secrets and variables > Actions > Variables), lues par le job `build`, qui n'a pas d'Environment :
 
    | Variable | Valeur |
