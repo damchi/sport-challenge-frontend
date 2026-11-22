@@ -227,8 +227,9 @@ défi terminé), rayon 18 px, bordure `--color-border` (`--color-risk-border`,
 
 Disposition : une carte par ligne en mobile ; à partir de `md`, grille
 `repeat(auto-fill, minmax(288px, 340px))`, gap 16 px. ✅ « Créer un défi » est
-un bouton (à droite du titre à partir de `md`, flottant en mobile), plus une
-tuile en fin de grille (décision du 2026-11-22).
+un bouton (à droite du titre à partir de `md`, flottant en mobile) ; la grille
+ne se termine plus par une tuile (décision du 2026-11-22, qui remplace
+SC-WEB-054).
 
 ### Bandeau de clôture
 
