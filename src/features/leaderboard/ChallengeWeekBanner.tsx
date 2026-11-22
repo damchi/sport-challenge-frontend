@@ -1,5 +1,5 @@
 import { Flag, Timer } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useChallenge, useLeaderboard, type ChallengeDetail } from '../../api/hooks/useChallenges';
 import {
@@ -104,6 +104,9 @@ function WeekBanner({
   );
 }
 
+/** How many times an upcoming challenge is read again once its start is reached. */
+const MAX_START_RELOADS = 10;
+
 /** The clock, read again every 30 s: the countdown shows minutes. */
 function useNow(): Date {
   const [now, setNow] = useState(() => new Date());
@@ -119,8 +122,8 @@ function useNow(): Date {
  * in its time zone (named when the user's differs), how many weeks it lasts
  * (the server's week_count) until its last day, its weeks, and that only the
  * activities from the start will count. Once the start is reached, it says
- * so and reads the challenge again at each tick of the clock, until the
- * server says it is ongoing (this banner is then gone).
+ * so and reads the challenge again at each tick of the clock, a few times,
+ * until the server says it is ongoing (this banner is then gone).
  */
 function ChallengeStartBanner({ challenge }: { challenge: ChallengeDetail }) {
   const { t, i18n } = useTranslation();
@@ -135,8 +138,13 @@ function ChallengeStartBanner({ challenge }: { challenge: ChallengeDetail }) {
   const reload = useChallenge(challenge.id).refetch;
   const left = countdown(now, new Date(challenge.starts_at));
   const started = now.getTime() >= new Date(challenge.starts_at).getTime();
+  // Past the start, read again at each tick, 10 times at most (5 min): then
+  // the usual reload on coming back to the page takes over.
+  const reloads = useRef(0);
   useEffect(() => {
-    if (started) void reload();
+    if (!started || reloads.current >= MAX_START_RELOADS) return;
+    reloads.current += 1;
+    void reload();
   }, [started, now, reload]);
   const { end } = challengePeriod(challenge.starts_at, challenge.ends_at, timezone, locale);
   const weeks = Array.from({ length: challenge.week_count }, (_, index) => index + 1);

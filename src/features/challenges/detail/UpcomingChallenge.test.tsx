@@ -168,6 +168,11 @@ describe('UpcomingChallenge', () => {
     await vi.waitFor(() => expect(reads).toBe(2));
     act(() => vi.advanceTimersByTime(30_000));
     await vi.waitFor(() => expect(reads).toBe(3));
+    // 10 reloads at most, then the page waits to be opened again.
+    for (let tick = 0; tick < 12; tick += 1) {
+      act(() => vi.advanceTimersByTime(30_000));
+      await vi.waitFor(() => expect(reads).toBe(Math.min(4 + tick, 11)));
+    }
   });
 
   it('does not load the leaderboard before the start', async () => {
