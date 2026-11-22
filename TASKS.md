@@ -974,6 +974,7 @@ Décision du 2026-11-21 : le déploiement en production devient automatique apr�
 - [ ] L'Environment `production` est conservé (le jeton OIDC de la fédération d'identité est lié à `environment:production`) et toujours limité à `main`, mais sans **Required reviewers**.
 - [ ] `.github/workflows/deploy.yml` : commentaires mis à jour (plus d'approbation) ; la protection « main a avancé, la fusion plus récente déploie » et la file `concurrency` sans annulation restent.
 - [ ] `docs/deploiement.md`, `docs/runbook.md` (cas normal, liste de contrôle) et `README.md` §4 décrivent le déploiement automatique et le risque accepté (aucune validation humaine, y compris pour un lancement à la main).
+- [ ] Règle de la branche `main` (ruleset, sans contournement) : pull request obligatoire, vérifications `typecheck, lint, test, build` et `end-to-end (Playwright)` vertes, push forcé et suppression interdits.
 
 **Revue** : `security-reviewer`.
 **Commit** : `chore(deploy): deploy to production without manual approval`
