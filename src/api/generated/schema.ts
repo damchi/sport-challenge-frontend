@@ -165,7 +165,11 @@ export interface paths {
          *     In `mine`, `my_week` gives where the user stands in each ongoing
          *     challenge they take part in: their lines of the leaderboard
          *     (`GET /challenges/{challengeId}/leaderboard`), computed at the
-         *     instant the status is.
+         *     instant the status is; `best_result` gives their best frozen rank in
+         *     each finished one.
+         *
+         *     `counts` gives how many challenges of the scope have each status,
+         *     whatever the `status` filter: the same on every page.
          */
         get: operations["listChallenges"];
         put?: never;
@@ -408,6 +412,42 @@ export interface paths {
          *     locked by another challenge.
          */
         get: operations["listParticipantActivities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/challenges/{challengeId}/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the activities of all the participants
+         * @description The activities of every participant of the challenge (abandoned or
+         *     excluded ones included) started in its window, deleted ones left
+         *     out, most recent first (`started_at`, then `id`), each with its
+         *     author. A deleted account is never listed, nor are its activities.
+         *     Visible to the participants of the challenge (abandoned or excluded
+         *     ones included) and its creators, as the list of a participant
+         *     (`listParticipantActivities`). A challenge the user may not see
+         *     answers 404 `challenge_not_found`; a visible one the user never
+         *     joined (a public challenge shows them its leaderboard only)
+         *     answers 404 `not_found`.
+         *     `contributions` and `locked` are those of the list of the author
+         *     (`listParticipantActivities`): read from this challenge only, never
+         *     from the other challenges of the author; `contributions` is empty
+         *     for a participant who abandoned.
+         *     A page may hold fewer than `limit` items (an account deleted while
+         *     it was read) and still have a `next_cursor`: only a null
+         *     `next_cursor` ends the list.
+         */
+        get: operations["listChallengeActivities"];
         put?: never;
         post?: never;
         delete?: never;
@@ -879,6 +919,19 @@ export interface components {
             items: components["schemas"]["ChallengeSummary"][];
             /** @description Pass it as `cursor` for the next page; null on the last page. */
             next_cursor: string | null;
+            counts: components["schemas"]["ChallengeCounts"];
+        };
+        /**
+         * @description How many challenges of the requested `scope` have each status, at the
+         *     instant the statuses of the page are: whatever the `status` filter and
+         *     the cursor, with the visibility rules of the scope (a private
+         *     challenge never counts in `public`). Their sum is every challenge of
+         *     the scope.
+         */
+        ChallengeCounts: {
+            upcoming: number;
+            ongoing: number;
+            finished: number;
         };
         ParticipantPage: {
             items: components["schemas"]["Participant"][];
@@ -1020,12 +1073,36 @@ export interface components {
             my_status: "active" | "abandoned" | null;
             /** @enum {string} */
             status: "upcoming" | "ongoing" | "finished";
+            /** @description Number of weeks of the challenge, whatever its status, as `week_count` of the detail. */
+            week_count: number;
             /**
              * @description Only in `mine`, for an ongoing challenge where the user is an
              *     active participant; null otherwise (`public`, upcoming or
              *     finished, abandoned).
              */
             my_week: components["schemas"]["MyWeek"] | null;
+            /**
+             * @description Only in `mine`, for a finished challenge whose results are frozen
+             *     (at the lock of its last week) and where the user is an active
+             *     participant ranked in at least one category; null otherwise
+             *     (`public`, upcoming or ongoing, results not frozen yet, abandoned
+             *     or excluded).
+             */
+            best_result: components["schemas"]["BestResult"] | null;
+        };
+        /**
+         * @description The user's best frozen rank among the categories of the challenge, as
+         *     the leaderboard serves it once the challenge is over (deleted accounts
+         *     left out, the others moving up). Between categories of the same rank,
+         *     the first one in the order of the challenge's categories.
+         */
+        BestResult: {
+            /** @enum {string} */
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
+            /** @description The user's rank in the category; equal values share it (1, 1, 3). */
+            rank: number;
+            /** @description How many participants are ranked in the category, abandoned ones and deleted accounts left out. */
+            ranked_count: number;
         };
         MyWeek: {
             /** @description Number of the current week. */
@@ -1109,6 +1186,25 @@ export interface components {
              *     days.
              */
             week_count: number;
+            /**
+             * @description The weeks of the challenge, in order, whatever its status: as many
+             *     as `week_count`. Each one starts at local midnight in the
+             *     challenge's time zone (the first instant of the day where a time
+             *     change skips midnight), in UTC like `starts_at`; the last one may
+             *     be shorter than 7 days and ends with the challenge. The current
+             *     week ends at `week_ends_at`.
+             */
+            weeks: components["schemas"]["ChallengeWeek"][];
+        };
+        ChallengeWeek: {
+            number: number;
+            /** Format: date-time */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @description Excluded, the start of the next week (or the end of the challenge).
+             */
+            ends_at: string;
         };
         ChallengeUpdate: {
             /**
@@ -1275,6 +1371,52 @@ export interface components {
         };
         ActivityPage: {
             items: components["schemas"]["Activity"][];
+            /** @description Pass it as `cursor` for the next page; null on the last page. */
+            next_cursor: string | null;
+        };
+        /**
+         * @description An activity in the list of a challenge: the fields of `Activity`,
+         *     `contributions` and `locked` read from this challenge only, plus its
+         *     author.
+         */
+        ChallengeActivity: {
+            /** Format: uuid */
+            id: string;
+            sport_code: string;
+            /** @description Label of the sport `other`, cleaned; null for the others. */
+            sport_label: string | null;
+            /** Format: date-time */
+            started_at: string;
+            duration_seconds: number;
+            distance_meters: number | null;
+            /** @enum {string} */
+            source: "manual";
+            /**
+             * Format: double
+             * @description Speed in meters per second, computed; null without distance.
+             */
+            speed_mps: number | null;
+            /**
+             * Format: double
+             * @description Pace in seconds per kilometer, computed; null without distance.
+             */
+            pace_seconds_per_km: number | null;
+            /**
+             * @description What the activity brings, now, to this challenge when it counts
+             *     in it: at most one item, none for an author who abandoned.
+             */
+            contributions: components["schemas"]["ActivityContribution"][];
+            /**
+             * @description True once the week of the activity is locked in this challenge,
+             *     where it counts, at 7 am, local time of the challenge, on the
+             *     first day of the next week; for an author who abandoned, only
+             *     when the week was already locked when they left.
+             */
+            locked: boolean;
+            user: components["schemas"]["LeaderboardUser"];
+        };
+        ChallengeActivityPage: {
+            items: components["schemas"]["ChallengeActivity"][];
             /** @description Pass it as `cursor` for the next page; null on the last page. */
             next_cursor: string | null;
         };
@@ -1994,6 +2136,48 @@ export interface operations {
              * @description A missing, deleted or hidden challenge (`challenge_not_found`), or
              *     an actor or a `userId` who never joined it, or a deleted account
              *     (`not_found`).
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listChallengeActivities: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description The `next_cursor` of the previous page, as is. */
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                challengeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of activities with their authors. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChallengeActivityPage"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            /**
+             * @description A missing, deleted or hidden challenge (`challenge_not_found`), or
+             *     an actor who never joined it (`not_found`).
              */
             404: {
                 headers: {

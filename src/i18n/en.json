@@ -252,7 +252,9 @@
       "all": "All",
       "upcoming": "Upcoming",
       "ongoing": "Ongoing",
-      "finished": "Finished"
+      "finished": "Finished",
+      "unit_one": "challenge",
+      "unit_other": "challenges"
     },
     "empty": {
       "public": "No public challenge yet. Start yours!",
@@ -268,16 +270,28 @@
     "participants_other": "{{count}} participants",
     "showAll": "Show all challenges",
     "role": {
-      "creator": "Creator",
-      "participant": "Participant",
-      "abandoned": "Abandoned"
+      "creator": "Creator"
     },
     "challengeStatus": {
-      "upcoming": "Upcoming",
-      "ongoing": "Ongoing",
-      "finished": "Finished"
+      "upcoming": "Upcoming"
     },
-    "rank": "{{rank}} of {{count}}"
+    "rank": "{{rank}} of {{count}}",
+    "greeting": "Hi {{name}}",
+    "card": {
+      "creator": "you created it",
+      "participant": "you're in",
+      "abandoned": "You abandoned",
+      "abandonedShort": "Abandoned",
+      "week": "Week {{week}} of {{count}} · ends {{date}}",
+      "weekShort": "Wk {{week}} of {{count}} · ends {{date}}",
+      "startsIn_one": "Starts {{date}} · in {{count}} day",
+      "startsIn_other": "Starts {{date}} · in {{count}} days",
+      "startsToday": "Starts {{date}} · today",
+      "ended": "Ended {{date}}",
+      "bestResult": "{{rank}} in {{category}}",
+      "bestResultNote": "your best result",
+      "noEliminationWeek1": "No elimination in week 1"
+    }
   },
   "wizard": {
     "progress": "Step {{current}} of {{total}}",

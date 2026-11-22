@@ -253,7 +253,10 @@
       "all": "Tous",
       "upcoming": "À venir",
       "ongoing": "En cours",
-      "finished": "Terminés"
+      "finished": "Terminés",
+      "unit_one": "défi",
+      "unit_many": "défis",
+      "unit_other": "défis"
     },
     "empty": {
       "public": "Aucun défi public pour l'instant. Lance le tien !",
@@ -270,16 +273,29 @@
     "participants_other": "{{count}} participants",
     "showAll": "Voir tous les défis",
     "role": {
-      "creator": "Créateur",
-      "participant": "Participant",
-      "abandoned": "A abandonné"
+      "creator": "Créateur"
     },
     "challengeStatus": {
-      "upcoming": "À venir",
-      "ongoing": "En cours",
-      "finished": "Terminé"
+      "upcoming": "À venir"
     },
-    "rank": "{{rank}} sur {{count}}"
+    "rank": "{{rank}} sur {{count}}",
+    "greeting": "Salut {{name}}",
+    "card": {
+      "creator": "tu l'as créé",
+      "participant": "tu participes",
+      "abandoned": "Tu as abandonné",
+      "abandonedShort": "Abandonné",
+      "week": "Semaine {{week}} sur {{count}} · se termine {{date}}",
+      "weekShort": "Sem. {{week}} sur {{count}} · se termine {{date}}",
+      "startsIn_one": "Commence {{date}} · dans {{count}} jour",
+      "startsIn_many": "Commence {{date}} · dans {{count}} jours",
+      "startsIn_other": "Commence {{date}} · dans {{count}} jours",
+      "startsToday": "Commence {{date}} · aujourd'hui",
+      "ended": "Terminé le {{date}}",
+      "bestResult": "{{rank}} en {{category}}",
+      "bestResultNote": "ton meilleur résultat",
+      "noEliminationWeek1": "Pas d'élimination en semaine 1"
+    }
   },
   "wizard": {
     "progress": "Étape {{current}} sur {{total}}",

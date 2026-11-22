@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
+import type { ChallengeSummary } from '../../api/hooks/useChallenges';
 import { otherTimeZoneName } from '../../domain/format/challengeDates';
 import { mockChallenges } from '../../mocks/handlers';
 import { AppProviders } from '../../test/AppProviders';
@@ -8,10 +9,34 @@ import { ChallengeCard } from './ChallengeCard';
 
 const found = mockChallenges[0];
 if (!found) throw new Error('No mock challenge');
-const montreal = found;
+const base: ChallengeSummary = {
+  ...found,
+  title: 'Défi d’automne',
+  visibility: 'public',
+  participant_count: 8,
+  my_role: 'creator',
+  my_status: 'active',
+  best_result: null,
+};
+
+type Ranking = NonNullable<ChallengeSummary['my_week']>['rankings'][number];
+
+function rank(type: Ranking['type'], value: number, count: number): Ranking {
+  return { type, rank: value, ranked_count: count, elimination: null, provisional_points: null };
+}
+
+/** An ongoing challenge in week `week` of 4, ending on Saturday 28 November in Montréal. */
+function ongoing(week: number, rankings: Ranking[]): ChallengeSummary {
+  return {
+    ...base,
+    status: 'ongoing',
+    week_count: 4,
+    my_week: { week, week_ends_at: '2026-11-28T05:00:00Z', rankings },
+  };
+}
 
 /** Renders the card on a device set to the given time zone. */
-function renderCardIn(deviceTimeZone: string, challenge = montreal) {
+function renderCard(challenge: ChallengeSummary, deviceTimeZone = 'America/Montreal') {
   const resolved = Intl.DateTimeFormat.prototype.resolvedOptions;
   vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockImplementation(function (
     this: Intl.DateTimeFormat,
@@ -19,150 +44,223 @@ function renderCardIn(deviceTimeZone: string, challenge = montreal) {
     return { ...resolved.call(this), timeZone: deviceTimeZone };
   });
   const router = createMemoryRouter([
-    {
-      path: '/',
-      element: <ChallengeCard challenge={challenge} showStatus />,
-    },
+    { path: '/', element: <ChallengeCard challenge={challenge} /> },
   ]);
   render(
     <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
       <RouterProvider router={router} />
     </AppProviders>,
   );
+  return screen.getByRole('link');
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
 describe('ChallengeCard', () => {
+  it('shows the week of 4 and my rank in each category, the elimination at risk', () => {
+    const card = renderCard(
+      ongoing(3, [
+        rank('cumulative_time', 4, 8),
+        rank('cumulative_distance', 2, 8),
+        {
+          ...rank('elimination', 5, 8),
+          elimination: {
+            status: 'at_risk',
+            eliminated_week: null,
+            minimum_meters: 25_000,
+            distance_meters: 18_000,
+            week_ends_at: '2026-11-28T05:00:00Z',
+          },
+        },
+        { ...rank('points', 2, 8), provisional_points: 4 },
+      ]),
+    );
+
+    expect(card).toHaveAttribute('href', `/challenges/${base.id}`);
+    expect(card).toHaveClass('border-risk-border');
+    // The card says it is at risk, and so does its elimination line.
+    expect(within(card).getAllByText('À risque')).toHaveLength(2);
+    expect(card).toHaveTextContent("Public · 8 participants · tu l'as créé");
+    expect(card).toHaveTextContent('Sem. 3 sur 4 · se termine sam. 28 nov., 00 h');
+    expect(card).toHaveTextContent('Semaine 3 sur 4 · se termine samedi 28 nov., 00 h');
+    const [time, distance, elimination, points] = within(card).getAllByRole('listitem');
+    expect(time).toHaveTextContent('Temps cumulé4e sur 8');
+    expect(distance).toHaveTextContent('Distance cumulée2e sur 8');
+    expect(elimination).toHaveTextContent('Course avec élimination');
+    expect(elimination).toHaveTextContent('18 km / 25 km');
+    expect(elimination).not.toHaveTextContent('5e sur 8');
+    expect(points).toHaveTextContent('Grand prix2e sur 8+ 4 pts provisoires');
+  });
+
+  it('shows the distance alone in week 1 of the elimination, no rank', () => {
+    const card = renderCard(
+      ongoing(1, [
+        {
+          ...rank('elimination', 1, 2),
+          elimination: {
+            status: null,
+            eliminated_week: null,
+            minimum_meters: null,
+            distance_meters: 12_000,
+            week_ends_at: '2026-11-28T05:00:00Z',
+          },
+        },
+      ]),
+    );
+
+    expect(card).not.toHaveClass('border-risk-border');
+    expect(within(card).queryByText('À risque')).not.toBeInTheDocument();
+    const [elimination] = within(card).getAllByRole('listitem');
+    expect(elimination).toHaveTextContent("12 kmPas d'élimination en semaine 1");
+    expect(elimination).not.toHaveTextContent('1er sur 2');
+  });
+
+  it('shares a rank between tied participants, as the server gives it', () => {
+    const card = renderCard(ongoing(2, [rank('cumulative_distance', 1, 2)]));
+
+    expect(within(card).getByRole('listitem')).toHaveTextContent('Distance cumulée1er sur 2');
+  });
+
+  it('says the week of the elimination instead of a distance once eliminated', () => {
+    const card = renderCard(
+      ongoing(4, [
+        {
+          ...rank('elimination', 6, 6),
+          elimination: {
+            status: 'eliminated',
+            eliminated_week: 3,
+            minimum_meters: null,
+            distance_meters: 0,
+            week_ends_at: null,
+          },
+        },
+      ]),
+    );
+
+    expect(within(card).getByRole('listitem')).toHaveTextContent('Éliminé en semaine 3');
+  });
+
+  it('shows no week for an ongoing challenge without my week', () => {
+    const card = renderCard({ ...base, status: 'ongoing', my_week: null, my_role: 'outsider' });
+
+    expect(card).not.toHaveTextContent('Semaine');
+    expect(within(card).queryByRole('list')).not.toBeInTheDocument();
+    expect(card).toHaveTextContent('Public · 8 participants');
+    expect(card).not.toHaveTextContent('tu ');
+  });
+
+  it('counts the days before an upcoming challenge, and says I abandoned it', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    // Sunday 22 November, 23:00 in Montréal (already the 23rd in UTC).
+    vi.setSystemTime(new Date('2026-11-23T04:00:00Z'));
+    const card = renderCard({
+      ...base,
+      title: 'Challenge des braves',
+      status: 'upcoming',
+      starts_at: '2026-12-01T05:00:00Z',
+      ends_at: '2027-01-12T05:00:00Z',
+      participant_count: 1,
+      my_status: 'abandoned',
+      my_week: null,
+    });
+
+    expect(within(card).getByText('Abandonné')).toBeInTheDocument();
+    expect(within(card).getByText('Tu as abandonné')).toBeInTheDocument();
+    expect(card).toHaveTextContent('Commence mardi 1 déc. · dans 9 jours');
+    expect(card).toHaveTextContent(
+      "Du 1 déc. 2026 au 11 janv. 2027 · Public · 1 participant · tu l'as créé",
+    );
+  });
+
+  it('says an upcoming challenge starts today once its first day has come', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    // Just past the start, before the server says it is ongoing.
+    vi.setSystemTime(new Date('2026-12-01T05:00:30Z'));
+    const card = renderCard({ ...base, status: 'upcoming', starts_at: '2026-12-01T05:00:00Z' });
+
+    expect(card).toHaveTextContent("Commence mardi 1 déc. · aujourd'hui");
+  });
+
+  it('shows my best result in a finished challenge, and its last day', () => {
+    const card = renderCard({
+      ...base,
+      title: 'Défi d’octobre',
+      status: 'finished',
+      visibility: 'private',
+      participant_count: 5,
+      my_role: 'participant',
+      starts_at: '2026-10-05T04:00:00Z',
+      ends_at: '2026-11-01T04:00:00Z',
+      my_week: null,
+      best_result: { type: 'cumulative_distance', rank: 2, ranked_count: 5 },
+    });
+
+    expect(card).toHaveTextContent('2e en distance cumulée · ton meilleur résultat');
+    expect(card).toHaveTextContent(
+      'Terminé le 31 oct. 2026 · Privé · 5 participants · tu participes',
+    );
+  });
+
+  it('keeps the name of the Grand prix in my best result', () => {
+    const card = renderCard({
+      ...base,
+      status: 'finished',
+      my_week: null,
+      best_result: { type: 'points', rank: 1, ranked_count: 5 },
+    });
+
+    expect(card).toHaveTextContent('1er en Grand prix');
+  });
+
+  it('says I abandoned an ongoing challenge, without my week', () => {
+    const card = renderCard({
+      ...base,
+      status: 'ongoing',
+      my_role: 'abandoned',
+      my_status: 'abandoned',
+      my_week: null,
+    });
+
+    expect(within(card).getByText('Tu as abandonné')).toBeInTheDocument();
+    expect(card).not.toHaveTextContent('Semaine');
+    expect(card).not.toHaveTextContent('tu ');
+  });
+
+  it('shows the bar of an elimination in progress, without a pill', () => {
+    const card = renderCard(
+      ongoing(2, [
+        {
+          ...rank('elimination', 3, 6),
+          elimination: {
+            status: 'in_progress',
+            eliminated_week: null,
+            minimum_meters: 20_000,
+            distance_meters: 5_000,
+            week_ends_at: '2026-11-28T05:00:00Z',
+          },
+        },
+      ]),
+    );
+
+    const row = within(card).getByRole('listitem');
+    expect(row).toHaveTextContent('5 km / 20 km');
+    expect(within(row).queryByText('En cours')).not.toBeInTheDocument();
+    expect(card).not.toHaveClass('border-risk-border');
+  });
+
+  it('shows no best result when the server gives none', () => {
+    const card = renderCard({ ...base, status: 'finished', my_week: null, best_result: null });
+
+    expect(card).not.toHaveTextContent('meilleur résultat');
+  });
+
   it('names the challenge time zone when the device is elsewhere', () => {
     const zone = otherTimeZoneName('America/Montreal', 'Europe/Paris', 'fr');
-    renderCardIn('Europe/Paris');
+    const card = renderCard({ ...base, status: 'finished' }, 'Europe/Paris');
 
-    expect(screen.getByText(/Du 2 nov\. au 29 nov\./)).toHaveTextContent(`· ${zone}`);
-  });
-
-  it('shows the period alone in the challenge time zone', () => {
-    renderCardIn('America/Montreal');
-
-    expect(screen.getByText('Du 2 nov. au 29 nov.')).toBeInTheDocument();
-  });
-
-  it('shows nothing of the week when the server gives none', () => {
-    renderCardIn('America/Montreal', { ...montreal, my_week: null });
-
-    expect(screen.queryByText(/Semaine/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('list')).not.toBeInTheDocument();
-  });
-
-  it('shows the week and the rank in each category, with the provisional points', () => {
-    renderCardIn('America/Montreal', {
-      ...montreal,
-      status: 'ongoing',
-      my_week: {
-        week: 3,
-        week_ends_at: '2026-11-23T05:00:00Z',
-        rankings: [
-          {
-            type: 'cumulative_time',
-            rank: 1,
-            ranked_count: 6,
-            elimination: null,
-            provisional_points: null,
-          },
-          {
-            type: 'elimination',
-            rank: 5,
-            ranked_count: 8,
-            elimination: {
-              status: 'at_risk',
-              eliminated_week: null,
-              minimum_meters: 25_000,
-              distance_meters: 18_000,
-              week_ends_at: '2026-11-23T05:00:00Z',
-            },
-            provisional_points: null,
-          },
-          { type: 'points', rank: 2, ranked_count: 6, elimination: null, provisional_points: 12 },
-        ],
-      },
-    });
-
-    const week = within(screen.getByRole('link'));
-    expect(week.getByText('Semaine 3')).toBeInTheDocument();
-    expect(week.getByText(/^Fin de la semaine : /)).toBeInTheDocument();
-    const [time, elimination, points] = week.getAllByRole('listitem') as [
-      HTMLElement,
-      HTMLElement,
-      HTMLElement,
-    ];
-    expect(time).toHaveTextContent('Temps cumulé1er sur 6');
-    // The list gives no reference sport: a generic name.
-    expect(elimination).toHaveTextContent('Élimination');
-    expect(elimination).toHaveTextContent('À risque');
-    expect(elimination).toHaveTextContent('18 km sur 25 km cette semaine');
-    expect(elimination).toHaveTextContent('5e sur 8');
-    expect(points).toHaveTextContent('Grand prix2e sur 6 + 12 pts provisoires');
-  });
-
-  it('says the week of the elimination instead of a rank once eliminated', () => {
-    renderCardIn('America/Montreal', {
-      ...montreal,
-      status: 'ongoing',
-      my_week: {
-        week: 4,
-        week_ends_at: '2026-11-30T05:00:00Z',
-        rankings: [
-          {
-            type: 'elimination',
-            rank: 6,
-            ranked_count: 6,
-            elimination: {
-              status: 'eliminated',
-              eliminated_week: 3,
-              minimum_meters: null,
-              distance_meters: 0,
-              week_ends_at: null,
-            },
-            provisional_points: null,
-          },
-        ],
-      },
-    });
-
-    const [elimination] = within(screen.getByRole('link')).getAllByRole('listitem');
-    expect(elimination).toHaveTextContent('Éliminé en semaine 3');
-    expect(elimination).not.toHaveTextContent('sur 6');
-  });
-
-  it('shows no progress in week 1 of the elimination, only the rank', () => {
-    renderCardIn('America/Montreal', {
-      ...montreal,
-      status: 'ongoing',
-      my_week: {
-        week: 1,
-        week_ends_at: '2026-11-09T05:00:00Z',
-        rankings: [
-          {
-            type: 'elimination',
-            rank: 1,
-            ranked_count: 3,
-            elimination: {
-              status: null,
-              eliminated_week: null,
-              minimum_meters: null,
-              distance_meters: 4_000,
-              week_ends_at: '2026-11-09T05:00:00Z',
-            },
-            provisional_points: null,
-          },
-        ],
-      },
-    });
-
-    const [elimination] = within(screen.getByRole('link')).getAllByRole('listitem');
-    expect(elimination).toHaveTextContent('Élimination1er sur 3');
-    expect(elimination).not.toHaveTextContent('cette semaine');
+    expect(card).toHaveTextContent(`Terminé le 29 nov. 2026 · ${zone} · Public`);
   });
 });

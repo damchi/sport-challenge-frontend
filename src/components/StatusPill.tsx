@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 // Tones of the statuses shown so far; each new status adds its own.
 const TONES = {
@@ -9,7 +10,7 @@ const TONES = {
 } as const;
 
 interface StatusPillProps {
-  label: string;
+  label: ReactNode;
   Icon: LucideIcon;
   tone: keyof typeof TONES;
 }

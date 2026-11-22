@@ -1,69 +1,210 @@
-import { Globe, Lock } from 'lucide-react';
+import { Award, Ban, CalendarDays, Timer, TriangleAlert } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { ChallengeSummary } from '../../api/hooks/useChallenges';
-import { challengePeriod, otherTimeZoneName } from '../../domain/format/challengeDates';
-import { ChallengeStatusPill, RolePills } from './ChallengePills';
-import { MyWeekSummary } from './MyWeekSummary';
+import { StatusPill } from '../../components/StatusPill';
+import {
+  challengeLastDay,
+  challengePeriod,
+  challengeStartDay,
+  challengeWeekEnd,
+  daysUntil,
+  otherTimeZoneName,
+} from '../../domain/format/challengeDates';
+import { useCategoryName } from './detail/categoryNames';
+import { MyWeekRows } from './MyWeekRows';
 
-interface ChallengeCardProps {
-  challenge: ChallengeSummary;
-  /** Shows the challenge's status (when the list is not filtered by it). */
-  showStatus: boolean;
-}
+const CARD = 'flex h-full flex-col rounded-card p-4 lg:p-5';
+const CARD_HOVER = '[@media(hover:hover)]:hover:border-muted';
 
 /**
- * A challenge of a list: title, my role, status, visibility, period in the
- * challenge's time zone (named when the user is elsewhere) and participants,
- * then the user's week and ranks while they take part.
+ * A challenge of the home page, as its status (the server's) shows it.
+ * Ongoing: the week and its end, then the user's line in each category
+ * while they take part (my_week). Upcoming: the start and the days left.
+ * Finished: the user's best frozen rank (best_result). Every card ends with
+ * its visibility, participants and the user's role; its dates are in the
+ * challenge's time zone, named when the user's differs.
  */
-export function ChallengeCard({ challenge, showStatus }: ChallengeCardProps) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const period = challengePeriod(
-    challenge.starts_at,
-    challenge.ends_at,
-    challenge.timezone,
-    locale,
-  );
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const zone = otherTimeZoneName(challenge.timezone, userTimeZone, locale);
-  const VisibilityIcon = challenge.visibility === 'public' ? Globe : Lock;
+export function ChallengeCard({ challenge }: { challenge: ChallengeSummary }) {
+  const { t } = useTranslation();
+  const atRisk =
+    challenge.my_week?.rankings.some((ranking) => ranking.elimination?.status === 'at_risk') ??
+    false;
+  const border = atRisk
+    ? 'border-2 border-risk-border bg-surface'
+    : challenge.status === 'finished'
+      ? `border border-border ${CARD_HOVER}`
+      : `border border-border bg-surface ${CARD_HOVER}`;
 
   return (
-    <Link
-      to={`/challenges/${challenge.id}`}
-      className="block rounded-card border border-border bg-surface p-4 [@media(hover:hover)]:hover:border-muted"
-    >
-      {/* The pills sit beside the title, under it when the text is enlarged. */}
+    <Link to={`/challenges/${challenge.id}`} className={`${CARD} ${border}`}>
+      {/* The pill sits beside the title, under it when the text is enlarged. */}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <h2 className="min-w-0 flex-1 basis-24 font-display text-lg font-bold break-words">
+        <h3 className="min-w-0 flex-1 basis-32 font-display text-lg font-bold break-words">
           {challenge.title}
-        </h2>
-        <div className="flex flex-wrap gap-1">
-          <RolePills role={challenge.my_role} status={challenge.my_status} />
-        </div>
+        </h3>
+        {atRisk ? (
+          <StatusPill
+            label={t('leaderboard.elimination.at_risk')}
+            Icon={TriangleAlert}
+            tone="risk"
+          />
+        ) : (
+          challenge.my_status === 'abandoned' && (
+            <StatusPill
+              label={
+                <>
+                  <span className="md:hidden">{t('challenges.card.abandonedShort')}</span>
+                  <span className="hidden md:inline">{t('challenges.card.abandoned')}</span>
+                </>
+              }
+              Icon={Ban}
+              tone="out"
+            />
+          )
+        )}
       </div>
-      {showStatus && (
-        <div className="mt-2">
-          <ChallengeStatusPill status={challenge.status} />
-        </div>
-      )}
-      <p className="mt-2 text-sm text-muted">
-        {t('challenges.period', period)}
-        {zone && <> · {zone}</>}
-      </p>
-      <p className="mt-1 flex items-center gap-3 text-sm text-muted">
-        <span className="inline-flex items-center gap-1">
-          <VisibilityIcon aria-hidden="true" size={14} strokeWidth={2} />
-          {t(`challenges.visibility.${challenge.visibility}`)}
-        </span>
-        <span>{t('challenges.participants', { count: challenge.participant_count })}</span>
-      </p>
-      {/* Given by the server while the user takes part in an ongoing challenge. */}
-      {challenge.my_week && (
-        <MyWeekSummary week={challenge.my_week} timeZone={challenge.timezone} />
-      )}
+      {challenge.status === 'ongoing' && <OngoingBody challenge={challenge} />}
+      {challenge.status === 'upcoming' && <UpcomingBody challenge={challenge} />}
+      {challenge.status === 'finished' && <FinishedBody challenge={challenge} />}
     </Link>
+  );
+}
+
+/** "Public · 8 participants · tu l'as créé", after what a status puts first. */
+function Meta({ challenge, first }: { challenge: ChallengeSummary; first?: string }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const zone = otherTimeZoneName(
+    challenge.timezone,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    locale,
+  );
+  const role =
+    challenge.my_role === 'creator'
+      ? t('challenges.card.creator')
+      : challenge.my_role === 'participant'
+        ? t('challenges.card.participant')
+        : undefined;
+  const parts = [
+    first,
+    zone,
+    t(`challenges.visibility.${challenge.visibility}`),
+    t('challenges.participants', { count: challenge.participant_count }),
+    role,
+  ].filter((part): part is string => Boolean(part));
+  return <p className="mt-2 text-sm text-muted">{parts.join(' · ')}</p>;
+}
+
+/** The week of the challenge (the user's my_week) in a dark banner, then the user's lines. */
+function OngoingBody({ challenge }: { challenge: ChallengeSummary }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const week = challenge.my_week;
+  const banner = (weekday: 'long' | 'short') =>
+    week &&
+    t(weekday === 'long' ? 'challenges.card.week' : 'challenges.card.weekShort', {
+      week: week.week,
+      count: challenge.week_count,
+      date: challengeWeekEnd(week.week_ends_at, challenge.timezone, locale, weekday),
+    });
+  return (
+    <>
+      <Meta challenge={challenge} />
+      {week && (
+        <>
+          <p className="mt-4 flex items-start gap-3 rounded-row border border-raised-border bg-surface-raised px-4 py-3 text-sm font-bold text-on-raised">
+            <Timer
+              aria-hidden="true"
+              size={18}
+              strokeWidth={2}
+              className="mt-0.5 flex-none text-accent"
+            />
+            <span className="md:hidden">{banner('short')}</span>
+            <span className="hidden md:inline">{banner('long')}</span>
+          </p>
+          <MyWeekRows week={week} referenceSport={challenge.reference_sport} />
+        </>
+      )}
+    </>
+  );
+}
+
+/** The first day and the days left before it, then the period. */
+function UpcomingBody({ challenge }: { challenge: ChallengeSummary }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const { timezone } = challenge;
+  const date = challengeStartDay(challenge.starts_at, timezone, locale);
+  const days = daysUntil(new Date(), challenge.starts_at, timezone);
+  return (
+    <>
+      <Highlight Icon={CalendarDays} iconClass="text-accent">
+        {days === 0
+          ? t('challenges.card.startsToday', { date })
+          : t('challenges.card.startsIn', { date, count: days })}
+      </Highlight>
+      <Meta
+        challenge={challenge}
+        first={t(
+          'challenges.period',
+          challengePeriod(challenge.starts_at, challenge.ends_at, timezone, locale),
+        )}
+      />
+    </>
+  );
+}
+
+/** The user's best frozen rank, when the server gives one, then the last day. */
+function FinishedBody({ challenge }: { challenge: ChallengeSummary }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const categoryName = useCategoryName(challenge.reference_sport);
+  const best = challenge.best_result;
+  return (
+    <>
+      {best && (
+        <Highlight Icon={Award} iconClass="text-ok-fg">
+          {t('challenges.card.bestResult', {
+            rank: t('leaderboard.rank', { count: best.rank, ordinal: true }),
+            // Inside a sentence: "2e en distance cumulée", but "1er en Grand prix".
+            category:
+              best.type === 'points'
+                ? categoryName(best.type)
+                : categoryName(best.type).toLocaleLowerCase(locale),
+          })}
+          <span className="hidden md:inline"> · {t('challenges.card.bestResultNote')}</span>
+        </Highlight>
+      )}
+      <Meta
+        challenge={challenge}
+        first={t('challenges.card.ended', {
+          date: challengeLastDay(challenge.ends_at, challenge.timezone, locale),
+        })}
+      />
+    </>
+  );
+}
+
+function Highlight({
+  Icon,
+  iconClass,
+  children,
+}: {
+  Icon: typeof Award;
+  iconClass: string;
+  children: ReactNode;
+}) {
+  return (
+    <p className="mt-3 flex items-start gap-2 font-bold">
+      <Icon
+        aria-hidden="true"
+        size={20}
+        strokeWidth={2}
+        className={`mt-0.5 flex-none ${iconClass}`}
+      />
+      <span>{children}</span>
+    </p>
   );
 }

@@ -220,16 +220,16 @@ si le chiffre est juste à côté.
 
 ### Carte de défi (accueil)
 
-Lien vers la page du défi, fond `--color-surface`, rayon 18 px. Ordre : titre
-+ badge de statut → grand chiffre « 18 » suivi de « / 25 km cette semaine » →
-barre → ligne méta (ce qui manque avant la clôture, ou les sports) et rang
-« 5e sur 8 » à droite.
+Lien vers la page du défi, fond `--color-surface` (fond de la page pour un
+défi terminé), rayon 18 px, bordure `--color-border` (`--color-risk-border`,
+2 px, quand l'élimination est à risque). Le contenu dépend du statut : voir
+« Écrans de référence », 1. « Accueil ».
 
-Disposition : une carte par ligne en mobile ; en web, grille
-`repeat(auto-fill, minmax(300px, 1fr))`, gap 16 px (deux cartes par ligne à
-1280 px). ✅ La grille se termine par une tuile « Créer un défi » (bordure
-pointillée `--color-border-dashed`, icône `plus` et texte en accent, hauteur
-minimale 120 px) ; en mobile, la même tuile termine la liste.
+Disposition : une carte par ligne en mobile ; à partir de `md`, grille
+`repeat(auto-fill, minmax(288px, 340px))`, gap 16 px. ✅ « Créer un défi » est
+un bouton (à droite du titre à partir de `md`, flottant en mobile) ; la grille
+ne se termine plus par une tuile (décision du 2026-11-22, qui remplace
+SC-WEB-054).
 
 ### Bandeau de clôture
 
@@ -351,21 +351,45 @@ Les réglages (langue, thème, déconnexion) sont dans l'onglet Profil ; le thè
 
 Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
 (mobile clair), `*-sombre.png` (mobile sombre), `*-web.png` (web à
-1280 px) ; page d'un défi : `Web · Page d'un défi · catégories@2x.png` et
+1280 px) ; accueil : `Web · Défis (mes défis)@2x.png` et
+`Mobile mes defis.png` ; page d'un défi : `Web · Page d'un défi · catégories@2x.png` et
 `Mobile · Page d'un défi · catégories@2x.png`.
 
-1. **Accueil « Mes défis »**
-   - Mobile : salutation + titre (bouton notifications en V3) ; bandeau de
-     clôture ; cartes de défi (à risque en premier, puis en cours, puis
-     éliminés) ; dernière activité (« Course · 8,2 km », date, contribution
-     « +8,2 km » en accent) ; barre de navigation (le bouton flottant de la
-     maquette devient la tuile « Ajouter une activité » de la page
-     Activités, décision du 2026-11-20).
-   - Web : barre en haut ; salutation + titre à gauche (« Ajouter une
-     activité » est sur la page Activités) ; colonne principale = grille des cartes de défi
-     (même ordre) terminée par « Créer un défi » ; colonne latérale = bandeau
-     de clôture puis carte « Dernières activités » (les trois dernières, avec
-     le défi concerné et la contribution, lien « Tout voir »).
+1. **Accueil « Défis »** (maquettes `Web · Défis (mes défis)@2x.png` et
+   `Mobile mes defis.png`, décisions du 2026-11-22)
+   - En-tête : « Salut <prénom> » (sinon le pseudo, sinon rien) puis le titre
+     « Défis » ; « + Créer un défi » en bouton principal à droite du titre à
+     partir de `md`, en bouton flottant au-dessus de la barre de navigation
+     en mobile. Plus de tuile « Créer un défi » en fin de liste ; une liste
+     vide propose le même bouton.
+   - Onglets « Mes défis » (par défaut) / « Publics », puis puces de statut
+     avec compteur (`counts` de l'API, quel que soit le filtre) : « Tous 4 ·
+     En cours 2 · À venir 1 · Terminés 1 » ; défilement horizontal en mobile,
+     à droite des onglets en web.
+   - Sous « Tous », une section par statut (« En cours », « À venir »,
+     « Terminés », dans cet ordre, absente quand son compteur vaut 0), chacune
+     avec sa requête et son « Charger plus » ; ordre des cartes = ordre du
+     serveur. Une puce choisie montre sa seule section.
+   - Grille de cartes de 340 px au plus à partir de `md`, une colonne en
+     mobile. « Publics » montre les mêmes cartes ; les lignes « où tu en es »
+     n'existent que pour un défi où je participe.
+   - Carte en cours : titre ; badge « À risque » et bordure
+     `--color-risk-border` quand l'élimination est à risque ; méta
+     « Public · 8 participants · tu l'as créé » (fuseau nommé en tête s'il
+     diffère) ; bandeau sombre « Semaine 3 sur 4 · se termine samedi 28 nov.,
+     00 h » (« Sem. » et jour abrégé en mobile, `week_count`) ; une ligne par
+     catégorie : nom et rang « 4e sur 8 » ; élimination : badge de statut,
+     « 18 km / 25 km » et barre, ou la distance de la semaine et « Pas
+     d'élimination en semaine 1 », ou « Éliminé en semaine N » ; Grand prix :
+     points provisoires sous le nom.
+   - Carte à venir : badge « Tu as abandonné » (« Abandonné » en mobile) ;
+     icône calendrier et « Commence mardi 1 déc. · dans 9 jours » (jours
+     comptés dans le fuseau du défi) ; « Du … au … · Public · 1 participant ·
+     tu l'as créé ».
+   - Carte terminée : fond de la page ; icône médaille et « 2e en distance
+     cumulée · ton meilleur résultat » (`best_result`, « ton meilleur
+     résultat » masqué en mobile, ligne absente quand il est null) ;
+     « Terminé le 31 oct. 2026 · Privé · 5 participants ».
 2. **Page d'un défi** (maquettes `Web · Page d'un défi · catégories@2x.png`
    et `Mobile · Page d'un défi · catégories@2x.png`, décisions du 2026-11-21)
    - En-tête : retour (flèche seule en mobile, « ‹ Mes défis » à partir de

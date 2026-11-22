@@ -1,8 +1,8 @@
 // Challenge types of the domain, shared with the mobile app in V2.
 
-/** Which challenges a list shows: the public ones, or those I created or joined. */
+/** Which challenges a list shows: those I created or joined (the default), or the public ones. */
 export type ChallengeScope = 'public' | 'mine';
-export const CHALLENGE_SCOPES: readonly ChallengeScope[] = ['public', 'mine'];
+export const CHALLENGE_SCOPES: readonly ChallengeScope[] = ['mine', 'public'];
 
 /** Status filter of a list; the server computes each challenge's status. */
 export type ChallengeStatus = 'upcoming' | 'ongoing' | 'finished';

@@ -138,3 +138,53 @@ export function otherTimeZoneName(
 export function challengeDay(instant: string, timeZone: string, locale: string): string {
   return dayFormat(locale, timeZone, false).format(new Date(instant));
 }
+
+/**
+ * End of a challenge's week as a card says it, in its time zone, to the hour:
+ * "samedi 28 nov., 00 h", or "sam. 28 nov., 00 h" with a short weekday.
+ */
+export function challengeWeekEnd(
+  instant: string,
+  timeZone: string,
+  locale: string,
+  weekday: 'long' | 'short',
+): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    weekday,
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+  }).format(new Date(instant));
+}
+
+/** The first day of a challenge with its weekday, in its time zone: "mardi 1 déc.". */
+export function challengeStartDay(startsAt: string, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(startsAt));
+}
+
+/** The calendar day of an instant in a time zone, as a UTC midnight (ms). */
+function dayIndex(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(instant);
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  return Date.UTC(part('year'), part('month') - 1, part('day'));
+}
+
+/**
+ * How many days from `now` to the day of `instant`, both read in the
+ * challenge's time zone: 0 the same day, 1 the next one (never below 0).
+ */
+export function daysUntil(now: Date, instant: string, timeZone: string): number {
+  const days = (dayIndex(new Date(instant), timeZone) - dayIndex(now, timeZone)) / 86_400_000;
+  return Math.max(0, Math.round(days));
+}

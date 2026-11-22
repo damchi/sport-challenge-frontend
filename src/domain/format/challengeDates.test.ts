@@ -5,7 +5,10 @@ import {
   challengeLastDay,
   challengeTime,
   challengePeriod,
+  challengeStartDay,
+  challengeWeekEnd,
   challengeWindowBounds,
+  daysUntil,
   otherTimeZoneName,
   timeZoneName,
 } from './challengeDates';
@@ -156,5 +159,39 @@ describe('activityTime', () => {
     expect(activityTime('2026-11-19T12:30:00Z', 'America/Montreal', 'en')).toBe(
       'Nov 19, 2026, 7:30 AM',
     );
+  });
+});
+
+describe('challengeWeekEnd', () => {
+  it('writes the end of a week in the challenge time zone, weekday long or short', () => {
+    // Saturday 28 November 2026 at midnight in Montréal.
+    const end = '2026-11-28T05:00:00Z';
+    expect(challengeWeekEnd(end, 'America/Montreal', 'fr', 'long')).toBe('samedi 28 nov., 00 h');
+    expect(challengeWeekEnd(end, 'America/Montreal', 'fr', 'short')).toBe('sam. 28 nov., 00 h');
+    expect(challengeWeekEnd(end, 'America/Montreal', 'en', 'short')).toBe('Sat, Nov 28, 12 AM');
+  });
+});
+
+describe('challengeStartDay', () => {
+  it('writes the first day with its weekday, in the challenge time zone', () => {
+    expect(challengeStartDay('2026-12-01T05:00:00Z', 'America/Montreal', 'fr')).toBe(
+      'mardi 1 déc.',
+    );
+    // The same instant is still Monday in Vancouver.
+    expect(challengeStartDay('2026-12-01T05:00:00Z', 'America/Vancouver', 'en')).toBe(
+      'Monday, Nov 30',
+    );
+  });
+});
+
+describe('daysUntil', () => {
+  const start = '2026-12-01T05:00:00Z';
+  it('counts calendar days in the challenge time zone', () => {
+    // Sunday 22 November, 23:00 in Montréal (already the 23rd in UTC).
+    expect(daysUntil(new Date('2026-11-23T04:00:00Z'), start, 'America/Montreal')).toBe(9);
+    expect(daysUntil(new Date('2026-11-30T12:00:00Z'), start, 'America/Montreal')).toBe(1);
+  });
+  it('never goes below 0', () => {
+    expect(daysUntil(new Date('2026-12-02T12:00:00Z'), start, 'America/Montreal')).toBe(0);
   });
 });
