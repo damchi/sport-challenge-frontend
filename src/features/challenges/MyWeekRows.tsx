@@ -21,14 +21,14 @@ export function MyWeekRows({ week, referenceSport }: { week: MyWeek; referenceSp
     <ul className="mt-4">
       {week.rankings.map((ranking) => (
         <li key={ranking.type} className="border-t border-border py-3 last:pb-0">
-          <RankingRow ranking={ranking} week={week.week} name={categoryName(ranking.type)} />
+          <RankingRow ranking={ranking} name={categoryName(ranking.type)} />
         </li>
       ))}
     </ul>
   );
 }
 
-function RankingRow({ ranking, week, name }: { ranking: MyRanking; week: number; name: string }) {
+function RankingRow({ ranking, name }: { ranking: MyRanking; name: string }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const km = (meters: number) => formatKm(meters / 1000, locale);
@@ -58,9 +58,10 @@ function RankingRow({ ranking, week, name }: { ranking: MyRanking; week: number;
       });
       live = { status, share: minimumShare(elimination) };
     } else {
-      // No minimum yet: the distance of the week.
+      // A survivor without a minimum in an ongoing challenge: week 1, as the
+      // server says with minimum_meters null. The distance of the week.
       value = km(elimination.distance_meters);
-      if (week === 1) detail = t('challenges.card.noEliminationWeek1');
+      if (elimination.minimum_meters === null) detail = t('challenges.card.noEliminationWeek1');
     }
   }
 

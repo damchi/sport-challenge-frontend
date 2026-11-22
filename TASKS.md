@@ -349,6 +349,9 @@ Total : **166 points** (57 tickets), dont **152 pour la V1** ; 14 points sont re
 **Statut** : À faire
 
 ### SC-WEB-054 · Accueil : tuile « Créer un défi » en fin de liste
+
+> **Remplacé le 2026-11-22 par SC-WEB-069 (#121)** : « Créer un défi » devient un bouton à droite du titre à partir de `md` et un bouton flottant en mobile ; la tuile de fin de liste est supprimée (décision du propriétaire, voir `docs/design/design.md`).
+
 `F3` · Story · Phase 3 · Estimation 1 · Dépend de : 020 · Backend : aucun
 
 **Contexte** : « Créer un défi » n'apparaît que dans l'état vide de l'accueil. Dès que la liste contient un défi (même abandonné), il n'y a plus aucun moyen d'en créer un autre. Décision du propriétaire (2026-11-20) : le 🟡 de `docs/design/design.md` (« La grille se termine par une tuile "Créer un défi" ») est validé.
