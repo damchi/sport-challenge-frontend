@@ -119,6 +119,8 @@ const startTime = () => screen.getByLabelText('Heure');
 const hours = () => screen.getByRole('textbox', { name: 'Heures' });
 const minutes = () => screen.getByRole('textbox', { name: 'Minutes' });
 const distance = () => screen.queryByRole('textbox', { name: 'Distance en kilomètres' });
+/** The distance field, failing at once when it is not shown. */
+const distanceField = () => screen.getByRole('textbox', { name: 'Distance en kilomètres' });
 const ELEVATION = { name: 'Dénivelé positif en mètres' };
 const elevation = () => screen.queryByRole('textbox', ELEVATION);
 /** Types the elevation gain, its field shown by now. */
@@ -453,8 +455,7 @@ describe('ActivityForm', () => {
       await pick('Course');
       expect(elevation()).not.toBeInTheDocument();
 
-      const typed = distance();
-      if (typed) type(typed, '8,2');
+      type(distanceField(), '8,2');
       expect(elevation()).toBeInTheDocument();
       expect(screen.getByText('facultatif')).toBeInTheDocument();
     });
@@ -498,7 +499,7 @@ describe('ActivityForm', () => {
     });
 
     it.each([
-      ['the distance is erased', () => type(distance() ?? document.body, '')],
+      ['the distance is erased', () => type(distanceField(), '')],
       [
         'the sport takes none',
         () => fireEvent.click(screen.getByRole('radio', { name: 'Natation' })),
@@ -512,8 +513,7 @@ describe('ActivityForm', () => {
       await waitFor(() => expect(elevation()).not.toBeInTheDocument());
       // Shown again, it opens empty.
       fireEvent.click(screen.getByRole('radio', { name: 'Course' }));
-      const km = distance();
-      if (km) type(km, '8,2');
+      type(distanceField(), '8,2');
       expect(elevation()).toHaveValue('');
     });
 
@@ -523,8 +523,7 @@ describe('ActivityForm', () => {
       await fill({ sport: 'Autre', km: '' });
       type(screen.getByRole('textbox', { name: 'Quel sport ?' }), 'Kayak');
       expect(elevation()).not.toBeInTheDocument();
-      const km = distance();
-      if (km) type(km, '3');
+      type(distanceField(), '3');
       typeElevation('12');
       fireEvent.click(save());
 
