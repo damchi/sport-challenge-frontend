@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Activity } from '../../api/hooks/useActivities';
@@ -153,6 +154,13 @@ const item = async (name: string) => screen.findByRole('article', { name });
 const week = (name: RegExp) => screen.getByRole('region', { name });
 const MENU = "Actions de l'activité";
 
+/** The value of a stat of an activity (`term`: its label), spaces made plain. */
+const statOf = (activity: HTMLElement, term: string) =>
+  within(activity)
+    .queryByText(term, { selector: 'dt' })
+    ?.parentElement?.querySelector('dd')
+    ?.textContent?.replace(/\s+/g, ' ');
+
 /** Opens the "…" menu of an activity. */
 async function openMenu(name: string) {
   fireEvent.click(within(await item(name)).getByRole('button', { name: MENU }));
@@ -193,6 +201,46 @@ describe('ActivityList', () => {
     expect(within(activity).getByText('Manuelle')).toBeInTheDocument();
     // Same time zone as the device: no mention.
     expect(screen.queryByText(/Heures affichées/)).not.toBeInTheDocument();
+  });
+
+  describe('elevation gain', () => {
+    afterEach(async () => {
+      await i18n.changeLanguage('fr');
+    });
+
+    const ride: Activity = {
+      ...run,
+      id: '00000000-0000-4000-8000-0000000003a1',
+      sport_code: 'ride',
+      distance_meters: 31_500,
+      elevation_gain_meters: 1250,
+    };
+    const walk: Activity = {
+      ...run,
+      id: '00000000-0000-4000-8000-0000000004a1',
+      sport_code: 'walk',
+      elevation_gain_meters: 0,
+    };
+
+    it('shows it as a stat of its own, 0 included, and nothing when not entered', async () => {
+      listing([run, ride, walk]);
+      renderList();
+
+      const bike = await item('Vélo');
+      expect(statOf(bike, 'Distance')).toBe('31,5 km');
+      expect(statOf(bike, 'Dénivelé')).toBe('↗ 1 250 m');
+      expect(within(bike).getByText('↗')).toHaveAttribute('aria-hidden', 'true');
+      expect(statOf(await item('Marche'), 'Dénivelé')).toBe('↗ 0 m');
+      expect(statOf(await item('Course'), 'Dénivelé')).toBeUndefined();
+    });
+
+    it('writes it in English', async () => {
+      await i18n.changeLanguage('en');
+      listing([ride]);
+      renderList();
+
+      expect(statOf(await item('Cycling'), 'Elevation')).toBe('↗ 1,250 m');
+    });
   });
 
   it('shows the label of the sport "other", no distance, and neither pace nor speed without one', async () => {

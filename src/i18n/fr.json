@@ -184,6 +184,7 @@
     "otherSport": "Autre sport",
     "duration": "Durée",
     "distance": "Distance",
+    "elevation": "Dénivelé",
     "speed": "Vitesse",
     "pace": "Allure",
     "paceValue": "{{pace}} /km",
