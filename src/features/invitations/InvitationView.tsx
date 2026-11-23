@@ -180,9 +180,10 @@ function InvitedChallenge({
         </p>
       )}
 
+      {/* A new history entry: back returns to the invitation, which can still
+          be accepted, instead of the sign-in pages before it. */}
       <Link
         to={`/challenges/${encodeURIComponent(data.id)}`}
-        replace
         className="mt-3 flex h-11 items-center justify-center rounded-full border border-border bg-surface px-5 font-bold md:inline-flex"
       >
         {t('invitationPage.open')}

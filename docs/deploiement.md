@@ -110,6 +110,7 @@ Dans l'application web **de production** du tenant (pas celle du local), avec l'
 - **Allowed Callback URLs** : `<site>/callback`
 - **Allowed Logout URLs** : `<site>`
 - **Allowed Web Origins** : `<site>`
+- **Application Login URI** : `<site>` (voir `docs/runbook.md` §4)
 
 ### 4. Backend
 

@@ -129,6 +129,27 @@ describe('InvitationView', () => {
     );
     expect(tokens).toEqual([{ token: mockInvitationToken }, { token: mockInvitationToken }]);
     expect(router.state.location.hash).toBe('');
+    // Replaced: the link and its token leave the history.
+    expect(router.state.historyAction).toBe('REPLACE');
+  });
+
+  it('opens the challenge on a new history entry: back returns to the invitation', async () => {
+    answer();
+    const { router } = renderAt(path);
+
+    await preview();
+    fireEvent.click(screen.getByRole('link', { name: 'Voir le défi' }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/challenges/${mockInvitedChallengeId}`),
+    );
+    expect(router.state.historyAction).toBe('PUSH');
+
+    await router.navigate(-1);
+    expect(router.state.location.pathname).toBe('/invite');
+    expect(router.state.location.hash).toBe(`#${mockInvitationToken}`);
+    // The invitation can still be accepted.
+    await preview();
+    expect(accept()).toBeInTheDocument();
   });
 
   it.each(['', '#', '#not a token', `#${'a'.repeat(257)}`])(
