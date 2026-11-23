@@ -292,10 +292,10 @@ venir » en pointillés).
 - **Principal** : fond `--color-accent`, texte `--color-on-accent` 15 px / 700,
   hauteur 52 px, rayon 26 px. Une seule action principale par écran.
   ✅ « Ajouter une activité » n'est ni un bouton flottant ni sur l'accueil :
-  c'est une tuile en tête de la page Activités, toujours première de la
-  liste, au style de la tuile « Créer un défi » (bordure pointillée, icône
-  `plus` et texte en accent, hauteur minimale 120 px) (décisions du
-  2026-11-20).
+  c'est le bouton principal de l'en-tête de « Mes activités », à droite du
+  titre (« + Ajouter » en mobile, « + Ajouter une activité » en web)
+  (décisions du 2026-11-20, tuile en pointillés remplacée le 2026-11-22,
+  SC-WEB-075).
 - **Danger** ✅ (décision du 2026-11-21) : forme du bouton principal, fond
   `--color-danger`, texte `--color-on-danger`. Réservé au bouton de
   confirmation d'une action définitive sur des données enregistrées
@@ -506,6 +506,25 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      modifiée demande confirmation.
    - Liste des activités : allure (« 5:07 /km ») et vitesse (km/h), toutes
      deux fournies par l'API.
+6. **Mes activités** (maquettes `Activites.png` et `WebActivites.png`,
+   SC-WEB-075, décisions du 2026-11-22)
+   - En-tête : titre et bouton principal « + Ajouter » (voir Boutons).
+   - Activités groupées par semaine, du **lundi au dimanche**, dans le fuseau
+     de saisie : « Cette semaine », « Semaine dernière », sinon « Semaine du
+     9 nov. », suivi des jours (« · 16–22 nov. ») ; les activités d'une
+     semaine dans une seule carte, séparées par un filet.
+   - Une activité : icône du sport (Lucide, pas d'emoji) dans une pastille
+     accent, sport, début (« Aujourd'hui à 8:05 », « Hier à … », sinon
+     « Ven. 20 nov. à 12:00 »), « Compte pour : » et les défis où elle
+     compte (« (temps seulement) » sans distance), puis Durée, Distance
+     (« — » sans distance), Allure et Vitesse (2 × 2 en mobile, en ligne à
+     partir de `lg`).
+   - Action à droite : bouton « … » (Modifier, Supprimer) tant que la
+     semaine n'est pas jugée ; sinon cadenas en mobile, pastille « Semaine
+     jugée » à partir de `lg`. Sous la liste : « Une activité se modifie ou
+     se supprime tant que sa semaine n'est pas jugée dans tes défis. »
+   - Résumé de la semaine, filtres par sport et totaux par semaine : à venir
+     (SC-WEB-076, totaux fournis par l'API).
 
 À dessiner plus tard dans le même style, en mobile et en web : lien
 d'invitation à partager, profil, et en V1.1 les badges (obtenus en

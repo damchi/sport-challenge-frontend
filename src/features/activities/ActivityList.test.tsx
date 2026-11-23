@@ -56,11 +56,17 @@ function listing(...pages: Activity[][]) {
   );
 }
 
+// Wednesday 25 Nov 2026, 10:00 in Montréal.
+const NOW = new Date('2026-11-25T15:00:00Z');
+
 // The device in the time zone of the mock challenges, unless said otherwise.
 function renderList({ deviceTimeZone = 'America/Montreal' } = {}) {
   const router = createMemoryRouter(
     [
-      { path: '/activities', element: <ActivityList deviceTimeZone={deviceTimeZone} /> },
+      {
+        path: '/activities',
+        element: <ActivityList deviceTimeZone={deviceTimeZone} now={NOW} />,
+      },
       { path: '/activities/:activityId/edit', element: <p>Modification</p> },
     ],
     { initialEntries: ['/activities'] },
@@ -73,6 +79,20 @@ function renderList({ deviceTimeZone = 'America/Montreal' } = {}) {
 }
 
 const item = async (name: string) => screen.findByRole('article', { name });
+const week = (name: RegExp) => screen.getByRole('region', { name });
+const MENU = "Actions de l'activité";
+
+/** Opens the "…" menu of an activity. */
+async function openMenu(name: string) {
+  fireEvent.click(within(await item(name)).getByRole('button', { name: MENU }));
+}
+
+const contribution = (challenge_title: string, distance_meters: number | null) => ({
+  challenge_id: '00000000-0000-4000-8000-0000000000c1',
+  challenge_title,
+  distance_meters,
+  duration_seconds: 2730,
+});
 
 describe('ActivityList', () => {
   it('shows each activity: sport, start, duration, distance, pace, speed and "manual"', async () => {
@@ -80,7 +100,7 @@ describe('ActivityList', () => {
     renderList();
     const activity = await item('Course');
 
-    expect(within(activity).getByText('19 nov. 2026, 7:30')).toBeInTheDocument();
+    expect(within(activity).getByText('jeu. 19 nov. à 7:30')).toBeInTheDocument();
     expect(within(activity).getByText('0:45:30')).toBeInTheDocument();
     expect(within(activity).getByText('8,2 km')).toBeInTheDocument();
     // The pace and the speed the API computed, per km and in km/h.
@@ -92,12 +112,13 @@ describe('ActivityList', () => {
     expect(screen.queryByText(/Heures affichées/)).not.toBeInTheDocument();
   });
 
-  it('shows the label of the sport "other", and neither distance, pace nor speed without one', async () => {
+  it('shows the label of the sport "other", no distance, and neither pace nor speed without one', async () => {
     listing([padel]);
     renderList();
     const activity = await item('Padel');
 
-    expect(within(activity).queryByText('Distance')).not.toBeInTheDocument();
+    expect(within(activity).getByText('Distance')).toBeInTheDocument();
+    expect(within(activity).getByText('Aucune')).toBeInTheDocument();
     expect(within(activity).queryByText('Allure')).not.toBeInTheDocument();
     expect(within(activity).queryByText('Vitesse')).not.toBeInTheDocument();
   });
@@ -106,37 +127,107 @@ describe('ActivityList', () => {
     listing([run]);
     renderList({ deviceTimeZone: 'Europe/Paris' });
 
-    expect(await screen.findByText('19 nov. 2026, 7:30')).toBeInTheDocument();
+    expect(await screen.findByText('jeu. 19 nov. à 7:30')).toBeInTheDocument();
     expect(
       screen.getByText('Heures affichées : heure de l’Est nord-américain.'),
     ).toBeInTheDocument();
   });
 
-  it('offers to change or delete an activity that is not locked', async () => {
+  it('groups the activities by week, Monday to Sunday, named from today', async () => {
+    const today: Activity = {
+      ...run,
+      id: '00000000-0000-4000-8000-0000000003a1',
+      started_at: '2026-11-25T13:05:00Z',
+    };
+    const yesterday: Activity = {
+      ...run,
+      id: '00000000-0000-4000-8000-0000000004a1',
+      sport_code: 'ride',
+      started_at: '2026-11-24T13:05:00Z',
+    };
+    listing([today, yesterday, run, padel]);
+    renderList();
+    await item('Vélo');
+
+    expect(screen.getAllByRole('heading', { level: 2 }).map((title) => title.textContent)).toEqual([
+      'Cette semaine · 23–29 nov.',
+      'Semaine dernière · 16–22 nov.',
+      'Semaine du 2 nov. · 2–8 nov.',
+    ]);
+    const thisWeek = week(/^Cette semaine/);
+    expect(within(thisWeek).getAllByRole('article')).toHaveLength(2);
+    expect(within(thisWeek).getByText("Aujourd'hui à 8:05")).toBeInTheDocument();
+    expect(within(thisWeek).getByText('Hier à 8:05')).toBeInTheDocument();
+    expect(
+      within(week(/^Semaine dernière/)).getByRole('article', { name: 'Course' }),
+    ).toBeInTheDocument();
+    expect(
+      within(week(/^Semaine du 2 nov/)).getByRole('article', { name: 'Padel' }),
+    ).toBeInTheDocument();
+  });
+
+  it('says where an activity counts, "time only" without a distance', async () => {
+    listing([
+      {
+        ...run,
+        contributions: [contribution("Défi d'automne", 8200), contribution('Les ruelles', 8200)],
+      },
+      { ...padel, contributions: [contribution("Défi d'automne", null)] },
+    ]);
+    renderList();
+
+    expect(
+      within(await item('Course')).getByText("Compte pour : Défi d'automne · Les ruelles"),
+    ).toBeInTheDocument();
+    expect(
+      within(await item('Padel')).getByText("Compte pour : Défi d'automne (temps seulement)"),
+    ).toBeInTheDocument();
+  });
+
+  it('offers to change or delete an activity that is not locked, from its menu', async () => {
     listing([run]);
     renderList();
     const activity = await item('Course');
+    const button = within(activity).getByRole('button', { name: MENU });
+    expect(button).toHaveAccessibleDescription('Course jeu. 19 nov. à 7:30');
+    expect(within(activity).queryByRole('link', { name: 'Modifier' })).not.toBeInTheDocument();
 
-    expect(within(activity).getByRole('link', { name: 'Modifier' })).toHaveAttribute(
-      'href',
-      `/activities/${RUN_ID}/edit`,
-    );
+    fireEvent.click(button);
+
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    const edit = within(activity).getByRole('link', { name: 'Modifier' });
+    expect(edit).toHaveAttribute('href', `/activities/${RUN_ID}/edit`);
+    expect(edit).toHaveFocus();
     expect(within(activity).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
-    expect(within(activity).queryByText(/ne peut plus être modifiée/)).not.toBeInTheDocument();
+    expect(within(activity).queryByText('Semaine jugée')).not.toBeInTheDocument();
   });
 
-  it('shows a locked activity read only, saying why', async () => {
+  it('closes the menu on Escape, the focus back on its button', async () => {
+    listing([run]);
+    renderList();
+    await openMenu('Course');
+    const activity = await item('Course');
+
+    fireEvent.keyDown(within(activity).getByRole('link', { name: 'Modifier' }), { key: 'Escape' });
+
+    const button = within(activity).getByRole('button', { name: MENU });
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(button).toHaveFocus();
+  });
+
+  it('shows a locked activity read only, its week judged, and the rule below the list', async () => {
     listing([padel]);
     renderList();
     const activity = await item('Padel');
 
-    expect(
-      within(activity).getByText(
-        'La semaine de cette activité est terminée dans un de tes défis : elle ne peut plus être modifiée ni supprimée.',
-      ),
-    ).toBeInTheDocument();
+    expect(within(activity).getByText('Semaine jugée')).toBeInTheDocument();
     expect(within(activity).queryByRole('link')).not.toBeInTheDocument();
     expect(within(activity).queryByRole('button')).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Une activité se modifie ou se supprime tant que sa semaine n'est pas jugée dans tes défis.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it('loads the next page on demand', async () => {
@@ -197,6 +288,7 @@ describe('ActivityList', () => {
     }
 
     const openConfirmation = async () => {
+      await openMenu('Course');
       fireEvent.click(within(await item('Course')).getByRole('button', { name: 'Supprimer' }));
       return screen.getByRole('dialog', { name: 'Supprimer cette activité ?' });
     };
@@ -214,6 +306,7 @@ describe('ActivityList', () => {
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(asked).toEqual([]);
+      expect(within(await item('Course')).getByRole('button', { name: MENU })).toHaveFocus();
     });
 
     it('deletes once confirmed, says so and reloads the list', async () => {
@@ -267,8 +360,8 @@ describe('ActivityList', () => {
       );
       await waitFor(() =>
         expect(
-          within(screen.getByRole('article', { name: 'Course' })).queryByRole('button'),
-        ).not.toBeInTheDocument(),
+          within(screen.getByRole('article', { name: 'Course' })).getByText('Semaine jugée'),
+        ).toBeInTheDocument(),
       );
     });
 
