@@ -28,13 +28,14 @@ export function Segmented<T extends string>({
 }) {
   const name = useId();
   return (
-    // A floated legend is laid out as a flex item, beside the options.
-    <fieldset className={inline ? 'flex items-center gap-3' : undefined}>
+    // A floated legend is laid out as a flex item, beside the options; they
+    // go under it when the text is enlarged.
+    <fieldset className={inline ? 'flex flex-wrap items-center gap-x-3 gap-y-2' : undefined}>
       <legend className={`text-sm font-semibold ${inline ? 'float-left shrink-0' : ''}`}>
         {legend}
       </legend>
       <div
-        className={`relative flex rounded-row bg-segment p-1 ${inline ? 'min-w-0 flex-1' : 'mt-2'}`}
+        className={`relative flex rounded-row bg-segment p-1 ${inline ? 'min-w-0 grow basis-44' : 'mt-2'}`}
       >
         {options.map((value) => {
           const on = value === selected;
