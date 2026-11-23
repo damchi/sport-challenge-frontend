@@ -28,3 +28,29 @@ test('a user records an activity with an idempotency key', async ({ page }) => {
   });
   await expect(page.getByText('Activité enregistrée.')).toBeVisible();
 });
+
+test('the lock of a judged week keeps its size, as the menu of the others', async ({ page }) => {
+  // Run at 360 px (mobile project), where the lock shows alone, and on desktop.
+  await signInAt(page, '/activities');
+
+  const lock = page.getByText('Semaine jugée').first().locator('..');
+  const menu = page.getByRole('button', { name: /Actions/ }).first();
+  await expect(lock).toBeVisible();
+  const row = (locator: typeof lock) => locator.locator('xpath=ancestor::article');
+  const [lockBox, menuBox, lockRow, menuRow] = await Promise.all([
+    lock.boundingBox(),
+    menu.boundingBox(),
+    row(lock).boundingBox(),
+    row(menu).boundingBox(),
+  ]);
+  if (!lockBox || !menuBox || !lockRow || !menuRow) throw new Error('Not laid out');
+  // A 44 px touch target, not stretched to the height of its row.
+  expect(lockBox.height).toBeGreaterThanOrEqual(44);
+  expect(lockBox.height).toBeLessThanOrEqual(menuBox.height);
+  expect(lockBox.width).toBeGreaterThanOrEqual(44);
+  // On a phone, at the top of its row, as the menu in its own, whatever their
+  // heights (from `lg`, the rows center their action).
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
+    expect(Math.abs(lockBox.y - lockRow.y - (menuBox.y - menuRow.y))).toBeLessThanOrEqual(1);
+  }
+});
