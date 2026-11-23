@@ -10,6 +10,7 @@ import { LoadingState } from '../../components/states/LoadingState';
 import { invitationTokenFromHash } from '../../domain/invitation';
 import { challengePeriod } from '../../domain/format/challengeDates';
 import { useJoinCopy } from '../challenges/detail/useJoinCopy';
+import { HOME_PATH } from '../../lib/paths';
 
 const isInvalid = (error: unknown) =>
   error instanceof ApiError && error.code === 'invitation_invalid';
@@ -46,7 +47,7 @@ function InvalidInvitation() {
     <div className="mt-6 rounded-card border border-border bg-surface p-5">
       <p role="alert">{t('invitationPage.invalid')}</p>
       <Link
-        to="/"
+        to={HOME_PATH}
         // The refused link leaves the history.
         replace
         className="mt-4 inline-flex h-11 items-center rounded-full border border-border bg-surface hover-fill px-5 font-bold"

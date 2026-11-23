@@ -1,0 +1,129 @@
+{
+  "pageTitle": "Sport Challenge · Sports challenges among friends",
+  "metaDescription": "Create a sports challenge of a few weeks, invite your friends and log your sessions: every sport counts, and each category has its podium. Free.",
+  "nav": {
+    "label": "Page sections",
+    "how": "How it works",
+    "categories": "Categories",
+    "sports": "Sports",
+    "faq": "Questions"
+  },
+  "start": "Get started",
+  "signInError": "Signing in couldn't start. Try again.",
+  "hero": {
+    "badge": "Among friends · free",
+    "title": "Challenge your friends, week after week.",
+    "lede": "Create a challenge of a few weeks, invite your crew with a link and log your sessions: running, cycling, yoga, climbing… Every activity counts, and each category has its podium.",
+    "howLink": "See how it works",
+    "noPassword": "No password: we email you a code."
+  },
+  "preview": {
+    "title": "Fall challenge",
+    "meta": "Private · 8 participants",
+    "atRisk": "At risk",
+    "pointsNote": "+4 provisional points this week",
+    "podiumTitle": "Leaderboard · Total time",
+    "podiumNote": "The time of every activity, every sport included.",
+    "exAequo": "tied",
+    "people": {
+      "julie": "Julie",
+      "marc": "Marc",
+      "sofia": "Sofia"
+    }
+  },
+  "how": {
+    "eyebrow": "How it works",
+    "title": "Three steps and you're off",
+    "create": {
+      "title": "Create a challenge",
+      "text": "Pick the length, from 2 to 52 weeks, the first day and the categories. Public or private by invitation: you also decide whether participants can invite."
+    },
+    "invite": {
+      "title": "Invite your friends",
+      "text": "Send the challenge link. People can join until the end of its first week."
+    },
+    "move": {
+      "title": "Move and compare",
+      "text": "A logged session counts in all your challenges, for the week it started. Each week is settled the day after it ends, at 7 a.m. challenge time. Until then, you can still edit your sessions."
+    }
+  },
+  "categories": {
+    "eyebrow": "How you win",
+    "title": "A podium per category",
+    "lede": "Total time is always there. Add the other categories to suit your crew: each has its podium, so a challenge has several winners.",
+    "always": "Always included",
+    "optional": "Optional",
+    "time": {
+      "text": "Every activity counts, every sport included: running, yoga, climbing, rowing…",
+      "win": "Most time wins."
+    },
+    "distance": {
+      "text": "The km of each sport are converted to the reference sport: 10 km of cycling count as 3 km of running.",
+      "win": "Most km wins."
+    },
+    "elimination": {
+      "text": "From week 2, cover at least your distance of the week before, plus a few km, every week. Otherwise, you're out of this category. And this one only.",
+      "win": "Among those still in, most km wins."
+    },
+    "points": {
+      "text": "Each week, the top 5 or 10 of each criterion score points: longest session, most sessions… depending on the challenge's criteria.",
+      "win": "Most points wins."
+    },
+    "elevation": {
+      "text": "The elevation gain of all your outings that have one (running, cycling, hiking…), in meters.",
+      "win": "Most elevation gain wins."
+    },
+    "reference": "The reference sport is running by default. The creator can pick cycling, swimming, rowing… Settings are locked at creation: creators don't change the rules midway.",
+    "fairness": "Everyone is ranked in every category of the challenge, with no handicap or level category. In case of a tie: tied ranks."
+  },
+  "sports": {
+    "eyebrow": "Every sport",
+    "title": "From yoga to rowing, it all counts",
+    "lede": "Every minute counts toward total time. For distance, sports faster than the reference sport are converted to it with a factor.",
+    "listLabel": "Distance factor by sport",
+    "timeOnly": "time",
+    "note": "Factors relative to running, suggested and adjustable when creating the challenge. Your sport isn't listed? Choose “Other” and name it.",
+    "manualTitle": "You log your sessions by hand, once.",
+    "manualText": "Each one counts in every challenge you take part in."
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "free": {
+      "q": "Is it free?",
+      "a": "Yes, the app is free."
+    },
+    "visibility": {
+      "q": "Who sees my activities?",
+      "a": "In a challenge, the other participants see the details of your sessions. Your email is visible only to you and the app's administrator."
+    },
+    "password": {
+      "q": "Why no password?",
+      "a": "You sign in with a one-time code sent by email: nothing to remember, nothing to steal."
+    },
+    "join": {
+      "q": "Can I join a challenge that has already started?",
+      "a": "Yes, until the end of its first week."
+    },
+    "leave": {
+      "q": "Can I leave a challenge?",
+      "a": "Yes, but it means giving up all its categories, for good."
+    },
+    "phone": {
+      "q": "Is there a phone app?",
+      "a": "The site installs on your phone's home screen, like an app."
+    },
+    "data": {
+      "q": "Where is my data?",
+      "a": "In Canada: the app is hosted on Google Cloud in Montréal, and sign-in goes through Auth0, Canada region."
+    }
+  },
+  "final": {
+    "title": "Ready to start your first challenge?",
+    "text": "Sign in with your email, create a challenge and send the link to your crew."
+  },
+  "footer": {
+    "tagline": "Sports challenges among friends",
+    "copyright": "© {{year}}"
+  },
+  "myAccount": "My account"
+}

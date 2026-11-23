@@ -4,6 +4,7 @@ import { LoadingState } from '../components/states/LoadingState';
 import { CallbackPage } from '../pages/CallbackPage';
 import { HomePage } from '../pages/HomePage';
 import { AppShell } from './AppShell';
+import { HOME_PATH } from '../lib/paths';
 import { pages } from './pages';
 import { ProfileGate } from './ProfileGate';
 import { RequireAuth } from './RequireAuth';
@@ -28,6 +29,12 @@ export const routes: RouteObject[] = [
     children: [
       // Public: it finishes the sign-in.
       { path: '/callback', element: <CallbackPage />, handle: title('auth.callback.title') },
+      // Public, for everyone: what the app is. The challenges are at /challenges.
+      // Not in pages: the signed-in app does not preload it.
+      {
+        path: '/',
+        lazy: () => import('../pages/LandingPage').then((m) => ({ Component: m.LandingPage })),
+      },
       {
         element: <RequireAuth />,
         children: [
@@ -46,7 +53,7 @@ export const routes: RouteObject[] = [
                     // Inside the shell: the navigation stays above the error page.
                     errorElement: <RouteError />,
                     children: [
-                      { path: '/', element: <HomePage />, handle: title('nav.challenges') },
+                      { path: HOME_PATH, element: <HomePage />, handle: title('nav.challenges') },
                       {
                         path: '/challenges/new',
                         lazy: pages.challengeCreate,

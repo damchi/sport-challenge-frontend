@@ -2,9 +2,10 @@ import { Activity, Trophy, User, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router';
 import { AppMark } from './AppMark';
+import { HOME_PATH } from '../lib/paths';
 
 const TABS: { to: string; labelKey: string; Icon: LucideIcon; end?: boolean }[] = [
-  { to: '/', labelKey: 'nav.challenges', Icon: Trophy, end: true },
+  { to: HOME_PATH, labelKey: 'nav.challenges', Icon: Trophy, end: true },
   { to: '/activities', labelKey: 'nav.activities', Icon: Activity },
   { to: '/me', labelKey: 'nav.profile', Icon: User },
 ];
@@ -23,7 +24,7 @@ export function MainNav() {
     >
       <div className="mx-auto flex max-w-page flex-wrap items-center md:min-h-16 md:gap-x-6 md:px-5 lg:max-w-wide lg:px-8">
         <Link
-          to="/"
+          to={HOME_PATH}
           className="-ml-2 hidden h-11 items-center gap-3 rounded-tab px-2 font-display text-xl font-bold hover-fill md:flex"
         >
           <AppMark />

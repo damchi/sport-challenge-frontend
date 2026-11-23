@@ -1,0 +1,129 @@
+{
+  "pageTitle": "Sport Challenge · Des défis sportifs entre amis",
+  "metaDescription": "Crée un défi sportif de quelques semaines, invite tes amis et saisis tes séances : tous les sports comptent, et chaque catégorie a son podium. Gratuit.",
+  "nav": {
+    "label": "Sections de la page",
+    "how": "Comment ça marche",
+    "categories": "Catégories",
+    "sports": "Sports",
+    "faq": "Questions"
+  },
+  "start": "Commencer",
+  "signInError": "La connexion n'a pas pu démarrer. Réessaie.",
+  "hero": {
+    "badge": "Entre amis · gratuit",
+    "title": "Défie tes amis, semaine après semaine.",
+    "lede": "Crée un défi de quelques semaines, invite ta gang par un lien et saisis tes séances : course, vélo, yoga, escalade… Chaque activité compte, et chaque catégorie a son podium.",
+    "howLink": "Voir comment ça marche",
+    "noPassword": "Pas de mot de passe : on t'envoie un code par e-mail."
+  },
+  "preview": {
+    "title": "Défi d'automne",
+    "meta": "Privé · 8 participants",
+    "atRisk": "À risque",
+    "pointsNote": "+4 points provisoires cette semaine",
+    "podiumTitle": "Classement · Temps cumulé",
+    "podiumNote": "Le temps de toutes les activités, tous sports confondus.",
+    "exAequo": "ex æquo",
+    "people": {
+      "julie": "Julie",
+      "marc": "Marc",
+      "sofia": "Sofia"
+    }
+  },
+  "how": {
+    "eyebrow": "Comment ça marche",
+    "title": "Trois étapes, et c'est parti",
+    "create": {
+      "title": "Crée un défi",
+      "text": "Choisis la durée, de 2 à 52 semaines, le premier jour et les catégories. Public ou privé sur invitation : tu décides aussi si les participants peuvent inviter."
+    },
+    "invite": {
+      "title": "Invite tes amis",
+      "text": "Envoie le lien du défi. On peut le rejoindre jusqu'à la fin de sa première semaine."
+    },
+    "move": {
+      "title": "Bouge et compare",
+      "text": "Une séance saisie compte dans tous tes défis, pour la semaine où elle a commencé. Chaque semaine est jugée le lendemain de sa fin, à 7 h, heure du défi. Jusque-là, tu peux encore modifier tes séances."
+    }
+  },
+  "categories": {
+    "eyebrow": "Comment on gagne",
+    "title": "Un podium par catégorie",
+    "lede": "Le temps cumulé est toujours là. Ajoute les autres catégories selon ta gang : chacune a son podium, donc plusieurs gagnants par défi.",
+    "always": "Toujours inclus",
+    "optional": "Au choix",
+    "time": {
+      "text": "Toutes les activités comptent, tous sports confondus : course, yoga, escalade, aviron…",
+      "win": "Le plus de temps gagne."
+    },
+    "distance": {
+      "text": "Les km de chaque sport sont ramenés au sport de référence : 10 km de vélo valent 3 km de course.",
+      "win": "Le plus de km gagne."
+    },
+    "elimination": {
+      "text": "Dès la semaine 2, fais chaque semaine au moins ta distance de la semaine d'avant, plus quelques km. Sinon, tu sors de cette catégorie. Et d'elle seule.",
+      "win": "Parmi ceux qui tiennent, le plus de km gagne."
+    },
+    "points": {
+      "text": "Chaque semaine, les 5 ou 10 meilleurs de chaque critère marquent des points : plus longue séance, plus de séances… selon les critères du défi.",
+      "win": "Le plus de points gagne."
+    },
+    "elevation": {
+      "text": "Le dénivelé positif de toutes tes sorties qui en ont un (course, vélo, randonnée…), en mètres.",
+      "win": "Le plus de D+ gagne."
+    },
+    "reference": "Le sport de référence est la course par défaut. Le créateur peut choisir le vélo, la natation, l'aviron… Les réglages sont figés à la création : les créateurs ne changent pas les règles en route.",
+    "fairness": "Tout le monde est classé dans toutes les catégories du défi, sans handicap ni catégorie de niveau. En cas d'égalité : ex æquo."
+  },
+  "sports": {
+    "eyebrow": "Tous les sports",
+    "title": "Du yoga à l'aviron, tout compte",
+    "lede": "Chaque minute compte pour le temps cumulé. Pour la distance, les sports plus rapides que le sport de référence sont ramenés à lui par un coefficient.",
+    "listLabel": "Coefficients de distance par sport",
+    "timeOnly": "temps",
+    "note": "Coefficients par rapport à la course, suggérés et ajustables à la création du défi. Ton sport n'est pas dans la liste ? Choisis « Autre » et donne-lui un nom.",
+    "manualTitle": "Tu saisis tes séances à la main, une seule fois.",
+    "manualText": "Chacune compte dans tous les défis où tu participes."
+  },
+  "faq": {
+    "title": "Questions fréquentes",
+    "free": {
+      "q": "C'est gratuit ?",
+      "a": "Oui, l'app est gratuite."
+    },
+    "visibility": {
+      "q": "Qui voit mes activités ?",
+      "a": "Dans un défi, les autres participants voient le détail de tes séances. Ton e-mail n'est visible que de toi et de l'administrateur de l'app."
+    },
+    "password": {
+      "q": "Pourquoi pas de mot de passe ?",
+      "a": "Tu te connectes avec un code à usage unique envoyé par e-mail : rien à retenir, rien à se faire voler."
+    },
+    "join": {
+      "q": "Je peux rejoindre un défi déjà commencé ?",
+      "a": "Oui, jusqu'à la fin de sa première semaine."
+    },
+    "leave": {
+      "q": "Je peux quitter un défi ?",
+      "a": "Oui, mais c'est un abandon de toutes ses catégories, et il est définitif."
+    },
+    "phone": {
+      "q": "Il y a une app pour téléphone ?",
+      "a": "Le site s'installe sur l'écran d'accueil de ton téléphone, comme une app."
+    },
+    "data": {
+      "q": "Où sont mes données ?",
+      "a": "Au Canada : l'app est hébergée chez Google Cloud à Montréal, et la connexion passe par Auth0, région Canada."
+    }
+  },
+  "final": {
+    "title": "Prêt à lancer ton premier défi ?",
+    "text": "Connecte-toi avec ton e-mail, crée un défi et envoie le lien à ta gang."
+  },
+  "footer": {
+    "tagline": "Des défis sportifs entre amis",
+    "copyright": "© {{year}}"
+  },
+  "myAccount": "Mon compte"
+}

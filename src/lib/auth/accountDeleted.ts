@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { Auth } from './auth';
 import type { SessionEnd } from './useHandleLostSession';
+import { HOME_PATH } from '../paths';
 
 /** Called once the user deleted their account: provided by the app. */
 export const AccountDeletedContext = createContext<(() => void) | undefined>(undefined);
@@ -22,7 +23,7 @@ export function accountDeletedHandler(
 ): () => void {
   return () => {
     clearCache();
-    onSessionEnd({ reason: 'account_deleted_by_user', returnTo: '/' });
+    onSessionEnd({ reason: 'account_deleted_by_user', returnTo: HOME_PATH });
     // A local sign-out only drops the tokens kept in memory: the screen is
     // shown either way, and its button signs out for good.
     auth.signOut({ local: true }).catch(() => undefined);

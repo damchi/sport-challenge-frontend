@@ -9,7 +9,7 @@ const CHALLENGE_ID = '00000000-0000-4000-8000-000000000005';
 
 // The key screens, each audited once its first heading shows (data loaded).
 const SCREENS = [
-  { name: 'challenges', path: '/' },
+  { name: 'challenges', path: '/challenges' },
   { name: 'leaderboard', path: `/challenges/${CHALLENGE_ID}` },
   { name: 'participants', path: `/challenges/${CHALLENGE_ID}/participants` },
   { name: 'challenge creation', path: '/challenges/new' },
@@ -52,7 +52,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
 
 test('the error state has no serious accessibility violation', async ({ network, page }) => {
   network.use(http.get('*/api/v1/challenges', () => new HttpResponse(null, { status: 500 })));
-  await signInAt(page, '/');
+  await signInAt(page, '/challenges');
   await expect(page.getByRole('button', { name: 'Réessayer' })).toBeVisible();
 
   expect(await seriousViolations(page)).toEqual([]);

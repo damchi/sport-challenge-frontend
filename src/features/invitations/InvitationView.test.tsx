@@ -161,7 +161,10 @@ describe('InvitationView', () => {
       expect(await screen.findByRole('alert')).toHaveTextContent(
         "Ce lien d'invitation n'est pas valide ou a expiré.",
       );
-      expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
+      expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute(
+        'href',
+        '/challenges',
+      );
       expect(tokens).toEqual([]);
     },
   );

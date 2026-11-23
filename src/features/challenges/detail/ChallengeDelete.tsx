@@ -6,6 +6,7 @@ import { useDeleteChallenge, type ChallengeDetail } from '../../../api/hooks/use
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { focusOnMount } from '../../../lib/focusOnMount';
 import { inputClass } from '../create/fields';
+import { HOME_PATH } from '../../../lib/paths';
 
 /**
  * Deletes a challenge, for its creators (the server's role), at any time,
@@ -76,7 +77,7 @@ export function ChallengeDelete({
           onClose();
           if (remove.isPending) return;
           remove.mutate(undefined, {
-            onSuccess: () => void navigate('/', { replace: true }),
+            onSuccess: () => void navigate(HOME_PATH, { replace: true }),
           });
         }}
         onCancel={() => {

@@ -37,7 +37,7 @@ async function tabTo(page: Page, name: string): Promise<string[]> {
 }
 
 test('a user records an activity with the keyboard only', async ({ page, isMobile }) => {
-  await signInAt(page, '/');
+  await signInAt(page, '/challenges');
   await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
 
   // The main navigation comes first (the app name is shown from a tablet).

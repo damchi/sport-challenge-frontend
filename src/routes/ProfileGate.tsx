@@ -5,6 +5,7 @@ import { ApiError, errorMessage } from '../api/errors';
 import { useMe } from '../api/hooks/useMe';
 import { safeReturnTo } from '../lib/auth/auth';
 import { Page } from '../components/Page';
+import { HOME_PATH } from '../lib/paths';
 
 const ONBOARDING = '/onboarding';
 const INVITE = '/invite';
@@ -18,7 +19,7 @@ const INVITE = '/invite';
 function afterOnboarding(returnTo: unknown): string {
   const origin = window.location.origin;
   const target = safeReturnTo(returnTo, origin);
-  return new URL(target, origin).pathname === INVITE ? target : '/';
+  return new URL(target, origin).pathname === INVITE ? target : HOME_PATH;
 }
 
 /**
@@ -78,7 +79,9 @@ export function ProfileGate() {
   if (me.data.profile_complete && onOnboarding) {
     const state: unknown = location.state;
     const returnTo =
-      typeof state === 'object' && state !== null && 'returnTo' in state ? state.returnTo : '/';
+      typeof state === 'object' && state !== null && 'returnTo' in state
+        ? state.returnTo
+        : HOME_PATH;
     return <Navigate to={afterOnboarding(returnTo)} replace />;
   }
   return <Outlet />;

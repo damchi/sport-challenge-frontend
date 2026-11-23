@@ -2,7 +2,7 @@
   "name": "Sport Challenge",
   "short_name": "Sport Challenge",
   "lang": "fr",
-  "start_url": "/",
+  "start_url": "/challenges",
   "scope": "/",
   "display": "standalone",
   "background_color": "#F5F4F0",

@@ -43,7 +43,7 @@ describe('RootLayout', () => {
   });
 
   it('closes the banner with its button', () => {
-    render(<AppWithError path="/" />);
+    render(<AppWithError path="/challenges" />);
 
     fireEvent.click(screen.getByRole('button', { name: 'fail' }));
     fireEvent.click(screen.getByRole('button', { name: 'Fermer le message' }));

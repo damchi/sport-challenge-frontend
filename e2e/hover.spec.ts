@@ -10,7 +10,7 @@ const border = (element: Element) => getComputedStyle(element).borderTopColor;
 test('a button reacts to the pointer, unless it is disabled or the device cannot hover', async ({
   page,
 }, testInfo) => {
-  await signInAt(page, '/');
+  await signInAt(page, '/challenges');
   const button = page.getByRole('link', { name: 'Créer un défi' }).first();
   await expect(button).toBeVisible();
   await page.mouse.move(0, 0);

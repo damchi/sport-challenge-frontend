@@ -10,7 +10,7 @@ import { routes } from './routes';
 
 vi.mock('../lib/background', () => ({ inBackground: vi.fn() }));
 
-function renderApp(path = '/') {
+function renderApp(path = '/challenges') {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(
     <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
@@ -22,7 +22,7 @@ function renderApp(path = '/') {
 
 describe('application shell', () => {
   it('offers the three tabs and marks the current one', async () => {
-    renderApp('/');
+    renderApp('/challenges');
 
     const nav = await screen.findByRole('navigation', { name: 'Navigation principale' });
     expect(nav).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe('application shell', () => {
   });
 
   it('navigates between tabs, with the page title and the focus on its heading', async () => {
-    const router = renderApp('/');
+    const router = renderApp('/challenges');
 
     fireEvent.click(await screen.findByRole('link', { name: 'Activités' }));
 
@@ -54,7 +54,7 @@ describe('application shell', () => {
   });
 
   it('preloads the code of the other pages in the background', async () => {
-    renderApp('/');
+    renderApp('/challenges');
     await screen.findByRole('navigation', { name: 'Navigation principale' });
     expect(inBackground).toHaveBeenCalledWith(preloadPages);
   });

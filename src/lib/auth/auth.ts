@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import { HOME_PATH } from '../paths';
 
 /** Signed-in user, as far as authentication knows: the profile comes from the API. */
 export interface AuthUser {
@@ -16,6 +17,12 @@ export interface Auth {
   user: AuthUser | undefined;
   /** The last sign-in attempt failed (cancelled, expired code...). */
   hasError: boolean;
+  /**
+   * Someone signed in on this device and has not signed out since, even if
+   * the session did not survive a reload: the landing page offers « Mon
+   * compte » rather than « Se connecter ». Read when the session changes.
+   */
+  isReturning: boolean;
   /**
    * Redirects to the sign-in page, then back to `returnTo` (a path of the
    * app). `chooseAccount` shows the sign-in form even when Auth0 still has a
@@ -49,14 +56,14 @@ export function useAuth(): Auth {
  * which a later navigation would read as another host.
  */
 export function safeReturnTo(value: unknown, origin: string): string {
-  if (typeof value !== 'string' || !value.startsWith('/')) return '/';
+  if (typeof value !== 'string' || !value.startsWith('/')) return HOME_PATH;
   // new URL rather than URL.parse: older Safari versions lack the latter.
   let url: URL;
   try {
     url = new URL(value, origin);
   } catch {
-    return '/';
+    return HOME_PATH;
   }
-  if (url.origin !== origin || url.pathname.startsWith('//')) return '/';
+  if (url.origin !== origin || url.pathname.startsWith('//')) return HOME_PATH;
   return `${url.pathname}${url.search}${url.hash}`;
 }

@@ -10,7 +10,7 @@ import { ProfileGate } from './ProfileGate';
 
 type Entry = string | { pathname: string; state: unknown };
 
-function renderGate(entry: Entry = '/') {
+function renderGate(entry: Entry = '/challenges') {
   const router = createMemoryRouter(
     [
       {
@@ -90,7 +90,7 @@ describe('ProfileGate', () => {
       const router = renderGate({ pathname: '/onboarding', state });
 
       expect(await screen.findByText('app page')).toBeInTheDocument();
-      expect(router.state.location.pathname).toBe('/');
+      expect(router.state.location.pathname).toBe('/challenges');
       expect(router.state.location.hash).toBe('');
     },
   );

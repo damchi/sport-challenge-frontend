@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router';
 import { SignInRequiredState } from '../../components/states/SignInRequiredState';
 import { useAuth } from '../../lib/auth/auth';
+import { HOME_PATH } from '../../lib/paths';
 
 function SignInButton() {
   const { t } = useTranslation();
@@ -67,7 +68,7 @@ export function SignInCallback() {
     );
   }
   // Signed in, page opened directly: nothing to finish.
-  if (auth.isAuthenticated) return <Navigate to="/" replace />;
+  if (auth.isAuthenticated) return <Navigate to={HOME_PATH} replace />;
   // Opened directly while signed out: nothing to finish.
   return <SignInRequiredState action={<SignInButton />} />;
 }

@@ -17,8 +17,8 @@ function renderAt(path: string, auth: Auth = signedIn()) {
 }
 
 describe('routes', () => {
-  it('renders the home page title on /', async () => {
-    renderAt('/');
+  it('renders the challenges on /challenges', async () => {
+    renderAt('/challenges');
     expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
     // Adding an activity belongs to the activities page.
     expect(screen.queryByRole('link', { name: 'Ajouter une activité' })).not.toBeInTheDocument();
@@ -78,13 +78,43 @@ describe('routes', () => {
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 
-  it('shows no challenge to a signed-out visitor of the home page', () => {
+  it('shows the landing page to a visitor of /, without signing in nor calling the API', async () => {
     const auth = createFakeAuth();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
     renderAt('/', auth);
 
-    expect(auth.signIn).toHaveBeenCalledWith('/');
-    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Défie tes amis, semaine après semaine.',
+      }),
+    ).toBeInTheDocument();
+    expect(auth.signIn).not.toHaveBeenCalled();
+    expect(auth.getAccessToken).not.toHaveBeenCalled();
+    expect(fetchSpy).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Publics' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.title).toBe('Sport Challenge · Des défis sportifs entre amis'),
+    );
+    fetchSpy.mockRestore();
+  });
+
+  it('shows the landing page to a signed-in user too, with a link to the challenges', async () => {
+    renderAt('/');
+
+    expect(await screen.findByRole('link', { name: 'Mon compte' })).toHaveAttribute(
+      'href',
+      '/challenges',
+    );
+    expect(screen.queryByRole('button', { name: 'Se connecter' })).not.toBeInTheDocument();
+  });
+
+  it('still signs a visitor in on a deep link, back to it', async () => {
+    const auth = createFakeAuth();
+    renderAt('/challenges/42', auth);
+
+    // Once the code of the page has loaded.
+    await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('/challenges/42'));
   });
 
   it('keeps /callback public', async () => {
@@ -106,6 +136,9 @@ describe('routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Page introuvable' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute(
+      'href',
+      '/challenges',
+    );
   });
 });
