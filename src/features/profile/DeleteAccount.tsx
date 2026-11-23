@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -7,6 +8,7 @@ import { useDeleteMe } from '../../api/hooks/useMe';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { challengeIdList } from '../../domain/challenge';
 import { useAccountDeleted } from '../../lib/auth/accountDeleted';
+import { ACCOUNT_ROW } from './profileCard';
 
 const CONSEQUENCES = ['challenges', 'profile', 'signIn', 'final'] as const;
 
@@ -50,7 +52,7 @@ export function DeleteAccount() {
   const blocking = error?.code === 'last_creator' ? challengeIdList(error.params.challenges) : [];
 
   return (
-    <div className="mt-6 flex flex-col gap-3">
+    <div className="flex flex-col">
       <button
         type="button"
         // Not `disabled`: the focus comes back here when the dialog closes,
@@ -63,12 +65,13 @@ export function DeleteAccount() {
           setUnderstood(false);
           setConfirming(true);
         }}
-        className="h-11 rounded-full border border-border bg-surface px-6 text-button font-bold aria-disabled:opacity-60"
+        className={`${ACCOUNT_ROW} text-danger aria-disabled:opacity-60`}
       >
+        <Trash2 aria-hidden="true" size={20} />
         {deleteMe.isPending ? t('profile.deleteAccount.busy') : t('profile.deleteAccount.button')}
       </button>
       {message && (
-        <div role="alert" className="text-sm text-risk-fg">
+        <div role="alert" className="pb-3 text-sm text-risk-fg">
           <p>{t(message.key, message.values)}</p>
           {blocking.length > 0 && (
             <>

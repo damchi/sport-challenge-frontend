@@ -32,22 +32,18 @@ describe('ProfilePage', () => {
     fireEvent.blur(input);
   }
 
-  // The names and the pseudo each have their own save button.
-  const saveNames = () =>
+  // One save button for the names and the pseudo.
+  const save = () =>
     within(screen.getByRole('region', { name: 'Identité' })).getByRole('button', {
       name: 'Enregistrer',
     });
-  const savePseudo = () =>
-    within(screen.getByRole('form', { name: 'Pseudo (facultatif)' })).getByRole('button', {
-      name: 'Enregistrer',
-    });
 
-  it('heads the profile with the initials avatar and the name others see', async () => {
+  it('heads the profile with the initials avatar, the names and the pseudo', async () => {
     server.use(
       http.get('*/api/v1/me', () =>
         HttpResponse.json({
           ...mockMe,
-          pseudo: null,
+          pseudo: 'draffi',
           first_name: 'Damien Paul-Louis',
           last_name: 'Raffi',
         }),
@@ -56,7 +52,25 @@ describe('ProfilePage', () => {
     renderProfile();
 
     expect(await screen.findByText('Damien Paul-Louis Raffi')).toBeInTheDocument();
+    expect(screen.getByText('@draffi')).toBeInTheDocument();
     expect(screen.getByText('DR')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('heads a profile without pseudo with the names alone', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, pseudo: null })));
+    renderProfile();
+
+    expect(await screen.findByText('Marie Tremblay')).toBeInTheDocument();
+    expect(screen.queryByText(/^@\w/)).not.toBeInTheDocument();
+  });
+
+  it('shows the preferences and the account', async () => {
+    renderProfile();
+
+    expect(await screen.findByRole('region', { name: 'Préférences' })).toBeInTheDocument();
+    const account = within(screen.getByRole('region', { name: 'Compte' }));
+    expect(account.getByRole('button', { name: 'Se déconnecter' })).toBeInTheDocument();
+    expect(account.getByRole('button', { name: 'Supprimer mon compte' })).toBeInTheDocument();
   });
 
   it('links to the activities', async () => {
@@ -68,13 +82,15 @@ describe('ProfilePage', () => {
     );
   });
 
-  it('shows the names to change and the e-mail read-only', async () => {
+  it('shows the names to change and the e-mail address read-only', async () => {
     renderProfile();
     const section = await identity();
 
     expect(section.getByLabelText('Prénom')).toHaveValue('Marie');
     expect(section.getByLabelText('Nom')).toHaveValue('Tremblay');
-    expect(section.getByText('E-mail').nextElementSibling).toHaveTextContent('marie@example.com');
+    expect(section.getByText('Adresse courriel').nextElementSibling).toHaveTextContent(
+      'marie@example.com',
+    );
     expect(section.queryByDisplayValue('marie@example.com')).not.toBeInTheDocument();
   });
 
@@ -83,7 +99,27 @@ describe('ProfilePage', () => {
     renderProfile();
     const section = await identity();
 
-    expect(section.getByText('E-mail').nextElementSibling).toHaveTextContent('Non renseigné');
+    expect(section.getByText('Adresse courriel').nextElementSibling).toHaveTextContent(
+      'Non renseigné',
+    );
+  });
+
+  it('saves the names and the pseudo together, in one request', async () => {
+    const sent: unknown[] = [];
+    server.use(
+      http.patch('*/api/v1/me', async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json({ ...mockMe, first_name: 'Marie-Ève', pseudo: 'jean.luc' });
+      }),
+    );
+    renderProfile();
+
+    await change('Prénom', 'Marie-Ève');
+    await change('Pseudo (facultatif)', 'jean.luc');
+    fireEvent.click(save());
+
+    expect(await screen.findByText('Profil enregistré.')).toHaveAttribute('role', 'status');
+    expect(sent).toEqual([{ first_name: 'Marie-Ève', pseudo: 'jean.luc' }]);
   });
 
   describe('names', () => {
@@ -98,15 +134,12 @@ describe('ProfilePage', () => {
       renderProfile();
 
       await screen.findByLabelText('Prénom');
-      expect(saveNames()).toBeDisabled();
+      expect(save()).toBeDisabled();
       await change('Prénom', ' Marie-Ève ');
       await change('Nom', 'Gagnon');
-      fireEvent.click(saveNames());
+      fireEvent.click(save());
 
-      expect(await screen.findByText('Prénom et nom enregistrés.')).toHaveAttribute(
-        'role',
-        'status',
-      );
+      expect(await screen.findByText('Profil enregistré.')).toHaveAttribute('role', 'status');
       expect(sent).toEqual({ first_name: 'Marie-Ève', last_name: 'Gagnon' });
     });
 
@@ -137,7 +170,7 @@ describe('ProfilePage', () => {
       renderProfile();
 
       await change('Prénom', 'Mariette');
-      fireEvent.click(saveNames());
+      fireEvent.click(save());
 
       expect(await screen.findByRole('alert')).toHaveTextContent("Ce nom n'est pas accepté.");
       expect(screen.getByLabelText('Prénom')).toHaveFocus();
@@ -158,11 +191,11 @@ describe('ProfilePage', () => {
       expect(await screen.findByRole('textbox', { name: 'Pseudo (facultatif)' })).toHaveValue(
         'marie_92',
       );
-      expect(savePseudo()).toBeDisabled();
+      expect(save()).toBeDisabled();
       await change('Pseudo (facultatif)', ' jean.luc ');
-      fireEvent.click(savePseudo());
+      fireEvent.click(save());
 
-      expect(await screen.findByText('Pseudo enregistré.')).toHaveAttribute('role', 'status');
+      expect(await screen.findByText('Profil enregistré.')).toHaveAttribute('role', 'status');
       expect(sent).toEqual({ pseudo: 'jean.luc' });
     });
 
@@ -177,11 +210,9 @@ describe('ProfilePage', () => {
       renderProfile();
 
       await change('Pseudo (facultatif)', '  ');
-      fireEvent.click(savePseudo());
+      fireEvent.click(save());
 
-      expect(
-        await screen.findByText('Pseudo retiré : les autres voient ton prénom et ton nom.'),
-      ).toHaveAttribute('role', 'status');
+      expect(await screen.findByText('Profil enregistré.')).toHaveAttribute('role', 'status');
       expect(sent).toEqual({ pseudo: null });
     });
 
@@ -199,7 +230,7 @@ describe('ProfilePage', () => {
       renderProfile();
 
       await change('Pseudo (facultatif)', 'jean.luc');
-      fireEvent.click(savePseudo());
+      fireEvent.click(save());
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
       expect(screen.getByRole('textbox', { name: 'Pseudo (facultatif)' })).toHaveAttribute(
@@ -215,7 +246,7 @@ describe('ProfilePage', () => {
       await change('Pseudo (facultatif)', '');
 
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      expect(savePseudo()).toBeDisabled();
+      expect(save()).toBeDisabled();
     });
   });
 });

@@ -51,26 +51,35 @@ export const profileSchema = z.object({
 
 export type ProfileInput = z.infer<typeof profileSchema>;
 
-/** The first and last name, changed from the profile page. */
-export const namesSchema = z.object({ first_name: personName, last_name: personName });
+/** The identity card of the profile page: first and last name, and pseudo. */
+export const identitySchema = z.object({ first_name: personName, last_name: personName, pseudo });
 
-export type NamesInput = z.infer<typeof namesSchema>;
+export type IdentityInput = z.infer<typeof identitySchema>;
 
-/** Whether the names typed, once tidied, are the ones the profile has. */
-export function sameNames(
-  typed: NamesInput,
-  saved: { first_name: string | null; last_name: string | null },
-): boolean {
-  return (
-    normalizeName(typed.first_name) === (saved.first_name ?? '') &&
-    normalizeName(typed.last_name) === (saved.last_name ?? '')
-  );
+interface SavedIdentity {
+  first_name: string | null;
+  last_name: string | null;
+  pseudo: string | null;
 }
 
-/** The pseudo alone, changed or removed from the profile page. */
-export const pseudoSchema = z.object({ pseudo });
-
-export type PseudoInput = z.infer<typeof pseudoSchema>;
+/**
+ * The PATCH /me body of the identity card: only what changed, the names
+ * tidied as they will be sent, an emptied pseudo removed. Empty when nothing
+ * changed.
+ */
+export function identityUpdate(
+  typed: IdentityInput,
+  saved: SavedIdentity,
+): { first_name?: string; last_name?: string; pseudo?: string | null } {
+  const first_name = normalizeName(typed.first_name);
+  const last_name = normalizeName(typed.last_name);
+  const pseudo = typed.pseudo.trim();
+  return {
+    ...(first_name !== (saved.first_name ?? '') && { first_name }),
+    ...(last_name !== (saved.last_name ?? '') && { last_name }),
+    ...(pseudo !== (saved.pseudo ?? '') && pseudoUpdate(pseudo, saved.pseudo)),
+  };
+}
 
 /**
  * The pseudo to send: an empty field removes a pseudo the profile has

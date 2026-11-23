@@ -66,7 +66,7 @@
   },
   "onboarding": {
     "title": "Bienvenue",
-    "intro": "Présente-toi. Les autres participants verront ton pseudo si tu en choisis un, sinon ton prénom et ton nom. Ton e-mail reste privé.",
+    "intro": "Présente-toi. Les autres participants verront ton pseudo si tu en choisis un, sinon ton prénom et ton nom. Ton courriel reste privé.",
     "pseudo": {
       "label": "Pseudo (facultatif)",
       "hint": "3 à 20 caractères : lettres, chiffres, _, . ou -."
@@ -97,16 +97,21 @@
     },
     "identity": {
       "title": "Identité",
-      "email": "E-mail",
+      "subtitle": "Ce que les autres participants voient de toi.",
+      "email": "Adresse courriel",
+      "emailHint": "Celle de ta connexion : elle ne se change pas ici.",
       "missing": "Non renseigné"
     },
-    "pseudoForm": {
-      "saved": "Pseudo enregistré.",
-      "removed": "Pseudo retiré : les autres voient ton prénom et ton nom."
-    },
     "save": "Enregistrer",
-    "namesForm": {
-      "saved": "Prénom et nom enregistrés."
+    "saved": "Profil enregistré.",
+    "handle": "@{{pseudo}}",
+    "at": "@",
+    "preferences": {
+      "title": "Préférences",
+      "subtitle": "Appliquées tout de suite."
+    },
+    "account": {
+      "title": "Compte"
     },
     "deleteAccount": {
       "button": "Supprimer mon compte",
@@ -115,7 +120,7 @@
       "message": "Voici ce qui va se passer :",
       "consequences": {
         "challenges": "Tu abandonnes tous tes défis, et tes activités sont effacées.",
-        "profile": "Ton profil est anonymisé : prénom, nom, pseudo et e-mail sont effacés.",
+        "profile": "Ton profil est anonymisé : prénom, nom, pseudo et courriel sont effacés.",
         "signIn": "Ton compte de connexion est supprimé : tu ne pourras plus te connecter avec.",
         "final": "C'est définitif : rien ne pourra être récupéré."
       },
@@ -298,7 +303,7 @@
   "settings": {
     "theme": {
       "label": "Thème",
-      "system": "Comme l'appareil",
+      "system": "Système",
       "light": "Clair",
       "dark": "Sombre"
     },

@@ -14,7 +14,7 @@ const COLORS: Record<number, string> = {
 // 32 px in rows (design.md); larger at the head of the profile.
 const SIZES = {
   md: 'size-8 text-xs',
-  lg: 'size-16 text-xl',
+  lg: 'size-18 text-2xl',
 };
 
 interface AvatarProps {

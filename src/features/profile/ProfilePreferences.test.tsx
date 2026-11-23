@@ -3,22 +3,20 @@ import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { mockMe } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
-import type { Auth } from '../../lib/auth/auth';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
-import { AppSettings } from './AppSettings';
+import { ProfilePreferences } from './ProfilePreferences';
 
-function renderSettings(overrides: Partial<Auth> = {}) {
-  const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' }, ...overrides });
+function renderSettings() {
+  const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
   render(
     <AppProviders auth={auth}>
-      <AppSettings />
+      <ProfilePreferences />
     </AppProviders>,
   );
-  return auth;
 }
 
-describe('AppSettings', () => {
+describe('ProfilePreferences', () => {
   afterEach(async () => {
     localStorage.clear();
     await i18n.changeLanguage('fr');
@@ -65,32 +63,12 @@ describe('AppSettings', () => {
 
   it('chooses the theme on the device', () => {
     renderSettings();
+    expect(screen.getByRole('radio', { name: 'Système' })).toBeChecked();
 
     fireEvent.click(screen.getByRole('radio', { name: 'Sombre' }));
 
     expect(screen.getByRole('radio', { name: 'Sombre' })).toBeChecked();
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(localStorage.getItem('sport-challenge:theme')).toBe('dark');
-  });
-
-  it('signs out', async () => {
-    const auth = renderSettings();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
-
-    await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1));
-  });
-
-  it('says when the sign-out could not start, and lets it be tried again', async () => {
-    const signOut = vi.fn<Auth['signOut']>().mockRejectedValueOnce(new Error('offline'));
-    signOut.mockResolvedValue(undefined);
-    renderSettings({ signOut });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Une erreur est survenue.');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    expect(signOut).toHaveBeenCalledTimes(2);
   });
 });
