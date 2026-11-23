@@ -655,6 +655,48 @@ describe('ChallengeDetailView', () => {
     ).toEqual(['Course ×1', 'Vélo ×0,3']);
   });
 
+  it('explains the elevation gain of the week among the criteria of the points', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        {
+          type: 'points',
+          position: 4,
+          params: { criteria: ['weekly_elevation'], podium: 5, min_session_seconds: 1200 },
+        },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await howToWin();
+    expect(within(section).getByText('D+ de la semaine')).toBeInTheDocument();
+    expect(
+      within(section).getByText(
+        'Le D+ de la semaine se cumule sur tous les sports qui en ont un, en mètres réels, sans coefficient',
+      ),
+    ).toBeInTheDocument();
+    expect(within(section).queryByText(/Une séance compte/)).not.toBeInTheDocument();
+  });
+
+  it('explains the elevation gain of the week in English', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'points', position: 4, params: { criteria: ['weekly_elevation'], podium: 10 } },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const section = await howToWin('How to win');
+    expect(within(section).getByText('Elevation gain of the week')).toBeInTheDocument();
+    expect(
+      within(section).getByText(
+        'The elevation gain of the week adds up every sport that has one, in real meters, without factor',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('lists no factors for points that do not use the distance', async () => {
     answer({
       categories: [

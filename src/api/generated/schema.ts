@@ -924,9 +924,11 @@ export interface components {
              * @description The longest session by duration (every sport), the longest
              *     session by equivalent distance (with the factors of
              *     `distance_factors`), the number of sessions of at least
-             *     `min_session_minutes`. At least one, each once.
+             *     `min_session_minutes`, the elevation gain of the week (every
+             *     sport that takes one, in real meters, without factor). At least
+             *     one, each once.
              */
-            criteria: ("longest_duration" | "longest_distance" | "session_count")[];
+            criteria: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation")[];
             /**
              * @description Top 5 (10, 8, 6, 4, 2) or top 10 (25, 18, 15, 12, 10, 8, 6, 4, 2, 1).
              * @enum {integer}
@@ -983,7 +985,7 @@ export interface components {
             /** @description Elimination category only, increment X in meters. */
             step_meters?: number;
             /** @description Points category only, its criteria in the order chosen. */
-            criteria?: ("longest_duration" | "longest_distance" | "session_count")[];
+            criteria?: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation")[];
             /**
              * @description Points category only, the size of the top that scores.
              * @enum {integer}
