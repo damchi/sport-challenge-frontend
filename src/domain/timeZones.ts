@@ -22,8 +22,8 @@ export interface TimeZoneGroup {
   zones: { id: string; city: string }[];
 }
 
-// "America/Argentina/Buenos_Aires" → "Buenos Aires"; "UTC" → "UTC".
-function city(timeZone: string): string {
+/** City of a zone: "America/Argentina/Buenos_Aires" → "Buenos Aires"; "UTC" → "UTC". */
+export function timeZoneCity(timeZone: string): string {
   return (timeZone.split('/').at(-1) ?? timeZone).replaceAll('_', ' ');
 }
 
@@ -33,7 +33,7 @@ export function groupTimeZones(timeZones: readonly string[]): TimeZoneGroup[] {
   for (const id of [...timeZones].sort()) {
     const first = id.split('/')[0] ?? '';
     const region = id.includes('/') && REGIONS.has(first) ? first : 'Other';
-    groups.set(region, [...(groups.get(region) ?? []), { id, city: city(id) }]);
+    groups.set(region, [...(groups.get(region) ?? []), { id, city: timeZoneCity(id) }]);
   }
   const other = groups.get('Other');
   groups.delete('Other');

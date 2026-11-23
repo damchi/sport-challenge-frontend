@@ -1,5 +1,9 @@
 import { expect, signInAt, test } from './fixtures';
 
+// The fixtures fix the browser's clock (NOW, 19 November 2026): a first day
+// after it, constant.
+const FIRST_DAY = '2026-11-23';
+
 test('a user creates a challenge and lands on its page', async ({ page }) => {
   await signInAt(page, '/challenges/new');
 
@@ -7,23 +11,26 @@ test('a user creates a challenge and lands on its page', async ({ page }) => {
   await page.getByRole('radio', { name: 'Privé' }).check();
   await page.getByRole('button', { name: 'Suivant' }).click();
 
-  await expect(page.getByRole('heading', { level: 2, name: 'Durée et fuseau' })).toBeVisible();
-  await page.getByRole('spinbutton', { name: 'Durée (en semaines)' }).fill('4');
-  await page.getByLabel('Date de début').fill('2026-11-23');
+  await expect(page.getByRole('heading', { level: 2, name: 'Quand ça se passe' })).toBeVisible();
+  await page.getByRole('spinbutton', { name: 'Durée' }).fill('4');
+  await page.getByLabel('Premier jour').fill(FIRST_DAY);
   await expect(page.getByRole('combobox', { name: 'Fuseau horaire' })).toHaveValue(
     'America/Toronto',
   );
   await page.getByRole('button', { name: 'Suivant' }).click();
 
-  await expect(page.getByRole('heading', { level: 2, name: 'Catégories' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Comment on gagne' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Sport de référence' }).selectOption('ride');
-  await page.getByRole('checkbox', { name: 'Ajouter la distance cumulée' }).check();
+  await page.getByRole('switch', { name: 'Distance cumulée' }).check();
+  await page.getByRole('button', { name: 'Personnaliser' }).click();
   await expect(page.getByRole('spinbutton', { name: 'Course' })).toHaveValue('1');
-  await page.getByRole('checkbox', { name: "Ajouter l'élimination" }).check();
-  await page.getByRole('spinbutton', { name: 'Incrément X (en km)' }).fill('2');
+  await page.getByRole('switch', { name: 'Vélo avec élimination' }).check();
+  await page
+    .getByRole('spinbutton', { name: "Hausse minimale d'une semaine à l'autre (en km)" })
+    .fill('2');
   await page.getByRole('button', { name: 'Suivant' }).click();
 
-  await expect(page.getByRole('heading', { level: 2, name: 'Récapitulatif' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Tout vérifier' })).toBeVisible();
   const creation = page.waitForRequest(
     (request) => request.method() === 'POST' && request.url().endsWith('/api/v1/challenges'),
   );
@@ -33,7 +40,7 @@ test('a user creates a challenge and lands on its page', async ({ page }) => {
     title: 'Défi de décembre',
     visibility: 'private',
     weeks: 4,
-    start_date: '2026-11-23',
+    start_date: FIRST_DAY,
     timezone: 'America/Toronto',
     reference_sport: 'ride',
     categories: { cumulative_distance: {}, elimination: { step_meters: 2000 } },

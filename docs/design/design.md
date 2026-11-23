@@ -450,10 +450,39 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      classement (semaine et général côte à côte, donc sans sélecteur) ;
      éliminés en grille.
 
-À dessiner plus tard dans le même style, en mobile et en web : création d'un
-défi (assistant en 3 ou 4 étapes, lien d'invitation à partager), activités,
-profil, et en V1.1 les badges (obtenus en couleur, à obtenir en silhouette
-avec leur condition).
+4. **Création d'un défi** (maquettes `CreerDefi1.png` à `CreerDefi4.png` et
+   `WebCreerDefi1.png` à `WebCreerDefi4.png`, SC-WEB-073, décisions du
+   2026-11-22)
+   - Assistant en 4 étapes : Infos, Dates, Catégories, Vérifier. Mobile :
+     croix « Quitter la création » à gauche du titre, « Étape N sur 4 · Nom »
+     au-dessus d'une barre en 4 segments, boutons « Retour » / « Suivant »
+     tenus en bas de l'écran, au-dessus de la barre de navigation. Web : lien
+     « ‹ Défis », étapes numérotées (coche une fois faites), formulaire dans
+     une carte (« Étape N sur 4 » + titre de l'étape), « Annuler » à
+     l'étape 1 ; à partir de `lg`, colonne de droite « Aperçu dans la liste
+     des défis » (pastilles « En cours » si le premier jour est aujourd'hui,
+     sinon « À venir », et visibilité ; titre ; période ; catégories ; sport
+     de référence) et encadré « Bon à savoir » propre à l'étape.
+   - Infos (« Le défi ») : titre avec compteur « 14 / 80 », description,
+     visibilité en cartes radio (côte à côte en web), « Les participants
+     peuvent inviter » en interrupteur, activé par défaut.
+   - Dates (« Quand ça se passe ») : durée en compteur − / +, premier jour,
+     fuseau ; bloc « Calendrier du défi » : premier et dernier jour en toutes
+     lettres, jour et fuseau où commence chaque semaine, une tuile par
+     semaine (2 colonnes en mobile, 4 en web).
+   - Catégories (« Comment on gagne ») : sport de référence, puis une carte
+     par catégorie (icône, nom, règle, interrupteur ; temps cumulé « Toujours
+     inclus ») avec ses réglages dedans une fois activée ; critères du Grand
+     prix en puces à cocher, barème en cartes radio ; coefficients de
+     distance en pastilles, saisis après « Personnaliser ».
+   - Vérifier (« Tout vérifier ») : sections Infos, Dates, Catégories avec
+     « Modifier » (retour à l'étape, saisie gardée), lignes libellé / valeur /
+     précision (libellé à gauche en web), avertissement sur les réglages
+     figés, « Créer le défi ».
+
+À dessiner plus tard dans le même style, en mobile et en web : lien
+d'invitation à partager, activités, profil, et en V1.1 les badges (obtenus en
+couleur, à obtenir en silhouette avec leur condition).
 
 ## États des écrans
 

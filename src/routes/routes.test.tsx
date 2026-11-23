@@ -29,7 +29,7 @@ describe('routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Créer un défi' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Informations' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Le défi' })).toBeInTheDocument();
   });
 
   it('opens the activity entry from the activities page, its first item', async () => {

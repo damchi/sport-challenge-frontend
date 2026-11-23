@@ -1,4 +1,4 @@
-import { groupTimeZones } from './timeZones';
+import { groupTimeZones, timeZoneCity } from './timeZones';
 
 describe('groupTimeZones', () => {
   it('groups by region, then sorts by city', () => {
@@ -30,5 +30,13 @@ describe('groupTimeZones', () => {
         ({ region }) => region,
       ),
     ).toEqual(['Europe', 'Other']);
+  });
+});
+
+describe('timeZoneCity', () => {
+  it('takes the last part of the name, with spaces', () => {
+    expect(timeZoneCity('America/Toronto')).toBe('Toronto');
+    expect(timeZoneCity('America/Argentina/Buenos_Aires')).toBe('Buenos Aires');
+    expect(timeZoneCity('UTC')).toBe('UTC');
   });
 });

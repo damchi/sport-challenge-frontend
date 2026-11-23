@@ -276,7 +276,8 @@
       "creator": "Créateur"
     },
     "challengeStatus": {
-      "upcoming": "À venir"
+      "upcoming": "À venir",
+      "ongoing": "En cours"
     },
     "rank": "{{rank}} sur {{count}}",
     "greeting": "Salut {{name}}",
@@ -300,22 +301,24 @@
   "wizard": {
     "progress": "Étape {{current}} sur {{total}}",
     "back": "Retour",
-    "next": "Suivant"
+    "next": "Suivant",
+    "done": "(faite)"
   },
   "challengeCreate": {
     "title": "Créer un défi",
     "steps": {
-      "info": "Informations",
-      "duration": "Durée et fuseau",
+      "info": "Infos",
+      "duration": "Dates",
       "categories": "Catégories",
-      "recap": "Récapitulatif"
+      "recap": "Vérifier"
     },
     "fields": {
       "title": {
         "label": "Titre",
         "hint": "Entre 3 et 80 caractères.",
         "length": "Le titre doit faire entre 3 et 80 caractères.",
-        "characters": "Le titre contient un caractère non autorisé (retour à la ligne, tabulation ou caractère invisible)."
+        "characters": "Le titre contient un caractère non autorisé (retour à la ligne, tabulation ou caractère invisible).",
+        "count": "{{count}} / {{max}}"
       },
       "description": {
         "label": "Description (facultative)",
@@ -324,31 +327,36 @@
         "characters": "La description contient un caractère invisible non autorisé."
       },
       "visibility": {
-        "label": "Visibilité",
+        "label": "Qui peut voir le défi ?",
         "private": "Privé",
-        "privateHint": "Sur invitation seulement.",
+        "privateHint": "Seules les personnes invitées le voient et peuvent le rejoindre.",
         "public": "Public",
-        "publicHint": "Listé sur l'accueil : tout le monde peut le voir.",
+        "publicHint": "Listé dans l'onglet Publics : tout le monde peut le voir et s'inscrire jusqu'à la fin de la première semaine.",
         "required": "Choisis la visibilité du défi."
       },
       "membersCanInvite": {
         "label": "Les participants peuvent inviter",
-        "hint": "Sinon, seuls les créateurs du défi invitent."
+        "hint": "Chaque participant peut envoyer le lien à ses amis."
       },
       "weeks": {
-        "label": "Durée (en semaines)",
+        "label": "Durée",
         "hint": "De 2 à 52 semaines.",
-        "range": "La durée doit être un nombre entier de semaines, de 2 à 52."
+        "range": "La durée doit être un nombre entier de semaines, de 2 à 52.",
+        "unit_one": "semaine",
+        "unit_many": "semaines",
+        "unit_other": "semaines",
+        "less": "Une semaine de moins",
+        "more": "Une semaine de plus"
       },
       "startDate": {
-        "label": "Date de début",
-        "hint": "Aujourd'hui ou plus tard, dans un an au plus. Le défi commence à minuit, dans le fuseau choisi ci-dessus.",
+        "label": "Premier jour",
+        "hint": "Aujourd'hui au plus tôt, dans un an au plus tard.",
         "required": "Choisis la date de début.",
         "range": "La date de début doit être entre aujourd'hui et la même date l'an prochain."
       },
       "timezone": {
         "label": "Fuseau horaire",
-        "hint": "Celui du lieu d'où tu lances le défi. Les semaines y commencent et s'y terminent, pour tous les participants.",
+        "hint": "Celui d'où tu lances le défi : les semaines y commencent et s'y terminent pour tout le monde.",
         "placeholder": "Choisis un fuseau",
         "option": "{{city}} — {{name}}",
         "required": "Choisis un fuseau horaire dans la liste.",
@@ -372,24 +380,32 @@
         "required": "Choisis le sport de référence."
       },
       "eliminationStep": {
-        "label": "Incrément X (en km)",
+        "label": "Hausse minimale d'une semaine à l'autre",
         "hint": "Plus de 0 km, 100 km au plus, une décimale au plus.",
-        "range": "L'incrément doit être entre 0,1 et 100 km, avec une décimale au plus."
+        "range": "La hausse doit être entre 0,1 et 100 km, avec une décimale au plus.",
+        "unit": "km",
+        "unitLong": "(en km)"
       },
       "factors": {
         "label": "Coefficients de distance",
-        "hint": "Utilisés pour la distance cumulée et la séance la plus longue en distance. L'application les propose d'après le sport de référence ; tu peux les changer, de 0,1 à 2.",
+        "hint": "De 0,1 à 2, deux décimales au plus.",
         "suggested": "Proposé : {{factor}}",
-        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus."
+        "range": "Le coefficient doit être entre 0,1 et 2, avec deux décimales au plus.",
+        "intro": "Ils ramènent les km des autres sports au sport de référence : à ×0,5, 1 km compte pour 0,5 km. Ils servent à la distance cumulée et à la séance la plus longue en distance.",
+        "customize": "Personnaliser"
       },
       "serverInvalid": "Valeur refusée. Vérifie-la, puis renvoie le défi.",
       "pointsCriteria": {
-        "label": "Critères",
+        "label": "Critères de la semaine",
         "required": "Coche au moins un critère."
       },
       "pointsPodium": {
-        "label": "Barème",
-        "required": "Choisis un barème."
+        "label": "Barème, par semaine et par critère",
+        "required": "Choisis un barème.",
+        "points_5": "10 · 8 · 6 · 4 · 2 points",
+        "points_10": "25 · 18 · 15 · 12 · 10 · 8 · 6 · 4 · 2 · 1 point",
+        "name_5": "Top 5",
+        "name_10": "Top 10"
       },
       "minSession": {
         "label": "Durée minimale d'une séance (en min)",
@@ -398,15 +414,15 @@
       }
     },
     "preview": {
-      "title": "Aperçu",
-      "empty": "L'aperçu s'affiche une fois la durée, la date et le fuseau choisis.",
-      "period": "Du {{start}} au {{end}}, {{zone}}.",
+      "title": "Aperçu dans la liste des défis",
+      "period": "{{start}} → {{end}} · {{weeks}}",
       "weeks_one": "{{count}} semaine",
       "weeks_many": "{{count}} semaines",
-      "weeks_other": "{{count}} semaines"
+      "weeks_other": "{{count}} semaines",
+      "reference": "Sport de référence : {{sport}}"
     },
     "categories": {
-      "intro": "Le temps cumulé fait toujours partie du défi. Ajoute si tu veux la distance cumulée, l'élimination et le Grand prix : chaque catégorie a son podium.",
+      "intro": "Chaque catégorie a son propre classement et son podium.",
       "waiting": "Les sports doivent s'afficher avant de continuer : patiente ou réessaie.",
       "time": {
         "name": "Temps cumulé",
@@ -415,18 +431,17 @@
       },
       "distance": {
         "name": "Distance cumulée",
-        "explanation": "Les km des activités à distance, ramenés au sport de référence : un km à ×0,5 compte pour 0,5 km.",
-        "add": "Ajouter la distance cumulée"
+        "explanation": "Les km de toutes les activités à distance, ramenés au sport de référence avec les coefficients plus bas."
       },
       "elimination": {
-        "explanation": "{{sport}} seulement, en distance réelle. Chaque semaine, il faut faire au moins la distance de la semaine précédente plus X km, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
-        "example": "Exemple avec X = {{step}} : {{week1}} en semaine 1, il faut au moins {{week2}} en semaine 2 ; {{ran2}} en semaine 2, au moins {{week3}} en semaine 3.",
-        "add": "Ajouter l'élimination"
+        "explanation": "{{sport}} seulement, en distance réelle. Chaque semaine, il faut au moins égaler la semaine précédente plus une hausse, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
+        "example": "{{done}} en semaine {{week}} → au moins <b>{{needed}}</b> en semaine {{next}}",
+        "exampleTitle": "Exemple"
       },
       "points": {
-        "explanation": "Chaque semaine, chaque critère choisi donne un classement de la semaine : les premiers marquent des points selon le barème. Le total des points acquis fait le classement.",
-        "add": "Ajouter le Grand prix"
-      }
+        "explanation": "Chaque semaine, un classement par critère : les premiers marquent des points. Le total des points acquis fait le classement."
+      },
+      "title": "Catégories"
     },
     "recap": {
       "description": "Description",
@@ -434,10 +449,42 @@
       "membersCanInvite": "Les participants peuvent inviter",
       "creatorsInvite": "Seuls les créateurs invitent",
       "period": "Période",
-      "categories": "Catégories",
       "step": "Incrément X : {{step}}",
-      "final": "Les catégories, le sport de référence et leurs réglages ne pourront plus être modifiés après la création.",
-      "referenceFactor": "{{sport}} {{factor}} (référence)"
+      "final": "Après la création, seuls le titre et la description pourront être modifiés : catégories, sport de référence, réglages, dates et visibilité seront figés.",
+      "referenceFactor": "{{sport}} {{factor}} (référence)",
+      "sections": {
+        "info": "Infos",
+        "dates": "Dates",
+        "categories": "Catégories"
+      },
+      "edit": "Modifier",
+      "editSection": "Modifier : {{section}}",
+      "visibility": "Visibilité",
+      "privateDetail": "Sur invitation seulement",
+      "publicDetail": "Listé dans l'onglet Publics",
+      "periodDetail": "Du {{start}} au {{end}}",
+      "timezone": "Fuseau",
+      "included": "Inclus",
+      "includedFeminine": "Incluse",
+      "excluded": "Non inclus",
+      "excludedFeminine": "Non incluse",
+      "timeDetail": "Tous sports confondus",
+      "distanceDetail": "Ramenée au sport de référence",
+      "eliminationDetail": "{{sport}} seulement, pas d'élimination en semaine 1",
+      "podium_5": "Top 5 · 10 à 2 points",
+      "podium_10": "Top 10 · 25 à 1 point",
+      "criteria": "Critères : {{criteria}}",
+      "factors": "Coefficients",
+      "factorsSuggested": "Valeurs proposées",
+      "factorsCustom": "Valeurs personnalisées",
+      "stepPerWeek": "+{{step}} par semaine",
+      "allInvite": "Tous les participants",
+      "creatorsOnly": "Seuls les créateurs",
+      "criteriaNames": {
+        "longest_duration": "séance la plus longue en temps",
+        "longest_distance": "séance la plus longue en distance équivalente",
+        "session_count": "nombre de séances"
+      }
     },
     "submit": {
       "label": "Créer le défi",
@@ -450,6 +497,31 @@
       "message": "Ta saisie n'est pas enregistrée : elle sera perdue.",
       "confirm": "Quitter",
       "cancel": "Continuer la saisie"
+    },
+    "headings": {
+      "info": "Le défi",
+      "duration": "Quand ça se passe",
+      "categories": "Comment on gagne",
+      "recap": "Tout vérifier"
+    },
+    "back": "Défis",
+    "close": "Quitter la création",
+    "cancel": "Annuler",
+    "calendar": {
+      "title": "Calendrier du défi",
+      "period": "Du <b>{{start}}</b> au <b>{{end}}</b> inclus.",
+      "weekStart": "Chaque semaine commence le {{day}} à minuit, {{zone}}.",
+      "weeks": "Semaines du défi",
+      "week": "Semaine {{week}}",
+      "weekDates": "{{start}} – {{end}}",
+      "empty": "Le calendrier s'affiche une fois la durée, le premier jour et le fuseau choisis."
+    },
+    "tips": {
+      "title": "Bon à savoir",
+      "info": "Un défi privé n'apparaît que pour les personnes invitées. Tu pourras inviter dès qu'il est créé.",
+      "duration": "Chaque semaine est jugée le lendemain de sa fin, à 7 h, heure du défi. Jusque-là, chacun peut encore ajouter ou corriger ses activités.",
+      "categories": "Pense à ajouter une catégorie en plus du temps : la distance récompense le volume, l'élimination la progression, le Grand prix les meilleures semaines.",
+      "recap": "Tout est figé à la création, sauf le titre et la description : ils se modifient depuis la page du défi."
     }
   },
   "challengeDetail": {

@@ -20,6 +20,7 @@ import {
   type ChallengeCreateValues,
 } from '../../../domain/schemas/challenge';
 import { CategoriesStep } from './CategoriesStep';
+import { CreationPreview, CreationTip } from './CreationAside';
 import { DurationStep } from './DurationStep';
 import { InfoStep } from './InfoStep';
 import { RecapStep } from './RecapStep';
@@ -102,7 +103,8 @@ export function ChallengeCreateWizard({
     defaultValues: {
       title: '',
       description: '',
-      members_can_invite: false,
+      // On unless the creator says otherwise (decision of 2026-11-22).
+      members_can_invite: true,
       start_date: '',
       timezone: DEFAULT_TIME_ZONE,
       reference_sport: DEFAULT_REFERENCE_SPORT,
@@ -200,24 +202,44 @@ export function ChallengeCreateWizard({
     return valid;
   };
 
+  // Beside each step, from `lg`: the challenge as listed, and a tip.
+  const aside = (tip: string) => (
+    <>
+      <CreationPreview now={now} />
+      <CreationTip>{t(tip)}</CreationTip>
+    </>
+  );
+
   return (
     <FormProvider {...form}>
       <Wizard
         steps={[
-          { title: t('challengeCreate.steps.info'), content: <InfoStep /> },
           {
-            title: t('challengeCreate.steps.duration'),
+            name: t('challengeCreate.steps.info'),
+            title: t('challengeCreate.headings.info'),
+            content: <InfoStep />,
+            aside: aside('challengeCreate.tips.info'),
+          },
+          {
+            name: t('challengeCreate.steps.duration'),
+            title: t('challengeCreate.headings.duration'),
             content: <DurationStep now={now} timeZones={timeZones} />,
+            aside: aside('challengeCreate.tips.duration'),
           },
           {
-            title: t('challengeCreate.steps.categories'),
+            name: t('challengeCreate.steps.categories'),
+            title: t('challengeCreate.headings.categories'),
             content: <CategoriesStep sportsWaiting={sportsWaiting} />,
+            aside: aside('challengeCreate.tips.categories'),
           },
           {
-            title: t('challengeCreate.steps.recap'),
-            content: <RecapStep now={now} error={submitError} />,
+            name: t('challengeCreate.steps.recap'),
+            title: t('challengeCreate.headings.recap'),
+            content: (goTo) => <RecapStep now={now} error={submitError} goTo={goTo} />,
+            aside: aside('challengeCreate.tips.recap'),
           },
         ]}
+        cancel={{ label: t('challengeCreate.cancel'), to: '/' }}
         validateStep={validateStep}
         finish={{
           label: t('challengeCreate.submit.label'),

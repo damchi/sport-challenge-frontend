@@ -8,25 +8,78 @@ import {
   sortSportsByName,
   usesDistanceFactors,
 } from '../../../domain/challengeCreate';
+import { timeZoneName } from '../../../domain/format/challengeDates';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
+import { timeZoneCity } from '../../../domain/timeZones';
 import { useSportName } from './useSportName';
 import { windowPreview } from './windowPreview';
 
-function Item({ label, children }: { label: string; children: ReactNode }) {
+/** One line of the recap: what it is, its value, then a detail if any. */
+function Row({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) {
   return (
-    <div className="border-t border-border py-3 first:border-t-0 first:pt-0">
-      <dt className="text-sm font-semibold text-muted">{label}</dt>
-      <dd className="mt-1 break-words">{children}</dd>
+    <div className="border-t border-border py-3 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,5fr)] md:gap-4">
+      <dt className="text-muted">{label}</dt>
+      <dd className="mt-1 min-w-0 break-words md:mt-0">
+        <span className="block font-bold">{value}</span>
+        {detail && <span className="mt-0.5 block text-sm text-muted">{detail}</span>}
+      </dd>
     </div>
   );
 }
 
+/** A part of the recap, with its way back to the step that enters it. */
+function Section({
+  id,
+  title,
+  onEdit,
+  children,
+}: {
+  id: string;
+  title: string;
+  onEdit: () => void;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section aria-labelledby={id} className="rounded-card border border-border bg-surface p-4">
+      <div className="flex items-center justify-between gap-3 pb-1">
+        <h3 id={id} className="font-display text-lg font-bold">
+          {title}
+        </h3>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={t('challengeCreate.recap.editSection', { section: title })}
+          className="inline-flex h-11 items-center font-semibold text-accent underline underline-offset-4"
+        >
+          {t('challengeCreate.recap.edit')}
+        </button>
+      </div>
+      <dl>{children}</dl>
+    </section>
+  );
+}
+
+// Step of each part of the recap, for "Modifier".
+const INFO_STEP = 0;
+const DATES_STEP = 1;
+const CATEGORIES_STEP = 2;
+
 /**
- * Step 4 of the creation: everything entered, before it is sent, with the
- * warning that the categories are final. `error` is the sending's, if any.
+ * Step 4 of the creation: everything entered, by part, each with a way back
+ * to its step, then the warning that the categories are final. `error` is
+ * the sending's, if any; `goTo` opens a step.
  */
-export function RecapStep({ now, error }: { now: Date; error: string | undefined }) {
+export function RecapStep({
+  now,
+  error,
+  goTo,
+}: {
+  now: Date;
+  error: string | undefined;
+  goTo: (step: number) => void;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
@@ -40,9 +93,13 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
     sportName,
     locale,
   ).map(({ code, suggested }) => ({
-    code,
     text: `${sportName(code)} ${formatFactor(values.factors[code] ?? suggested, locale)}`,
+    changed: values.factors[code] !== undefined && values.factors[code] !== suggested,
   }));
+  const zone = timeZoneName(values.timezone, locale);
+  const criteria = values.points_criteria
+    .map((criterion) => t(`challengeCreate.recap.criteriaNames.${criterion}`))
+    .join(', ');
   // A failed sending disables then frees the button: the focus goes to the
   // error, so the keyboard is not lost.
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -51,92 +108,140 @@ export function RecapStep({ now, error }: { now: Date; error: string | undefined
   }, [error]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <dl className="rounded-row border border-border bg-surface p-4">
-        <Item label={t('challengeCreate.fields.title.label')}>{values.title.trim()}</Item>
+    <div className="flex flex-col gap-4">
+      <Section
+        id="recap-info"
+        title={t('challengeCreate.recap.sections.info')}
+        onEdit={() => goTo(INFO_STEP)}
+      >
+        <Row label={t('challengeCreate.fields.title.label')} value={values.title.trim()} />
         {values.description !== '' && (
-          <Item label={t('challengeCreate.recap.description')}>
-            <span className="whitespace-pre-line">{values.description}</span>
-          </Item>
+          <Row
+            label={t('challengeCreate.recap.description')}
+            value={<span className="font-normal whitespace-pre-line">{values.description}</span>}
+          />
         )}
-        <Item label={t('challengeCreate.fields.visibility.label')}>
-          {t(`challengeCreate.fields.visibility.${values.visibility}`)}
-        </Item>
-        <Item label={t('challengeCreate.recap.invitations')}>
-          {t(
+        <Row
+          label={t('challengeCreate.recap.visibility')}
+          value={t(`challengeCreate.fields.visibility.${values.visibility}`)}
+          detail={t(`challengeCreate.recap.${values.visibility}Detail`)}
+        />
+        <Row
+          label={t('challengeCreate.recap.invitations')}
+          value={t(
             values.members_can_invite
-              ? 'challengeCreate.recap.membersCanInvite'
-              : 'challengeCreate.recap.creatorsInvite',
+              ? 'challengeCreate.recap.allInvite'
+              : 'challengeCreate.recap.creatorsOnly',
           )}
-        </Item>
-        <Item label={t('challengeCreate.recap.period')}>
-          {period &&
+        />
+      </Section>
+
+      <Section
+        id="recap-dates"
+        title={t('challengeCreate.recap.sections.dates')}
+        onEdit={() => goTo(DATES_STEP)}
+      >
+        <Row
+          label={t('challengeCreate.recap.period')}
+          value={
+            period &&
             t('challengeCreate.preview.period', {
-              start: period.start,
-              end: period.end,
-              zone: period.zone,
-            })}{' '}
-          {t('challengeCreate.preview.weeks', { count: values.weeks })}
-        </Item>
-        <Item label={t('challengeCreate.fields.referenceSport.label')}>{sportName(reference)}</Item>
-        <Item label={t('challengeCreate.recap.categories')}>
-          <ol className="flex flex-col gap-1">
-            <li>{t('challengeCreate.categories.time.name')}</li>
-            {values.cumulative_distance && <li>{t('challengeCreate.categories.distance.name')}</li>}
-            {values.elimination && values.elimination_step_km !== undefined && (
-              <li>
-                {t('challengeDetail.categories.elimination', { sport: sportName(reference) })}
-                <span className="block text-sm text-muted">
-                  {t('challengeCreate.recap.step', {
-                    step: formatKm(values.elimination_step_km, locale),
-                  })}
-                </span>
-              </li>
-            )}
-            {values.points && values.points_podium && (
-              <li>
-                {t('challengeDetail.categories.points')}
-                <ul className="mt-1 text-sm text-muted">
-                  {values.points_criteria.map((criterion) => (
-                    <li key={criterion}>
-                      {t(`challengeDetail.categories.pointsParams.criteria.${criterion}`)}
-                    </li>
-                  ))}
-                  {values.points_criteria.includes('session_count') && (
-                    <li>
-                      {t('challengeDetail.categories.pointsParams.minSession', {
-                        minutes: values.points_min_session_minutes,
-                      })}
-                    </li>
-                  )}
-                  <li>
-                    {t(`challengeDetail.categories.pointsParams.podium_${values.points_podium}`)}
-                  </li>
-                </ul>
-              </li>
-            )}
-          </ol>
-        </Item>
+              start: period.short.start,
+              end: period.short.end,
+              weeks: t('challengeCreate.preview.weeks', { count: values.weeks }),
+            })
+          }
+          detail={
+            period &&
+            t('challengeCreate.recap.periodDetail', {
+              start: period.full.start,
+              end: period.full.end,
+            })
+          }
+        />
+        <Row
+          label={t('challengeCreate.recap.timezone')}
+          value={zone.charAt(0).toLocaleUpperCase(locale) + zone.slice(1)}
+          detail={timeZoneCity(values.timezone)}
+        />
+      </Section>
+
+      <Section
+        id="recap-categories"
+        title={t('challengeCreate.recap.sections.categories')}
+        onEdit={() => goTo(CATEGORIES_STEP)}
+      >
+        <Row
+          label={t('challengeCreate.fields.referenceSport.label')}
+          value={sportName(reference)}
+        />
+        <Row
+          label={t('challengeCreate.categories.time.name')}
+          value={t('challengeCreate.recap.included')}
+          detail={t('challengeCreate.recap.timeDetail')}
+        />
+        <Row
+          label={t('challengeCreate.categories.distance.name')}
+          value={t(
+            values.cumulative_distance
+              ? 'challengeCreate.recap.includedFeminine'
+              : 'challengeCreate.recap.excludedFeminine',
+          )}
+          detail={values.cumulative_distance && t('challengeCreate.recap.distanceDetail')}
+        />
+        <Row
+          label={t('challengeDetail.categories.eliminationGeneric')}
+          value={
+            values.elimination && values.elimination_step_km !== undefined
+              ? t('challengeCreate.recap.stepPerWeek', {
+                  step: formatKm(values.elimination_step_km, locale),
+                })
+              : t('challengeCreate.recap.excludedFeminine')
+          }
+          detail={
+            values.elimination &&
+            t('challengeCreate.recap.eliminationDetail', { sport: sportName(reference) })
+          }
+        />
+        <Row
+          label={t('challengeDetail.categories.points')}
+          value={
+            values.points && values.points_podium
+              ? t(`challengeCreate.recap.podium_${values.points_podium}`)
+              : t('challengeCreate.recap.excluded')
+          }
+          detail={
+            values.points && (
+              <>
+                {t('challengeCreate.recap.criteria', { criteria })}
+                {values.points_criteria.includes('session_count') && (
+                  <span className="block">
+                    {t('challengeDetail.categories.pointsParams.minSession', {
+                      minutes: values.points_min_session_minutes,
+                    })}
+                  </span>
+                )}
+              </>
+            )
+          }
+        />
         {usesDistanceFactors(values) && (
-          <Item label={t('challengeCreate.fields.factors.label')}>
-            <ul className="flex flex-col gap-1">
-              <li>
-                {t('challengeCreate.recap.referenceFactor', {
-                  sport: sportName(reference),
-                  factor: formatFactor(1, locale),
-                })}
-              </li>
-              {factors.map(({ code, text }) => (
-                <li key={code}>{text}</li>
-              ))}
-            </ul>
-          </Item>
+          <Row
+            label={t('challengeCreate.recap.factors')}
+            value={t(
+              factors.some(({ changed }) => changed)
+                ? 'challengeCreate.recap.factorsCustom'
+                : 'challengeCreate.recap.factorsSuggested',
+            )}
+            // The reference, ×1, is named just above.
+            detail={factors.map(({ text }) => text).join(' · ')}
+          />
         )}
-      </dl>
+      </Section>
 
       <p
         role="note"
-        className="flex gap-2 rounded-row border border-risk-border bg-risk-bg p-4 text-risk-fg"
+        className="flex gap-3 rounded-row border border-risk-border bg-risk-bg p-4 text-risk-fg"
       >
         <TriangleAlert aria-hidden="true" size={20} className="mt-0.5 flex-none" />
         {t('challengeCreate.recap.final')}
