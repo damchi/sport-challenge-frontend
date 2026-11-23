@@ -47,6 +47,7 @@ const textPairs: [text: string, background: string][] = [
   ['muted', 'surface'],
   ['muted', 'segment'],
   ['ink', 'segment'],
+  ['danger', 'segment'],
   ['ink', 'segment-active'],
   ['on-raised', 'surface-raised'],
   ['on-raised-muted', 'surface-raised'],
