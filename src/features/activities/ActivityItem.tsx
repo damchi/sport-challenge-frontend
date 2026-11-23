@@ -121,8 +121,8 @@ export function ActivityItem({
       className="flex flex-wrap gap-3 p-4 lg:flex-nowrap lg:items-center lg:gap-5 lg:px-6"
     >
       <SportIcon code={activity.sport_code} />
-      <div className="min-w-0 flex-1 basis-[140px] lg:flex lg:items-center lg:gap-6">
-        <div className="min-w-0 lg:flex-1">
+      <div className="min-w-0 flex-1 basis-[140px] lg:flex lg:flex-wrap lg:items-center lg:gap-x-6 lg:gap-y-3">
+        <div className="min-w-0 lg:flex-1 lg:basis-36">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h3 id={titleId} className="font-display text-lg font-bold break-words">
               {sport}
@@ -141,7 +141,10 @@ export function ActivityItem({
             </p>
           )}
         </div>
-        <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 lg:mt-0 lg:grid lg:w-xl lg:flex-none lg:grid-cols-5 lg:gap-x-4">
+        {/* Beside the details while there is room, under them otherwise; its
+            columns, the same from one activity to the next, wrap when the
+            text is enlarged. */}
+        <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 lg:mt-0 lg:grid lg:w-xl lg:max-w-full lg:grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] lg:gap-x-4">
           {stats.map(({ key, value }) => (
             <div key={key} className="flex min-w-0 flex-col-reverse">
               <dt className="text-sm text-muted">{t(`activities.${key}`)}</dt>
