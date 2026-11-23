@@ -91,7 +91,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
             >
               <Minus aria-hidden="true" size={20} />
             </button>
-            <span className="flex min-w-0 flex-1 items-center justify-center gap-1.5 font-bold">
+            <span className="flex min-w-0 flex-1 items-stretch justify-center gap-1.5 font-bold">
               <input
                 id="weeks"
                 type="number"
@@ -101,10 +101,10 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
                 step={1}
                 aria-invalid={weeksError ? true : undefined}
                 aria-describedby={describedBy('weeks', weeksError)}
-                className="w-10 [appearance:textfield] bg-transparent text-right text-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="h-full w-12 [appearance:textfield] bg-transparent text-right text-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 {...register('weeks', { valueAsNumber: true })}
               />
-              <span aria-hidden="true">
+              <span aria-hidden="true" className="self-center">
                 {t('challengeCreate.fields.weeks.unit', { count: typedWeeks ?? 0 })}
               </span>
             </span>
