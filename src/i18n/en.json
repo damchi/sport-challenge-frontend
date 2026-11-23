@@ -513,7 +513,7 @@
     "tips": {
       "title": "Good to know",
       "info": "A private challenge only shows to the people invited. You can invite as soon as it is created.",
-      "duration": "Each week is judged the day after it ends, at 7 a.m. Until then, everyone can still add or fix their activities.",
+      "duration": "Each week is judged the day after it ends, at 7 a.m. in the challenge's time zone. Until then, everyone can still add or fix their activities.",
       "categories": "Think of adding a category besides the time: the distance rewards volume, the elimination progress, the Grand Prix the best weeks.",
       "recap": "Everything is fixed at creation except the title and description, which can be changed from the challenge's page."
     }

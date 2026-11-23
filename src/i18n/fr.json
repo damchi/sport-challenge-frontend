@@ -519,7 +519,7 @@
     "tips": {
       "title": "Bon à savoir",
       "info": "Un défi privé n'apparaît que pour les personnes invitées. Tu pourras inviter dès qu'il est créé.",
-      "duration": "Chaque semaine est jugée le lendemain de sa fin, à 7 h. Jusque-là, chacun peut encore ajouter ou corriger ses activités.",
+      "duration": "Chaque semaine est jugée le lendemain de sa fin, à 7 h, heure du défi. Jusque-là, chacun peut encore ajouter ou corriger ses activités.",
       "categories": "Pense à ajouter une catégorie en plus du temps : la distance récompense le volume, l'élimination la progression, le Grand prix les meilleures semaines.",
       "recap": "Tout est figé à la création, sauf le titre et la description : ils se modifient depuis la page du défi."
     }
