@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { useChallenges } from '../../api/hooks/useChallenges';
+import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
 import { activityTimeZone } from '../../domain/activity';
 
 /**
@@ -11,10 +11,8 @@ import { activityTimeZone } from '../../domain/activity';
  */
 export function useActivityTimeZone(deviceTimeZone: string | undefined, paused = false) {
   const ongoing = useChallenges('mine', 'ongoing', 'all');
-  const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = ongoing;
-  useEffect(() => {
-    if (!paused && hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
-  }, [paused, hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
+  useFetchAllPages(ongoing, !paused);
+  const { hasNextPage, isError } = ongoing;
   const isPending = ongoing.isPending || (hasNextPage && !isError);
   const failed = !isPending && (!ongoing.data || isError);
   const device = deviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
