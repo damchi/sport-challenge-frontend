@@ -1,8 +1,9 @@
-import { ArrowRight, Mail, Users } from 'lucide-react';
+import { Mail, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ChallengePreview } from './ChallengePreview';
 import { SignInMessage } from './SignInMessage';
-import { LANDING_CONTAINER, PRIMARY_BUTTON, SECONDARY_BUTTON } from './styles';
+import { StartButton } from './StartButton';
+import { LANDING_CONTAINER, SECONDARY_BUTTON } from './styles';
 import type { LandingSignIn } from './useLandingSignIn';
 
 /** The pitch, « Commencer » and an example of a challenge. */
@@ -26,15 +27,7 @@ export function LandingHero({ signIn }: { signIn: LandingSignIn }) {
         </h1>
         <p className="mt-4 max-w-xl text-muted lg:text-lg">{t('landing.hero.lede')}</p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => signIn.signIn('top')}
-            disabled={signIn.pending}
-            className={PRIMARY_BUTTON}
-          >
-            {t('landing.start')}
-            <ArrowRight aria-hidden="true" size={18} strokeWidth={2} />
-          </button>
+          <StartButton signIn={signIn} source="top" />
           <a href="#how" className={SECONDARY_BUTTON}>
             {t('landing.hero.howLink')}
           </a>

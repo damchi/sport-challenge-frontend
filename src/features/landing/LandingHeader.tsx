@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
+import { HOME_PATH } from '../../lib/paths';
 import { AppMark } from '../../components/AppMark';
 import { LanguageSwitch } from './LanguageSwitch';
 import { LANDING_CONTAINER, SECONDARY_BUTTON } from './styles';
@@ -6,7 +8,7 @@ import type { LandingSignIn } from './useLandingSignIn';
 
 const SECTIONS = ['how', 'categories', 'sports', 'faq'] as const;
 
-/** The app's name, the sections (web), the language and « Se connecter ». */
+/** The app's name, the sections (web), the language and « Se connecter » (« Mes défis » signed in). */
 export function LandingHeader({ signIn }: { signIn: LandingSignIn }) {
   const { t } = useTranslation();
   return (
@@ -34,14 +36,20 @@ export function LandingHeader({ signIn }: { signIn: LandingSignIn }) {
         </nav>
         <div className="ml-auto flex items-center gap-3 lg:ml-0">
           <LanguageSwitch />
-          <button
-            type="button"
-            onClick={() => signIn.signIn('top')}
-            disabled={signIn.pending}
-            className={SECONDARY_BUTTON}
-          >
-            {t('auth.signIn')}
-          </button>
+          {signIn.signedIn ? (
+            <Link to={HOME_PATH} className={SECONDARY_BUTTON}>
+              {t('landing.myChallenges')}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => signIn.signIn('top')}
+              disabled={signIn.pending}
+              className={SECONDARY_BUTTON}
+            >
+              {t('auth.signIn')}
+            </button>
+          )}
         </div>
       </div>
     </header>

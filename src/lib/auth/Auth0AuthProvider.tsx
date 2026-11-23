@@ -3,7 +3,6 @@ import i18n from 'i18next';
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { Config } from '../config';
 import { AuthContext, safeReturnTo, type Auth } from './auth';
-import { forgetReturningUser, isReturningUser, rememberReturningUser } from './returningUser';
 
 // Errors meaning there is no session to get a token from: the user is signed
 // out. Any other failure (network, timeout) is thrown, not taken for a sign-out.
@@ -69,7 +68,6 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
   useEffect(() => {
     session.current = { isLoading, isAuthenticated };
     if (!isLoading) waiting.current.splice(0).forEach((resume) => resume());
-    if (isAuthenticated) rememberReturningUser();
   }, [isLoading, isAuthenticated]);
 
   const auth = useMemo<Auth>(
@@ -78,7 +76,6 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
       isAuthenticated,
       user: user?.sub ? { id: user.sub } : undefined,
       hasError: error !== undefined,
-      isReturning: isAuthenticated || isReturningUser(),
       signIn: (returnTo, { chooseAccount = false } = {}) =>
         loginWithRedirect({
           appState: { returnTo: safeReturnTo(returnTo, window.location.origin) },
@@ -89,7 +86,6 @@ function Auth0Bridge({ children }: { children: ReactNode }) {
           },
         }),
       signOut: async ({ local = false } = {}) => {
-        forgetReturningUser();
         // The logout redirect does not revoke the refresh token: revoke it first.
         await revokeRefreshToken().catch(() => undefined);
         await logout(

@@ -23,7 +23,7 @@ test('a new user signs in, fills in the profile and reaches the challenges', asy
     }),
   );
 
-  await signInAt(page, '/');
+  await signInAt(page, '/challenges');
 
   await expect(page.getByRole('heading', { level: 1, name: 'Bienvenue !' })).toBeVisible();
   await expect(page).toHaveURL('/onboarding');
@@ -32,7 +32,7 @@ test('a new user signs in, fills in the profile and reaches the challenges', asy
   await page.getByLabel('Nom', { exact: true }).fill('Tremblay');
   await page.getByRole('button', { name: "C'est parti" }).click();
 
-  await expect(page).toHaveURL('/');
+  await expect(page).toHaveURL('/challenges');
   await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
   expect(profile).toMatchObject({ pseudo: 'marie_92', first_name: 'Marie', last_name: 'Tremblay' });
 });

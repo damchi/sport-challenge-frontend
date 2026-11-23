@@ -26,6 +26,7 @@ import { InfoStep } from './InfoStep';
 import { RecapStep } from './RecapStep';
 import { useLeaveWarning } from './useLeaveWarning';
 import { useSportName } from './useSportName';
+import { HOME_PATH } from '../../../lib/paths';
 
 // Fields checked before leaving each step, in step order; the recap sends the
 // whole form, checked once more.
@@ -242,7 +243,7 @@ export function ChallengeCreateWizard({
             aside: aside('challengeCreate.tips.recap'),
           },
         ]}
-        cancel={{ label: t('challengeCreate.cancel'), to: '/' }}
+        cancel={{ label: t('challengeCreate.cancel'), to: HOME_PATH }}
         validateStep={validateStep}
         finish={{
           label: t('challengeCreate.submit.label'),

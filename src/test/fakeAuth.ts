@@ -7,7 +7,6 @@ export function createFakeAuth(overrides: Partial<Auth> = {}): Auth {
     isAuthenticated: false,
     user: undefined,
     hasError: false,
-    isReturning: false,
     signIn: vi.fn(() => Promise.resolve()),
     signOut: vi.fn(() => Promise.resolve()),
     getAccessToken: vi.fn(() => Promise.resolve(undefined)),

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { PageTitle } from '../../../components/Page';
+import { HOME_PATH } from '../../../lib/paths';
 
 /**
  * No challenge to show. The same words whether it never existed, was deleted
@@ -13,7 +14,7 @@ export function ChallengeNotFound() {
       <PageTitle>{t('challengeDetail.notFound.title')}</PageTitle>
       <p className="mt-2 text-muted">{t('challengeDetail.notFound.message')}</p>
       <Link
-        to="/"
+        to={HOME_PATH}
         className="mt-6 inline-flex h-11 items-center font-bold text-accent underline underline-offset-4 hover-link"
       >
         {t('notFound.backHome')}

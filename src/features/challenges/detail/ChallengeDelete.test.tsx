@@ -126,7 +126,7 @@ describe('ChallengeDelete', () => {
     expect(confirm).not.toHaveAttribute('aria-disabled');
     fireEvent.click(confirm);
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/challenges'));
     expect(deletes).toBe(1);
   });
 
@@ -143,7 +143,7 @@ describe('ChallengeDelete', () => {
     fireEvent.change(within(dialog).getByRole('textbox'), { target: { value: summary.title } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer le défi' }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/challenges'));
   });
 
   it('says the deletion is being sent once the dialog is closed', async () => {

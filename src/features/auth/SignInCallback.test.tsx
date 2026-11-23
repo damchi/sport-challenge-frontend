@@ -9,7 +9,7 @@ function renderCallback(auth: Auth, path = '/callback') {
   const router = createMemoryRouter(
     [
       { path: '/callback', element: <SignInCallback /> },
-      { path: '/', element: <p>home</p> },
+      { path: '/challenges', element: <p>home</p> },
     ],
     { initialEntries: [path] },
   );

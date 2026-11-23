@@ -21,14 +21,9 @@
     "title": "Défi d'automne",
     "meta": "Privé · 8 participants",
     "atRisk": "À risque",
-    "week": "Semaine 3 sur 4 · se termine samedi 28 nov. à 0 h",
-    "rank4": "4e sur 8",
-    "rank2": "2e sur 8",
     "pointsNote": "+4 points provisoires cette semaine",
     "podiumTitle": "Classement · Temps cumulé",
     "podiumNote": "Le temps de toutes les activités, tous sports confondus.",
-    "first": "1er",
-    "second": "2e",
     "exAequo": "ex æquo",
     "people": {
       "julie": "Julie",
@@ -128,6 +123,7 @@
   },
   "footer": {
     "tagline": "Des défis sportifs entre amis",
-    "copyright": "© 2026"
-  }
+    "copyright": "© {{year}}"
+  },
+  "myChallenges": "Mes défis"
 }

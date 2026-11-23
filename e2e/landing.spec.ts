@@ -23,11 +23,11 @@ test('a visitor reads the landing page, then starts and lands on their challenge
   await page.getByRole('link', { name: FAKE_SIGN_IN }).click();
   await page.waitForURL((url) => url.host !== AUTH0_DOMAIN && url.pathname !== '/callback');
 
-  expect(new URL(page.url()).pathname).toBe('/');
+  expect(new URL(page.url()).pathname).toBe('/challenges');
   await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
 });
 
-test('a user who signed in on this device signs in again on /, without the landing page', async ({
+test('a signed-in user still reads the landing page, and goes on to their challenges', async ({
   page,
 }) => {
   await page.goto('/');
@@ -35,10 +35,16 @@ test('a user who signed in on this device signs in again on /, without the landi
   await page.getByRole('link', { name: FAKE_SIGN_IN }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
 
-  // The session in memory is gone after a reload (no silent sign-in here).
-  await page.reload();
-
-  await expect(page.getByRole('link', { name: FAKE_SIGN_IN })).toBeVisible();
+  // Opened within the app (a full load drops the session in memory here: no
+  // silent sign-in in the tests).
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  });
+  await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
+  await page.getByRole('link', { name: 'Mes défis' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
+  await expect(page).toHaveURL('/challenges');
 });
 
 test('a deep link still signs in first', async ({ page }) => {

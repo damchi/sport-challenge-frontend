@@ -1,5 +1,6 @@
 import { Timer, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { challengeWeekEnd } from '../../domain/format/challengeDates';
 import { formatKm } from '../../domain/format/distance';
 import { StatusPill } from '../../components/StatusPill';
 import { initials } from '../../domain/avatar';
@@ -8,26 +9,31 @@ import { initials } from '../../domain/avatar';
 const PODIUM = [
   {
     person: 'julie',
-    rank: 'first',
+    rank: 1,
     minutes: 400,
     tied: false,
     tone: 'bg-avatar-1-bg text-avatar-1-fg',
   },
   {
     person: 'marc',
-    rank: 'second',
+    rank: 2,
     minutes: 355,
     tied: true,
     tone: 'bg-avatar-2-bg text-avatar-2-fg',
   },
   {
     person: 'sofia',
-    rank: 'second',
+    rank: 2,
     minutes: 355,
     tied: true,
     tone: 'bg-avatar-3-bg text-avatar-3-fg',
   },
 ] as const;
+
+// The example challenge: Montréal, its week 3 of 4 ending Saturday at midnight.
+const TIME_ZONE = 'America/Toronto';
+const WEEK_ENDS_AT = '2026-11-28T05:00:00Z';
+const PARTICIPANTS = 8;
 
 const ROW = 'flex items-center justify-between gap-3 border-t border-border py-3 text-sm';
 
@@ -40,6 +46,11 @@ export function ChallengePreview() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
   const number = new Intl.NumberFormat(locale);
+  const rank = (value: number) =>
+    t('challenges.rank', {
+      rank: t('leaderboard.rank', { count: value, ordinal: true }),
+      count: PARTICIPANTS,
+    });
   return (
     <div aria-hidden="true" className="flex flex-col gap-4">
       <div className="rounded-card border-2 border-risk-border bg-surface p-4 lg:p-5">
@@ -50,16 +61,20 @@ export function ChallengePreview() {
         <p className="mt-1 text-sm text-muted">{t('landing.preview.meta')}</p>
         <p className="mt-3 flex items-center gap-3 rounded-row bg-surface-raised px-4 py-3 text-sm font-semibold text-on-raised">
           <Timer size={18} strokeWidth={2} className="shrink-0 text-risk-bar" />
-          {t('landing.preview.week')}
+          {t('challenges.card.week', {
+            week: 3,
+            count: 4,
+            date: challengeWeekEnd(WEEK_ENDS_AT, TIME_ZONE, locale, 'long'),
+          })}
         </p>
         <div className="mt-3">
           <p className={ROW}>
             {t('challengeCreate.categories.time.name')}
-            <span className="font-bold tabular-nums">{t('landing.preview.rank4')}</span>
+            <span className="font-bold tabular-nums">{rank(4)}</span>
           </p>
           <p className={ROW}>
             {t('challengeCreate.categories.distance.name')}
-            <span className="font-bold tabular-nums">{t('landing.preview.rank2')}</span>
+            <span className="font-bold tabular-nums">{rank(2)}</span>
           </p>
           <div className="border-t border-border py-3 text-sm">
             <p className="flex flex-wrap items-center justify-between gap-2">
@@ -80,7 +95,7 @@ export function ChallengePreview() {
               {t('challengeDetail.categories.points')}
               <span className="block text-xs text-muted">{t('landing.preview.pointsNote')}</span>
             </span>
-            <span className="font-bold tabular-nums">{t('landing.preview.rank2')}</span>
+            <span className="font-bold tabular-nums">{rank(2)}</span>
           </div>
         </div>
       </div>
@@ -98,7 +113,7 @@ export function ChallengePreview() {
                 className="flex min-w-0 flex-col items-center gap-1 rounded-row border border-border px-1 py-3 text-center"
               >
                 <span className="font-display text-xl font-bold">
-                  {t(`landing.preview.${entry.rank}`)}
+                  {t('leaderboard.rank', { count: entry.rank, ordinal: true })}
                 </span>
                 <span className="min-h-4 text-xs text-muted">
                   {entry.tied ? t('landing.preview.exAequo') : ''}

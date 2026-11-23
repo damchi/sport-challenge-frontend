@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../lib/auth/auth';
 import { useOnline } from '../../lib/online';
+import { HOME_PATH } from '../../lib/paths';
 
 /** Where the sign-in was asked from: its message shows there. */
 export type SignInSource = 'top' | 'bottom';
@@ -11,8 +12,9 @@ interface SignInRequest {
 }
 
 /**
- * Sign-in from the landing page, back to `/` (the challenges, or the
- * onboarding for a new account). Like RequireAuth: offline, it waits for the
+ * Sign-in from the landing page, to the challenges (or the onboarding for a
+ * new account). A signed-in user gets links to the challenges instead
+ * (`signedIn`). Like RequireAuth: offline, it waits for the
  * connection and starts then; a redirect that cannot start offers a retry.
  */
 export function useLandingSignIn() {
@@ -26,14 +28,27 @@ export function useLandingSignIn() {
     if (!asked || !online || started.current || !request) return;
     started.current = true;
     const { source } = request;
-    auth.signIn('/').catch(() => {
+    auth.signIn(HOME_PATH).catch(() => {
       started.current = false;
       setRequest({ source, failed: true });
     });
   }, [asked, online, request, auth]);
 
+  // Back from the sign-in page, a page restored from the browser's cache
+  // keeps its state: the buttons must not stay disabled.
+  useEffect(() => {
+    const restored = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      started.current = false;
+      setRequest(undefined);
+    };
+    window.addEventListener('pageshow', restored);
+    return () => window.removeEventListener('pageshow', restored);
+  }, []);
+
   const pending = asked && online;
   return {
+    signedIn: auth.isAuthenticated,
     signIn: (source: SignInSource) => {
       // One redirect at a time: a double click must not start two sign-ins.
       if (!pending) setRequest({ source, failed: false });

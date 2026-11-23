@@ -12,7 +12,7 @@ describe('accountDeletedHandler', () => {
     expect(clearCache).toHaveBeenCalledTimes(1);
     expect(onSessionEnd).toHaveBeenCalledWith({
       reason: 'account_deleted_by_user',
-      returnTo: '/',
+      returnTo: '/challenges',
     });
     expect(auth.signOut).toHaveBeenCalledWith({ local: true });
   });

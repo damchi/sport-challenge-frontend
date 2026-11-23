@@ -3,8 +3,8 @@ import { AppMark } from '../../components/AppMark';
 import { SUPPORTED_LANGUAGES } from '../../i18n';
 import { LANDING_CONTAINER } from './styles';
 
-/** The app's name, the language in full and the year. */
-export function LandingFooter() {
+/** The app's name, the language in full and the year (`now`: injected by tests). */
+export function LandingFooter({ now = new Date() }: { now?: Date }) {
   const { t, i18n } = useTranslation();
   return (
     <footer className="border-t border-border">
@@ -32,7 +32,7 @@ export function LandingFooter() {
               </li>
             ))}
           </ul>
-          <span>{t('landing.footer.copyright')}</span>
+          <span>{t('landing.footer.copyright', { year: now.getFullYear() })}</span>
         </div>
       </div>
     </footer>

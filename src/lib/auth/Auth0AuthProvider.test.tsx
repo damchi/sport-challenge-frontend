@@ -128,7 +128,7 @@ describe('Auth0AuthProvider', () => {
     providerProps().onRedirectCallback?.({ returnTo: 'https://evil.example' });
     providerProps().onRedirectCallback?.({ returnTo: '/challenges/42' });
 
-    expect(onRedirect.mock.calls).toEqual([['/'], ['/challenges/42']]);
+    expect(onRedirect.mock.calls).toEqual([['/challenges'], ['/challenges/42']]);
   });
 
   it('revokes the refresh token before signing out', async () => {
@@ -200,32 +200,5 @@ describe('Auth0AuthProvider', () => {
 
     sdk.state = { ...sdk.state, isAuthenticated: false, user: undefined };
     expect(await renderAuth().current.getAccessToken()).toBeUndefined();
-  });
-});
-
-describe('Auth0AuthProvider returning user', () => {
-  afterEach(() => localStorage.clear());
-
-  it('remembers on the device that someone signed in', () => {
-    const result = renderAuth();
-
-    expect(result.current.isReturning).toBe(true);
-    sdk.state = { ...sdk.state, isAuthenticated: false, user: undefined };
-    expect(renderAuth().current.isReturning).toBe(true);
-  });
-
-  it('is not returning on a device where nobody signed in', () => {
-    sdk.state = { ...sdk.state, isAuthenticated: false, user: undefined };
-
-    expect(renderAuth().current.isReturning).toBe(false);
-  });
-
-  it('forgets it on sign-out', async () => {
-    const result = renderAuth();
-
-    await result.current.signOut({ local: true });
-    sdk.state = { ...sdk.state, isAuthenticated: false, user: undefined };
-
-    expect(renderAuth().current.isReturning).toBe(false);
   });
 });

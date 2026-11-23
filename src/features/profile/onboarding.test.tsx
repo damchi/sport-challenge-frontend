@@ -67,14 +67,16 @@ describe('profile onboarding', () => {
   });
 
   it('sends an incomplete profile to /onboarding', async () => {
-    const router = renderApp('/');
+    const router = renderApp('/challenges');
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Bienvenue !' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Bienvenue !' }),
+    ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/onboarding');
   });
 
   it('previews the name others will see as it is typed', async () => {
-    renderApp('/');
+    renderApp('/challenges');
 
     const preview = (await screen.findByText('Les autres te verront ainsi')).parentElement;
     if (!preview) throw new Error('no preview');
@@ -100,7 +102,7 @@ describe('profile onboarding', () => {
       }),
       http.get('*/api/v1/me', () => HttpResponse.json(saved ?? newProfile)),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     fireEvent.click(await screen.findByRole('radio', { name: 'English' }));
 
@@ -119,7 +121,7 @@ describe('profile onboarding', () => {
 
   it('shows the button busy while the profile is sent', async () => {
     server.use(http.patch('*/api/v1/me', () => new Promise<never>(() => undefined)));
-    renderApp('/');
+    renderApp('/challenges');
 
     await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
@@ -128,7 +130,7 @@ describe('profile onboarding', () => {
   });
 
   it('explains an invalid pseudo once the field is left, then as it is typed', async () => {
-    renderApp('/');
+    renderApp('/challenges');
 
     await typePseudo('ab');
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -151,7 +153,7 @@ describe('profile onboarding', () => {
         ),
       ),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
@@ -168,7 +170,7 @@ describe('profile onboarding', () => {
         ),
       ),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
@@ -178,7 +180,7 @@ describe('profile onboarding', () => {
 
   it('shows any other failure above the button', async () => {
     server.use(http.patch('*/api/v1/me', () => new HttpResponse(null, { status: 500 })));
-    renderApp('/');
+    renderApp('/challenges');
 
     await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
@@ -212,7 +214,7 @@ describe('profile onboarding', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'asked page' }),
     ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/');
+    expect(router.state.location.pathname).toBe('/challenges');
     expect(sent).toEqual({
       pseudo: 'jean.luc',
       first_name: 'Marie-Ève',
@@ -232,7 +234,7 @@ describe('profile onboarding', () => {
       }),
       http.get('*/api/v1/me', () => HttpResponse.json(saved ?? newProfile)),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     await type('Prénom', 'Marie');
     await type('Nom', 'Tremblay');
@@ -253,7 +255,7 @@ describe('profile onboarding', () => {
         return HttpResponse.json(mockMe);
       }),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     await typePseudo('marie_92');
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
@@ -269,7 +271,7 @@ describe('profile onboarding', () => {
   });
 
   it('explains a name with other characters than letters', async () => {
-    renderApp('/');
+    renderApp('/challenges');
 
     await type('Prénom', 'Marie2');
 
@@ -287,7 +289,7 @@ describe('profile onboarding', () => {
         ),
       ),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
@@ -312,7 +314,7 @@ describe('profile onboarding', () => {
         ),
       ),
     );
-    renderApp('/');
+    renderApp('/challenges');
 
     await fillProfile();
     fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));

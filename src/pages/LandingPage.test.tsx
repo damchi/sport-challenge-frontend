@@ -83,16 +83,43 @@ describe('LandingPage', () => {
     const auth = renderLanding();
 
     fireEvent.click(startButtons()[0]);
-    expect(auth.signIn).toHaveBeenCalledWith('/');
+    expect(auth.signIn).toHaveBeenCalledWith('/challenges');
   });
 
   it('starts one sign-in at a time', () => {
-    const auth = renderLanding(createFakeAuth({ signIn: vi.fn(() => new Promise<void>(() => undefined)) }));
+    const auth = renderLanding(
+      createFakeAuth({ signIn: vi.fn(() => new Promise<void>(() => undefined)) }),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
     fireEvent.click(startButtons()[0]);
 
     expect(auth.signIn).toHaveBeenCalledTimes(1);
+  });
+
+  it('enables the buttons again when the page comes back from the browser cache', () => {
+    const auth = renderLanding(
+      createFakeAuth({ signIn: vi.fn(() => new Promise<void>(() => undefined)) }),
+    );
+    fireEvent.click(startButtons()[0]);
+    expect(startButtons()[0]).toBeDisabled();
+
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+    });
+
+    expect(startButtons()[0]).toBeEnabled();
+    fireEvent.click(startButtons()[0]);
+    expect(auth.signIn).toHaveBeenCalledTimes(2);
+  });
+
+  it('links a signed-in user to the challenges', () => {
+    renderLanding(createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } }));
+
+    expect(screen.getByRole('link', { name: 'Mes défis' })).toHaveAttribute('href', '/challenges');
+    for (const start of screen.getAllByRole('link', { name: 'Commencer' })) {
+      expect(start).toHaveAttribute('href', '/challenges');
+    }
   });
 
   it('offers a retry when the sign-in cannot start', async () => {
@@ -120,7 +147,7 @@ describe('LandingPage', () => {
     );
 
     goOnline(true);
-    expect(auth.signIn).toHaveBeenCalledWith('/');
+    expect(auth.signIn).toHaveBeenCalledWith('/challenges');
   });
 
   it('switches to English, numbers included', async () => {
@@ -136,7 +163,7 @@ describe('LandingPage', () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText('×0.3')).toBeInTheDocument();
-    expect(document.querySelector('meta[name="description"]')).toBeNull();
+    expect(screen.getByText(/^Week 3 of 4 · ends Saturday, Nov(\.)? 28/)).toBeInTheDocument();
   });
 
   it('answers the first question, the others on demand', () => {
@@ -162,6 +189,11 @@ describe('LandingPage description', () => {
       </AppProviders>,
     );
     expect(meta.content).toMatch(/^Crée un défi sportif/);
+
+    act(() => {
+      void i18n.changeLanguage('en');
+    });
+    expect(meta.content).toMatch(/^Create a sports challenge/);
 
     unmount();
     expect(meta.content).toBe('static');

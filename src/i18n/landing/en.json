@@ -21,14 +21,9 @@
     "title": "Fall challenge",
     "meta": "Private · 8 participants",
     "atRisk": "At risk",
-    "week": "Week 3 of 4 · ends Saturday, Nov. 28 at 12 a.m.",
-    "rank4": "4th of 8",
-    "rank2": "2nd of 8",
     "pointsNote": "+4 provisional points this week",
     "podiumTitle": "Leaderboard · Total time",
     "podiumNote": "The time of every activity, every sport included.",
-    "first": "1st",
-    "second": "2nd",
     "exAequo": "tied",
     "people": {
       "julie": "Julie",
@@ -128,6 +123,7 @@
   },
   "footer": {
     "tagline": "Sports challenges among friends",
-    "copyright": "© 2026"
-  }
+    "copyright": "© {{year}}"
+  },
+  "myChallenges": "My challenges"
 }

@@ -17,8 +17,8 @@ function renderAt(path: string, auth: Auth = signedIn()) {
 }
 
 describe('routes', () => {
-  it('renders the home page title on /', async () => {
-    renderAt('/');
+  it('renders the challenges on /challenges', async () => {
+    renderAt('/challenges');
     expect(await screen.findByRole('heading', { level: 1, name: 'Défis' })).toBeInTheDocument();
     // Adding an activity belongs to the activities page.
     expect(screen.queryByRole('link', { name: 'Ajouter une activité' })).not.toBeInTheDocument();
@@ -99,12 +99,14 @@ describe('routes', () => {
     fetchSpy.mockRestore();
   });
 
-  it('signs a returning user in again on /, rather than show the landing page', () => {
-    const auth = createFakeAuth({ isReturning: true });
-    renderAt('/', auth);
+  it('shows the landing page to a signed-in user too, with a link to the challenges', async () => {
+    renderAt('/');
 
-    expect(auth.signIn).toHaveBeenCalledWith('/');
-    expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Mes défis' })).toHaveAttribute(
+      'href',
+      '/challenges',
+    );
+    expect(screen.queryByRole('button', { name: 'Se connecter' })).not.toBeInTheDocument();
   });
 
   it('still signs a visitor in on a deep link, back to it', async () => {
@@ -134,6 +136,9 @@ describe('routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Page introuvable' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: "Retour à l'accueil" })).toHaveAttribute(
+      'href',
+      '/challenges',
+    );
   });
 });

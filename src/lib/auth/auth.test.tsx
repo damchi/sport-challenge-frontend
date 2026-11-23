@@ -22,7 +22,7 @@ describe('safeReturnTo', () => {
     '/.//evil.example',
     '/a/..//evil.example',
   ])('falls back on the home page for %j', (value) => {
-    expect(safeReturnTo(value, origin)).toBe('/');
+    expect(safeReturnTo(value, origin)).toBe('/challenges');
   });
 });
 
