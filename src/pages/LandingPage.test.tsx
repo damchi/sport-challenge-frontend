@@ -7,7 +7,10 @@ import { AppProviders } from '../test/AppProviders';
 import { LandingPage } from './LandingPage';
 
 function renderLanding(auth: Auth = createFakeAuth()) {
-  const router = createMemoryRouter([{ path: '/', element: <LandingPage /> }]);
+  const router = createMemoryRouter([
+    { path: '/', element: <LandingPage /> },
+    { path: '/challenges', element: <p>challenges</p> },
+  ]);
   render(
     <AppProviders auth={auth}>
       <RouterProvider router={router} />
@@ -127,6 +130,15 @@ describe('LandingPage', () => {
 
     expect(screen.getByRole('link', { name: 'Mon compte' })).toHaveAttribute('href', '/challenges');
     expect(screen.queryByRole('button', { name: 'Se connecter' })).not.toBeInTheDocument();
+  });
+
+  it('goes to the challenges, which wait for it, while the session loads', async () => {
+    const auth = renderLanding(createFakeAuth({ isLoading: true }));
+
+    fireEvent.click(startButtons()[0]);
+
+    expect(await screen.findByText('challenges')).toBeInTheDocument();
+    expect(auth.signIn).not.toHaveBeenCalled();
   });
 
   it('offers a retry when the sign-in cannot start', async () => {

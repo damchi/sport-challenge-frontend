@@ -767,7 +767,8 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Contexte** : aujourd'hui, un visiteur non connecté qui ouvre `/` est envoyé directement vers Auth0 (`RequireAuth`), sans rien savoir de l'app. On veut une **landing page publique** qui explique le fonctionnement de l'app et ses différents défis.
 
 **Décisions du propriétaire du produit du 2026-11-23**
-- Landing page à **`/` pour un visiteur non connecté** ; une personne connectée voit toujours ses défis (`HomePage`) à `/`.
+- ~~Landing page à `/` pour un visiteur non connecté ; une personne connectée voit toujours ses défis à `/`.~~ Remplacé le 2026-11-23 : landing page à **`/` pour tout le monde**, connecté ou non ; les défis (`HomePage`) passent à **`/challenges`**. Connecté, « Commencer » mène aux défis ; « Se connecter » devient « Mon compte » (vers `/challenges`) pour qui s'est déjà connecté sur l'appareil.
+- Écarts avec les maquettes : pas de mention de Strava, Garmin, Polar ni Coros (README de l'API §2.11) ; une 5e carte « D+ cumulé » ; FAQ rédigée d'après les README ; pas de lien « Contact » ; maquette « Invitation sans compte » écartée (il faut toujours un compte pour participer et inviter).
 - Les liens profonds (`/invite`, `/challenges/:id`…) gardent leur comportement : connexion puis retour à la page demandée.
 - **Contenu statique** : aucune requête à l'API (toutes ses routes exigent une connexion). Le texte suit la section du README de l'API (SC-API-151).
 
@@ -782,7 +783,7 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 - **Maquettes web et mobile à venir** (propriétaire du produit, 2026-11-23) : ne pas coder avant leur ajout dans `docs/design/maquettes` ; la page devra y être conforme. Les sections ci-dessus sont indicatives et s'aligneront sur les maquettes.
 
 **Critères d'acceptation**
-- [ ] Visiteur non connecté sur `/` : landing page, sans redirection vers Auth0 ni appel d'API ; connecté : défis, sans changement.
+- [ ] Visiteur non connecté sur `/` : landing page, sans redirection vers Auth0 ni appel d'API ; connecté : landing page avec liens vers les défis, à `/challenges`.
 - [ ] Liens profonds inchangés (redirection vers la connexion puis retour).
 - [ ] Les boutons « Se connecter » / « Commencer » lancent la connexion Auth0 ; échec ou hors ligne gérés comme dans `RequireAuth` (réessayer, attente du réseau).
 - [ ] Contenu conforme au README de l'API (SC-API-151), aucune règle inventée ; textes FR/EN ; nombres formatés selon la langue.
@@ -792,7 +793,7 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Tests** : rendu connecté / déconnecté sur `/`, clic « Commencer » appelle `signIn`, lien profond toujours protégé, FR/EN, clair/sombre ; e2e Playwright du parcours visiteur.
 **Revue** : `ts-reviewer`, `ux-reviewer`.
 **Commit** : `feat(landing): add the public landing page`
-**Statut** : Bloqué
+**Statut** : En revue (PR #183)
 
 ### SC-WEB-097 · Création : catégorie D+ cumulé
 `F4` · Story · Phase 9 · Estimation 2 · Dépend de : 058 · Backend : damchi/sport-challenge-api#309 (SC-API-169), bloquant · règles : damchi/sport-challenge-api#308 (SC-API-168)

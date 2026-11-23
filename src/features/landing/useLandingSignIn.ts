@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../../lib/auth/auth';
 import { useOnline } from '../../lib/online';
 import { HOME_PATH } from '../../lib/paths';
@@ -20,6 +21,7 @@ interface SignInRequest {
 export function useLandingSignIn() {
   const auth = useAuth();
   const online = useOnline();
+  const navigate = useNavigate();
   const [request, setRequest] = useState<SignInRequest>();
   const started = useRef(false);
 
@@ -52,6 +54,12 @@ export function useLandingSignIn() {
     /** Signed in now, or before on this device: « Mon compte » in the header. */
     known: auth.isAuthenticated || auth.isReturning,
     signIn: (source: SignInSource) => {
+      // The session may still come back: the challenges' page waits for it,
+      // then signs in only if needed.
+      if (auth.isLoading) {
+        void navigate(HOME_PATH);
+        return;
+      }
       // One redirect at a time: a double click must not start two sign-ins.
       if (!pending) setRequest({ source, failed: false });
     },
