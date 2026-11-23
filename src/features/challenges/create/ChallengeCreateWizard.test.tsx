@@ -619,6 +619,7 @@ describe('ChallengeCreateWizard', () => {
         'Séance la plus longue en temps',
         'Séance la plus longue en distance équivalente',
         'Nombre de séances',
+        'D+ de la semaine',
       ]) {
         expect(criterion(name)).not.toBeChecked();
       }
@@ -641,6 +642,41 @@ describe('ChallengeCreateWizard', () => {
       );
       fireEvent.click(criterion('Nombre de séances'));
       expect(minSession()).not.toBeInTheDocument();
+    });
+
+    it('explains the elevation gain of the week once ticked, and sends it', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+      const explanation =
+        'Le D+ de la semaine se cumule sur tous les sports qui en ont un, en mètres réels, sans coefficient';
+      expect(screen.queryByText(explanation)).not.toBeInTheDocument();
+
+      fireEvent.click(criterion('D+ de la semaine'));
+      expect(
+        screen.getByRole('group', { name: 'Critères de la semaine' }),
+      ).toHaveAccessibleDescription(explanation);
+      fireEvent.click(criterion('D+ de la semaine'));
+      expect(screen.queryByText(explanation)).not.toBeInTheDocument();
+
+      fireEvent.click(criterion('D+ de la semaine'));
+      fireEvent.click(screen.getByRole('radio', { name: /^Top 5/ }));
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+      expect(row('Grand prix')).toHaveTextContent(
+        'Top 5 · 10 à 2 pointsCritères : D+ de la semaine',
+      );
+      expect(step().queryByText('Coefficients')).not.toBeInTheDocument();
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.categories).toEqual({
+        points: { criteria: ['weekly_elevation'], podium: 5, min_session_minutes: 20 },
+      });
+      expect(bodies[0]).not.toHaveProperty('distance_factors');
     });
 
     it('asks for a criterion, a scale and a valid minimum session', async () => {

@@ -602,7 +602,8 @@
       "criteriaNames": {
         "longest_duration": "séance la plus longue en temps",
         "longest_distance": "séance la plus longue en distance équivalente",
-        "session_count": "nombre de séances"
+        "session_count": "nombre de séances",
+        "weekly_elevation": "D+ de la semaine"
       }
     },
     "submit": {
@@ -669,11 +670,13 @@
         "criteria": {
           "longest_duration": "Séance la plus longue en temps",
           "longest_distance": "Séance la plus longue en distance équivalente",
-          "session_count": "Nombre de séances"
+          "session_count": "Nombre de séances",
+          "weekly_elevation": "D+ de la semaine"
         },
         "podium_5": "Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points",
         "podium_10": "Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point",
-        "minSession": "Une séance compte à partir de {{minutes}} min"
+        "minSession": "Une séance compte à partir de {{minutes}} min",
+        "weeklyElevation": "Le D+ de la semaine se cumule sur tous les sports qui en ont un, en mètres réels, sans coefficient"
       },
       "elevationInSentence": "D+ cumulé"
     },

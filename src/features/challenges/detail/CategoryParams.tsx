@@ -6,8 +6,9 @@ type Category = ChallengeDetail['categories'][number];
 
 /**
  * Settings of a category, frozen at creation, as the server sends them: the
- * elimination's X, the Grand prix's criteria, scale and minimum session. The
- * distance factors are listed once, in the challenge's details.
+ * elimination's X, the Grand prix's criteria, scale, minimum session and the
+ * explanation of the weekly elevation criterion. The distance factors are
+ * listed once, in the challenge's details.
  */
 export function CategoryParams({ category }: { category: Category }) {
   const { t, i18n } = useTranslation();
@@ -41,6 +42,9 @@ export function CategoryParams({ category }: { category: Category }) {
               minutes: Math.round(params.min_session_seconds / 60),
             })}
           </li>
+        )}
+        {params.criteria?.includes('weekly_elevation') && (
+          <li>{t('challengeDetail.categories.pointsParams.weeklyElevation')}</li>
         )}
       </ul>
     );

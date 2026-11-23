@@ -184,6 +184,11 @@ function Categories({ sports }: { sports: Sports }) {
   const referenceError = errors.reference_sport?.message;
   const stepError = errors.elimination_step_km?.message;
   const criteriaError = errors.points_criteria?.message;
+  const criteriaHint = criteria.includes('weekly_elevation');
+  const criteriaDescribedBy =
+    [criteriaHint && 'points_criteria-hint', criteriaError && 'points_criteria-error']
+      .filter(Boolean)
+      .join(' ') || undefined;
   const podiumError = errors.points_podium?.message;
   const minSessionError = errors.points_min_session_minutes?.message;
 
@@ -328,7 +333,7 @@ function Categories({ sports }: { sports: Sports }) {
             toggle="points"
             on={points}
           >
-            <fieldset aria-describedby={criteriaError ? 'points_criteria-error' : undefined}>
+            <fieldset aria-describedby={criteriaDescribedBy}>
               <legend className="font-semibold">
                 {t('challengeCreate.fields.pointsCriteria.label')}
               </legend>
@@ -350,6 +355,11 @@ function Categories({ sports }: { sports: Sports }) {
                   </label>
                 ))}
               </div>
+              {criteriaHint && (
+                <p id="points_criteria-hint" className="mt-2 text-sm text-muted">
+                  {t('challengeDetail.categories.pointsParams.weeklyElevation')}
+                </p>
+              )}
             </fieldset>
             {criteria.includes('session_count') && (
               <div>

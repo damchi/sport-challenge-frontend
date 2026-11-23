@@ -589,7 +589,8 @@
       "criteriaNames": {
         "longest_duration": "longest session by time",
         "longest_distance": "longest session by equivalent distance",
-        "session_count": "number of sessions"
+        "session_count": "number of sessions",
+        "weekly_elevation": "elevation gain of the week"
       }
     },
     "submit": {
@@ -655,11 +656,13 @@
         "criteria": {
           "longest_duration": "Longest session by time",
           "longest_distance": "Longest session by equivalent distance",
-          "session_count": "Number of sessions"
+          "session_count": "Number of sessions",
+          "weekly_elevation": "Elevation gain of the week"
         },
         "podium_5": "Top 5 of each week and criterion: 10, 8, 6, 4 and 2 points",
         "podium_10": "Top 10 of each week and criterion: 25, 18, 15, 12, 10, 8, 6, 4, 2 and 1 point",
-        "minSession": "A session counts from {{minutes}} min"
+        "minSession": "A session counts from {{minutes}} min",
+        "weeklyElevation": "The elevation gain of the week adds up every sport that has one, in real meters, without factor"
       },
       "elevationInSentence": "total elevation gain"
     },
