@@ -555,6 +555,10 @@
       "points": {
         "explanation": "Chaque semaine, un classement par critère : les premiers marquent des points. Le total des points acquis fait le classement."
       },
+      "elevation": {
+        "name": "D+ cumulé",
+        "explanation": "Le dénivelé positif de toutes les activités qui en ont un, tous sports confondus, en mètres réels, sans coefficient."
+      },
       "title": "Catégories"
     },
     "recap": {
@@ -585,6 +589,7 @@
       "timeDetail": "Tous sports confondus",
       "distanceDetail": "Ramenée au sport de référence",
       "eliminationDetail": "{{sport}} seulement, pas d'élimination en semaine 1",
+      "elevationDetail": "Tous sports, en mètres réels",
       "podium_5": "Top 5 · 10 à 2 points",
       "podium_10": "Top 10 · 25 à 1 point",
       "criteria": "Critères : {{criteria}}",
@@ -634,7 +639,7 @@
       "title": "Bon à savoir",
       "info": "Un défi privé n'apparaît que pour les personnes invitées. Tu pourras inviter dès qu'il est créé.",
       "duration": "Chaque semaine est jugée le lendemain de sa fin, à 7 h, heure du défi. Jusque-là, chacun peut encore ajouter ou corriger ses activités.",
-      "categories": "Pense à ajouter une catégorie en plus du temps : la distance récompense le volume, l'élimination la progression, le Grand prix les meilleures semaines.",
+      "categories": "Pense à ajouter une catégorie en plus du temps : la distance récompense le volume, l'élimination la progression, le Grand prix les meilleures semaines, le D+ cumulé les grimpeurs.",
       "recap": "Tout est figé à la création, sauf le titre et la description : ils se modifient depuis la page du défi."
     }
   },

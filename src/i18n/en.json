@@ -542,6 +542,10 @@
       "points": {
         "explanation": "Each week, one ranking per criterion: the first ones score points. The total of the secured points makes the ranking."
       },
+      "elevation": {
+        "name": "Total elevation gain",
+        "explanation": "The elevation gain of every activity that has one, every sport included, in real meters, without factor."
+      },
       "title": "Categories"
     },
     "recap": {
@@ -572,6 +576,7 @@
       "timeDetail": "Every sport included",
       "distanceDetail": "Brought back to the reference sport",
       "eliminationDetail": "{{sport}} only, no elimination in week 1",
+      "elevationDetail": "Every sport, in real meters",
       "podium_5": "Top 5 · 10 to 2 points",
       "podium_10": "Top 10 · 25 to 1 point",
       "criteria": "Criteria: {{criteria}}",
@@ -621,7 +626,7 @@
       "title": "Good to know",
       "info": "A private challenge only shows to the people invited. You can invite as soon as it is created.",
       "duration": "Each week is judged the day after it ends, at 7 a.m. in the challenge's time zone. Until then, everyone can still add or fix their activities.",
-      "categories": "Think of adding a category besides the time: the distance rewards volume, the elimination progress, the Grand Prix the best weeks.",
+      "categories": "Think of adding a category besides the time: the distance rewards volume, the elimination progress, the Grand Prix the best weeks, the total elevation gain the climbers.",
       "recap": "Everything is fixed at creation except the title and description, which can be changed from the challenge's page."
     }
   },

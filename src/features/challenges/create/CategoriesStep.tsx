@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useFormContext, useWatch, type FieldPath } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { Trans, useTranslation } from 'react-i18next';
 import { useSports } from '../../../api/hooks/useSports';
 import { ErrorState } from '../../../components/states/ErrorState';
@@ -30,9 +30,10 @@ const EXAMPLE_ABOVE_MINIMUM_KM = 3;
 
 /**
  * Step 3 of the creation: the reference sport, then the categories, one card
- * each. The cumulative time is always there; the cumulative distance, the
- * elimination, with its weekly increase, and the points, with their criteria
- * and scale, are switched on at will, their settings inside their card. The
+ * each. The cumulative time is always there; the others are switched on at
+ * will, their settings inside their card: the elimination's weekly increase,
+ * the points' criteria and scale (the cumulative distance and the total
+ * elevation gain have none). The
  * distance factors show once the cumulative distance or the longest session
  * by distance is chosen: the catalogue's suggestions brought back to the
  * reference, which follow it when it changes unless the creator set them.
@@ -63,10 +64,13 @@ export function CategoriesStep({ sportsWaiting }: { sportsWaiting: boolean }) {
 
 type Sports = NonNullable<ReturnType<typeof useSports>['data']>;
 
+// The form's field of each category the creator switches on.
+type CategoryToggle = 'cumulative_distance' | 'elimination' | 'points' | 'cumulative_elevation';
+
 /**
  * A category's card: icon, name, what it ranks, then on the right its switch
  * (`toggle`, the form's field) or what stands in for it (`fixed`). Its
- * settings show inside once it is on.
+ * settings show inside once it is on; a switch the server refused, below.
  */
 function CategoryCard({
   id,
@@ -82,12 +86,16 @@ function CategoryCard({
   Icon: LucideIcon;
   name: string;
   explanation: string;
-  toggle?: FieldPath<ChallengeCreateInput>;
+  toggle?: CategoryToggle;
   fixed?: ReactNode;
   on: boolean;
   children?: ReactNode;
 }) {
-  const { register } = useFormContext<ChallengeCreateInput>();
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<ChallengeCreateInput>();
+  const toggleError = toggle && errors[toggle]?.message;
   const head = (
     <>
       <span
@@ -123,7 +131,10 @@ function CategoryCard({
           {head}
           <Switch
             aria-labelledby={`${id}-name`}
-            aria-describedby={`${id}-explanation`}
+            aria-describedby={
+              toggleError ? `${id}-explanation ${toggle}-error` : `${id}-explanation`
+            }
+            aria-invalid={toggleError ? true : undefined}
             {...register(toggle)}
           />
         </label>
@@ -133,6 +144,7 @@ function CategoryCard({
           {fixed}
         </div>
       )}
+      {toggle && <FieldError id={`${toggle}-error`} message={toggleError} />}
       {on && children && (
         <div className="mt-4 flex flex-col gap-6 border-t border-border pt-4">{children}</div>
       )}
@@ -151,7 +163,7 @@ function Categories({ sports }: { sports: Sports }) {
     setValue,
     formState: { errors },
   } = useFormContext<ChallengeCreateInput>();
-  const [reference, distance, elimination, stepKm, points, criteria] = useWatch({
+  const [reference, distance, elimination, stepKm, points, criteria, elevation] = useWatch({
     control,
     name: [
       'reference_sport',
@@ -160,6 +172,7 @@ function Categories({ sports }: { sports: Sports }) {
       'elimination_step_km',
       'points',
       'points_criteria',
+      'cumulative_elevation',
     ],
   });
   const exampleKm = stepKm !== undefined && stepKm > 0 && stepKm <= 100 ? stepKm : EXAMPLE_STEP_KM;
@@ -394,6 +407,15 @@ function Categories({ sports }: { sports: Sports }) {
               </div>
             </fieldset>
           </CategoryCard>
+
+          <CategoryCard
+            id="elevation"
+            Icon={CATEGORY_ICONS.cumulative_elevation}
+            name={t('challengeCreate.categories.elevation.name')}
+            explanation={t('challengeCreate.categories.elevation.explanation')}
+            toggle="cumulative_elevation"
+            on={elevation}
+          />
         </ol>
       </section>
 

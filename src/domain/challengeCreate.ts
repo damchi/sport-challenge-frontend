@@ -154,6 +154,7 @@ export function challengeCreateRequest(
             : DEFAULT_MIN_SESSION_MINUTES,
         },
       }),
+    ...(values.cumulative_elevation && { cumulative_elevation: {} }),
   };
   return {
     title: values.title,
@@ -179,12 +180,14 @@ const POINTS_FIELDS: Record<string, string> = {
 /**
  * The form field of a field the server refused (`params.fields` of
  * validation_failed): "categories.elimination.step_meters" is X in km,
- * "categories.points.*" a setting of the points, "distance_factors.ride" a
+ * "categories.points.*" a setting of the points, "categories.cumulative_elevation"
+ * the total elevation gain itself (it has no settings), "distance_factors.ride" a
  * factor, "distance_factors" the factors as a whole. Undefined for a field
  * the form lacks.
  */
 export function formFieldOf(serverField: string): string | undefined {
   if (serverField === 'categories.elimination.step_meters') return 'elimination_step_km';
+  if (serverField === 'categories.cumulative_elevation') return 'cumulative_elevation';
   const points = POINTS_FIELDS[serverField];
   if (points) return points;
   if (serverField === 'distance_factors') return 'factors';

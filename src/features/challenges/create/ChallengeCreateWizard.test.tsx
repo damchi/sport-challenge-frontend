@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { StrictMode } from 'react';
 import { createMemoryRouter, Link, RouterProvider, useParams } from 'react-router';
@@ -89,6 +90,8 @@ const addElimination = async () =>
   fireEvent.click(await screen.findByRole('switch', { name: / avec élimination$/ }));
 const addPoints = async () =>
   fireEvent.click(await screen.findByRole('switch', { name: 'Grand prix' }));
+const addElevation = async () =>
+  fireEvent.click(await screen.findByRole('switch', { name: 'D+ cumulé' }));
 const criterion = (name: string) => screen.getByRole('checkbox', { name });
 const minSession = () =>
   screen.queryByRole('spinbutton', { name: "Durée minimale d'une séance (en min)" });
@@ -493,6 +496,7 @@ describe('ChallengeCreateWizard', () => {
         'Distance cumulée',
         'Course avec élimination',
         'Grand prix',
+        'D+ cumulé',
       ]) {
         expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
       }
@@ -504,7 +508,52 @@ describe('ChallengeCreateWizard', () => {
       );
       expect(screen.getByRole('switch', { name: 'Course avec élimination' })).not.toBeChecked();
       expect(screen.getByRole('switch', { name: 'Grand prix' })).not.toBeChecked();
+      expect(screen.getByRole('switch', { name: 'D+ cumulé' })).not.toBeChecked();
+      expect(screen.getByRole('switch', { name: 'D+ cumulé' })).toHaveAccessibleDescription(
+        'Le dénivelé positif de toutes les activités qui en ont un, tous sports confondus, en mètres réels, sans coefficient.',
+      );
       expect(screen.queryAllByRole('spinbutton')).toHaveLength(0);
+    });
+
+    it('adds the total elevation gain without settings or factors', async () => {
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+
+      await addElevation();
+
+      expect(screen.getByRole('switch', { name: 'D+ cumulé' })).toBeChecked();
+      expect(screen.queryAllByRole('spinbutton')).toHaveLength(0);
+      expect(
+        screen.queryByRole('region', { name: 'Coefficients de distance' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('names the total elevation gain in English', async () => {
+      await i18n.changeLanguage('en');
+      try {
+        renderWizard();
+        const nextStep = () => fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+        type(await screen.findByRole('textbox', { name: 'Title' }), 'Spring challenge');
+        fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
+        nextStep();
+        await screen.findByRole('heading', { level: 2, name: 'When it happens' });
+        type(screen.getByRole('spinbutton', { name: 'Duration' }), '6');
+        type(screen.getByLabelText('First day'), '2026-10-05');
+        nextStep();
+        await screen.findByRole('heading', { level: 2, name: 'How to win' });
+
+        expect(
+          await screen.findByRole('switch', { name: 'Total elevation gain' }),
+        ).toHaveAccessibleDescription(
+          'The elevation gain of every activity that has one, every sport included, in real meters, without factor.',
+        );
+        expect(
+          within(screen.getByRole('complementary')).getByRole('region', { name: 'Good to know' }),
+        ).toHaveTextContent(/the total elevation gain the climbers\.$/);
+      } finally {
+        await i18n.changeLanguage('fr');
+      }
     });
 
     it('shows the suggested factors once the total distance is added', async () => {
@@ -903,6 +952,7 @@ describe('ChallengeCreateWizard', () => {
         "+2,5 km par semaineCourse seulement, pas d'élimination en semaine 1",
       );
       expect(row('Grand prix')).toHaveTextContent('Non inclus');
+      expect(row('D+ cumulé')).toHaveTextContent('Non inclus');
       expect(row('Coefficients')).toHaveTextContent(
         'Valeurs proposéesAviron ×0,5 · Marche ×1 · Natation ×1 · Randonnée ×1 · Roller ×0,5 · Ski de fond ×0,5 · Vélo ×0,3 · Autre ×1',
       );
@@ -965,6 +1015,67 @@ describe('ChallengeCreateWizard', () => {
       expect(bodies[0]).not.toHaveProperty('categories');
       expect(bodies[0]).not.toHaveProperty('distance_factors');
       expect(bodies[0]?.reference_sport).toBe('run');
+    });
+
+    it('sums up and sends the total elevation gain, in the preview too', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addElevation();
+      expect(
+        within(screen.getByRole('complementary')).getByRole('region', { name: 'Bon à savoir' }),
+      ).toHaveTextContent(/le D\+ cumulé les grimpeurs\.$/);
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+
+      expect(row('D+ cumulé')).toHaveTextContent('InclusTous sports, en mètres réels');
+      expect(step().queryByText('Coefficients')).not.toBeInTheDocument();
+      expect(
+        within(screen.getByRole('region', { name: 'Aperçu dans la liste des défis' })).getByText(
+          'D+ cumulé',
+        ),
+      ).toBeInTheDocument();
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.categories).toEqual({ cumulative_elevation: {} });
+      expect(bodies[0]).not.toHaveProperty('distance_factors');
+    });
+
+    it('shows a refused total elevation gain on its switch', async () => {
+      answerCreation(() =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 'validation_failed',
+              params: { fields: 'categories.cumulative_elevation' },
+            },
+          },
+          { status: 400 },
+        ),
+      );
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addElevation();
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+
+      send();
+
+      expect(
+        await screen.findByText(
+          'Certaines informations ont été refusées : D+ cumulé. Corrige-les, puis réessaie.',
+        ),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+      const elevation = await screen.findByRole('switch', { name: 'D+ cumulé' });
+      expect(elevation).toHaveAttribute('aria-invalid', 'true');
+      expect(elevation).toHaveAccessibleDescription(
+        expect.stringContaining('Valeur refusée. Vérifie-la, puis renvoie le défi.'),
+      );
     });
 
     it('sums up and sends the points, with the factors of the longest session by distance', async () => {

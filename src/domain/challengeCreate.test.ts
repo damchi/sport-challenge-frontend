@@ -33,6 +33,7 @@ const VALUES = {
   points_criteria: [],
   points_podium: undefined,
   points_min_session_minutes: 20,
+  cumulative_elevation: false,
   factors: { ride: 0.3, rowing: 0.5, swim: 1 },
 };
 
@@ -258,6 +259,28 @@ describe('challengeCreateRequest', () => {
     ).toBeUndefined();
   });
 
+  it('sends the total elevation gain without settings or factors', () => {
+    expect(
+      challengeCreateRequest(
+        { ...VALUES, cumulative_distance: false, elimination: false, cumulative_elevation: true },
+        SPORTS,
+      ),
+    ).toEqual({ ...BASE, categories: { cumulative_elevation: {} } });
+  });
+
+  it('sends the factors for the total distance alone, the elevation gain beside it', () => {
+    expect(
+      challengeCreateRequest(
+        { ...VALUES, elimination: false, cumulative_elevation: true, factors: { ride: 0.25 } },
+        SPORTS,
+      ),
+    ).toEqual({
+      ...BASE,
+      categories: { cumulative_distance: {}, cumulative_elevation: {} },
+      distance_factors: { ride: 0.25 },
+    });
+  });
+
   it('rounds X to the meter', () => {
     expect(
       challengeCreateRequest({ ...VALUES, elimination_step_km: 0.1 + 0.2 }, SPORTS).categories
@@ -277,6 +300,7 @@ describe('formFieldOf', () => {
     ['categories.points.criteria', 'points_criteria'],
     ['categories.points.podium', 'points_podium'],
     ['categories.points.min_session_minutes', 'points_min_session_minutes'],
+    ['categories.cumulative_elevation', 'cumulative_elevation'],
     ['categories', undefined],
   ])('maps %s to %s', (server, form) => {
     expect(formFieldOf(server)).toBe(form);

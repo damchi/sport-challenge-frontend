@@ -71,9 +71,11 @@ export function challengeCreateSchema(now: Date) {
       // A sport of the catalogue whose distance is required: the server
       // checks it against the catalogue.
       reference_sport: z.string().min(1, 'challengeCreate.fields.referenceSport.required'),
-      // The cumulative time is always there; these two are chosen.
+      // The cumulative time is always there; the others are chosen.
       cumulative_distance: z.boolean(),
       elimination: z.boolean(),
+      // No settings: real meters, without factor.
+      cumulative_elevation: z.boolean(),
       // Increment X of the elimination, in km with one decimal: sent in
       // meters (1 to 100 000). Checked below, with the elimination only: an
       // empty field reads NaN.
