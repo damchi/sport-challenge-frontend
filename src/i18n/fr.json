@@ -294,7 +294,6 @@
         "unitLong": "en mètres",
         "unit": "m",
         "tagOptional": "facultatif",
-        "hint": "Il ne compte dans aucun classement.",
         "range": "Indique un dénivelé en mètres, nombre entier de 0 à 20 000."
       },
       "serverInvalid": "Valeur refusée. Vérifie-la."

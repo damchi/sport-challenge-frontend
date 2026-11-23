@@ -287,7 +287,6 @@
         "unitLong": "in meters",
         "unit": "m",
         "tagOptional": "optional",
-        "hint": "It counts in no ranking.",
         "range": "Enter an elevation gain in meters, a whole number from 0 to 20,000."
       },
       "serverInvalid": "Value refused. Check it."

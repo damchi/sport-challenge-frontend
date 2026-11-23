@@ -437,7 +437,6 @@ export function ActivityFormFields({
                   aria-invalid={elevationError ? true : undefined}
                   aria-describedby={[
                     'elevation_m-tag',
-                    'elevation_m-hint',
                     ...(elevationError ? ['elevation_m-error'] : []),
                   ].join(' ')}
                   className={`${inputClass} mt-0! h-13 w-full pr-14`}
@@ -447,9 +446,6 @@ export function ActivityFormFields({
                   {t('activityForm.fields.elevation.unit')}
                 </span>
               </div>
-              <p id="elevation_m-hint" className="mt-2 text-sm text-muted">
-                {t('activityForm.fields.elevation.hint')}
-              </p>
               <FieldError id="elevation_m-error" message={elevationError} />
             </div>
           )}

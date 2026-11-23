@@ -457,7 +457,6 @@ describe('ActivityForm', () => {
       if (typed) type(typed, '8,2');
       expect(elevation()).toBeInTheDocument();
       expect(screen.getByText('facultatif')).toBeInTheDocument();
-      expect(screen.getByText(/ne compte dans aucun classement/)).toBeInTheDocument();
     });
 
     it('is not offered for a sport that takes none, even with a distance', async () => {
@@ -544,7 +543,6 @@ describe('ActivityForm', () => {
         expect(
           screen.getByRole('textbox', { name: 'Elevation gain in meters' }),
         ).toBeInTheDocument();
-        expect(screen.getByText(/counts in no ranking/)).toBeInTheDocument();
       } finally {
         await i18n.changeLanguage('fr');
       }
