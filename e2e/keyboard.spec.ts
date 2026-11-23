@@ -17,7 +17,8 @@ async function tabTo(page: Page, name: string): Promise<string[]> {
         (element.id ? document.querySelector(`label[for="${element.id}"]`) : null) ??
         element.closest('label');
       return {
-        name: (label ?? element).textContent?.trim() ?? '',
+        // A control named apart from its text (a shortened label on a phone).
+        name: element.getAttribute('aria-label') ?? (label ?? element).textContent?.trim() ?? '',
         // Not :focus while on a date field's own picker button, which the
         // browser rings itself.
         ring:

@@ -1,5 +1,5 @@
 import { PenLine } from 'lucide-react';
-import { useId, type ReactNode } from 'react';
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Activity } from '../../api/hooks/useActivities';
 import { StatusPill } from '../../components/StatusPill';
@@ -12,22 +12,12 @@ import { useSportName } from '../challenges/create/useSportName';
  * An activity, read only: sport (marked "manual" when entered by hand),
  * start in `timeZone`, duration, distance, and the pace and speed the API
  * computes.
- * `children` follow, given the ids of its title and start to describe them.
  */
-export function ActivityCard({
-  activity,
-  timeZone,
-  children,
-}: {
-  activity: Activity;
-  timeZone: string;
-  children?: (ids: { titleId: string; startId: string }) => ReactNode;
-}) {
+export function ActivityCard({ activity, timeZone }: { activity: Activity; timeZone: string }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
   const titleId = useId();
-  const startId = useId();
   const sport =
     activity.sport_code === 'other'
       ? (activity.sport_label ?? t('activities.otherSport'))
@@ -47,7 +37,7 @@ export function ActivityCard({
           <StatusPill label={t('activities.manual')} Icon={PenLine} tone="neutral" />
         )}
       </div>
-      <p id={startId} className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted">
         <time dateTime={activity.started_at}>
           {activityTime(activity.started_at, timeZone, locale)}
         </time>
@@ -84,7 +74,6 @@ export function ActivityCard({
           </div>
         )}
       </dl>
-      {children?.({ titleId, startId })}
     </article>
   );
 }

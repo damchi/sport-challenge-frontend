@@ -55,7 +55,11 @@ describe('routes', () => {
 
   it('opens the change of an activity from the activities page', async () => {
     renderAt('/activities');
-    const [first] = await screen.findAllByRole('link', { name: 'Modifier' });
+    // Edited from the "…" menu of an activity that can still change.
+    const [menu] = await screen.findAllByRole('button', { name: "Actions de l'activité" });
+    if (!menu) throw new Error('No activity to change');
+    fireEvent.click(menu);
+    const [first] = screen.getAllByRole('link', { name: 'Modifier' });
     if (!first) throw new Error('No activity to change');
     fireEvent.click(first);
 
