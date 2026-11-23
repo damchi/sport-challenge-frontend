@@ -1,4 +1,11 @@
-import { activityClock, activityDay, weekDays, weekMonday } from './activityDates';
+import {
+  activityClock,
+  activityDay,
+  weekDays,
+  weekdayLetter,
+  weekdayName,
+  weekMonday,
+} from './activityDates';
 
 describe('weekDays', () => {
   it('writes a week in the language, with the year when asked', () => {
@@ -23,5 +30,14 @@ describe('activityDay and activityClock', () => {
     expect(activityClock(start, 'America/Montreal', 'fr')).toBe('22:30');
     expect(activityDay(start, 'Europe/Paris', 'fr')).toBe('sam. 21 nov.');
     expect(activityClock(start, 'Europe/Paris', 'en')).toBe('4:30 AM');
+  });
+});
+
+describe('weekdayLetter and weekdayName', () => {
+  it('name the day whatever the time zone of the device', () => {
+    expect(weekdayLetter('2026-11-23', 'fr')).toBe('L');
+    expect(weekdayLetter('2026-11-29', 'en')).toBe('S');
+    expect(weekdayName('2026-11-23', 'fr')).toBe('lundi 23 novembre');
+    expect(weekdayName('2026-11-23', 'en')).toBe('Monday, November 23');
   });
 });

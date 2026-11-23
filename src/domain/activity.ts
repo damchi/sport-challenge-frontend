@@ -36,6 +36,14 @@ export function isActivityId(value: unknown): value is string {
   return typeof value === 'string' && ACTIVITY_ID.test(value);
 }
 
+// A sport code of the catalogue, as the API accepts it in a filter.
+const SPORT_CODE = /^[a-z][a-z0-9_]{0,31}$/;
+
+/** Whether an address parameter can be a sport code, checked before any request. */
+export function isSportCode(value: unknown): value is string {
+  return typeof value === 'string' && SPORT_CODE.test(value);
+}
+
 // Sports in the order an entry offers them (mockups AjoutActivite and
 // WebAjoutActivite, owner's decision of 2026-11-22).
 const ENTRY_ORDER = [

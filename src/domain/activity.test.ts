@@ -1,4 +1,4 @@
-import { activityTimeZone, isActivityId, sortSportsForEntry } from './activity';
+import { activityTimeZone, isActivityId, isSportCode, sortSportsForEntry } from './activity';
 
 describe('activityTimeZone', () => {
   it("takes the device's time zone without an ongoing challenge", () => {
@@ -35,6 +35,17 @@ describe('activityTimeZone', () => {
     expect(
       activityTimeZone([{ timezone: 'America/Toronto', my_status: 'abandoned' }], 'Europe/Paris'),
     ).toBe('Europe/Paris');
+  });
+});
+
+describe('isSportCode', () => {
+  it('accepts a code of the catalogue shape and nothing else', () => {
+    expect(isSportCode('run')).toBe(true);
+    expect(isSportCode('trail_run2')).toBe(true);
+    expect(isSportCode('Run')).toBe(false);
+    expect(isSportCode('run&x=1')).toBe(false);
+    expect(isSportCode('a'.repeat(33))).toBe(false);
+    expect(isSportCode(null)).toBe(false);
   });
 });
 

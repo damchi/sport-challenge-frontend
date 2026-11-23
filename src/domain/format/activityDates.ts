@@ -49,3 +49,20 @@ export function activityClock(instant: string, timeZone: string, locale: string)
     minute: '2-digit',
   }).format(new Date(instant));
 }
+
+/** A day's weekday in one letter, for the bars of a week: "L", "M" / "M", "T". */
+export function weekdayLetter(date: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { timeZone: 'UTC', weekday: 'narrow' }).format(
+    utcDay(date),
+  );
+}
+
+/** A day in full, read out for its bar: "lundi 23 novembre" / "Monday, November 23". */
+export function weekdayName(date: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: 'UTC',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(utcDay(date));
+}

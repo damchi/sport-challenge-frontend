@@ -8,7 +8,12 @@ export const queryKeys = {
   activities: {
     // Reloaded once an activity is recorded, changed or deleted.
     all: ['activities'] as const,
-    mine: ['activities', 'mine'] as const,
+    // Of one sport, or of every sport (`undefined`).
+    mine: (sport?: string) => ['activities', 'mine', sport ?? 'all'] as const,
+    // Weeks and days cut in `timeZone`.
+    summary: (timeZone: string) => ['activities', 'summary', timeZone] as const,
+    weeks: (timeZone: string, sport?: string) =>
+      ['activities', 'weeks', timeZone, sport ?? 'all'] as const,
   },
   invitations: {
     // The preview of a link; the token stays in memory only (gcTime 0).

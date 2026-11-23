@@ -10,6 +10,8 @@ import { createFakeAuth } from '../../test/fakeAuth';
 import { ActivityList } from './ActivityList';
 
 type ActivityPage = components['schemas']['ActivityPage'];
+type ActivitySummary = components['schemas']['ActivitySummary'];
+type ActivityWeekPage = components['schemas']['ActivityWeekPage'];
 
 const RUN_ID = '00000000-0000-4000-8000-0000000001a1';
 const LOCKED_ID = '00000000-0000-4000-8000-0000000002a1';
@@ -59,8 +61,72 @@ function listing(...pages: Activity[][]) {
 // Wednesday 25 Nov 2026, 10:00 in Montréal.
 const NOW = new Date('2026-11-25T15:00:00Z');
 
+/** The days of the week of NOW, Monday to Sunday, with these durations. */
+function days(...durations: number[]) {
+  return Array.from({ length: 7 }, (_, index) => ({
+    date: `2026-11-${23 + index}`,
+    sessions: durations[index] ? 1 : 0,
+    duration_seconds: durations[index] ?? 0,
+  }));
+}
+
+/** The summary of the week of NOW in Montréal: these totals, days and sports. */
+function summary({
+  sessions = 0,
+  duration = 0,
+  distance = 0,
+  durations = [] as number[],
+  sports = [] as ActivitySummary['sports'],
+} = {}): ActivitySummary {
+  return {
+    current_week: {
+      starts_at: '2026-11-23T05:00:00Z',
+      ends_at: '2026-11-30T05:00:00Z',
+      sessions,
+      duration_seconds: duration,
+      distance_meters: distance,
+      days: days(...durations),
+    },
+    sports,
+    total: sports.reduce((sum, { count }) => sum + count, 0),
+  };
+}
+
+/** The summary answered, and the time zones it was asked in. */
+function summarizing(answer: ActivitySummary) {
+  const zones: (string | null)[] = [];
+  server.use(
+    http.get('*/api/v1/me/activities/summary', ({ request }) => {
+      zones.push(new URL(request.url).searchParams.get('tz'));
+      return HttpResponse.json(answer);
+    }),
+  );
+  return zones;
+}
+
+/** The weeks answered, and the queries (`tz`, `sport`) they were asked with. */
+function weeksTotals(...items: ActivityWeekPage['items']) {
+  const asked: URLSearchParams[] = [];
+  server.use(
+    http.get('*/api/v1/me/activities/weeks', ({ request }) => {
+      asked.push(new URL(request.url).searchParams);
+      return HttpResponse.json<ActivityWeekPage>({ items, next_cursor: null });
+    }),
+  );
+  return asked;
+}
+
+/** The totals of the week of `monday` (Montréal, standard time). */
+const weekOf = (monday: string, sessions: number, duration: number, distance: number) => ({
+  starts_at: `${monday}T05:00:00Z`,
+  ends_at: new Date(Date.parse(`${monday}T05:00:00Z`) + 7 * 86_400_000).toISOString(),
+  sessions,
+  duration_seconds: duration,
+  distance_meters: distance,
+});
+
 // The device in the time zone of the mock challenges, unless said otherwise.
-function renderList({ deviceTimeZone = 'America/Montreal' } = {}) {
+function renderList({ deviceTimeZone = 'America/Montreal', path = '/activities' } = {}) {
   const router = createMemoryRouter(
     [
       {
@@ -69,7 +135,7 @@ function renderList({ deviceTimeZone = 'America/Montreal' } = {}) {
       },
       { path: '/activities/:activityId/edit', element: <p>Modification</p> },
     ],
-    { initialEntries: ['/activities'] },
+    { initialEntries: [path] },
   );
   render(
     <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
@@ -92,6 +158,18 @@ const contribution = (challenge_title: string, distance_meters: number | null) =
   challenge_title,
   distance_meters,
   duration_seconds: 2730,
+});
+
+// Unless a test says otherwise: one run and one padel, none this week.
+beforeEach(() => {
+  summarizing(
+    summary({
+      sports: [
+        { sport_code: 'run', count: 1 },
+        { sport_code: 'other', count: 1 },
+      ],
+    }),
+  );
 });
 
 describe('ActivityList', () => {
@@ -149,7 +227,12 @@ describe('ActivityList', () => {
     renderList();
     await item('Vélo');
 
-    expect(screen.getAllByRole('heading', { level: 2 }).map((title) => title.textContent)).toEqual([
+    const list = screen.getByRole('region', { name: 'Mes activités enregistrées' });
+    expect(
+      within(list)
+        .getAllByRole('heading', { level: 2 })
+        .map((title) => title.textContent),
+    ).toEqual([
       'Cette semaine · 23–29 nov.',
       'Semaine dernière · 16–22 nov.',
       'Semaine du 2 nov. · 2–8 nov.',
@@ -243,7 +326,8 @@ describe('ActivityList', () => {
     expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
   });
 
-  it('says what to do without any activity', async () => {
+  it('says what to do without any activity, with neither summary nor filter', async () => {
+    summarizing(summary());
     listing([]);
     renderList();
 
@@ -252,6 +336,10 @@ describe('ActivityList', () => {
         'Aucune activité pour le moment. Ajoute ta première : elle comptera dans les défis dont les dates la contiennent.',
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('region', { name: 'Résumé de cette semaine' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
   });
 
   it('offers a retry when the list fails', async () => {
@@ -380,6 +468,223 @@ describe('ActivityList', () => {
 
       expect(await screen.findByRole('status')).toHaveTextContent('Activité supprimée.');
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('summary of the week', () => {
+    const card = async () => screen.findByRole('region', { name: 'Résumé de cette semaine' });
+
+    it('shows the totals and a bar a day from the server, asked in the time zone of entry', async () => {
+      const zones = summarizing(
+        summary({
+          sessions: 2,
+          duration: 4200 + 1800,
+          distance: 32_000,
+          durations: [4200, 0, 1800],
+          sports: [{ sport_code: 'ride', count: 2 }],
+        }),
+      );
+      listing([run]);
+      renderList({ deviceTimeZone: 'Europe/Paris' });
+      const summaryCard = await card();
+
+      expect(within(summaryCard).getByRole('heading')).toHaveTextContent(
+        'Cette semaine · 23–29 nov.',
+      );
+      expect(within(summaryCard).getByText('2')).toBeInTheDocument();
+      expect(within(summaryCard).getByText('séances')).toBeInTheDocument();
+      expect(within(summaryCard).getByText('1:40')).toBeInTheDocument();
+      expect(within(summaryCard).getByText('32 km')).toBeInTheDocument();
+      const bars = within(within(summaryCard).getByRole('list', { name: 'Durée de chaque jour' }))
+        .getAllByRole('listitem')
+        .map((bar) => bar.textContent);
+      expect(bars).toEqual([
+        'Llundi 23 novembre : 1 heure 10 minutes',
+        'Mmardi 24 novembre : aucune activité',
+        'Mmercredi 25 novembre : 30 minutes',
+        'Jjeudi 26 novembre : aucune activité',
+        'Vvendredi 27 novembre : aucune activité',
+        'Ssamedi 28 novembre : aucune activité',
+        'Ddimanche 29 novembre : aucune activité',
+      ]);
+      // Today is Wednesday in Montréal, the zone of entry, not the device's.
+      expect(
+        within(summaryCard)
+          .getAllByRole('listitem')
+          .find((bar) => bar.hasAttribute('aria-current')),
+      ).toHaveTextContent('mercredi');
+      expect(zones).toEqual(['America/Montreal']);
+    });
+
+    it('shows a week without activity, in the singular for one session', async () => {
+      summarizing(summary({ sports: [{ sport_code: 'run', count: 1 }] }));
+      listing([run]);
+      renderList();
+      const summaryCard = await card();
+
+      expect(within(summaryCard).getByText('séance')).toBeInTheDocument();
+      expect(within(summaryCard).getByText('0:00')).toBeInTheDocument();
+      expect(within(summaryCard).getByText('0 km')).toBeInTheDocument();
+      expect(within(summaryCard).getAllByText(/aucune activité/)).toHaveLength(7);
+    });
+
+    it('offers a retry when it fails, the list still shown', async () => {
+      let calls = 0;
+      server.use(
+        http.get('*/api/v1/me/activities/summary', () => {
+          calls += 1;
+          return calls === 1
+            ? HttpResponse.json(
+                { error: { code: 'internal_error', message: 'Boom' } },
+                { status: 500 },
+              )
+            : HttpResponse.json(summary({ sports: [{ sport_code: 'run', count: 1 }] }));
+        }),
+      );
+      listing([run]);
+      renderList();
+
+      expect(await item('Course')).toBeInTheDocument();
+      fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+
+      expect(await card()).toBeInTheDocument();
+      expect(screen.getByRole('radiogroup', { name: 'Filtrer par sport' })).toBeInTheDocument();
+    });
+  });
+
+  describe('sport filter', () => {
+    const SPORTS = [
+      { sport_code: 'run', count: 4 },
+      { sport_code: 'ride', count: 1 },
+      { sport_code: 'other', count: 1 },
+    ];
+
+    it("lists the sports in the server's order, with their counts, all of them chosen", async () => {
+      summarizing(summary({ sports: SPORTS }));
+      listing([run]);
+      renderList();
+      const group = await screen.findByRole('radiogroup', { name: 'Filtrer par sport' });
+
+      expect(
+        within(group)
+          .getAllByRole('radio')
+          .map((radio) => radio.closest('label')?.textContent),
+      ).toEqual([
+        'Tous6 activités',
+        'Course4 activités',
+        'Vélo1 activité',
+        'Autre sport1 activité',
+      ]);
+      expect(within(group).getByRole('radio', { name: /^Tous/ })).toBeChecked();
+    });
+
+    it('applies the sport chosen to the list and to the totals of the weeks', async () => {
+      summarizing(summary({ sports: SPORTS }));
+      const asked = weeksTotals(weekOf('2026-11-16', 1, 2730, 8200));
+      const listed: (string | null)[] = [];
+      server.use(
+        http.get('*/api/v1/me/activities', ({ request }) => {
+          const sport = new URL(request.url).searchParams.get('sport');
+          listed.push(sport);
+          return HttpResponse.json<ActivityPage>({
+            items: sport === 'ride' ? [] : [run],
+            next_cursor: null,
+          });
+        }),
+      );
+      renderList();
+      await item('Course');
+
+      fireEvent.click(screen.getByRole('radio', { name: /^Vélo/ }));
+
+      expect(await screen.findByText('Aucune activité de ce sport.')).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: /^Vélo/ })).toBeChecked();
+      expect(listed).toEqual([null, 'ride']);
+      expect(asked.map((query) => [query.get('tz'), query.get('sport')])).toEqual([
+        ['America/Montreal', null],
+        ['America/Montreal', 'ride'],
+      ]);
+    });
+  });
+
+  describe('sport no longer there', () => {
+    it('shows every sport when the address names one without activity', async () => {
+      summarizing(summary({ sports: [{ sport_code: 'run', count: 1 }] }));
+      const listed: (string | null)[] = [];
+      server.use(
+        http.get('*/api/v1/me/activities', ({ request }) => {
+          listed.push(new URL(request.url).searchParams.get('sport'));
+          return HttpResponse.json<ActivityPage>({ items: [run], next_cursor: null });
+        }),
+      );
+      renderList({ path: '/activities?sport=ride' });
+
+      expect(await screen.findByRole('radio', { name: /^Tous/ })).toBeChecked();
+      await item('Course');
+      expect(listed.at(-1)).toBeNull();
+    });
+  });
+
+  describe('totals of the weeks', () => {
+    /** The totals line of a week, its duration also in words for a screen reader. */
+    const totalsOf = (region: HTMLElement) => within(region).getByText(/^\d+ séances?/);
+
+    it("shows the server's totals beside each week, the distance left out at 0", async () => {
+      weeksTotals(weekOf('2026-11-16', 4, 9360, 26_000), weekOf('2026-11-02', 1, 2730, 0));
+      listing([run, padel]);
+      renderList();
+      await item('Course');
+
+      expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(
+        '4 séances · 2:362 heures 36 minutes · 26 km',
+      );
+      expect(totalsOf(week(/^Semaine du 2 nov/))).toHaveTextContent(/^1 séance · 0:4545 minutes$/);
+    });
+
+    it('loads more weeks while a week shown has no totals yet', async () => {
+      server.use(
+        http.get('*/api/v1/me/activities/weeks', ({ request }) => {
+          const later = new URL(request.url).searchParams.get('cursor') === '2';
+          return HttpResponse.json<ActivityWeekPage>({
+            items: [later ? weekOf('2026-11-02', 1, 2730, 0) : weekOf('2026-11-16', 1, 2730, 8200)],
+            next_cursor: later ? null : '2',
+          });
+        }),
+      );
+      listing([run, padel]);
+      renderList();
+
+      const older = await screen.findByRole('region', { name: /^Semaine du 2 nov/ });
+      await waitFor(() => expect(totalsOf(older)).toHaveTextContent('1 séance · 0:45'));
+    });
+
+    it('keeps the list and offers a retry when they fail', async () => {
+      let calls = 0;
+      server.use(
+        http.get('*/api/v1/me/activities/weeks', () => {
+          calls += 1;
+          return calls === 1
+            ? HttpResponse.json(
+                { error: { code: 'internal_error', message: 'Boom' } },
+                { status: 500 },
+              )
+            : HttpResponse.json<ActivityWeekPage>({
+                items: [weekOf('2026-11-16', 1, 2730, 8200)],
+                next_cursor: null,
+              });
+        }),
+      );
+      listing([run]);
+      renderList();
+
+      const retry = await screen.findByRole('button', { name: 'Réessayer' });
+      expect(screen.getByRole('article', { name: 'Course' })).toBeInTheDocument();
+      fireEvent.click(retry);
+
+      await waitFor(() =>
+        expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent('1 séance · 0:45'),
+      );
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
     });
   });
 
