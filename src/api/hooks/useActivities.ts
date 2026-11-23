@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '../ApiClientContext';
 import type { components } from '../generated/schema';
 import { queryKeys } from '../queryKeys';
@@ -6,23 +6,69 @@ import { queryKeys } from '../queryKeys';
 export type ActivityCreate = components['schemas']['ActivityCreate'];
 export type Activity = components['schemas']['Activity'];
 export type ActivityContribution = components['schemas']['ActivityContribution'];
+export type ActivitySummary = components['schemas']['ActivitySummary'];
+export type ActivityWeekTotals = components['schemas']['ActivityWeek'];
 
 /**
- * The user's activities, most recent first, page by page (cursor). Each one
- * says whether it is `locked`: its week has ended in a challenge where it
- * counts.
+ * The user's activities, of `sport` only when given, most recent first, page
+ * by page (cursor). Each one says whether it is `locked`: its week has ended
+ * in a challenge where it counts.
  */
-export function useMyActivities() {
+export function useMyActivities(sport?: string) {
   const client = useApiClient();
   return useInfiniteQuery({
-    queryKey: queryKeys.activities.mine,
+    queryKey: queryKeys.activities.mine(sport),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await client.GET('/api/v1/me/activities', {
-        params: { query: { cursor: pageParam } },
+        params: { query: { cursor: pageParam, sport } },
         signal,
       });
       if (!data) throw new Error('Empty activity page');
+      return data;
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+}
+
+/**
+ * The totals of the user's current week, day by day, and the number of
+ * activities of each sport, weeks and days cut in `timeZone` (Monday to
+ * Sunday). Waits while the zone is not known.
+ */
+export function useMyActivitySummary(timeZone: string | undefined) {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.activities.summary(timeZone ?? ''),
+    enabled: timeZone !== undefined,
+    queryFn: async ({ signal }) => {
+      const { data } = await client.GET('/api/v1/me/activities/summary', {
+        params: { query: { tz: timeZone ?? '' } },
+        signal,
+      });
+      if (!data) throw new Error('Empty activity summary');
+      return data;
+    },
+  });
+}
+
+/**
+ * The totals of the user's weeks holding an activity (of `sport` only when
+ * given), most recent first, page by page (cursor), cut in `timeZone`. Waits
+ * while the zone is not known.
+ */
+export function useMyActivityWeeks(timeZone: string | undefined, sport?: string) {
+  const client = useApiClient();
+  return useInfiniteQuery({
+    queryKey: queryKeys.activities.weeks(timeZone ?? '', sport),
+    enabled: timeZone !== undefined,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data } = await client.GET('/api/v1/me/activities/weeks', {
+        params: { query: { tz: timeZone ?? '', sport, cursor: pageParam } },
+        signal,
+      });
+      if (!data) throw new Error('Empty activity week page');
       return data;
     },
     getNextPageParam: (page) => page.next_cursor ?? undefined,

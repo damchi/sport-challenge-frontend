@@ -119,8 +119,10 @@ describe('ParticipantActivities', () => {
     const router = renderAt(path);
 
     // The name comes from the leaderboard: the activities route gives none.
+    // The title is drawn again once the list is there: read it then.
+    await screen.findByRole('article');
     expect(
-      await screen.findByRole('heading', { level: 2, name: 'Activités de jean.luc1' }),
+      screen.getByRole('heading', { level: 2, name: 'Activités de jean.luc1' }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'Voir les participants' }));
     await vi.waitFor(() =>
@@ -133,9 +135,9 @@ describe('ParticipantActivities', () => {
     listing([run]);
     renderAt(`/challenges/${id}/participants/${mockMe.id}`);
 
-    expect(
-      await screen.findByRole('heading', { level: 2, name: 'Tes activités' }),
-    ).toBeInTheDocument();
+    // The title is drawn again once the list is there: read it then.
+    await screen.findByRole('article');
+    expect(screen.getByRole('heading', { level: 2, name: 'Tes activités' })).toBeInTheDocument();
   });
 
   it('keeps a neutral title while the name is not known', async () => {

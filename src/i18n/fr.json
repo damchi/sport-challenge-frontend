@@ -168,6 +168,36 @@
       "message": "Elle ne comptera plus dans tes défis. Cette action est définitive.",
       "confirm": "Supprimer l'activité",
       "cancel": "Annuler"
+    },
+    "sessions_one": "{{count}} séance",
+    "sessions_many": "{{count}} séances",
+    "sessions_other": "{{count}} séances",
+    "summary": {
+      "label": "Résumé de cette semaine",
+      "sessions_one": "séance",
+      "sessions_many": "séances",
+      "sessions_other": "séances",
+      "moving": "de mouvement",
+      "covered": "parcourus",
+      "days": "Durée de chaque jour",
+      "day": "{{day}} : {{duration}}",
+      "dayEmpty": "{{day}} : aucune activité"
+    },
+    "filter": {
+      "label": "Filtrer par sport",
+      "all": "Tous",
+      "empty": "Aucune activité de ce sport.",
+      "unit_one": "activité",
+      "unit_many": "activités",
+      "unit_other": "activités"
+    },
+    "spoken": {
+      "hours_one": "{{count}} heure",
+      "hours_many": "{{count}} heures",
+      "hours_other": "{{count}} heures",
+      "minutes_one": "{{count}} minute",
+      "minutes_many": "{{count}} minutes",
+      "minutes_other": "{{count}} minutes"
     }
   },
   "participantActivities": {

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { createTestQueryClient } from '../../test/render';
 import { ApiClientContext } from '../ApiClientContext';
@@ -7,7 +7,13 @@ import { createApiClient } from '../client';
 import { queryKeys } from '../queryKeys';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
-import { useCreateActivity, useDeleteActivity, useUpdateActivity } from './useActivities';
+import {
+  useCreateActivity,
+  useDeleteActivity,
+  useMyActivitySummary,
+  useMyActivityWeeks,
+  useUpdateActivity,
+} from './useActivities';
 
 describe('useCreateActivity', () => {
   it('reloads the activities, the challenges and their leaderboards once recorded', async () => {
@@ -61,7 +67,7 @@ const ACTIVITY_ID = '00000000-0000-4000-8000-0000000001a1';
 function setup() {
   const queryClient = createTestQueryClient();
   const keys = {
-    mine: queryKeys.activities.mine,
+    mine: queryKeys.activities.mine(),
     leaderboard: queryKeys.challenges.leaderboard('c1'),
     sports: queryKeys.sports,
   };
@@ -125,5 +131,40 @@ describe('useDeleteActivity', () => {
     expect(invalidated(keys.mine)).toBe(true);
     expect(invalidated(keys.leaderboard)).toBe(true);
     expect(invalidated(keys.sports)).toBe(false);
+  });
+});
+
+describe('useMyActivitySummary and useMyActivityWeeks', () => {
+  it('wait for the time zone, then send it with the sport', async () => {
+    const asked: string[] = [];
+    server.use(
+      http.get('*/api/v1/me/activities/summary', ({ request }) => {
+        asked.push(new URL(request.url).search);
+        return HttpResponse.json(
+          { error: { code: 'internal_error', message: '' } },
+          { status: 500 },
+        );
+      }),
+      http.get('*/api/v1/me/activities/weeks', ({ request }) => {
+        asked.push(new URL(request.url).search);
+        return HttpResponse.json({ items: [], next_cursor: null });
+      }),
+    );
+    const { wrapper } = setup();
+    const { result, rerender } = renderHook(
+      ({ zone }: { zone: string | undefined }) => ({
+        summary: useMyActivitySummary(zone),
+        weeks: useMyActivityWeeks(zone, 'run'),
+      }),
+      { wrapper, initialProps: { zone: undefined } as { zone: string | undefined } },
+    );
+    expect(result.current.summary.fetchStatus).toBe('idle');
+    expect(result.current.weeks.fetchStatus).toBe('idle');
+
+    rerender({ zone: 'America/Montreal' });
+
+    await waitFor(() => expect(result.current.weeks.isSuccess).toBe(true));
+    expect(asked).toContain('?tz=America%2FMontreal');
+    expect(asked).toContain('?tz=America%2FMontreal&sport=run');
   });
 });

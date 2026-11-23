@@ -109,13 +109,62 @@ export interface paths {
          * List my activities
          * @description The activities of the authenticated user, deleted ones left out,
          *     most recent first (`started_at`, then `id`). `from` and `to` keep
-         *     those started in `[from, to)`; `to` must come after `from`. Each one
+         *     those started in `[from, to)`; `to` must come after `from`; `sport`
+         *     those of one sport. Each one
          *     lists the challenges where it counts now and whether it is `locked`
          *     (its week is locked in one of them: 7 am, local time of that
          *     challenge, on the first day of the next week, the day of its
          *     `week_ends_at`).
          */
         get: operations["listMyActivities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/activities/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summarize my activities
+         * @description Totals of the activities of the authenticated user, deleted ones left
+         *     out, whether they count in a challenge or not: those of the current
+         *     week, day by day, and the number of activities of each sport. A week
+         *     runs from Monday 00:00 to the next Monday 00:00 in `tz` (the first
+         *     instant of the day where a time change skips midnight), so it can last
+         *     167 or 169 hours; it is not the week of a challenge.
+         */
+        get: operations["getMyActivitySummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/activities/weeks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the totals of my weeks
+         * @description The weeks with at least one activity of the authenticated user
+         *     (deleted ones left out; of `sport` only, when given), most recent
+         *     first, with their totals. Weeks are cut as in
+         *     `GET /api/v1/me/activities/summary`.
+         */
+        get: operations["listMyActivityWeeks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1389,6 +1438,67 @@ export interface components {
             /** @description Pass it as `cursor` for the next page; null on the last page. */
             next_cursor: string | null;
         };
+        ActivityWeek: {
+            /**
+             * Format: date-time
+             * @description Monday 00:00 in `tz`.
+             */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @description Excluded, the next Monday 00:00 in `tz`.
+             */
+            ends_at: string;
+            /** @description Number of activities started in the week. */
+            sessions: number;
+            duration_seconds: number;
+            /** @description Sum of the distances entered; an activity without distance adds 0. */
+            distance_meters: number;
+        };
+        ActivityWeekPage: {
+            items: components["schemas"]["ActivityWeek"][];
+            /** @description Pass it as `cursor` for the next page; null on the last page. */
+            next_cursor: string | null;
+        };
+        ActivityDay: {
+            /**
+             * Format: date
+             * @description Local day in `tz`.
+             */
+            date: string;
+            sessions: number;
+            duration_seconds: number;
+        };
+        CurrentActivityWeek: {
+            /**
+             * Format: date-time
+             * @description Monday 00:00 in `tz`.
+             */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @description Excluded, the next Monday 00:00 in `tz`.
+             */
+            ends_at: string;
+            sessions: number;
+            duration_seconds: number;
+            /** @description Sum of the distances entered; an activity without distance adds 0. */
+            distance_meters: number;
+            /** @description The 7 days of the week, Monday to Sunday, empty ones included. */
+            days: components["schemas"]["ActivityDay"][];
+        };
+        SportCount: {
+            /** @description Code of the catalogue; every activity of the sport `other` counts under `other`, whatever its label. */
+            sport_code: string;
+            count: number;
+        };
+        ActivitySummary: {
+            current_week: components["schemas"]["CurrentActivityWeek"];
+            /** @description The sports of my activities, most frequent first (then by code). */
+            sports: components["schemas"]["SportCount"][];
+            /** @description Number of my activities, the sum of the counts of `sports`. */
+            total: number;
+        };
         /**
          * @description An activity in the list of a challenge: the fields of `Activity`,
          *     `contributions` and `locked` read from this challenge only, plus its
@@ -1539,7 +1649,19 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        /**
+         * @description IANA time zone the weeks and days are cut in (that of the activity
+         *     entry: the one the challenges in progress share, else the device's).
+         *     An unknown zone gives `validation_failed` on `tz`.
+         */
+        TimeZone: string;
+        /**
+         * @description Keeps the activities of this sport of the catalogue (`other` keeps
+         *     every activity of the sport `other`). An unknown sport keeps none.
+         */
+        SportFilter: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -1706,6 +1828,11 @@ export interface operations {
     listMyActivities: {
         parameters: {
             query?: {
+                /**
+                 * @description Keeps the activities of this sport of the catalogue (`other` keeps
+                 *     every activity of the sport `other`). An unknown sport keeps none.
+                 */
+                sport?: components["parameters"]["SportFilter"];
                 from?: string;
                 to?: string;
                 limit?: number;
@@ -1725,6 +1852,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    getMyActivitySummary: {
+        parameters: {
+            query: {
+                /**
+                 * @description IANA time zone the weeks and days are cut in (that of the activity
+                 *     entry: the one the challenges in progress share, else the device's).
+                 *     An unknown zone gives `validation_failed` on `tz`.
+                 */
+                tz: components["parameters"]["TimeZone"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The summary. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivitySummary"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
+    listMyActivityWeeks: {
+        parameters: {
+            query: {
+                /**
+                 * @description IANA time zone the weeks and days are cut in (that of the activity
+                 *     entry: the one the challenges in progress share, else the device's).
+                 *     An unknown zone gives `validation_failed` on `tz`.
+                 */
+                tz: components["parameters"]["TimeZone"];
+                /**
+                 * @description Keeps the activities of this sport of the catalogue (`other` keeps
+                 *     every activity of the sport `other`). An unknown sport keeps none.
+                 */
+                sport?: components["parameters"]["SportFilter"];
+                limit?: number;
+                /** @description The `next_cursor` of the previous page, as is. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of weeks. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityWeekPage"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

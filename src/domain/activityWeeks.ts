@@ -60,3 +60,23 @@ export function dayKind(
   if (day === today) return 'today';
   return day === addToDate(today, { days: -1 }) ? 'yesterday' : 'other';
 }
+
+/** Weeks of the server (`starts_at`, Monday 00:00 in `timeZone`) by their Monday ("YYYY-MM-DD"). */
+export function weeksByMonday<W extends { starts_at: string }>(
+  weeks: readonly W[],
+  timeZone: string,
+): Map<string, W> {
+  return new Map(weeks.map((week) => [localDate(new Date(week.starts_at), timeZone), week]));
+}
+
+/**
+ * Whether the weeks loaded (their Mondays) stop before the week of `monday`:
+ * none loaded, or all of them more recent. Then older weeks are to load.
+ */
+export function missesOlderWeek(monday: string | undefined, loaded: Iterable<string>): boolean {
+  if (monday === undefined) return false;
+  let oldest: string | undefined;
+  for (const candidate of loaded)
+    if (oldest === undefined || candidate < oldest) oldest = candidate;
+  return oldest === undefined || monday < oldest;
+}

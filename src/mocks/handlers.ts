@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import type { components } from '../api/generated/schema';
-import { challengeWindow } from '../domain/challengeWindow';
+import { mondayOf } from '../domain/activityWeeks';
+import { addToDate, challengeWindow, localDate, zonedMidnight } from '../domain/challengeWindow';
 
 // Mock handlers shared by the tests (src/mocks/server.ts) and the development
 // mocks (VITE_MOCKS=true). Each ticket adds the routes it uses, typed by the
@@ -120,6 +121,31 @@ function mockCategories(
 }
 
 const PAGE_SIZE = 20;
+
+/** The mock activities of `sport`, or all of them. */
+function ofSport(sport: string | null): Activity[] {
+  return sport === null
+    ? mockActivities
+    : mockActivities.filter((activity) => activity.sport_code === sport);
+}
+
+/** The totals of the week of `monday` in `timeZone`, as the server gives them. */
+function weekTotals(
+  monday: string,
+  timeZone: string,
+  activities: readonly Activity[],
+): components['schemas']['ActivityWeek'] {
+  const inWeek = activities.filter(
+    (activity) => mondayOf(localDate(new Date(activity.started_at), timeZone)) === monday,
+  );
+  return {
+    starts_at: zonedMidnight(monday, timeZone).toISOString(),
+    ends_at: zonedMidnight(addToDate(monday, { days: 7 }), timeZone).toISOString(),
+    sessions: inWeek.length,
+    duration_seconds: inWeek.reduce((sum, activity) => sum + activity.duration_seconds, 0),
+    distance_meters: inWeek.reduce((sum, activity) => sum + (activity.distance_meters ?? 0), 0),
+  };
+}
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
@@ -548,10 +574,57 @@ export const handlers = [
   }),
   // The cursor is the index of the next activity.
   http.get('*/api/v1/me/activities', ({ request }) => {
-    const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
-    const items = mockActivities.slice(from, from + PAGE_SIZE);
-    const next = from + PAGE_SIZE < mockActivities.length ? String(from + PAGE_SIZE) : null;
+    const query = new URL(request.url).searchParams;
+    const from = Number(query.get('cursor') ?? 0);
+    const kept = ofSport(query.get('sport'));
+    const items = kept.slice(from, from + PAGE_SIZE);
+    const next = from + PAGE_SIZE < kept.length ? String(from + PAGE_SIZE) : null;
     return HttpResponse.json<ActivityPage>({ items, next_cursor: next });
+  }),
+  // The current week of the real clock (the mock activities may be older).
+  http.get('*/api/v1/me/activities/summary', ({ request }) => {
+    const timeZone = new URL(request.url).searchParams.get('tz') ?? 'UTC';
+    const monday = mondayOf(localDate(new Date(), timeZone));
+    const week = weekTotals(monday, timeZone, mockActivities);
+    const counts = new Map<string, number>();
+    for (const { sport_code } of mockActivities) {
+      counts.set(sport_code, (counts.get(sport_code) ?? 0) + 1);
+    }
+    return HttpResponse.json<components['schemas']['ActivitySummary']>({
+      current_week: {
+        ...week,
+        days: Array.from({ length: 7 }, (_, index) => {
+          const date = addToDate(monday, { days: index });
+          const day = mockActivities.filter(
+            (activity) => localDate(new Date(activity.started_at), timeZone) === date,
+          );
+          return {
+            date,
+            sessions: day.length,
+            duration_seconds: day.reduce((sum, activity) => sum + activity.duration_seconds, 0),
+          };
+        }),
+      },
+      sports: [...counts]
+        .map(([sport_code, count]) => ({ sport_code, count }))
+        .sort((a, b) => b.count - a.count || a.sport_code.localeCompare(b.sport_code)),
+      total: mockActivities.length,
+    });
+  }),
+  // Every week on one page.
+  http.get('*/api/v1/me/activities/weeks', ({ request }) => {
+    const query = new URL(request.url).searchParams;
+    const timeZone = query.get('tz') ?? 'UTC';
+    const kept = ofSport(query.get('sport'));
+    const mondays = [
+      ...new Set(
+        kept.map((activity) => mondayOf(localDate(new Date(activity.started_at), timeZone))),
+      ),
+    ];
+    return HttpResponse.json<components['schemas']['ActivityWeekPage']>({
+      items: mondays.map((monday) => weekTotals(monday, timeZone, kept)),
+      next_cursor: null,
+    });
   }),
   // The activity as replaced, from the request; the list stays as it was.
   http.patch('*/api/v1/activities/:activityId', async ({ params, request }) => {

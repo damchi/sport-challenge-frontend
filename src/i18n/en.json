@@ -168,6 +168,31 @@
       "message": "It will no longer count in any challenge. This cannot be undone.",
       "confirm": "Delete activity",
       "cancel": "Cancel"
+    },
+    "sessions_one": "{{count}} session",
+    "sessions_other": "{{count}} sessions",
+    "summary": {
+      "label": "Summary of this week",
+      "sessions_one": "session",
+      "sessions_other": "sessions",
+      "moving": "active",
+      "covered": "covered",
+      "days": "Time of each day",
+      "day": "{{day}}: {{duration}}",
+      "dayEmpty": "{{day}}: no activity"
+    },
+    "filter": {
+      "label": "Filter by sport",
+      "all": "All",
+      "empty": "No activity of this sport.",
+      "unit_one": "activity",
+      "unit_other": "activities"
+    },
+    "spoken": {
+      "hours_one": "{{count}} hour",
+      "hours_other": "{{count}} hours",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes"
     }
   },
   "participantActivities": {

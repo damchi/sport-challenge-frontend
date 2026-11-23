@@ -1,4 +1,11 @@
-import { dayKind, groupByWeek, mondayOf, weekKind } from './activityWeeks';
+import {
+  dayKind,
+  groupByWeek,
+  missesOlderWeek,
+  mondayOf,
+  weekKind,
+  weeksByMonday,
+} from './activityWeeks';
 
 const MTL = 'America/Montreal';
 
@@ -84,5 +91,23 @@ describe('dayKind', () => {
     expect(dayKind('2026-11-25T05:00:00Z', now, MTL)).toBe('today');
     expect(dayKind('2026-11-25T04:00:00Z', now, MTL)).toBe('yesterday');
     expect(dayKind('2026-11-24T04:00:00Z', now, MTL)).toBe('other');
+  });
+});
+
+describe('weeksByMonday', () => {
+  it("keys the server's weeks by their Monday in the time zone", () => {
+    const week = { starts_at: '2026-11-23T05:00:00Z' };
+    expect(weeksByMonday([week], MTL).get('2026-11-23')).toBe(week);
+    // The same instant is Monday 06:00 in Paris.
+    expect([...weeksByMonday([week], 'Europe/Paris').keys()]).toEqual(['2026-11-23']);
+  });
+});
+
+describe('missesOlderWeek', () => {
+  it('asks for older weeks while the one shown is older than every week loaded', () => {
+    expect(missesOlderWeek('2026-11-02', ['2026-11-16', '2026-11-09'])).toBe(true);
+    expect(missesOlderWeek('2026-11-09', ['2026-11-09', '2026-11-16'])).toBe(false);
+    expect(missesOlderWeek('2026-11-16', [])).toBe(true);
+    expect(missesOlderWeek(undefined, [])).toBe(false);
   });
 });

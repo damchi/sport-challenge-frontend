@@ -523,8 +523,19 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      semaine n'est pas jugée ; sinon cadenas en mobile, pastille « Semaine
      jugée » à partir de `lg`. Sous la liste : « Une activité se modifie ou
      se supprime tant que sa semaine n'est pas jugée dans tes défis. »
-   - Résumé de la semaine, filtres par sport et totaux par semaine : à venir
-     (SC-WEB-076, totaux fournis par l'API).
+   - Sous l'en-tête (SC-WEB-076, chiffres fournis par l'API) : carte
+     « Cette semaine · 23–29 nov. » avec séances, durée (« 1:10 de
+     mouvement », h:mm comme les autres totaux) et distance (« 32 km
+     parcourus »), puis une barre par jour **L M M J V S D** (hauteur selon
+     la durée du jour, `--color-accent`, jour sans activité en
+     `--color-track`, jour courant en gras) ; en web, chiffres à gauche et
+     barres à droite. La carte n'apparaît pas avant la première activité.
+   - Puces de sport « Tous 24 », « Course 6 »… (ordre et nombres de l'API),
+     une seule choisie (groupe radio) : la puce choisie en couleurs
+     inversées (`--color-ink` sur `--color-bg`). La liste et les totaux par
+     semaine suivent le filtre, gardé dans l'adresse (`?sport=`).
+   - Totaux de chaque semaine (« 4 séances · 2:36 · 26 km », distance omise
+     à 0) : sous le titre en mobile, à droite à partir de `lg`.
 
 À dessiner plus tard dans le même style, en mobile et en web : lien
 d'invitation à partager, profil, et en V1.1 les badges (obtenus en
