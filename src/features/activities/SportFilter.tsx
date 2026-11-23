@@ -6,7 +6,7 @@ import { useSportName } from '../challenges/create/useSportName';
 const CHIP =
   'flex h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm font-bold has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent';
 const CHIP_ON = 'border-ink bg-ink text-bg';
-const CHIP_OFF = 'border-border bg-surface text-ink';
+const CHIP_OFF = 'border-border bg-surface text-ink hover-border';
 
 /**
  * "All 6", "Run 4", "Ride 1"…: one sport at a time, in the server's order

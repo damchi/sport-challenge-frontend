@@ -13,7 +13,7 @@ export function ActivityPageHeader({ title }: { title: string }) {
     <div className="flex items-center gap-1 md:flex-col md:items-start md:gap-0">
       <Link
         to="/activities"
-        className="-ml-3 inline-flex size-11 flex-none items-center justify-center gap-1 rounded-full font-semibold text-muted md:h-11 md:w-auto md:justify-start md:px-2"
+        className="-ml-3 inline-flex size-11 flex-none items-center justify-center gap-1 rounded-full font-semibold text-muted hover-fill md:h-11 md:w-auto md:justify-start md:px-2"
       >
         <ChevronLeft aria-hidden="true" size={22} strokeWidth={2} />
         <span className="sr-only md:not-sr-only">{t('activities.title')}</span>

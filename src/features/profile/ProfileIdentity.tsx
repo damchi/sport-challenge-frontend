@@ -148,7 +148,7 @@ export function ProfileIdentity({ me }: { me: Me }) {
             type="submit"
             disabled={isSubmitting || unchanged}
             aria-busy={isSubmitting}
-            className="h-12 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
+            className="h-12 rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
           >
             {isSubmitting ? t('onboarding.saving') : t('profile.save')}
           </button>

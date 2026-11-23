@@ -49,7 +49,7 @@ function InvalidInvitation() {
         to="/"
         // The refused link leaves the history.
         replace
-        className="mt-4 inline-flex h-11 items-center rounded-full border border-border bg-surface px-5 font-bold"
+        className="mt-4 inline-flex h-11 items-center rounded-full border border-border bg-surface hover-fill px-5 font-bold"
       >
         {t('notFound.backHome')}
       </Link>
@@ -157,7 +157,7 @@ function InvitedChallenge({
                   void navigate(`/challenges/${encodeURIComponent(joined.id)}`, { replace: true }),
               });
             }}
-            className="mt-4 h-13 w-full rounded-full bg-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60 md:w-auto"
+            className="mt-4 h-13 w-full rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60 md:w-auto"
           >
             {accept.isPending ? t('challengeDetail.join.busy') : t('invitationPage.accept')}
           </button>
@@ -184,7 +184,7 @@ function InvitedChallenge({
           be accepted, instead of the sign-in pages before it. */}
       <Link
         to={`/challenges/${encodeURIComponent(data.id)}`}
-        className="mt-3 flex h-11 items-center justify-center rounded-full border border-border bg-surface px-5 font-bold md:inline-flex"
+        className="mt-3 flex h-11 items-center justify-center rounded-full border border-border bg-surface hover-fill px-5 font-bold md:inline-flex"
       >
         {t('invitationPage.open')}
       </Link>

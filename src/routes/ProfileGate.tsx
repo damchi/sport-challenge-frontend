@@ -63,7 +63,7 @@ export function ProfileGate() {
         <button
           type="button"
           onClick={() => void me.refetch()}
-          className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+          className="mt-6 h-13 rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent"
         >
           {t('errorPage.retry')}
         </button>

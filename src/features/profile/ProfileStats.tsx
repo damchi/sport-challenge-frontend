@@ -39,7 +39,7 @@ export function ProfileStats() {
           onClick={() => {
             if (!summary.isFetching) void summary.refetch();
           }}
-          className="h-11 rounded-full border border-border bg-surface px-5 text-sm font-bold aria-disabled:opacity-60"
+          className="h-11 rounded-full border border-border bg-surface hover-fill px-5 text-sm font-bold aria-disabled:opacity-60"
         >
           {t('errorPage.retry')}
         </button>

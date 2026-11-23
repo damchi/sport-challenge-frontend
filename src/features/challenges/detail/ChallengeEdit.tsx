@@ -214,14 +214,14 @@ function ChallengeEditForm({
           type="submit"
           disabled={isSubmitting}
           aria-busy={isSubmitting}
-          className="h-11 rounded-full bg-accent px-6 text-sm font-bold text-on-accent disabled:opacity-60"
+          className="h-11 rounded-full bg-accent hover-accent px-6 text-sm font-bold text-on-accent disabled:opacity-60"
         >
           {isSubmitting ? t('challengeDetail.edit.saving') : t('challengeDetail.edit.save')}
         </button>
         <button
           type="button"
           onClick={() => onClose(false)}
-          className="h-11 rounded-full border border-border bg-surface px-6 text-sm font-bold"
+          className="h-11 rounded-full border border-border bg-surface hover-fill px-6 text-sm font-bold"
         >
           {t('challengeDetail.edit.cancel')}
         </button>

@@ -51,7 +51,7 @@ function Section({
           type="button"
           onClick={onEdit}
           aria-label={t('challengeCreate.recap.editSection', { section: title })}
-          className="inline-flex h-11 items-center font-semibold text-accent underline underline-offset-4"
+          className="inline-flex h-11 items-center font-semibold text-accent underline underline-offset-4 hover-link"
         >
           {t('challengeCreate.recap.edit')}
         </button>

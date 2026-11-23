@@ -10,7 +10,7 @@ const TABS = [
 const TAB =
   'flex min-h-11 flex-1 items-center justify-center rounded-tab px-2 text-sm font-semibold';
 const TAB_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
-const TAB_OFF = 'text-muted';
+const TAB_OFF = 'text-muted hover-ink';
 
 /**
  * Sections of a challenge, one address each (the current one is marked

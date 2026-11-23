@@ -13,13 +13,13 @@ export function ChallengeCreatePage() {
         <Link
           to="/"
           aria-label={t('challengeCreate.close')}
-          className="-ml-3 inline-flex size-11 flex-none items-center justify-center rounded-full md:hidden"
+          className="-ml-3 inline-flex size-11 flex-none items-center justify-center rounded-full hover-fill md:hidden"
         >
           <X aria-hidden="true" size={24} strokeWidth={2} />
         </Link>
         <Link
           to="/"
-          className="-ml-2 hidden h-11 items-center gap-1 px-2 font-semibold text-muted md:inline-flex"
+          className="-ml-2 hidden h-11 items-center gap-1 rounded-full px-2 font-semibold text-muted hover-fill md:inline-flex"
         >
           <ChevronLeft aria-hidden="true" size={22} strokeWidth={2} />
           {t('challengeCreate.back')}

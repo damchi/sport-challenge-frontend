@@ -161,7 +161,7 @@ export function Wizard({
                 type="button"
                 onClick={() => goTo(index - 1)}
                 disabled={isLast && finish.busy}
-                className="inline-flex h-13 items-center gap-1 rounded-full border border-border bg-surface px-5 font-bold disabled:opacity-60"
+                className="inline-flex h-13 items-center gap-1 rounded-full border border-border bg-surface hover-fill px-5 font-bold disabled:opacity-60"
               >
                 <ChevronLeft aria-hidden="true" size={20} className="hidden md:block" />
                 {t('wizard.back')}
@@ -170,7 +170,7 @@ export function Wizard({
               cancel && (
                 <Link
                   to={cancel.to}
-                  className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex"
+                  className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex hover-link"
                 >
                   {cancel.label}
                 </Link>
@@ -181,7 +181,7 @@ export function Wizard({
               disabled={isLast && finish.busy}
               aria-busy={isLast && finish.busy ? true : undefined}
               // Whole line on a phone; its own width, on the right, from md.
-              className="ml-auto h-13 flex-1 rounded-full bg-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
+              className="ml-auto h-13 flex-1 rounded-full bg-accent hover-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
             >
               {isLast ? (finish.busy ? finish.busyLabel : finish.label) : t('wizard.next')}
             </button>

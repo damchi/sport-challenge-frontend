@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 const ITEM =
-  'flex min-h-11 w-full items-center rounded-tab px-3 text-left text-sm font-semibold hover:bg-segment';
+  'flex min-h-11 w-full items-center rounded-tab px-3 text-left text-sm font-semibold hover-fill';
 
 /**
  * The "…" button of an activity that can still change: a disclosure with
@@ -67,7 +67,7 @@ export function ActivityMenu({
         aria-controls={listId}
         disabled={deleting}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface disabled:opacity-60"
+        className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface hover-fill disabled:opacity-60"
       >
         <Ellipsis aria-hidden="true" size={20} strokeWidth={2} />
       </button>

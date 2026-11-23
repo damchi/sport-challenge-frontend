@@ -26,6 +26,12 @@
     font-family: var(--font-sans);
   }
 
+  /* An enabled button shows that it can be clicked; a disabled or busy one
+     keeps the default cursor. */
+  button:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
+    cursor: pointer;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
@@ -58,5 +64,114 @@
   /* A page title focused after a navigation is not a control: no ring. */
   h1[tabindex='-1']:focus {
     outline: none;
+  }
+}
+
+/* Hover of the buttons and clickable cards (design.md, « Boutons »): only on
+   a device that hovers (no state stuck after a tap), never on a disabled or
+   busy control. One class per kind of control; the focus ring is untouched. */
+@custom-variant enabled-hover {
+  &:not(:disabled, [aria-disabled='true'], [aria-busy='true']) {
+    @media (hover: hover) {
+      &:hover {
+        @slot;
+      }
+    }
+  }
+}
+
+/* The same, for a choice that wraps a radio or a checkbox: a checked one
+   keeps its accent border. */
+@custom-variant unchecked-hover {
+  &:not(:disabled, [aria-disabled='true'], [aria-busy='true'], :has(:checked)) {
+    @media (hover: hover) {
+      &:hover {
+        @slot;
+      }
+    }
+  }
+}
+
+/* Main button. */
+@utility hover-accent {
+  transition: background-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    background-color: var(--color-accent-hover);
+  }
+}
+
+/* Danger button. */
+@utility hover-danger {
+  transition: background-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    background-color: var(--color-danger-hover);
+  }
+}
+
+/* Secondary button, icon-only button, menu item. */
+@utility hover-fill {
+  transition: background-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    background-color: var(--color-segment);
+  }
+}
+
+/* Icon-only button on a raised surface (error banner). */
+@utility hover-fill-raised {
+  transition: background-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    background-color: var(--color-track-raised);
+  }
+}
+
+/* Clickable card or tile. */
+@utility hover-border {
+  transition: border-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    border-color: var(--color-muted);
+  }
+}
+
+/* Choice card or chip of a form (radio, checkbox), while unchecked. */
+@utility hover-choice {
+  transition: border-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant unchecked-hover {
+    border-color: var(--color-muted);
+  }
+}
+
+/* Inactive tab of a segmented control or of the navigation: the text darkens. */
+@utility hover-ink {
+  transition: color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    color: var(--color-ink);
+  }
+}
+
+/* Underlined text link: the underline thickens. */
+@utility hover-link {
+  @variant enabled-hover {
+    text-decoration-thickness: 2px;
   }
 }

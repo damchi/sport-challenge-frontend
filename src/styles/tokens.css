@@ -23,8 +23,10 @@
   --color-segment: #eae8e2;
   --color-segment-active: #ffffff;
   --color-accent: #c2410c;
+  --color-accent-hover: #9a3412;
   --color-on-accent: #ffffff;
   --color-danger: #b91c1c;
+  --color-danger-hover: #991b1b;
   --color-on-danger: #ffffff;
   --color-accent-soft: #fff4eb;
   --color-risk-bg: #ffedd5;
@@ -98,8 +100,10 @@
   --color-segment: #22262d;
   --color-segment-active: #343943;
   --color-accent: #fb923c;
+  --color-accent-hover: #fdba74;
   --color-on-accent: #16181d;
   --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
   --color-on-danger: #16181d;
   --color-accent-soft: #2a1d14;
   --color-risk-bg: #3b2414;

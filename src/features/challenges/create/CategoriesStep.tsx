@@ -324,7 +324,7 @@ function Categories({ sports }: { sports: Sports }) {
                 {POINTS_CRITERIA.map((criterion) => (
                   <label
                     key={criterion}
-                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 font-semibold has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:ring-1 has-[:checked]:ring-accent"
+                    className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 font-semibold hover-choice has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:ring-1 has-[:checked]:ring-accent"
                   >
                     <input
                       type="checkbox"
@@ -445,7 +445,7 @@ function DistanceFactors({ sports, reference }: { sports: Sports; reference: str
             type="button"
             onClick={() => setCustomizing(true)}
             aria-describedby="factors-title"
-            className="-my-2 inline-flex h-11 flex-none items-center font-semibold text-accent underline underline-offset-4"
+            className="-my-2 inline-flex h-11 flex-none items-center font-semibold text-accent underline underline-offset-4 hover-link"
           >
             {t('challengeCreate.fields.factors.customize')}
           </button>

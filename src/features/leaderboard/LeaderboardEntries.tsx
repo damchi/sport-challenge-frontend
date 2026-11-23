@@ -31,6 +31,8 @@ interface RankedProps extends EntryProps {
 const BOX = 'rounded-row border';
 const BOX_ON = 'border-2 border-accent bg-accent-soft';
 const BOX_OFF = 'border-border bg-surface';
+// Only a plain entry that links shows the hover: mine and one at risk keep their border.
+const boxOff = (href: string | undefined) => (href ? `${BOX_OFF} hover-border` : BOX_OFF);
 const BOX_RISK = 'border-2 border-risk-border bg-surface';
 
 /** The entry as a link to the participant's activities, or as plain text. */
@@ -85,7 +87,7 @@ export function PodiumCard({ entry, type, me, href, tied, referenceSport }: Rank
   return (
     <EntryBox
       href={href}
-      className={`flex w-full flex-col items-center gap-1 p-3 text-center ${BOX} ${me ? BOX_ON : BOX_OFF}`}
+      className={`flex w-full flex-col items-center gap-1 p-3 text-center ${BOX} ${me ? BOX_ON : boxOff(href)}`}
     >
       <span className="font-display text-lg font-bold">
         {t('leaderboard.rank', { count: entry.rank ?? 0, ordinal: true })}
@@ -117,7 +119,7 @@ export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: 
   return (
     <EntryBox
       href={href}
-      className={`flex min-h-14 items-center gap-3 px-3 py-2 ${BOX} ${me ? BOX_ON : atRisk ? BOX_RISK : BOX_OFF}`}
+      className={`flex min-h-14 items-center gap-3 px-3 py-2 ${BOX} ${me ? BOX_ON : atRisk ? BOX_RISK : boxOff(href)}`}
     >
       <span className="min-w-[22px] shrink-0 text-center font-bold text-muted tabular-nums">
         {entry.rank}
@@ -149,7 +151,7 @@ export function OutRow({ entry, me, href }: EntryProps) {
   return (
     <EntryBox
       href={href}
-      className={`flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-row border border-dashed border-border-dashed px-3 py-2 text-muted`}
+      className={`flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-row border border-dashed border-border-dashed px-3 py-2 text-muted ${href ? 'hover-border' : ''}`}
     >
       <Avatar userId={entry.user.id} user={entry.user} muted />
       <span className="min-w-0 flex-1 truncate font-semibold" title={name}>

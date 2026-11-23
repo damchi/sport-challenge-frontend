@@ -58,7 +58,7 @@ export function ParticipantActions({
           : t(`challengeDetail.participants.manage.${action}.buttonNamed`, { name })
       }
       onClick={() => actions.request(action, participant, name)}
-      className="h-11 rounded-full border border-border bg-surface px-4 text-sm font-bold aria-disabled:opacity-60"
+      className="h-11 rounded-full border border-border bg-surface hover-fill px-4 text-sm font-bold aria-disabled:opacity-60"
     >
       {busy === action
         ? t(`challengeDetail.participants.manage.${action}.busy`)

@@ -16,7 +16,7 @@ import { useCategoryName } from './detail/categoryNames';
 import { MyWeekRows } from './MyWeekRows';
 
 const CARD = 'flex h-full flex-col rounded-card p-4 lg:p-5';
-const CARD_HOVER = '[@media(hover:hover)]:hover:border-muted';
+const CARD_HOVER = 'hover-border';
 
 /**
  * A challenge of the home page, as its status (the server's) shows it.

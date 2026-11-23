@@ -130,7 +130,7 @@ export function ChallengeParticipation({
           onClick={() => {
             if (!join.isPending) setJoining(true);
           }}
-          className="h-13 flex-none rounded-full bg-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60"
+          className="h-13 flex-none rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent aria-disabled:opacity-60"
         >
           {join.isPending ? t('challengeDetail.join.busy') : t('challengeDetail.join.button')}
         </button>

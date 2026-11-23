@@ -125,4 +125,38 @@ describe('ConfirmDialog', () => {
     fireEvent.click(confirm);
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it('gives each button the hover of its kind', () => {
+    const { rerender } = render(
+      <ConfirmDialog
+        open
+        title="Leave?"
+        message="Your input will be lost."
+        confirmLabel="Leave"
+        cancelLabel="Stay"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Leave' })).toHaveClass('hover-accent');
+    expect(screen.getByRole('button', { name: 'Stay' })).toHaveClass('hover-fill');
+
+    rerender(
+      <ConfirmDialog
+        open
+        variant="danger"
+        title="Delete?"
+        message="This is final."
+        confirmLabel="Delete"
+        cancelLabel="Stay"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const confirm = screen.getByRole('button', { name: 'Delete' });
+    expect(confirm).toHaveClass('hover-danger');
+    expect(confirm).not.toHaveClass('hover-accent');
+  });
 });

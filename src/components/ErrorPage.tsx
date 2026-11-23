@@ -10,7 +10,7 @@ export function ErrorPage({ onRetry }: { onRetry: () => void }) {
       <button
         type="button"
         onClick={onRetry}
-        className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent"
+        className="mt-6 h-13 rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent"
       >
         {t('errorPage.retry')}
       </button>

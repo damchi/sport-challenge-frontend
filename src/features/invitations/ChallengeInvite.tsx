@@ -12,8 +12,8 @@ type Notice = 'copied' | 'copyFailed' | 'shareFailed';
 
 const BUTTON_BASE =
   'inline-flex h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold aria-disabled:opacity-60';
-const BUTTON = `${BUTTON_BASE} border border-border bg-surface`;
-const BUTTON_PRIMARY = `${BUTTON_BASE} bg-accent text-on-accent`;
+const BUTTON = `${BUTTON_BASE} border border-border bg-surface hover-fill`;
+const BUTTON_PRIMARY = `${BUTTON_BASE} bg-accent text-on-accent hover-accent`;
 
 /**
  * Invitation to a challenge, for those who may invite (canInvite). The button

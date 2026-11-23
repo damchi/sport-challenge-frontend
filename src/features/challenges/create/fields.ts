@@ -7,7 +7,7 @@ export const inputClass =
 // A choice drawn as a card (a radio and its text): accent once chosen, the
 // ring adding the second pixel without moving the content.
 export const choiceCardClass =
-  'flex min-h-11 cursor-pointer items-start gap-3 rounded-row border border-border bg-surface p-4 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:ring-1 has-[:checked]:ring-accent';
+  'flex min-h-11 cursor-pointer items-start gap-3 rounded-row border border-border bg-surface p-4 hover-choice has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:ring-1 has-[:checked]:ring-accent';
 
 /** Hint first, then the error once there is one. */
 export function describedBy(name: string, message: string | undefined): string {

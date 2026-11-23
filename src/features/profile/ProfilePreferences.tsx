@@ -56,7 +56,7 @@ export function ProfilePreferences() {
               <button
                 type="button"
                 onClick={() => updateMe.variables && updateMe.mutate(updateMe.variables)}
-                className="h-11 rounded-full border border-border bg-surface px-4 text-sm font-bold"
+                className="h-11 rounded-full border border-border bg-surface hover-fill px-4 text-sm font-bold"
               >
                 {t('errorPage.retry')}
               </button>

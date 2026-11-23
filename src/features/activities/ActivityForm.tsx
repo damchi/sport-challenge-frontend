@@ -39,7 +39,7 @@ const legendClass = 'font-display text-lg font-bold';
 // A sport to pick: accent once chosen, the ring adding the second pixel
 // without moving the text (the state is not given by the colour alone).
 const sportChipClass =
-  'flex min-h-13 cursor-pointer items-center justify-center rounded-row border border-border bg-surface px-2 py-2 text-center text-sm font-bold break-words hyphens-auto md:text-base has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent has-[:checked]:ring-1 has-[:checked]:ring-accent has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent';
+  'flex min-h-13 cursor-pointer items-center justify-center rounded-row border border-border bg-surface px-2 py-2 hover-choice text-center text-sm font-bold break-words hyphens-auto md:text-base has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent has-[:checked]:ring-1 has-[:checked]:ring-accent has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent';
 // The unit written inside a field, at its end.
 const unitClass =
   'pointer-events-none absolute inset-y-0 right-4 flex items-center font-semibold text-muted';
@@ -431,14 +431,14 @@ export function ActivityFormFields({
               disabled={busy}
               aria-busy={busy ? true : undefined}
               // Whole line on a phone; its own width from md.
-              className="h-13 flex-1 rounded-full bg-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
+              className="h-13 flex-1 rounded-full bg-accent hover-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
             >
               {busy ? t(`${submitKey}.busy`) : t(`${submitKey}.label`)}
             </button>
             {/* A phone leaves by the arrow of the header. */}
             <Link
               to="/activities"
-              className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex"
+              className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex hover-link"
             >
               {t('activityForm.cancel')}
             </Link>

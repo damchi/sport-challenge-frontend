@@ -36,7 +36,7 @@ export function ActivitySaved({
             <li key={challenge_id}>
               <Link
                 to={`/challenges/${challenge_id}`}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3"
+                className="flex min-h-11 items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3 hover-border"
               >
                 <span className="flex min-w-0 flex-col">
                   <span className="font-semibold break-words">{challenge_title}</span>
@@ -50,7 +50,7 @@ export function ActivitySaved({
       )}
       <Link
         to="/activities"
-        className="inline-flex h-11 items-center font-semibold text-accent underline"
+        className="inline-flex h-11 items-center font-semibold text-accent underline hover-link"
       >
         {t('activityForm.back')}
       </Link>

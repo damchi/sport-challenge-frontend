@@ -50,7 +50,7 @@ export function UpcomingChallenge({
             <button
               type="button"
               onClick={onEdit}
-              className="-mx-1 mt-2 min-h-11 px-1 font-bold text-accent underline underline-offset-4"
+              className="-mx-1 mt-2 min-h-11 px-1 font-bold text-accent underline underline-offset-4 hover-link"
             >
               {t('challengeDetail.upcoming.creator.edit')}
             </button>

@@ -72,7 +72,7 @@ export function ChallengeMenu({
         aria-expanded={open}
         aria-controls={listId}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface"
+        className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface hover-fill"
       >
         <Ellipsis aria-hidden="true" size={20} strokeWidth={2} />
       </button>
@@ -90,7 +90,7 @@ export function ChallengeMenu({
                 setOpen(false);
                 onSelect(action);
               }}
-              className={`flex min-h-11 w-full items-center rounded-tab px-3 text-left text-sm font-semibold hover:bg-segment ${action === 'edit' ? 'text-ink' : 'text-danger'}`}
+              className={`flex min-h-11 w-full items-center rounded-tab px-3 text-left text-sm font-semibold hover-fill ${action === 'edit' ? 'text-ink' : 'text-danger'}`}
             >
               {t(LABELS[action])}
             </button>
