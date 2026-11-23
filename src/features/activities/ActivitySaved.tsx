@@ -50,7 +50,7 @@ export function ActivitySaved({
       )}
       <Link
         to="/activities"
-        className="inline-flex h-11 items-center font-semibold text-accent underline"
+        className="inline-flex h-11 items-center font-semibold text-accent underline hover-link"
       >
         {t('activityForm.back')}
       </Link>

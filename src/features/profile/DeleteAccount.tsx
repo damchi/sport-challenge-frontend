@@ -20,7 +20,7 @@ function BlockingChallenge({ challengeId }: { challengeId: string }) {
     <li>
       <Link
         to={`/challenges/${encodeURIComponent(challengeId)}`}
-        className="inline-flex min-h-11 items-center font-semibold break-words underline"
+        className="inline-flex min-h-11 items-center font-semibold break-words underline hover-link"
       >
         {challenge?.title ?? t('profile.deleteAccount.challengeFallback')}
       </Link>

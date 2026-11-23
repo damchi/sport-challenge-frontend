@@ -3,7 +3,7 @@ import { useId } from 'react';
 const SEGMENT =
   'flex h-11 flex-1 cursor-pointer items-center justify-center rounded-tab px-2 text-sm font-semibold has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
-const SEGMENT_OFF = 'text-muted';
+const SEGMENT_OFF = 'text-muted hover-ink';
 
 /** A choice among a few options, as a segmented control of radio buttons (design.md). */
 export function Segmented<T extends string>({

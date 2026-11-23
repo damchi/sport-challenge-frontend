@@ -159,7 +159,7 @@ function ParticipantActivitiesNotFound({ challengeId }: { challengeId: string })
       action={
         <Link
           to={`/challenges/${challengeId}/participants`}
-          className="inline-flex h-11 items-center font-bold text-accent underline underline-offset-4"
+          className="inline-flex h-11 items-center font-bold text-accent underline underline-offset-4 hover-link"
         >
           {t('participantActivities.toParticipants')}
         </Link>

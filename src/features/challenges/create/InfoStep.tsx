@@ -93,7 +93,7 @@ export function InfoStep() {
         <FieldError id="visibility-error" message={visibilityError} />
       </fieldset>
 
-      <label className="flex items-center gap-4 rounded-row border border-border bg-surface p-4">
+      <label className="flex cursor-pointer items-center gap-4 rounded-row border border-border bg-surface p-4 hover-border">
         <span className="min-w-0 flex-1">
           <span id="members-can-invite-label" className="block font-bold">
             {t('challengeCreate.fields.membersCanInvite.label')}

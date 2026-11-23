@@ -151,7 +151,7 @@ export function OutRow({ entry, me, href }: EntryProps) {
   return (
     <EntryBox
       href={href}
-      className={`flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-row border border-dashed border-border-dashed px-3 py-2 text-muted`}
+      className={`flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-row border border-dashed border-border-dashed px-3 py-2 text-muted ${href ? 'hover-border' : ''}`}
     >
       <Avatar userId={entry.user.id} user={entry.user} muted />
       <span className="min-w-0 flex-1 truncate font-semibold" title={name}>

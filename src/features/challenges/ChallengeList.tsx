@@ -17,12 +17,12 @@ import { ChallengeCard } from './ChallengeCard';
 
 const SEGMENT = 'h-11 flex-1 rounded-tab text-sm font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
-const SEGMENT_OFF = 'text-muted';
+const SEGMENT_OFF = 'text-muted hover-ink';
 
 const CHIP =
   'flex h-11 shrink-0 items-center gap-2 rounded-full border pr-2 pl-4 text-sm font-bold';
 const CHIP_ON = 'border-accent bg-accent-soft text-accent';
-const CHIP_OFF = 'border-border bg-surface text-muted';
+const CHIP_OFF = 'border-border bg-surface text-muted hover-border';
 const COUNT = 'min-w-6 rounded-full px-1.5 py-0.5 text-center text-xs tabular-nums';
 const COUNT_ON = 'bg-accent text-on-accent';
 const COUNT_OFF = 'bg-segment text-ink';

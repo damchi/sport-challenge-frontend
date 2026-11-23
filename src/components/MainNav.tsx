@@ -24,7 +24,7 @@ export function MainNav() {
       <div className="mx-auto flex max-w-page flex-wrap items-center md:min-h-16 md:gap-x-6 md:px-5 lg:max-w-wide lg:px-8">
         <Link
           to="/"
-          className="hidden h-11 items-center gap-3 font-display text-xl font-bold md:flex"
+          className="-ml-2 hidden h-11 items-center gap-3 rounded-tab px-2 font-display text-xl font-bold hover-fill md:flex"
         >
           <AppMark />
           {t('home.title')}
@@ -39,7 +39,7 @@ export function MainNav() {
                   `flex h-18 flex-col items-center justify-center gap-1 text-nav md:h-11 md:flex-row md:gap-2 md:rounded-tab md:px-3.5 md:text-sm ${
                     isActive
                       ? 'font-bold text-accent md:bg-accent-soft'
-                      : 'font-semibold text-muted'
+                      : 'font-semibold text-muted hover-fill'
                   }`
                 }
               >

@@ -324,19 +324,18 @@ venir » en pointillés).
   | Danger | `--color-danger-hover` (#991b1b) | `--color-danger-hover` (#fca5a5) | `hover-danger` |
   | Secondaire, icône seule, élément de menu | fond `--color-segment` | fond `--color-segment` | `hover-fill` |
   | Icône seule sur fond `--color-surface-raised` (bandeau d'erreur) | fond `--color-track-raised` | fond `--color-track-raised` | `hover-fill-raised` |
-  | Carte ou tuile cliquable | bordure `--color-muted` | bordure `--color-muted` | `hover-border` |
+  | Carte ou tuile cliquable, puce de filtre inactive | bordure `--color-muted` | bordure `--color-muted` | `hover-border` |
+  | Choix d'un formulaire (carte ou puce de radio, case à cocher) non coché | bordure `--color-muted` | bordure `--color-muted` | `hover-choice` |
+  | Onglet inactif d'un sélecteur ou d'un défi | texte `--color-ink` | texte `--color-ink` | `hover-ink` |
+  | Onglet inactif de la barre de navigation | fond `--color-segment` | fond `--color-segment` | `hover-fill` |
+  | Lien texte souligné | soulignement de 2 px | soulignement de 2 px | `hover-link` |
 
   Le texte garde sa couleur (`--color-on-accent`, `--color-on-danger`,
   `--color-ink`, `--color-on-raised`) ; chaque paire reste au-dessus de 4,5:1
   (`tokens.test.ts`). Les utilitaires sont définis dans `src/styles/index.css`.
-  Sont couverts : boutons principal, danger, secondaire (dont les lignes
-  « Se déconnecter » et « Supprimer le compte » et les boutons − et + de la
-  durée), à icône seule et éléments de menu ; cartes et lignes cliquables
-  (cartes de défi, cartes « Ma position », lignes du classement et des
-  participants qui mènent à une page, défis d'une activité enregistrée).
-  Une carte ou une ligne « moi » ou à risque garde sa bordure. Restent sans
-  survol en V1 : puces de filtre, sélecteurs à onglets, onglets d'un défi et
-  barre de navigation, dont l'état actif ne doit pas être masqué.
+  Tout ce qui est cliquable a un survol. Un élément actif (onglet ou puce
+  sélectionnés, entrée courante de la navigation, choix coché, carte ou ligne
+  « moi » ou à risque) n'en a pas : son état reste visible.
 
 ### Sélecteur à onglets (« Semaine 3 » / « Général »)
 

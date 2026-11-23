@@ -17,7 +17,7 @@ import { hasStandings, myLines, shownCategory } from './shownCategory';
 const SEGMENT =
   'min-h-11 min-w-fit flex-1 rounded-tab px-2 py-1 text-sm leading-tight font-semibold';
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
-const SEGMENT_OFF = 'text-muted';
+const SEGMENT_OFF = 'text-muted hover-ink';
 // A long ranking (no cap on participants) stays fast: the browser skips the
 // rendering of the rows off screen, which stay in the page (find, screen readers).
 // It clips the painting to the row: 4 px of padding, taken back by the margin,

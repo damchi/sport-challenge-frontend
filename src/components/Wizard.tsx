@@ -170,7 +170,7 @@ export function Wizard({
               cancel && (
                 <Link
                   to={cancel.to}
-                  className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex"
+                  className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex hover-link"
                 >
                   {cancel.label}
                 </Link>

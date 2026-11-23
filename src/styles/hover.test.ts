@@ -17,6 +17,15 @@ describe('hover styles', () => {
     expect(variant).toContain('@media (hover: hover)');
   });
 
+  it('keeps the accent border of a checked choice', () => {
+    const variant = block('@custom-variant unchecked-hover');
+
+    expect(variant).toContain(
+      "&:not(:disabled, [aria-disabled='true'], [aria-busy='true'], :has(:checked))",
+    );
+    expect(variant).toContain('@media (hover: hover)');
+  });
+
   it('keeps the default cursor on a disabled or busy button', () => {
     expect(indexCss).toMatch(
       /button:not\(:disabled, \[aria-disabled='true'\], \[aria-busy='true'\]\)\s*\{\s*cursor: pointer;/,
@@ -29,11 +38,27 @@ describe('hover styles', () => {
     ['hover-fill', 'background-color: var(--color-segment)'],
     ['hover-fill-raised', 'background-color: var(--color-track-raised)'],
     ['hover-border', 'border-color: var(--color-muted)'],
+    ['hover-ink', 'color: var(--color-ink)'],
   ])('%s takes a token through the shared variant, without motion when reduced', (name, rule) => {
     const utility = block(`@utility ${name} {`);
 
     expect(utility).toContain('@variant enabled-hover');
     expect(utility).toContain(rule);
     expect(utility).toMatch(/@variant motion-reduce \{\s*transition: none;/);
+  });
+
+  it('hover-choice skips a checked choice', () => {
+    const utility = block('@utility hover-choice {');
+
+    expect(utility).toContain('@variant unchecked-hover');
+    expect(utility).toContain('border-color: var(--color-muted)');
+    expect(utility).toMatch(/@variant motion-reduce \{\s*transition: none;/);
+  });
+
+  it('hover-link thickens the underline through the shared variant', () => {
+    const utility = block('@utility hover-link {');
+
+    expect(utility).toContain('@variant enabled-hover');
+    expect(utility).toContain('text-decoration-thickness: 2px');
   });
 });

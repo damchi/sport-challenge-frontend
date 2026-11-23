@@ -14,7 +14,7 @@ export function ChallengeNotFound() {
       <p className="mt-2 text-muted">{t('challengeDetail.notFound.message')}</p>
       <Link
         to="/"
-        className="mt-6 inline-flex h-11 items-center font-bold text-accent underline underline-offset-4"
+        className="mt-6 inline-flex h-11 items-center font-bold text-accent underline underline-offset-4 hover-link"
       >
         {t('notFound.backHome')}
       </Link>

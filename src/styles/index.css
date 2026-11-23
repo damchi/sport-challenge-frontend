@@ -80,6 +80,18 @@
   }
 }
 
+/* The same, for a choice that wraps a radio or a checkbox: a checked one
+   keeps its accent border. */
+@custom-variant unchecked-hover {
+  &:not(:disabled, [aria-disabled='true'], [aria-busy='true'], :has(:checked)) {
+    @media (hover: hover) {
+      &:hover {
+        @slot;
+      }
+    }
+  }
+}
+
 /* Main button. */
 @utility hover-accent {
   transition: background-color 150ms ease-out;
@@ -132,5 +144,34 @@
   }
   @variant enabled-hover {
     border-color: var(--color-muted);
+  }
+}
+
+/* Choice card or chip of a form (radio, checkbox), while unchecked. */
+@utility hover-choice {
+  transition: border-color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant unchecked-hover {
+    border-color: var(--color-muted);
+  }
+}
+
+/* Inactive tab of a segmented control or of the navigation: the text darkens. */
+@utility hover-ink {
+  transition: color 150ms ease-out;
+  @variant motion-reduce {
+    transition: none;
+  }
+  @variant enabled-hover {
+    color: var(--color-ink);
+  }
+}
+
+/* Underlined text link: the underline thickens. */
+@utility hover-link {
+  @variant enabled-hover {
+    text-decoration-thickness: 2px;
   }
 }
