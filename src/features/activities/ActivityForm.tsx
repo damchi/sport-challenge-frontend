@@ -176,10 +176,12 @@ export function ActivityFormFields({
   const sport = sports.find((candidate) => candidate.code === sportCode);
   const mode = sport?.distance_mode;
   const hasElevation = takesElevation(sport, distanceKm);
-  // Hidden, it holds nothing: shown again, it opens empty.
+  // Hidden, it holds nothing: shown again, it opens empty. Only the user's
+  // change of sport or distance hides it, and that change alone tells
+  // whether the entry is changed: emptying it marks nothing.
   useEffect(() => {
     if (!hasElevation && form.getValues('elevation_m') !== '') {
-      form.setValue('elevation_m', '', { shouldDirty: true });
+      form.setValue('elevation_m', '');
       form.clearErrors('elevation_m');
     }
   }, [hasElevation, form]);

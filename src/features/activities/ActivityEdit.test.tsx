@@ -207,6 +207,17 @@ describe('ActivityEdit', () => {
       expect(sent[0]?.body.elevation_gain_meters).toBe(120);
     });
 
+    it('keeps an untouched activity untouched: leaving asks nothing', async () => {
+      listing([{ ...run, elevation_gain_meters: 85 }]);
+      renderEdit();
+      expect(await elevation()).toHaveValue('85');
+
+      fireEvent.click(screen.getByRole('link', { name: 'Annuler' }));
+
+      expect(await screen.findByText('Mes activités (page)')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
     it('is removed once emptied: the change leaves it out', async () => {
       listing([{ ...run, elevation_gain_meters: 85 }]);
       const sent = replaceWith((body) => HttpResponse.json<Activity>({ ...run, ...body }));
