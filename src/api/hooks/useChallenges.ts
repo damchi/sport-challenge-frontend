@@ -166,7 +166,11 @@ export function useJoinChallenge(challengeId: string) {
     },
     onSuccess: (challenge) => {
       queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
-      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+      // The summary counts the challenges joined (profile).
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]);
     },
     onError: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
@@ -224,7 +228,11 @@ export function useDeleteChallenge(challengeId: string) {
       }
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all, refetchType: 'none' }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all, refetchType: 'none' }),
+        // The summary counts the challenges joined (profile).
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]),
   });
 }
 

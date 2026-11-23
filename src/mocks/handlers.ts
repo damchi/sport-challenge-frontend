@@ -609,6 +609,11 @@ export const handlers = [
         .map(([sport_code, count]) => ({ sport_code, count }))
         .sort((a, b) => b.count - a.count || a.sport_code.localeCompare(b.sport_code)),
       total: mockActivities.length,
+      total_duration_seconds: mockActivities.reduce(
+        (sum, activity) => sum + activity.duration_seconds,
+        0,
+      ),
+      challenge_count: 3,
     });
   }),
   // Every week on one page.

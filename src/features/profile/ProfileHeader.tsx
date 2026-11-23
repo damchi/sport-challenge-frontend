@@ -5,10 +5,11 @@ import type { Me } from '../../api/hooks/useMe';
 import { Avatar } from '../../components/Avatar';
 import { displayName, fullName } from '../../domain/displayName';
 import { PROFILE_CARD } from './profileCard';
+import { ProfileStats } from './ProfileStats';
 
 /**
  * Head of the profile: the initials avatar, the first and last name, the
- * pseudo under them, then the way to the user's activities.
+ * pseudo under them, the user's numbers, then the way to their activities.
  */
 export function ProfileHeader({ me }: { me: Me }) {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ export function ProfileHeader({ me }: { me: Me }) {
           {t('profile.handle', { pseudo: me.pseudo })}
         </p>
       )}
+      <ProfileStats />
       <Link
         to="/activities"
         className="mt-5 flex min-h-12 w-full items-center gap-3 rounded-row bg-bg px-4 py-3 text-left font-semibold"

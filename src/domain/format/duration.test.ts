@@ -1,4 +1,4 @@
-import { formatActivityDuration, formatDuration, formatPace } from './duration';
+import { hoursAndMinutes, formatActivityDuration, formatDuration, formatPace } from './duration';
 
 describe('formatDuration', () => {
   it('writes hours and minutes', () => {
@@ -33,5 +33,14 @@ describe('formatPace', () => {
 
   it('writes hours from an hour per kilometer', () => {
     expect(formatPace(3725)).toBe('1:02:05');
+  });
+});
+
+describe('hoursAndMinutes', () => {
+  it('splits a duration into whole hours and minutes, the seconds dropped', () => {
+    expect(hoursAndMinutes(0)).toEqual({ hours: 0, minutes: 0 });
+    expect(hoursAndMinutes(45 * 60 + 59)).toEqual({ hours: 0, minutes: 45 });
+    expect(hoursAndMinutes(14 * 3600)).toEqual({ hours: 14, minutes: 0 });
+    expect(hoursAndMinutes(14 * 3600 + 30 * 60 + 12)).toEqual({ hours: 14, minutes: 30 });
   });
 });

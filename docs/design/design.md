@@ -544,7 +544,11 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      mobile : les mêmes cartes l'une sous l'autre. Cartes `--color-surface`,
      rayon 20 px, bordure `--color-border`.
    - Carte d'identité : avatar à initiales de 72 px, prénom et nom complets
-     (même avec un pseudo), `@pseudo` dessous s'il existe, puis la ligne
+     (même avec un pseudo), `@pseudo` dessous s'il existe, puis, sous un
+     filet, trois chiffres en colonnes (SC-WEB-079) : défis rejoints,
+     activités et temps total (« 14 h 30 de sport », heures et minutes),
+     tous fournis par le serveur ; squelette au chargement, message et
+     « Réessayer » en cas d'erreur, sans bloquer le reste. Puis la ligne
      « Mes activités » (icône `activity` en accent, chevron) vers
      `/activities`, fond `--color-bg`.
    - Identité (« Ce que les autres participants voient de toi. ») : Prénom et

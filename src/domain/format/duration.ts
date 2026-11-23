@@ -25,3 +25,9 @@ export function formatPace(secondsPerKm: number): string {
     ? `${Math.floor(minutes / 60)}:${pad(minutes % 60)}:${pad(seconds % 60)}`
     : `${minutes}:${pad(seconds % 60)}`;
 }
+
+/** Whole hours and minutes of a duration in seconds, the seconds dropped. */
+export function hoursAndMinutes(seconds: number): { hours: number; minutes: number } {
+  const minutes = Math.floor(seconds / 60);
+  return { hours: Math.floor(minutes / 60), minutes: minutes % 60 };
+}
