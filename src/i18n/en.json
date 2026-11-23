@@ -230,6 +230,11 @@
     "title": "Activities of {{name}}",
     "mine": "Your activities"
   },
+  "challengeActivities": {
+    "label": "Challenge activities",
+    "empty": "No activity in this challenge yet.",
+    "notFound": "These activities aren't available."
+  },
   "activityForm": {
     "title": "Add an activity",
     "fields": {
@@ -645,8 +650,7 @@
       "label": "Challenge sections",
       "leaderboard": "Leaderboard",
       "participants": "Participants",
-      "activities": "Activities",
-      "pending": "This section is coming soon."
+      "activities": "Activities"
     },
     "notFound": {
       "title": "Challenge not found",

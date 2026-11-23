@@ -61,7 +61,7 @@ export const routes: RouteObject[] = [
                           { index: true, lazy: pages.leaderboard },
                           { path: 'participants', lazy: pages.participants },
                           { path: 'participants/:userId', lazy: pages.participantActivities },
-                          { path: 'activities', lazy: pages.pending },
+                          { path: 'activities', lazy: pages.challengeActivities },
                         ],
                       },
                       {

@@ -237,6 +237,11 @@
     "title": "Activités de {{name}}",
     "mine": "Tes activités"
   },
+  "challengeActivities": {
+    "label": "Activités du défi",
+    "empty": "Aucune activité dans ce défi pour l'instant.",
+    "notFound": "Ces activités ne sont pas disponibles."
+  },
   "activityForm": {
     "title": "Ajouter une activité",
     "fields": {
@@ -659,8 +664,7 @@
       "label": "Sections du défi",
       "leaderboard": "Classement",
       "participants": "Participants",
-      "activities": "Activités",
-      "pending": "Cette section arrive bientôt."
+      "activities": "Activités"
     },
     "notFound": {
       "title": "Défi introuvable",

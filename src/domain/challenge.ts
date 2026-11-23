@@ -45,9 +45,10 @@ export function isUserId(value: unknown): value is string {
 export type ChallengeRole = 'creator' | 'participant' | 'abandoned' | 'invited' | 'outsider';
 
 /**
- * Whether the user may open the activities of a participant: the creators and
- * the participants, abandoned ones included, as the contract says
- * (listParticipantActivities); anyone else gets a 404 there.
+ * Whether the user may open the activities of a participant, or of all of
+ * them: the creators and the participants, abandoned ones included, as the
+ * contract says (listParticipantActivities, listChallengeActivities); anyone
+ * else gets a 404 there.
  */
 export function canSeeParticipantActivities(role: ChallengeRole): boolean {
   return role === 'creator' || role === 'participant' || role === 'abandoned';

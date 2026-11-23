@@ -8,6 +8,7 @@ export type Activity = components['schemas']['Activity'];
 export type ActivityContribution = components['schemas']['ActivityContribution'];
 export type ActivitySummary = components['schemas']['ActivitySummary'];
 export type ActivityWeekTotals = components['schemas']['ActivityWeek'];
+export type ChallengeActivity = components['schemas']['ChallengeActivity'];
 
 /**
  * The user's activities, of `sport` only when given, most recent first, page
@@ -91,6 +92,29 @@ export function useParticipantActivities(challengeId: string, userId: string) {
         '/api/v1/challenges/{challengeId}/participants/{userId}/activities',
         { params: { path: { challengeId, userId }, query: { cursor: pageParam } }, signal },
       );
+      if (!data) throw new Error('Empty activity page');
+      return data;
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+}
+
+/**
+ * The activities of every participant of a challenge (abandoned ones
+ * included), each with its author, started in its window, most recent first,
+ * page by page (cursor). Only the participants and the creators may read
+ * them; anyone else gets a 404.
+ */
+export function useChallengeActivities(challengeId: string) {
+  const client = useApiClient();
+  return useInfiniteQuery({
+    queryKey: queryKeys.challenges.activities(challengeId),
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data } = await client.GET('/api/v1/challenges/{challengeId}/activities', {
+        params: { path: { challengeId }, query: { cursor: pageParam } },
+        signal,
+      });
       if (!data) throw new Error('Empty activity page');
       return data;
     },

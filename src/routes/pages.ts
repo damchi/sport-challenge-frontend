@@ -30,8 +30,10 @@ export const pages = {
     import('../features/activities/ParticipantActivities').then((m) => ({
       Component: m.ParticipantActivities,
     })),
-  pending: () =>
-    import('../features/challenges/detail/TabPending').then((m) => ({ Component: m.TabPending })),
+  challengeActivities: () =>
+    import('../features/activities/ChallengeActivities').then((m) => ({
+      Component: m.ChallengeActivities,
+    })),
 } satisfies Record<string, LazyRouteFunction<RouteObject>>;
 
 /** Loads the code of every page, so that opening one later does not wait for it. */

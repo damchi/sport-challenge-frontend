@@ -1,8 +1,10 @@
 import { PenLine } from 'lucide-react';
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Activity } from '../../api/hooks/useActivities';
+import type { Activity, ChallengeActivity } from '../../api/hooks/useActivities';
+import { Avatar } from '../../components/Avatar';
 import { StatusPill } from '../../components/StatusPill';
+import { displayName } from '../../domain/displayName';
 import { activityTime } from '../../domain/format/challengeDates';
 import { formatKm, formatSpeed } from '../../domain/format/distance';
 import { formatActivityDuration, formatPace } from '../../domain/format/duration';
@@ -11,20 +13,42 @@ import { useSportName } from '../challenges/create/useSportName';
 /**
  * An activity, read only: sport (marked "manual" when entered by hand),
  * start in `timeZone`, duration, distance, and the pace and speed the API
- * computes.
+ * computes. With `author`, their initials and name head it, as text: no link.
  */
-export function ActivityCard({ activity, timeZone }: { activity: Activity; timeZone: string }) {
+export function ActivityCard({
+  activity,
+  timeZone,
+  author,
+}: {
+  activity: Activity;
+  timeZone: string;
+  author?: ChallengeActivity['user'];
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
   const titleId = useId();
+  const authorId = useId();
   const sport =
     activity.sport_code === 'other'
       ? (activity.sport_label ?? t('activities.otherSport'))
       : sportName(activity.sport_code);
 
   return (
-    <article aria-labelledby={titleId} className="rounded-card border border-border bg-surface p-4">
+    <article
+      aria-labelledby={author ? `${authorId} ${titleId}` : titleId}
+      className="rounded-card border border-border bg-surface p-4"
+    >
+      {author && (
+        <div className="mb-3 flex items-center gap-2">
+          <Avatar userId={author.id} user={author} />
+          <p id={authorId} className="min-w-0 font-semibold break-words">
+            {displayName(author) ?? t('challengeDetail.participants.unnamed')}
+            {/* Heard "marie_92, Running": the name, then the sport. */}
+            <span className="sr-only">,</span>
+          </p>
+        </div>
+      )}
       {/* The pill sits beside the sport, under it when the text is enlarged. */}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <h2

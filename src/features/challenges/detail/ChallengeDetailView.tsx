@@ -5,7 +5,7 @@ import { ApiError } from '../../../api/errors';
 import { useChallenge } from '../../../api/hooks/useChallenges';
 import { ErrorState } from '../../../components/states/ErrorState';
 import { LoadingState } from '../../../components/states/LoadingState';
-import { isChallengeId } from '../../../domain/challenge';
+import { canSeeParticipantActivities, isChallengeId } from '../../../domain/challenge';
 import { isWithin, usePendingPath } from '../../../lib/pendingNavigation';
 import { ChallengeInvite } from '../../invitations/ChallengeInvite';
 import { ChallengeWeekBanner } from '../../leaderboard/ChallengeWeekBanner';
@@ -104,7 +104,10 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
           <div className="mt-6 flex flex-wrap items-start gap-6">
             <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-8">
               <div>
-                <ChallengeTabs challengeId={challengeId} />
+                <ChallengeTabs
+                  challengeId={challengeId}
+                  activities={canSeeParticipantActivities(challenge.data.my_role)}
+                />
                 <div className="mt-4">{sectionLoading ? <LoadingState /> : <Outlet />}</div>
               </div>
               <HowToWin challenge={challenge.data} />
