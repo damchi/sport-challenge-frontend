@@ -161,7 +161,9 @@ export function ActivityItem({
           </p>
         )}
       </div>
-      <div className="flex flex-none justify-end lg:w-40">
+      {/* Stretched to the row's height on a phone: its action keeps its own
+          size, at the top, as the "…" button. */}
+      <div className="flex flex-none items-start justify-end lg:w-40">
         {activity.locked ? (
           // A lock alone on a phone, with its words from `lg`; the same
           // words for a screen reader.
