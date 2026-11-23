@@ -154,11 +154,11 @@ const item = async (name: string) => screen.findByRole('article', { name });
 const week = (name: RegExp) => screen.getByRole('region', { name });
 const MENU = "Actions de l'activité";
 
-/** The distance of an activity as read, spaces made plain. */
-const distanceOf = (activity: HTMLElement) =>
+/** The value of a stat of an activity (`term`: its label), spaces made plain. */
+const statOf = (activity: HTMLElement, term: string) =>
   within(activity)
-    .getByText('Distance')
-    .parentElement?.querySelector('dd')
+    .queryByText(term, { selector: 'dt' })
+    ?.parentElement?.querySelector('dd')
     ?.textContent?.replace(/\s+/g, ' ');
 
 /** Opens the "…" menu of an activity. */
@@ -222,14 +222,16 @@ describe('ActivityList', () => {
       elevation_gain_meters: 0,
     };
 
-    it('shows it beside the distance, 0 included, and nothing when not entered', async () => {
+    it('shows it as a stat of its own, 0 included, and nothing when not entered', async () => {
       listing([run, ride, walk]);
       renderList();
 
-      expect(distanceOf(await item('Vélo'))).toBe('31,5 km, dénivelé positif ↗ 1 250 m');
-      expect(within(await item('Vélo')).getByText('↗')).toHaveAttribute('aria-hidden', 'true');
-      expect(distanceOf(await item('Marche'))).toBe('8,2 km, dénivelé positif ↗ 0 m');
-      expect(distanceOf(await item('Course'))).toBe('8,2 km');
+      const bike = await item('Vélo');
+      expect(statOf(bike, 'Distance')).toBe('31,5 km');
+      expect(statOf(bike, 'Dénivelé')).toBe('↗ 1 250 m');
+      expect(within(bike).getByText('↗')).toHaveAttribute('aria-hidden', 'true');
+      expect(statOf(await item('Marche'), 'Dénivelé')).toBe('↗ 0 m');
+      expect(statOf(await item('Course'), 'Dénivelé')).toBeUndefined();
     });
 
     it('writes it in English', async () => {
@@ -237,7 +239,7 @@ describe('ActivityList', () => {
       listing([ride]);
       renderList();
 
-      expect(distanceOf(await item('Cycling'))).toBe('31.5 km, elevation gain ↗ 1,250 m');
+      expect(statOf(await item('Cycling'), 'Elevation')).toBe('↗ 1,250 m');
     });
   });
 

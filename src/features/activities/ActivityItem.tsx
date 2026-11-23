@@ -94,12 +94,7 @@ export function ActivityItem({
             <span className="sr-only">{t('activities.noDistance')}</span>
           </>
         ) : (
-          <>
-            {formatKm(activity.distance_meters / 1000, locale)}
-            {activity.elevation_gain_meters !== null && (
-              <ElevationGain meters={activity.elevation_gain_meters} />
-            )}
-          </>
+          formatKm(activity.distance_meters / 1000, locale)
         ),
     },
     ...(activity.pace_seconds_per_km !== null
@@ -112,6 +107,10 @@ export function ActivityItem({
       : []),
     ...(activity.speed_mps !== null
       ? [{ key: 'speed', value: formatSpeed(activity.speed_mps, locale) }]
+      : []),
+    // Last, so that the other stats keep their columns without it.
+    ...(activity.elevation_gain_meters !== null
+      ? [{ key: 'elevation', value: <ElevationGain meters={activity.elevation_gain_meters} /> }]
       : []),
   ];
 
@@ -142,7 +141,7 @@ export function ActivityItem({
             </p>
           )}
         </div>
-        <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 lg:mt-0 lg:grid lg:w-md lg:flex-none lg:grid-cols-4 lg:gap-x-4">
+        <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 lg:mt-0 lg:grid lg:w-xl lg:flex-none lg:grid-cols-5 lg:gap-x-4">
           {stats.map(({ key, value }) => (
             <div key={key} className="flex min-w-0 flex-col-reverse">
               <dt className="text-sm text-muted">{t(`activities.${key}`)}</dt>

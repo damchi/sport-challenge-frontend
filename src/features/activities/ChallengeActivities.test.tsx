@@ -121,11 +121,11 @@ function renderAt(initialPath: string) {
   return router;
 }
 
-/** The distance of an activity as read, spaces made plain. */
-const distanceOf = (activity: HTMLElement) =>
+/** The value of a stat of an activity (`term`: its label), spaces made plain. */
+const statOf = (activity: HTMLElement, term: string) =>
   within(activity)
-    .getByText('Distance')
-    .parentElement?.querySelector('dd')
+    .queryByText(term, { selector: 'dt' })
+    ?.parentElement?.querySelector('dd')
     ?.textContent?.replace(/\s+/g, ' ');
 
 const list = () => screen.findByRole('region', { name: 'Activités du défi' });
@@ -160,7 +160,7 @@ describe('ChallengeActivities', () => {
     );
   });
 
-  it('shows the elevation gain beside the distance, 0 included, nothing when not entered', async () => {
+  it('shows the elevation gain as a stat of its own, 0 included, nothing when not entered', async () => {
     answer();
     listing([
       { ...run, elevation_gain_meters: 450 },
@@ -169,14 +169,10 @@ describe('ChallengeActivities', () => {
     ]);
     renderAt(path);
 
-    const distances = within(await list())
+    const elevations = within(await list())
       .getAllByRole('article')
-      .map((activity) => distanceOf(activity));
-    expect(distances).toEqual([
-      '8,2 km, dénivelé positif ↗ 450 m',
-      '8,2 km, dénivelé positif ↗ 0 m',
-      '8,2 km',
-    ]);
+      .map((activity) => statOf(activity, 'Dénivelé'));
+    expect(elevations).toEqual(['↗ 450 m', '↗ 0 m', undefined]);
   });
 
   it('writes the elevation gain in English', async () => {
@@ -187,7 +183,7 @@ describe('ChallengeActivities', () => {
 
     const activity = within(await screen.findByRole('region', { name: 'Challenge activities' }))
       .getByRole('article');
-    expect(distanceOf(activity)).toBe('8.2 km, elevation gain ↗ 1,250 m');
+    expect(statOf(activity, 'Elevation')).toBe('↗ 1,250 m');
   });
 
   it('links nothing in the feed: neither an activity nor its author', async () => {

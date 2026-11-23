@@ -79,9 +79,6 @@ export function ActivityCard({
             <dt className="text-muted">{t('activities.distance')}</dt>
             <dd className="font-semibold tabular-nums">
               {formatKm(activity.distance_meters / 1000, locale)}
-              {activity.elevation_gain_meters !== null && (
-                <ElevationGain meters={activity.elevation_gain_meters} />
-              )}
             </dd>
           </div>
         )}
@@ -98,6 +95,14 @@ export function ActivityCard({
             <dt className="text-muted">{t('activities.speed')}</dt>
             <dd className="font-semibold tabular-nums">
               {formatSpeed(activity.speed_mps, locale)}
+            </dd>
+          </div>
+        )}
+        {activity.elevation_gain_meters !== null && (
+          <div className="flex gap-1">
+            <dt className="text-muted">{t('activities.elevation')}</dt>
+            <dd className="font-semibold tabular-nums">
+              <ElevationGain meters={activity.elevation_gain_meters} />
             </dd>
           </div>
         )}
