@@ -22,8 +22,12 @@ test('a participant reads the leaderboard and the statuses', async ({ page }) =>
   // Those who abandoned stay off the podium, listed in the full ranking only.
   await expect(podium.getByRole('link')).toHaveCount(3);
   await expect(podium.getByText('A abandonné')).toHaveCount(0);
+  // Ten lines after the podium, then the next page, those who abandoned last.
   const leaderboard = page.getByRole('region', { name: 'Classement · Temps cumulé' });
+  await expect(leaderboard.getByText('A abandonné')).toHaveCount(0);
+  await leaderboard.getByRole('button', { name: 'Charger plus' }).click();
   await expect(leaderboard.getByText('A abandonné').first()).toBeVisible();
+  await expect(podium.getByRole('link')).toHaveCount(3);
 
   // The cards of « Où tu en es » choose the category.
   const standings = page.getByRole('region', { name: 'Où tu en es' });

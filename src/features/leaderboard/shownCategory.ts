@@ -6,10 +6,10 @@ type CategoryRanking = Leaderboard['categories'][number];
  * The category the leaderboard shows: the one of the address (?category=)
  * when the challenge has it, else the first one.
  */
-export function shownCategory(
-  categories: readonly CategoryRanking[],
+export function shownCategory<Category extends { type: string }>(
+  categories: readonly Category[],
   asked: string | null,
-): CategoryRanking | undefined {
+): Category | undefined {
   return categories.find((category) => category.type === asked) ?? categories[0];
 }
 

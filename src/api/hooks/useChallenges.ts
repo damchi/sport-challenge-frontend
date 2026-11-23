@@ -1,10 +1,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef } from 'react';
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
 import { pageLimit, type PageSize } from '../../domain/pageSize';
 import { useApiClient } from '../ApiClientContext';
 import { ApiError } from '../errors';
 import type { components } from '../generated/schema';
-import { staleTimes } from '../queryClient';
+import { isInvalidCursor, staleTimes } from '../queryClient';
 import { queryKeys } from '../queryKeys';
 
 export type ChallengeSummary = components['schemas']['ChallengeSummary'];
@@ -14,6 +15,8 @@ export type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
 export type Participant = components['schemas']['Participant'];
 export type Leaderboard = components['schemas']['Leaderboard'];
 export type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
+export type CategoryRanking = components['schemas']['CategoryRanking'];
+export type CategoryType = CategoryRanking['type'];
 
 /**
  * Challenges of a list, page by page (cursor) of `size` (each size cached on
@@ -107,6 +110,76 @@ export function useLeaderboard(challengeId: string) {
     },
   });
 }
+
+/**
+ * The ranking of one category, page by page (cursor) of `size` after its
+ * podium, which every page gives whole (ties included), with the user's line
+ * (`me`) wherever it is. Each size of each category is cached on its own,
+ * under the leaderboard (reloaded with it). The ranking changed since a
+ * cursor was given (`cursor_invalid`): it starts again from the first page,
+ * without the error banner.
+ */
+export function useCategoryLeaderboard(
+  challengeId: string,
+  category: CategoryType,
+  size: PageSize,
+) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  const query = useInfiniteQuery({
+    queryKey: queryKeys.challenges.leaderboardCategory(challengeId, category, size),
+    staleTime: staleTimes.leaderboard,
+    meta: { restartsOnInvalidCursor: true },
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data } = await client.GET('/api/v1/challenges/{challengeId}/leaderboard', {
+        params: {
+          path: { challengeId },
+          query: { category, limit: pageLimit(size), cursor: pageParam },
+        },
+        signal,
+      });
+      const ranking = data?.categories[0];
+      if (!ranking) throw new Error('Empty leaderboard page');
+      return ranking;
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+  const reset = useCallback(
+    () =>
+      queryClient.resetQueries({
+        queryKey: queryKeys.challenges.leaderboardCategory(challengeId, category, size),
+        exact: true,
+      }),
+    [queryClient, challengeId, category, size],
+  );
+  // Restarts in a row, without a next page read in between: a ranking that
+  // keeps moving (or a server that keeps refusing) stops them, the list then
+  // offering its retry, which starts again too.
+  const restarts = useRef(0);
+  const pages = query.data?.pages.length ?? 0;
+  useEffect(() => {
+    if (pages > 1) restarts.current = 0;
+  }, [pages]);
+  // A next page, or a refetch of the pages read, met a stale cursor.
+  const restart = isInvalidCursor(query.error) && !query.isFetching;
+  useEffect(() => {
+    if (!restart || restarts.current >= MAX_RESTARTS) return;
+    restarts.current += 1;
+    void reset();
+  }, [restart, reset]);
+  const { fetchNextPage } = query;
+  const stale = isInvalidCursor(query.error);
+  const next = useCallback((): Promise<unknown> => {
+    if (!stale) return fetchNextPage();
+    restarts.current = 0;
+    return reset();
+  }, [stale, fetchNextPage, reset]);
+  return { ...query, fetchNextPage: next };
+}
+
+/** Restarts from the first page in a row on a stale cursor, before giving up. */
+const MAX_RESTARTS = 2;
 
 /**
  * Creates a challenge; the lists then reload to show it, and the profile's

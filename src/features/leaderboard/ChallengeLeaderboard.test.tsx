@@ -1,9 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { timeZoneName } from '../../domain/format/challengeDates';
 import { mockChallengeDetail, mockChallenges, mockMe } from '../../mocks/handlers';
+import { answerLeaderboard, type FullRanking } from '../../mocks/leaderboard';
 import { server } from '../../mocks/server';
 import { routes } from '../../routes/routes';
 import { AppProviders } from '../../test/AppProviders';
@@ -61,10 +63,10 @@ const time = [
   entry('leo', null, null),
 ];
 
-function leaderboard(categories: Leaderboard['categories']) {
+function leaderboard(categories: FullRanking[]) {
   server.use(
-    http.get('*/api/v1/challenges/:challengeId/leaderboard', () =>
-      HttpResponse.json<Leaderboard>({ computed_at: '2026-11-18T15:00:00Z', categories }),
+    http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) =>
+      HttpResponse.json<Leaderboard>(served(request, categories)),
     ),
   );
 }
@@ -86,7 +88,7 @@ function runner(pseudo: string, rank: number, value: number, elimination: Partia
   };
 }
 
-const threeCategories: Leaderboard['categories'] = [
+const threeCategories: FullRanking[] = [
   { type: 'cumulative_time', ranked_count: 0, entries: time },
   { type: 'cumulative_distance', ranked_count: 0, entries: [entry('nina', 1, 12_500)] },
   { type: 'elimination', ranked_count: 0, entries: [entry('hugo', 1, 8_000)] },
@@ -100,6 +102,23 @@ function renderAt(path: string) {
     </AppProviders>,
   );
   return router;
+}
+
+/** The leaderboard as the API answers the request (paginated with `limit`). */
+function served(request: Request, categories: FullRanking[], computedAt = '2026-11-18T15:00:00Z') {
+  return answerLeaderboard(computedAt, categories, new URL(request.url).searchParams, mockMe.id);
+}
+
+/** The categories of the challenge: the cumulative time and `other`. */
+function timeAnd(other: 'elimination' | 'cumulative_elevation') {
+  return {
+    categories: [
+      { type: 'cumulative_time', position: 1, params: {} },
+      other === 'elimination'
+        ? { type: 'elimination', position: 3, params: { sport: 'run', step_meters: 5_000 } }
+        : { type: 'cumulative_elevation', position: 5, params: {} },
+    ],
+  } satisfies Partial<ChallengeDetail>;
 }
 
 const section = (name: string) => screen.findByRole('region', { name });
@@ -159,18 +178,14 @@ describe('ChallengeLeaderboard', () => {
 
     const rows = within(await section('Suite du classement')).getAllByRole('listitem');
     // Skipped, not removed: the browser's find and screen readers reach every
-    // row (the first three are on the podium).
-    expect(rows).toHaveLength(28);
+    // row (the first three are on the podium, then a page of 10 and the user's).
+    expect(rows).toHaveLength(11);
     const mine = rows.at(-1);
     expect(mine).toHaveTextContent('Toi');
     expect(mine).toHaveClass('sticky');
     // Sticky positioning needs the row painted.
     expect(mine).not.toHaveClass('[content-visibility:auto]');
-    const others = [
-      ...rows.slice(0, -1),
-      ...within(await section('Éliminés')).getAllByRole('listitem'),
-    ];
-    for (const row of others) expect(row).toHaveClass('[content-visibility:auto]');
+    for (const row of rows.slice(0, -1)) expect(row).toHaveClass('[content-visibility:auto]');
   });
 
   it('lists the participants who abandoned apart, without a rank nor the podium', async () => {
@@ -279,7 +294,7 @@ describe('ChallengeLeaderboard', () => {
   });
 
   it('shows two categories only, as the challenge has them', async () => {
-    answer({ my_role: 'outsider', my_status: null });
+    answer({ my_role: 'outsider', my_status: null, ...timeAnd('elimination') });
     leaderboard([
       { type: 'cumulative_time', ranked_count: 0, entries: time },
       { type: 'elimination', ranked_count: 0, entries: [entry('hugo', 1, 8_000)] },
@@ -296,7 +311,7 @@ describe('ChallengeLeaderboard', () => {
   });
 
   it('shows the meters climbed of the total elevation gain, ties sharing a rank', async () => {
-    answer({ my_role: 'outsider', my_status: null });
+    answer({ my_role: 'outsider', my_status: null, ...timeAnd('cumulative_elevation') });
     leaderboard([
       { type: 'cumulative_time', ranked_count: 0, entries: time },
       {
@@ -327,8 +342,9 @@ describe('ChallengeLeaderboard', () => {
     const out = within(await section('Éliminés'));
     expect(out.getByText('A abandonné')).toBeInTheDocument();
     expect(out.queryByText(/m D\+/)).not.toBeInTheDocument();
+    // The challenge's page names the categories too: the leaderboard's own words.
     expect(
-      screen.getByText(
+      within(await section('Classement · D+ cumulé')).getByText(
         'Le dénivelé positif de toutes les activités qui en ont un, tous sports confondus, en mètres réels, sans coefficient.',
       ),
     ).toBeInTheDocument();
@@ -391,7 +407,7 @@ describe('ChallengeLeaderboard', () => {
     renderAt(`/challenges/${id}`);
 
     const ranking = await section('Classement · Temps cumulé');
-    expect(within(ranking).getByText('julie')).toBeInTheDocument();
+    expect(await within(ranking).findByText('julie')).toBeInTheDocument();
     expect(within(ranking).queryByRole('link')).not.toBeInTheDocument();
   });
 
@@ -416,12 +432,11 @@ describe('ChallengeLeaderboard', () => {
       release = resolve;
     });
     server.use(
-      http.get('*/api/v1/challenges/:challengeId/leaderboard', async () => {
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', async ({ request }) => {
         await sent;
-        return HttpResponse.json<Leaderboard>({
-          computed_at: '2026-11-18T15:00:00Z',
-          categories: threeCategories,
-        });
+        return HttpResponse.json<Leaderboard>(
+          served(request, threeCategories, '2026-11-18T15:00:00Z'),
+        );
       }),
     );
     renderAt(`/challenges/${id}`);
@@ -504,19 +519,17 @@ describe('ChallengeLeaderboard, refresh', () => {
     vi.setSystemTime(new Date('2026-11-18T15:00:30Z'));
     answer();
     let computedAt = '2026-11-18T15:00:00Z';
-    let calls = 0;
+    // The banner's whole leaderboard, and the page of the category shown.
+    const calls = { whole: 0, paged: 0 };
     server.use(
-      http.get('*/api/v1/challenges/:challengeId/leaderboard', () => {
-        calls += 1;
-        return HttpResponse.json<Leaderboard>({
-          computed_at: computedAt,
-          categories: threeCategories,
-        });
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        calls[new URL(request.url).searchParams.has('limit') ? 'paged' : 'whole'] += 1;
+        return HttpResponse.json<Leaderboard>(served(request, threeCategories, computedAt));
       }),
     );
     renderAt(`/challenges/${id}`);
     expect(await screen.findByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
-    expect(calls).toBe(1);
+    await waitFor(() => expect(calls).toEqual({ whole: 1, paged: 1 }));
 
     const comeBack = () =>
       act(() => void document.dispatchEvent(new Event('visibilitychange', { bubbles: true })));
@@ -524,13 +537,13 @@ describe('ChallengeLeaderboard, refresh', () => {
     comeBack();
     // Still fresh: no request, the time stays.
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(calls).toBe(1);
+    expect(calls).toEqual({ whole: 1, paged: 1 });
     expect(screen.getByText('Classements mis à jour : 18 nov., 10:00')).toBeInTheDocument();
 
     vi.setSystemTime(new Date('2026-11-18T15:20:30Z'));
     comeBack();
     expect(await screen.findByText('Classements mis à jour : 18 nov., 10:20')).toBeInTheDocument();
-    expect(calls).toBe(2);
+    await waitFor(() => expect(calls).toEqual({ whole: 2, paged: 2 }));
   });
 });
 
@@ -557,7 +570,7 @@ describe('ChallengeLeaderboard, finished challenge', () => {
 
   it('shows the frozen meters of the total elevation gain once the challenge is finished', async () => {
     deviceIn(summary.timezone);
-    answer(finished);
+    answer({ ...finished, ...timeAnd('cumulative_elevation') });
     leaderboard([
       { type: 'cumulative_time', ranked_count: 0, entries: time },
       {
@@ -880,7 +893,7 @@ describe('ChallengeLeaderboard, points', () => {
     provisional_points: provisional,
   });
 
-  const withPoints = (entries: LeaderboardEntry[]): Leaderboard['categories'] => [
+  const withPoints = (entries: LeaderboardEntry[]): FullRanking[] => [
     { type: 'cumulative_time', ranked_count: 0, entries: time },
     { type: 'points', ranked_count: 0, entries },
   ];
@@ -949,5 +962,369 @@ describe('ChallengeLeaderboard, points', () => {
 
     expect(within(await section('Podium')).getByText('+ 10 pts provisoires')).toBeInTheDocument();
     expect(screen.getByText(/^Les points d'une semaine sont acquis à 7 h/)).toBeInTheDocument();
+  });
+});
+
+describe('ChallengeLeaderboard, podium then pages', () => {
+  afterEach(async () => {
+    await i18n.changeLanguage('fr');
+  });
+
+  /**
+   * 24 ranked (1, 2, 3, 3, 5…24: a tie at the third rank), the user at
+   * `myRank` (none: not a participant), then two who abandoned.
+   */
+  function longRanking(
+    type: 'cumulative_time' | 'cumulative_distance',
+    myRank: number | null,
+  ): FullRanking {
+    const ranked = Array.from({ length: 24 }, (_, index) => {
+      const rank = index === 3 ? 3 : index + 1;
+      const userId = rank === myRank && index !== 3 ? mockMe.id : undefined;
+      return entry(
+        `p${index + 1}`,
+        rank,
+        100_000 - Math.min(index, 2) * 1_000 - index * 1_000,
+        userId,
+      );
+    });
+    const tied = ranked[2];
+    if (ranked[3] && tied) ranked[3] = { ...ranked[3], value: tied.value };
+    return {
+      type,
+      ranked_count: 24,
+      entries: [...ranked, entry('zoe', null, null), entry('yann', null, null)],
+    };
+  }
+
+  /** Serves `categories`, paginated, and records every request. */
+  function recorded(categories: FullRanking[]) {
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        if (query.has('limit')) requests.push(query);
+        return HttpResponse.json<Leaderboard>(served(request, categories));
+      }),
+    );
+    return requests;
+  }
+
+  const ranks = async () =>
+    within(await section('Suite du classement'))
+      .getAllByRole('listitem')
+      .map((row) => row.querySelector('span')?.textContent);
+
+  it('shows the whole podium, the tie at the third rank included, then a page of 10', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const requests = recorded([longRanking('cumulative_time', null)]);
+    renderAt(`/challenges/${id}`);
+
+    const podium = within(await section('Podium')).getAllByRole('listitem');
+    expect(podium.map((card) => card.querySelector('span')?.firstChild?.textContent)).toEqual([
+      '1er',
+      '2e',
+      '3e',
+      '3e',
+    ]);
+    expect(podium[2]).toHaveTextContent('ex æquo');
+    expect(await ranks()).toEqual(['5', '6', '7', '8', '9', '10', '11', '12', '13', '14']);
+    expect(requests[0]?.get('category')).toBe('cumulative_time');
+    expect(requests[0]?.get('limit')).toBe('10');
+    expect(requests[0]?.has('cursor')).toBe(false);
+    // Not a participant: no line of « Toi ».
+    expect(screen.queryByText('Toi')).not.toBeInTheDocument();
+  });
+
+  it('loads the pages after the podium one after the other, those who abandoned last', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const requests = recorded([longRanking('cumulative_time', null)]);
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
+    await waitFor(async () => expect(await ranks()).toHaveLength(20));
+    expect(requests.at(-1)?.get('cursor')).toBe('10');
+    expect(screen.queryByRole('region', { name: 'Éliminés' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
+    const out = within(await section('Éliminés')).getAllByRole('listitem');
+    expect(out.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('zoe'),
+      expect.stringContaining('yann'),
+    ]);
+    expect(requests.at(-1)?.get('cursor')).toBe('20');
+    // The podium stays whole, never repeated below it.
+    expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(4);
+    expect((await ranks()).at(0)).toBe('5');
+    expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
+  });
+
+  it('reads every line after the podium with « Tout », and keeps the choice', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const requests = recorded([longRanking('cumulative_time', null)]);
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    fireEvent.click(screen.getByRole('radio', { name: 'Tout' }));
+
+    expect(await section('Éliminés')).toBeInTheDocument();
+    expect(await ranks()).toHaveLength(20);
+    expect(requests.at(-1)?.get('limit')).toBe('100');
+    expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
+    expect(localStorage.getItem('sport-challenge:page-size:leaderboard')).toBe('all');
+  });
+
+  it('keeps the size chosen when another category is shown', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const requests = recorded([
+      longRanking('cumulative_time', null),
+      longRanking('cumulative_distance', null),
+      { type: 'elimination', ranked_count: 0, entries: [] },
+    ]);
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    fireEvent.click(screen.getByRole('radio', { name: '50' }));
+    await waitFor(async () => expect(await ranks()).toHaveLength(20));
+    fireEvent.click(screen.getByRole('button', { name: 'Distance cumulée' }));
+
+    await screen.findByRole('heading', { name: 'Classement · Distance cumulée' });
+    await waitFor(() => expect(requests.at(-1)?.get('category')).toBe('cumulative_distance'));
+    expect(requests.at(-1)?.get('limit')).toBe('50');
+    expect(screen.getByRole('radio', { name: '50' })).toBeChecked();
+  });
+
+  it('shows the user on the podium once, not below it', async () => {
+    answer();
+    recorded([longRanking('cumulative_time', 2)]);
+    renderAt(`/challenges/${id}`);
+
+    const podium = within(await section('Podium')).getAllByRole('listitem');
+    expect(podium[1]).toHaveTextContent('Toi');
+    await section('Suite du classement');
+    expect(screen.getAllByText('Toi')).toHaveLength(1);
+  });
+
+  it('shows the user in the loaded page once, kept on screen', async () => {
+    answer();
+    recorded([longRanking('cumulative_time', 8)]);
+    renderAt(`/challenges/${id}`);
+
+    const rows = within(await section('Suite du classement')).getAllByRole('listitem');
+    expect(rows).toHaveLength(10);
+    expect(rows[3]).toHaveTextContent('Toi');
+    expect(rows[3]).toHaveClass('sticky');
+    expect(screen.getAllByText('Toi')).toHaveLength(1);
+  });
+
+  it('shows the user apart, with the rank, until the page that holds it is loaded', async () => {
+    answer();
+    recorded([longRanking('cumulative_time', 20)]);
+    renderAt(`/challenges/${id}`);
+
+    const rows = within(await section('Suite du classement')).getAllByRole('listitem');
+    expect(rows).toHaveLength(11);
+    const mine = rows.at(-1);
+    expect(mine).toHaveTextContent('Toi');
+    expect(mine?.querySelector('span')?.textContent).toBe('20');
+    expect(mine).toHaveClass('sticky');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
+    await waitFor(async () => expect(await ranks()).toHaveLength(20));
+    // In its place now, once only.
+    expect((await ranks()).indexOf('20')).toBe(15);
+    expect(screen.getAllByText('Toi')).toHaveLength(1);
+  });
+
+  it('shows the user who abandoned apart, before the page of those who abandoned', async () => {
+    answer({ my_role: 'abandoned', my_status: 'abandoned' });
+    const ranking = longRanking('cumulative_time', null);
+    ranking.entries.push(entry('marie_92', null, null, mockMe.id));
+    recorded([ranking]);
+    renderAt(`/challenges/${id}`);
+
+    const out = within(await section('Éliminés')).getAllByRole('listitem');
+    expect(out).toHaveLength(1);
+    expect(out[0]).toHaveTextContent('Toi');
+    expect(out[0]).toHaveTextContent('A abandonné');
+    expect(await ranks()).toHaveLength(10);
+  });
+
+  it('keeps the loaded lines and offers a retry when the next page fails', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const categories = [longRanking('cumulative_time', null)];
+    let fail = true;
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        if (fail && new URL(request.url).searchParams.has('cursor')) {
+          return HttpResponse.json(
+            { error: { code: 'internal_error', message: 'boom' } },
+            { status: 500 },
+          );
+        }
+        return HttpResponse.json<Leaderboard>(served(request, categories));
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
+    expect(
+      await screen.findByText("La suite n'a pas pu être chargée.", {}, { timeout: 5_000 }),
+    ).toBeInTheDocument();
+    expect(await ranks()).toHaveLength(10);
+    expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(4);
+
+    fail = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
+    await waitFor(async () => expect(await ranks()).toHaveLength(20));
+  }, 10_000);
+
+  it('starts again from the first page when the ranking changed since the cursor', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const categories = [longRanking('cumulative_time', null)];
+    const requests: URLSearchParams[] = [];
+    let stale = true;
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        if (query.has('limit')) requests.push(query);
+        if (stale && query.has('cursor')) {
+          stale = false;
+          return HttpResponse.json(
+            { error: { code: 'cursor_invalid', message: 'Cursor invalid' } },
+            { status: 400 },
+          );
+        }
+        return HttpResponse.json<Leaderboard>(served(request, categories));
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
+
+    await waitFor(() => expect(requests).toHaveLength(3));
+    expect(requests[2]?.has('cursor')).toBe(false);
+    expect(await ranks()).toHaveLength(10);
+    // Neither the failure of the list nor the banner of the app.
+    expect(screen.queryByText("La suite n'a pas pu être chargée.")).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('offers a retry under the category, without the size choice, when the ranking fails', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const categories = [longRanking('cumulative_time', null)];
+    let fail = true;
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        if (fail && new URL(request.url).searchParams.has('limit')) {
+          return HttpResponse.json(
+            { error: { code: 'validation_failed', message: 'Invalid' } },
+            { status: 400 },
+          );
+        }
+        return HttpResponse.json<Leaderboard>(served(request, categories));
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    const ranking = await section('Classement · Temps cumulé');
+    const retry = await within(ranking).findByRole('button', { name: 'Réessayer' });
+    // The category stays chosen above the failure.
+    expect(within(ranking).getByRole('group', { name: 'Catégorie du classement' })).toBeVisible();
+    expect(within(ranking).queryByRole('radio')).not.toBeInTheDocument();
+
+    fail = false;
+    fireEvent.click(retry);
+    expect(await section('Podium')).toBeInTheDocument();
+    expect(within(ranking).getByRole('radio', { name: '10' })).toBeChecked();
+  });
+
+  it('leaves the podium out while nobody has scored, the tied lines below', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    recorded([
+      {
+        type: 'cumulative_time',
+        ranked_count: 2,
+        entries: [entry('julie', 1, 0), entry('marc', 1, 0)],
+      },
+    ]);
+    renderAt(`/challenges/${id}`);
+
+    expect(await ranks()).toEqual(['1 ex æquo', '1 ex æquo']);
+    expect(screen.queryByRole('region', { name: 'Podium' })).not.toBeInTheDocument();
+  });
+
+  it('hides the size choice when no one is ranked', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    recorded([{ type: 'cumulative_time', ranked_count: 0, entries: [] }]);
+    renderAt(`/challenges/${id}`);
+
+    expect(
+      await screen.findByText("Personne n'est encore classé dans ce défi."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+  });
+
+  it('stops starting again when every cursor is refused, then retries from the first page', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const categories = [longRanking('cumulative_time', null)];
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        if (query.has('limit')) requests.push(query);
+        if (query.has('cursor')) {
+          return HttpResponse.json(
+            { error: { code: 'cursor_invalid', message: 'Cursor invalid' } },
+            { status: 400 },
+          );
+        }
+        return HttpResponse.json<Leaderboard>(served(request, categories));
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    const firstPages = () => requests.filter((query) => !query.has('cursor')).length;
+    // Each refused cursor starts again from the first page, twice in a row at most.
+    for (const restarted of [2, 3]) {
+      fireEvent.click(await screen.findByRole('button', { name: 'Charger plus' }));
+      await waitFor(() => expect(firstPages()).toBe(restarted));
+    }
+    fireEvent.click(await screen.findByRole('button', { name: 'Charger plus' }));
+    const retry = await screen.findByRole('button', { name: 'Réessayer' });
+    expect(screen.getByText("La suite n'a pas pu être chargée.")).toBeInTheDocument();
+    expect(firstPages()).toBe(3);
+    expect(await ranks()).toHaveLength(10);
+
+    // The retry starts again too.
+    fireEvent.click(retry);
+    await waitFor(() => expect(firstPages()).toBe(4));
+  });
+
+  it('shows the frozen ranking of a finished challenge the same way', async () => {
+    answer({ status: 'finished', current_week: null, week_ends_at: null });
+    recorded([longRanking('cumulative_time', 20)]);
+    renderAt(`/challenges/${id}`);
+
+    expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(4);
+    expect(await ranks()).toHaveLength(11);
+    expect(screen.getByRole('button', { name: 'Charger plus' })).toBeInTheDocument();
+  });
+
+  it('speaks English', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    answer();
+    recorded([longRanking('cumulative_time', 20)]);
+    renderAt(`/challenges/${id}`);
+
+    const rows = within(await section('Rest of the ranking')).getAllByRole('listitem');
+    expect(rows.at(-1)).toHaveTextContent('You');
+    expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'All' })).toBeInTheDocument();
   });
 });
