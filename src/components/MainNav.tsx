@@ -1,6 +1,7 @@
 import { Activity, Trophy, User, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router';
+import { AppMark } from './AppMark';
 
 const TABS: { to: string; labelKey: string; Icon: LucideIcon; end?: boolean }[] = [
   { to: '/', labelKey: 'nav.challenges', Icon: Trophy, end: true },
@@ -25,9 +26,7 @@ export function MainNav() {
           to="/"
           className="hidden h-11 items-center gap-3 font-display text-xl font-bold md:flex"
         >
-          <span className="flex size-8 items-center justify-center rounded-tab bg-accent text-on-accent">
-            <Trophy aria-hidden="true" size={18} strokeWidth={2} />
-          </span>
+          <AppMark />
           {t('home.title')}
         </Link>
         <ul className="flex flex-1 md:flex-none md:gap-1">

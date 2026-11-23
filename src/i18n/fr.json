@@ -65,11 +65,19 @@
     }
   },
   "onboarding": {
-    "title": "Bienvenue",
-    "intro": "Présente-toi. Les autres participants verront ton pseudo si tu en choisis un, sinon ton prénom et ton nom. Ton courriel reste privé.",
+    "title": "Bienvenue !",
+    "subtitle": "Présente-toi en quelques secondes. Ton courriel reste privé.",
+    "preview": {
+      "label": "Les autres te verront ainsi",
+      "empty": "Ton nom apparaîtra ici"
+    },
     "pseudo": {
       "label": "Pseudo (facultatif)",
-      "hint": "3 à 20 caractères : lettres, chiffres, _, . ou -."
+      "hint": "3 à 20 caractères : lettres, chiffres, _, . ou -.",
+      "name": "Pseudo",
+      "optional": "(facultatif)",
+      "placeholder": "ex. : coureur_du_dimanche",
+      "help": "S'il est rempli, il remplace ton nom dans les défis. 3 à 20 caractères : lettres, chiffres, _, . ou -"
     },
     "firstName": "Prénom",
     "lastName": "Nom",
@@ -78,8 +86,9 @@
       "fr": "Français",
       "en": "English"
     },
-    "submit": "Continuer",
-    "saving": "Enregistrement…"
+    "submit": "C'est parti",
+    "saving": "Enregistrement…",
+    "later": "Tout se change plus tard dans ton profil."
   },
   "profile": {
     "loading": "Chargement de ton profil…",

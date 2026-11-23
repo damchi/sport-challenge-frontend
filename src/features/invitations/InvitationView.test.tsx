@@ -320,7 +320,7 @@ describe('InvitationView', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/onboarding'));
     fireEvent.change(await screen.findByLabelText('Prénom'), { target: { value: 'Marie' } });
     fireEvent.change(screen.getByLabelText('Nom'), { target: { value: 'Tremblay' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(await preview()).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/invite');
