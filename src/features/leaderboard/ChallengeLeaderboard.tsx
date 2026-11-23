@@ -1,13 +1,25 @@
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
-import { useChallenge, useLeaderboard, type LeaderboardEntry } from '../../api/hooks/useChallenges';
+import {
+  useCategoryLeaderboard,
+  useChallenge,
+  useLeaderboard,
+  type CategoryType,
+  type ChallengeDetail,
+  type LeaderboardEntry,
+} from '../../api/hooks/useChallenges';
+import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
 import { useMe } from '../../api/hooks/useMe';
+import { LoadMore } from '../../components/LoadMore';
+import { PageSizeChoice } from '../../components/PageSizeChoice';
 import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../domain/challenge';
 import { timeZoneName } from '../../domain/format/challengeDates';
 import { sharedRanks } from '../../domain/format/rank';
+import type { PageSize } from '../../domain/pageSize';
+import { usePageSize } from '../../lib/pageSize';
 import { useSportName } from '../challenges/create/useSportName';
 import { CATEGORY_EXPLANATIONS, useCategoryName } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
@@ -25,67 +37,52 @@ const SEGMENT_OFF = 'text-muted hover-ink';
 const OFFSCREEN_ROW = '-m-1 p-1 [content-visibility:auto] [contain-intrinsic-size:auto_4rem]';
 
 /**
- * Leaderboard tab of a challenge: one category at a time, among the 1 to 4
+ * Leaderboard tab of a challenge: one category at a time, among the 1 to 5
  * the challenge has (its choice lives in the address, ?category=, set by
  * the cards of « Où tu en es »; without them, by a selector here, and no
  * choice with a single category), with what it ranks, its podium (ranks 1
- * to 3, ties included), the rest of its ranking and, apart, the
- * participants who abandoned or, in the elimination, were eliminated.
- * Ranks, order and statuses are the server's. The user's row stands out
- * and stays on screen. No live update in V1: the page's banner says when
- * the server computed it, or that the results are final.
+ * to 3, ties included, always whole), then the rest of its ranking, 10, 50 or
+ * every line after the podium (one choice for every category, kept on the
+ * device), and, apart, the participants who abandoned or, in the
+ * elimination, were eliminated. Ranks, order and statuses are the server's.
+ * The user's row stands out and stays on screen, even before the page that
+ * holds it is loaded. No live update in V1: the page's banner says when the
+ * server computed it, or that the results are final.
  * Rendered under the challenge page, which has already loaded the challenge.
  */
 export function ChallengeLeaderboard() {
   const { challengeId = '' } = useParams();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const challenge = useChallenge(challengeId);
+  // The whole leaderboard of « Où tu en es » (shared with it): whether its cards show.
   const leaderboard = useLeaderboard(challengeId);
   const me = useMe();
+  const [size, setSize] = usePageSize('leaderboard');
   // A hook comes before the early returns; the name is only read once the
   // challenge has loaded, so the fallback never shows.
   const categoryName = useCategoryName(challenge.data?.reference_sport ?? 'run');
   const sportName = useSportName();
 
   if (!challenge.data) return null;
-  if (leaderboard.isPending) return <LoadingState />;
-  if (!leaderboard.data) {
-    return <ErrorState error={leaderboard.error} onRetry={() => void leaderboard.refetch()} />;
-  }
-
-  const { categories } = leaderboard.data;
+  const { categories } = challenge.data;
   const category = shownCategory(categories, params.get('category'));
   if (!category) return <EmptyState message={t('leaderboard.empty')} />;
 
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const { timezone } = challenge.data;
   const name = categoryName(category.type);
   // The cards of « Où tu en es », when the page shows them, choose the category.
-  // While the user loads, no selector: it would show, then give way to them.
+  // While they load, no selector: it would show, then give way to them.
   const cardsChoose =
-    hasStandings(challenge.data) && (me.isPending || myLines(categories, me.data?.id).length > 0);
+    hasStandings(challenge.data) &&
+    (leaderboard.isPending ||
+      me.isPending ||
+      myLines(leaderboard.data?.categories ?? [], me.data?.id).length > 0);
 
   const choose = (type: string) => {
     const next = new URLSearchParams(params);
     next.set('category', type);
     setParams(next, { replace: true });
   };
-  // Eliminated ones follow the survivors, abandoned ones come last (server's order).
-  const isOut = (entry: LeaderboardEntry) =>
-    entry.abandoned || (entry.elimination?.eliminated_week ?? null) !== null;
-  const ranked = category.entries.filter((entry) => !isOut(entry));
-  const out = category.entries.filter(isOut);
-  const onPodium = (entry: LeaderboardEntry) => entry.rank !== null && entry.rank <= 3;
-  const podium = ranked.filter(onPodium);
-  const rest = ranked.filter((entry) => !onPodium(entry));
-  const ties = sharedRanks(ranked.map((entry) => entry.rank));
-  const linked = canSeeParticipantActivities(challenge.data.my_role);
-  const rowProps = (userId: string) => ({
-    type: category.type,
-    me: userId === me.data?.id,
-    href: linked ? `/challenges/${challengeId}/participants/${userId}` : undefined,
-  });
 
   return (
     <section
@@ -121,21 +118,106 @@ export function ChallengeLeaderboard() {
         })}
       </p>
 
+      <CategoryLeaderboard
+        challenge={challenge.data}
+        type={category.type}
+        myId={me.data?.id}
+        size={size}
+        onSize={setSize}
+      />
+    </section>
+  );
+}
+
+/**
+ * The ranking of one category: its podium, whole on every page, the lines
+ * after it page by page, and the user's line, from `me`, while the page that
+ * holds it is not loaded yet (never twice).
+ */
+function CategoryLeaderboard({
+  challenge,
+  type,
+  myId,
+  size,
+  onSize,
+}: {
+  challenge: ChallengeDetail;
+  type: CategoryType;
+  myId: string | undefined;
+  size: PageSize;
+  onSize: (size: PageSize) => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const ranking = useCategoryLeaderboard(challenge.id, type, size);
+  useFetchAllPages(ranking, size === 'all');
+
+  const pages = ranking.data?.pages;
+  const first = pages?.[0];
+  const podiumLines = first?.podium ?? [];
+  const lines = pages?.flatMap((page) => page.entries) ?? [];
+  const empty = first !== undefined && podiumLines.length === 0 && lines.length === 0;
+
+  // Eliminated ones follow the survivors, abandoned ones come last (server's order).
+  const isOut = (entry: LeaderboardEntry) =>
+    entry.abandoned || (entry.elimination?.eliminated_week ?? null) !== null;
+  const loaded = [...podiumLines, ...lines];
+  const mine = first?.me ?? null;
+  // Not loaded yet: shown after the loaded lines it comes after, until its page is.
+  const apart = mine && !loaded.some((entry) => entry.user.id === mine.user.id) ? mine : null;
+  // An eliminated one keeps out of the podium, even at the end (decision of 2026-11-20).
+  const podium = podiumLines.filter((entry) => !isOut(entry));
+  const rest = [
+    ...lines.filter((entry) => !isOut(entry)),
+    ...(apart && !isOut(apart) ? [apart] : []),
+  ];
+  const out = [
+    ...podiumLines.filter(isOut),
+    ...lines.filter(isOut),
+    ...(apart && isOut(apart) ? [apart] : []),
+  ];
+  // « ex æquo » among the loaded lines: a tie with a line not loaded yet is
+  // noted once its page is (the rank itself is always the server's).
+  const ties = sharedRanks([...podium, ...rest].map((entry) => entry.rank));
+  const linked = canSeeParticipantActivities(challenge.my_role);
+  const rowProps = (userId: string) => ({
+    type,
+    me: userId === myId,
+    href: linked ? `/challenges/${challenge.id}/participants/${userId}` : undefined,
+  });
+  const locale = i18n.resolvedLanguage ?? 'fr';
+
+  return (
+    <>
       {/* While the server still gives provisional points: until the last
           week locks, after the challenge's end too. */}
-      {category.type === 'points' &&
-        category.entries.some((entry) => entry.provisional_points !== null) && (
+      {type === 'points' &&
+        [...loaded, ...(mine ? [mine] : [])].some((entry) => entry.provisional_points !== null) && (
           <p className="mt-4 text-sm text-muted">
-            {t('leaderboard.pointsRule', { zone: timeZoneName(timezone, locale) })}
+            {t('leaderboard.pointsRule', { zone: timeZoneName(challenge.timezone, locale) })}
           </p>
         )}
 
       {/* Only during the weeks of the challenge: the minimum then applies. */}
-      {category.type === 'elimination' && challenge.data.current_week !== null && (
-        <EliminationContext challenge={challenge.data} />
+      {type === 'elimination' && challenge.current_week !== null && (
+        <EliminationContext challenge={challenge} />
       )}
 
-      {category.entries.length === 0 ? (
+      {/* Kept while the ranking reloads in its new size (the focus stays on
+          it); hidden when it failed or ranks no one. */}
+      {(ranking.isPending || (first && !empty)) && (
+        <div className="mt-4">
+          <PageSizeChoice size={size} onChange={onSize} />
+        </div>
+      )}
+
+      {ranking.isPending ? (
+        <LoadingState />
+      ) : !first ? (
+        // Nothing loaded: the ranking failed (a failed "load more" keeps it).
+        <div className="mt-4">
+          <ErrorState error={ranking.error} onRetry={() => void ranking.refetch()} />
+        </div>
+      ) : empty ? (
         <div className="mt-4">
           <EmptyState message={t('leaderboard.empty')} />
         </div>
@@ -155,7 +237,7 @@ export function ChallengeLeaderboard() {
                   >
                     <PodiumCard
                       entry={entry}
-                      referenceSport={challenge.data.reference_sport}
+                      referenceSport={challenge.reference_sport}
                       tied={ties.has(entry.rank ?? 0)}
                       {...rowProps(entry.user.id)}
                     />
@@ -186,7 +268,7 @@ export function ChallengeLeaderboard() {
                       <LeaderboardRow
                         entry={entry}
                         tied={ties.has(entry.rank ?? 0)}
-                        referenceSport={challenge.data.reference_sport}
+                        referenceSport={challenge.reference_sport}
                         {...props}
                       />
                     </li>
@@ -210,8 +292,17 @@ export function ChallengeLeaderboard() {
               </ul>
             </section>
           )}
+
+          <LoadMore
+            hasMore={ranking.hasNextPage}
+            loading={ranking.isFetchingNextPage}
+            // While every page is read, a failed reload also stops the reading.
+            failed={ranking.isFetchNextPageError || (size === 'all' && ranking.isError)}
+            auto={size === 'all'}
+            onLoadMore={() => void ranking.fetchNextPage()}
+          />
         </>
       )}
-    </section>
+    </>
   );
 }

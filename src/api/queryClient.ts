@@ -10,6 +10,11 @@ export const staleTimes = {
 
 const MAX_RETRIES = 2;
 
+/** A cursor the ranking no longer matches (the list starts again). */
+export function isInvalidCursor(error: unknown): boolean {
+  return error instanceof ApiError && error.code === 'cursor_invalid';
+}
+
 /** A lost session: the client already tried to renew it before failing. */
 function isAuthError(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401;
@@ -51,7 +56,14 @@ export function createQueryClient({
     queryCache: new QueryCache({
       // A screen shows the error of its first load; a failed refresh keeps the
       // previous data on screen, so the error is reported globally.
-      onError: (error, query) => report(error, query.state.data === undefined),
+      // A list that starts again on a stale cursor (meta.restartsOnInvalidCursor)
+      // shows nothing of it.
+      onError: (error, query) =>
+        report(
+          error,
+          query.state.data === undefined ||
+            (query.meta?.restartsOnInvalidCursor === true && isInvalidCursor(error)),
+        ),
     }),
     mutationCache: new MutationCache({
       // A mutation whose form shows its own errors (meta.handlesError) skips the banner.

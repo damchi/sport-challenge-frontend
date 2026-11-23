@@ -1,10 +1,11 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
 import { pageLimit, type PageSize } from '../../domain/pageSize';
 import { useApiClient } from '../ApiClientContext';
 import { ApiError } from '../errors';
 import type { components } from '../generated/schema';
-import { staleTimes } from '../queryClient';
+import { isInvalidCursor, staleTimes } from '../queryClient';
 import { queryKeys } from '../queryKeys';
 
 export type ChallengeSummary = components['schemas']['ChallengeSummary'];
@@ -14,6 +15,8 @@ export type ChallengeUpdate = components['schemas']['ChallengeUpdate'];
 export type Participant = components['schemas']['Participant'];
 export type Leaderboard = components['schemas']['Leaderboard'];
 export type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
+export type CategoryRanking = components['schemas']['CategoryRanking'];
+export type CategoryType = CategoryRanking['type'];
 
 /**
  * Challenges of a list, page by page (cursor) of `size` (each size cached on
@@ -106,6 +109,52 @@ export function useLeaderboard(challengeId: string) {
       return data;
     },
   });
+}
+
+/**
+ * The ranking of one category, page by page (cursor) of `size` after its
+ * podium, which every page gives whole (ties included), with the user's line
+ * (`me`) wherever it is. Each size of each category is cached on its own,
+ * under the leaderboard (reloaded with it). The ranking changed since a
+ * cursor was given (`cursor_invalid`): it starts again from the first page,
+ * without the error banner.
+ */
+export function useCategoryLeaderboard(
+  challengeId: string,
+  category: CategoryType,
+  size: PageSize,
+) {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  const query = useInfiniteQuery({
+    queryKey: queryKeys.challenges.leaderboardCategory(challengeId, category, size),
+    staleTime: staleTimes.leaderboard,
+    meta: { restartsOnInvalidCursor: true },
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam, signal }) => {
+      const { data } = await client.GET('/api/v1/challenges/{challengeId}/leaderboard', {
+        params: {
+          path: { challengeId },
+          query: { category, limit: pageLimit(size), cursor: pageParam },
+        },
+        signal,
+      });
+      const ranking = data?.categories[0];
+      if (!ranking) throw new Error('Empty leaderboard page');
+      return ranking;
+    },
+    getNextPageParam: (page) => page.next_cursor ?? undefined,
+  });
+  // A next page, or a refetch of the pages read, met a stale cursor.
+  const restart = isInvalidCursor(query.error) && !query.isFetching;
+  useEffect(() => {
+    if (!restart) return;
+    void queryClient.resetQueries({
+      queryKey: queryKeys.challenges.leaderboardCategory(challengeId, category, size),
+      exact: true,
+    });
+  }, [restart, queryClient, challengeId, category, size]);
+  return query;
 }
 
 /**

@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail, Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { mockChallengeDetail, mockChallenges, mockMe } from '../../mocks/handlers';
+import { answerLeaderboard, type FullRanking } from '../../mocks/leaderboard';
 import { server } from '../../mocks/server';
 import { routes } from '../../routes/routes';
 import { AppProviders } from '../../test/AppProviders';
@@ -71,7 +72,7 @@ const myElimination = (elimination: Partial<NonNullable<LeaderboardEntry['elimin
   },
 });
 
-const fourRankings: Leaderboard['categories'] = [
+const fourRankings: FullRanking[] = [
   {
     type: 'cumulative_time',
     ranked_count: 8,
@@ -90,10 +91,20 @@ const fourRankings: Leaderboard['categories'] = [
   },
 ];
 
-function leaderboard(categories: Leaderboard['categories']) {
+/** The leaderboard as the API answers the request (paginated with `limit`). */
+function served(request: Request, categories: FullRanking[]) {
+  return answerLeaderboard(
+    '2026-11-18T15:00:00Z',
+    categories,
+    new URL(request.url).searchParams,
+    mockMe.id,
+  );
+}
+
+function leaderboard(categories: FullRanking[]) {
   server.use(
-    http.get('*/api/v1/challenges/:challengeId/leaderboard', () =>
-      HttpResponse.json<Leaderboard>({ computed_at: '2026-11-18T15:00:00Z', categories }),
+    http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) =>
+      HttpResponse.json<Leaderboard>(served(request, categories)),
     ),
   );
 }
@@ -239,7 +250,7 @@ describe('MyStandings', () => {
   it('says the week of the elimination of an eliminated user, without a rank', async () => {
     answer();
     leaderboard([
-      fourRankings[0] as Leaderboard['categories'][number],
+      fourRankings[0] as FullRanking,
       {
         type: 'elimination',
         ranked_count: 5,
@@ -269,7 +280,7 @@ describe('MyStandings', () => {
 
   it('shows a single card for a challenge with the cumulative time only', async () => {
     answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
-    leaderboard([fourRankings[0] as Leaderboard['categories'][number]]);
+    leaderboard([fourRankings[0] as FullRanking]);
     renderAt(`/challenges/${id}`);
 
     expect(await cards()).toHaveLength(1);

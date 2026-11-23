@@ -34,6 +34,11 @@ export const queryKeys = {
     participants: (challengeId: string, size: string) =>
       ['challenges', challengeId, 'participants', { size }] as const,
     leaderboard: (challengeId: string) => ['challenges', challengeId, 'leaderboard'] as const,
+    // One category, one cache per page size, under the leaderboard: invalidating
+    // the leaderboard reloads them too. Their data is paged (infinite query),
+    // not a whole Leaderboard: never read them by the leaderboard's prefix.
+    leaderboardCategory: (challengeId: string, category: string, size: string) =>
+      ['challenges', challengeId, 'leaderboard', category, { size }] as const,
     // Under the challenge: it reloads with the challenges once an activity changes.
     participantActivities: (challengeId: string, userId: string, size: string) =>
       ['challenges', challengeId, 'participants', userId, 'activities', size] as const,

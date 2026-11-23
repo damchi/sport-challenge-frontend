@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import type { components } from '../api/generated/schema';
 import { mondayOf } from '../domain/activityWeeks';
 import { addToDate, challengeWindow, localDate, zonedMidnight } from '../domain/challengeWindow';
+import { answerLeaderboard, type FullRanking } from './leaderboard';
 
 // Mock handlers shared by the tests (src/mocks/server.ts) and the development
 // mocks (VITE_MOCKS=true). Each ticket adds the routes it uses, typed by the
@@ -212,12 +213,7 @@ export const mockParticipants: Participant[] = Array.from({ length: 25 }, (_, in
  * first, equal values sharing a rank (1, 1, 3), the participants who
  * abandoned last, without a rank nor a value.
  */
-type CategoryRanking = Leaderboard['categories'][number];
-
-function mockRanking(
-  type: CategoryRanking['type'],
-  value: (index: number) => number,
-): CategoryRanking {
+function mockRanking(type: FullRanking['type'], value: (index: number) => number): FullRanking {
   const user = ({ user_id, pseudo, first_name, last_name, avatar }: Participant) => ({
     id: user_id,
     pseudo,
@@ -262,8 +258,8 @@ function mockRanking(
 }
 
 /** The leaderboard of every mock challenge, with ties in each category. */
-const mockLeaderboard: Leaderboard = {
-  computed_at: '2026-11-18T15:00:00Z',
+const mockLeaderboard = {
+  computedAt: '2026-11-18T15:00:00Z',
   categories: [
     // Seconds; the first two are tied.
     mockRanking('cumulative_time', (index) => (index < 2 ? 36_000 : 30_000 - index * 600)),
@@ -375,7 +371,8 @@ export const handlers = [
     const next = from + size < mockParticipants.length ? String(from + size) : null;
     return HttpResponse.json<ParticipantPage>({ items, next_cursor: next });
   }),
-  http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ params }) => {
+  // Paginated after the podium with `limit` (the cursor is the index of the next line).
+  http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ params, request }) => {
     if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
       const body: ApiErrorBody = {
         error: { code: 'challenge_not_found', message: 'Challenge not found' },
@@ -384,10 +381,14 @@ export const handlers = [
     }
     // Only the categories the challenge has.
     const types = new Set(mockCategories(String(params.challengeId)).categories.map((c) => c.type));
-    return HttpResponse.json<Leaderboard>({
-      ...mockLeaderboard,
-      categories: mockLeaderboard.categories.filter((category) => types.has(category.type)),
-    });
+    return HttpResponse.json<Leaderboard>(
+      answerLeaderboard(
+        mockLeaderboard.computedAt,
+        mockLeaderboard.categories.filter((category) => types.has(category.type)),
+        new URL(request.url).searchParams,
+        mockMe.id,
+      ),
+    );
   }),
   // Every participant shows the user's activities; the cursor is the index
   // of the next one. Someone who never joined answers 404.
