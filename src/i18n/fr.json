@@ -469,7 +469,7 @@
       "excluded": "Non inclus",
       "excludedFeminine": "Non incluse",
       "timeDetail": "Tous sports confondus",
-      "distanceDetail": "Ramenée en km de {{sport}}",
+      "distanceDetail": "Ramenée au sport de référence",
       "eliminationDetail": "{{sport}} seulement, pas d'élimination en semaine 1",
       "podium_5": "Top 5 · 10 à 2 points",
       "podium_10": "Top 10 · 25 à 1 point",
@@ -479,7 +479,12 @@
       "factorsCustom": "Valeurs personnalisées",
       "stepPerWeek": "+{{step}} par semaine",
       "allInvite": "Tous les participants",
-      "creatorsOnly": "Seuls les créateurs"
+      "creatorsOnly": "Seuls les créateurs",
+      "criteriaNames": {
+        "longest_duration": "séance la plus longue en temps",
+        "longest_distance": "séance la plus longue en distance équivalente",
+        "session_count": "nombre de séances"
+      }
     },
     "submit": {
       "label": "Créer le défi",

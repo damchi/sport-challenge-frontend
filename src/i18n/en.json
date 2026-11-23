@@ -463,7 +463,7 @@
       "excluded": "Not included",
       "excludedFeminine": "Not included",
       "timeDetail": "Every sport included",
-      "distanceDetail": "Brought back to {{sport}} km",
+      "distanceDetail": "Brought back to the reference sport",
       "eliminationDetail": "{{sport}} only, no elimination in week 1",
       "podium_5": "Top 5 · 10 to 2 points",
       "podium_10": "Top 10 · 25 to 1 point",
@@ -473,7 +473,12 @@
       "factorsCustom": "Custom values",
       "stepPerWeek": "+{{step}} per week",
       "allInvite": "All participants",
-      "creatorsOnly": "Creators only"
+      "creatorsOnly": "Creators only",
+      "criteriaNames": {
+        "longest_duration": "longest session by time",
+        "longest_distance": "longest session by equivalent distance",
+        "session_count": "number of sessions"
+      }
     },
     "submit": {
       "label": "Create the challenge",

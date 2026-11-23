@@ -98,9 +98,7 @@ export function RecapStep({
   }));
   const zone = timeZoneName(values.timezone, locale);
   const criteria = values.points_criteria
-    .map((criterion) =>
-      t(`challengeDetail.categories.pointsParams.criteria.${criterion}`).toLocaleLowerCase(locale),
-    )
+    .map((criterion) => t(`challengeCreate.recap.criteriaNames.${criterion}`))
     .join(', ');
   // A failed sending disables then frees the button: the focus goes to the
   // error, so the keyboard is not lost.
@@ -189,12 +187,7 @@ export function RecapStep({
               ? 'challengeCreate.recap.includedFeminine'
               : 'challengeCreate.recap.excludedFeminine',
           )}
-          detail={
-            values.cumulative_distance &&
-            t('challengeCreate.recap.distanceDetail', {
-              sport: sportName(reference).toLocaleLowerCase(locale),
-            })
-          }
+          detail={values.cumulative_distance && t('challengeCreate.recap.distanceDetail')}
         />
         <Row
           label={t('challengeDetail.categories.eliminationGeneric')}

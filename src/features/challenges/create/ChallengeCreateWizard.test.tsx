@@ -898,7 +898,7 @@ describe('ChallengeCreateWizard', () => {
       );
       expect(row('Sport de référence')).toHaveTextContent('Course');
       expect(row('Temps cumulé')).toHaveTextContent('InclusTous sports confondus');
-      expect(row('Distance cumulée')).toHaveTextContent('IncluseRamenée en km de course');
+      expect(row('Distance cumulée')).toHaveTextContent('IncluseRamenée au sport de référence');
       expect(row('Élimination')).toHaveTextContent(
         "+2,5 km par semaineCourse seulement, pas d'élimination en semaine 1",
       );
