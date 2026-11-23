@@ -1,4 +1,4 @@
-import { formatActivityDuration, formatDuration } from './duration';
+import { formatActivityDuration, formatDuration, formatPace } from './duration';
 
 describe('formatDuration', () => {
   it('writes hours and minutes', () => {
@@ -21,5 +21,17 @@ describe('formatActivityDuration', () => {
     expect(formatActivityDuration(3930)).toBe('1:05:30');
     expect(formatActivityDuration(2700)).toBe('0:45:00');
     expect(formatActivityDuration(86_400)).toBe('24:00:00');
+  });
+});
+
+describe('formatPace', () => {
+  it('writes minutes and seconds, rounded to the second', () => {
+    expect(formatPace(307)).toBe('5:07');
+    expect(formatPace(329.4)).toBe('5:29');
+    expect(formatPace(59.6)).toBe('1:00');
+  });
+
+  it('writes hours from an hour per kilometer', () => {
+    expect(formatPace(3725)).toBe('1:02:05');
   });
 });

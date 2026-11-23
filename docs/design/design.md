@@ -480,8 +480,33 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      précision (libellé à gauche en web), avertissement sur les réglages
      figés, « Créer le défi ».
 
+5. **Ajout et modification d'une activité** (maquettes `AjoutActivite.png`
+   et `WebAjoutActivite.png`, SC-WEB-074, décisions du 2026-11-22)
+   - En-tête : flèche à gauche du titre en mobile, « ‹ Mes activités »
+     au-dessus du titre à partir de `md`. Même mise en page pour « Modifier
+     l'activité ».
+   - Sport : puces radio (3 colonnes en mobile, 5 en web), dans l'ordre de
+     la maquette (Course, Vélo, Marche, Randonnée, Natation, Aviron, Roller,
+     Ski de fond, Yoga, Escalade, Renforcement musculaire, « Musculation »
+     sur la maquette), autres sports du catalogue
+     ensuite, « Autre » en dernier (libellé libre dessous). La puce choisie a
+     la bordure, le fond et le texte accent.
+   - Début : « Date » et « Heure » côte à côte, fuseau de saisie nommé
+     dessous. Durée : h / min / s, unité dans le champ. Distance : mention
+     « obligatoire pour ce sport » ou « facultative » à côté du titre, « km »
+     dans le champ ; absente pour un sport sans distance.
+   - Carte « Résumé » (sport, début avec le jour, durée, distance), remplie
+     au fil de la saisie, sans allure ni vitesse : sous les champs en
+     mobile, en colonne de droite à partir de `lg`, avec la phrase sur
+     l'allure et la vitesse calculées après l'enregistrement.
+   - « Enregistrer l'activité » tenu en bas de l'écran en mobile ; à partir
+     de `md`, dans le pied de la carte avec « Annuler ». Quitter une saisie
+     modifiée demande confirmation.
+   - Liste des activités : allure (« 5:07 /km ») et vitesse (km/h), toutes
+     deux fournies par l'API.
+
 À dessiner plus tard dans le même style, en mobile et en web : lien
-d'invitation à partager, activités, profil, et en V1.1 les badges (obtenus en
+d'invitation à partager, profil, et en V1.1 les badges (obtenus en
 couleur, à obtenir en silhouette avec leur condition).
 
 ## États des écrans

@@ -35,3 +35,39 @@ const ACTIVITY_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 export function isActivityId(value: unknown): value is string {
   return typeof value === 'string' && ACTIVITY_ID.test(value);
 }
+
+// Sports in the order an entry offers them (mockups AjoutActivite and
+// WebAjoutActivite, owner's decision of 2026-11-22).
+const ENTRY_ORDER = [
+  'run',
+  'ride',
+  'walk',
+  'hike',
+  'swim',
+  'rowing',
+  'roller',
+  'xc_ski',
+  'yoga',
+  'climbing',
+  'strength',
+];
+
+/**
+ * The catalogue as an entry offers it: the sports of the mockups in their
+ * order, then any other sport of the catalogue by its `name` in `locale`,
+ * "other" last.
+ */
+export function sortSportsForEntry<S extends { code: string }>(
+  sports: readonly S[],
+  name: (code: string) => string,
+  locale: string,
+): S[] {
+  const rank = (sport: S) => {
+    if (sport.code === 'other') return ENTRY_ORDER.length + 1;
+    const index = ENTRY_ORDER.indexOf(sport.code);
+    return index === -1 ? ENTRY_ORDER.length : index;
+  };
+  return [...sports].sort(
+    (a, b) => rank(a) - rank(b) || name(a.code).localeCompare(name(b.code), locale),
+  );
+}

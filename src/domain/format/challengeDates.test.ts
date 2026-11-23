@@ -1,4 +1,5 @@
 import {
+  activityStart,
   activityTime,
   challengeDay,
   challengeInstant,
@@ -154,6 +155,14 @@ describe('activityTime', () => {
     expect(activityTime('2026-11-19T12:30:00Z', 'America/Montreal', 'en')).toBe(
       'Nov 19, 2026, 7:30 AM',
     );
+  });
+});
+
+describe('activityStart', () => {
+  it('writes the start with its weekday, in the time zone and the language', () => {
+    const start = new Date('2026-11-21T12:30:00Z');
+    expect(activityStart(start, 'America/Montreal', 'fr')).toBe('samedi 21 nov., 7:30');
+    expect(activityStart(start, 'America/Montreal', 'en')).toBe('Saturday, Nov 21, 7:30 AM');
   });
 });
 

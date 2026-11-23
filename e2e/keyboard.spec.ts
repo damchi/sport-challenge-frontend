@@ -12,13 +12,16 @@ async function tabTo(page: Page, name: string): Promise<string[]> {
     const focused = await page.evaluate(() => {
       const element = document.activeElement;
       if (!element || element === document.body) return undefined;
-      const label = element.id ? document.querySelector(`label[for="${element.id}"]`) : null;
+      // A field's own label, or the one around it (a sport's chip).
+      const label =
+        (element.id ? document.querySelector(`label[for="${element.id}"]`) : null) ??
+        element.closest('label');
       return {
         name: (label ?? element).textContent?.trim() ?? '',
-        // Not :focus while on the date field's own picker button, which the
-        // browser rings itself.
+        // Not :focus while on a date or time field's own picker button, which
+        // the browser rings itself.
         ring:
-          !element.matches(':focus') && element.matches('input[type="datetime-local"]')
+          !element.matches(':focus') && element.matches('input[type="date"], input[type="time"]')
             ? 'solid 2px'
             : `${getComputedStyle(element).outlineStyle} ${getComputedStyle(element).outlineWidth}`,
       };
@@ -48,20 +51,25 @@ test('a user records an activity with the keyboard only', async ({ page, isMobil
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { level: 1, name: 'Ajouter une activité' })).toBeFocused();
   // The form shows once its sports are loaded.
-  const sport = page.getByRole('combobox', { name: 'Sport' });
-  await expect(sport).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Sport' })).toBeVisible();
 
-  // The form, field after field.
-  expect(await tabTo(page, 'Sport')).toEqual(['Sport']);
-  await page.keyboard.type('Course');
-  await expect(sport).toHaveValue('run');
-  expect(await tabTo(page, 'Début')).toEqual(['Début']);
-  // The order of the date's parts (day, month, year, AM/PM) depends on the
-  // system: the value is set directly, the field is still left with Tab.
-  await page.getByLabel('Début').fill('2026-11-19T07:30');
-  expect(await tabTo(page, 'Minutes')).toEqual(['Début', 'Heures', 'Minutes']);
+  // The form, field after field: the sports are one stop, Space picks one.
+  expect(await tabTo(page, 'Course')).toEqual(['Course']);
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('radio', { name: 'Course' })).toBeChecked();
+  expect(await tabTo(page, 'Date')).toEqual(['Date']);
+  // The order of the date's and time's parts (day, month, year, AM/PM)
+  // depends on the system: the values are set directly, the fields are
+  // still left with Tab.
+  await page.getByLabel('Date', { exact: true }).fill('2026-11-19');
+  expect(await tabTo(page, 'Heure')).toEqual(['Date', 'Heure']);
+  await page.getByLabel('Heure', { exact: true }).fill('07:30');
+  expect(await tabTo(page, 'Minutes')).toEqual(['Heure', 'Heures', 'Minutes']);
   await page.keyboard.type('45');
-  expect(await tabTo(page, 'Distance (km)')).toEqual(['Secondes', 'Distance (km)']);
+  expect(await tabTo(page, 'Distance en kilomètres')).toEqual([
+    'Secondes',
+    'Distance en kilomètres',
+  ]);
   await page.keyboard.type('8,2');
   expect(await tabTo(page, "Enregistrer l'activité")).toEqual(["Enregistrer l'activité"]);
   const recording = page.waitForRequest(

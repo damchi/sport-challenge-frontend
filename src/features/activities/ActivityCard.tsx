@@ -5,12 +5,13 @@ import type { Activity } from '../../api/hooks/useActivities';
 import { StatusPill } from '../../components/StatusPill';
 import { activityTime } from '../../domain/format/challengeDates';
 import { formatKm, formatSpeed } from '../../domain/format/distance';
-import { formatActivityDuration } from '../../domain/format/duration';
+import { formatActivityDuration, formatPace } from '../../domain/format/duration';
 import { useSportName } from '../challenges/create/useSportName';
 
 /**
  * An activity, read only: sport (marked "manual" when entered by hand),
- * start in `timeZone`, duration, distance and the speed the API computes.
+ * start in `timeZone`, duration, distance, and the pace and speed the API
+ * computes.
  * `children` follow, given the ids of its title and start to describe them.
  */
 export function ActivityCard({
@@ -63,6 +64,14 @@ export function ActivityCard({
             <dt className="text-muted">{t('activities.distance')}</dt>
             <dd className="font-semibold tabular-nums">
               {formatKm(activity.distance_meters / 1000, locale)}
+            </dd>
+          </div>
+        )}
+        {activity.pace_seconds_per_km !== null && (
+          <div className="flex gap-1">
+            <dt className="text-muted">{t('activities.pace')}</dt>
+            <dd className="font-semibold tabular-nums">
+              {t('activities.paceValue', { pace: formatPace(activity.pace_seconds_per_km) })}
             </dd>
           </div>
         )}

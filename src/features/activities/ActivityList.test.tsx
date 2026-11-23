@@ -75,7 +75,7 @@ function renderList({ deviceTimeZone = 'America/Montreal' } = {}) {
 const item = async (name: string) => screen.findByRole('article', { name });
 
 describe('ActivityList', () => {
-  it('shows each activity: sport, start, duration, distance, speed and "manual"', async () => {
+  it('shows each activity: sport, start, duration, distance, pace, speed and "manual"', async () => {
     listing([run]);
     renderList();
     const activity = await item('Course');
@@ -83,19 +83,22 @@ describe('ActivityList', () => {
     expect(within(activity).getByText('19 nov. 2026, 7:30')).toBeInTheDocument();
     expect(within(activity).getByText('0:45:30')).toBeInTheDocument();
     expect(within(activity).getByText('8,2 km')).toBeInTheDocument();
-    // The speed the API computed, in km/h.
+    // The pace and the speed the API computed, per km and in km/h.
+    expect(within(activity).getByText('Allure')).toBeInTheDocument();
+    expect(within(activity).getByText('5:33 /km')).toBeInTheDocument();
     expect(within(activity).getByText('10,8 km/h')).toBeInTheDocument();
     expect(within(activity).getByText('Manuelle')).toBeInTheDocument();
     // Same time zone as the device: no mention.
     expect(screen.queryByText(/Heures affichées/)).not.toBeInTheDocument();
   });
 
-  it('shows the label of the sport "other", and neither distance nor speed without one', async () => {
+  it('shows the label of the sport "other", and neither distance, pace nor speed without one', async () => {
     listing([padel]);
     renderList();
     const activity = await item('Padel');
 
     expect(within(activity).queryByText('Distance')).not.toBeInTheDocument();
+    expect(within(activity).queryByText('Allure')).not.toBeInTheDocument();
     expect(within(activity).queryByText('Vitesse')).not.toBeInTheDocument();
   });
 

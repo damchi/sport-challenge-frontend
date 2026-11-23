@@ -118,6 +118,21 @@ export function activityTime(instant: string, timeZone: string, locale: string):
   }).format(new Date(instant));
 }
 
+/**
+ * The start of an activity being entered, to the minute, in the time zone
+ * it is read in, with its weekday ("samedi 21 nov., 7:30").
+ */
+export function activityStart(instant: Date, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeZone,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(instant);
+}
+
 /** Name of a time zone that holds all year ("heure de l'Est nord-américain"). */
 export function timeZoneName(timeZone: string, locale: string): string {
   const parts = new Intl.DateTimeFormat(locale, {

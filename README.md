@@ -47,7 +47,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Impossible d'ajouter une activité après la fin du challenge.
 - ✅ Une semaine terminée est verrouillée : l'interface affiche l'échéance de la semaine (dans le fuseau du challenge), refuse une activité datée d'une semaine passée et ne permet plus de modifier ni de supprimer les activités de cette semaine.
 - ✅ Pendant la semaine en cours, un participant peut modifier ou supprimer ses propres activités.
-- ✅ La vitesse (ou l'allure) n'est **jamais saisie** : l'interface affiche celle que l'API calcule à partir de la durée et de la distance.
+- ✅ La vitesse et l'allure ne sont **jamais saisies** : l'interface affiche les deux, telles que l'API les calcule à partir de la durée et de la distance (`speed_mps`, `pace_seconds_per_km`). Le résumé affiché pendant la saisie n'en montre aucune (décisions du 2026-11-22).
 - ✅ Les activités manuelles sont marquées « manuelle » (décision du propriétaire du 2026-11-20, consignée dans la PR #89).
 - ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; ils sont exprimés par rapport à la course ; pour une autre référence, la suggestion est `min(1, coefficient du sport / coefficient de la référence)`, arrondie à deux décimales et jamais sous 0,1 (README backend §2.4). Le créateur peut les changer à la création (0,1 à 2, deux décimales), le sport de référence restant ×1, puis ils sont figés. Sans distance cumulée ni critère de distance du Grand prix, il n'y a pas de coefficients (la création les refuse).
 

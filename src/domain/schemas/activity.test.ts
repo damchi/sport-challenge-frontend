@@ -1,5 +1,6 @@
 import {
   activityCreateSchema,
+  activityDraft,
   activityFormFieldOf,
   activityFormValues,
   cleanSportLabel,
@@ -22,7 +23,8 @@ const schema = activityCreateSchema(() => now, sports, 'America/Toronto');
 const valid: ActivityCreateInput = {
   sport_code: 'run',
   sport_label: '',
-  started_at: '2026-11-20T07:30',
+  start_date: '2026-11-20',
+  start_time: '07:30',
   hours: '1',
   minutes: '02',
   seconds: '3',
@@ -102,18 +104,24 @@ describe('activityCreateSchema', () => {
       expect(paris.parse(valid).started_at).toBe('2026-11-20T06:30:00.000Z');
     });
 
-    it.each(['', '2026-11-20', 'yesterday'])('wants a date and a time, not %j', (startedAt) => {
-      expect(errorsOf({ started_at: startedAt }).started_at).toBe(
-        'activityForm.fields.startedAt.required',
-      );
+    it.each([
+      ['', '07:30'],
+      ['2026-11-20', ''],
+      ['yesterday', '07:30'],
+      ['2026-11-20', '7h30'],
+    ])('wants a date and a time, not %j at %j', (date, time) => {
+      // The one error goes on the day.
+      expect(errorsOf({ start_date: date, start_time: time })).toEqual({
+        start_date: 'activityForm.fields.startedAt.required',
+      });
     });
 
     it('is never in the future nor before 2000', () => {
-      expect(errorsOf({ started_at: '2026-11-20T12:01' }).started_at).toBe(
+      expect(errorsOf({ start_time: '12:01' }).start_date).toBe(
         'activityForm.fields.startedAt.range',
       );
       // 2000-01-01 is in UTC: a day earlier is before it in any time zone.
-      expect(errorsOf({ started_at: '1999-12-30T23:59' }).started_at).toBe(
+      expect(errorsOf({ start_date: '1999-12-30', start_time: '23:59' }).start_date).toBe(
         'activityForm.fields.startedAt.range',
       );
     });
@@ -150,12 +158,10 @@ describe('activityCreateSchema', () => {
 
     it('ends by now, give or take 5 minutes', () => {
       // 11:00 plus 1 h 5 min ends at 12:05: still accepted.
-      expect(
-        errorsOf({ started_at: '2026-11-20T11:00', hours: '1', minutes: '5', seconds: '' }),
-      ).toEqual({});
-      expect(
-        errorsOf({ started_at: '2026-11-20T11:00', hours: '1', minutes: '5', seconds: '1' }).hours,
-      ).toBe('activityForm.fields.duration.future');
+      expect(errorsOf({ start_time: '11:00', hours: '1', minutes: '5', seconds: '' })).toEqual({});
+      expect(errorsOf({ start_time: '11:00', hours: '1', minutes: '5', seconds: '1' }).hours).toBe(
+        'activityForm.fields.duration.future',
+      );
     });
   });
 
@@ -195,7 +201,7 @@ describe('activityFormFieldOf', () => {
   it('gives the form field of a refused request field', () => {
     expect(activityFormFieldOf('duration_seconds')).toBe('hours');
     expect(activityFormFieldOf('distance_meters')).toBe('distance_km');
-    expect(activityFormFieldOf('started_at')).toBe('started_at');
+    expect(activityFormFieldOf('started_at')).toBe('start_date');
     expect(activityFormFieldOf('constructor')).toBeUndefined();
   });
 });
@@ -240,7 +246,8 @@ describe('activityFormValues', () => {
     ).toEqual({
       sport_code: 'other',
       sport_label: 'Padel',
-      started_at: '2026-11-20T07:30',
+      start_date: '2026-11-20',
+      start_time: '07:30',
       hours: '1',
       minutes: '',
       seconds: '',
@@ -258,5 +265,34 @@ describe('activityFormValues', () => {
     };
     expect(activityFormValues(run, 'America/Toronto', 'en').distance_km).toBe('1234.567');
     expect(activityFormValues(run, 'America/Toronto', 'fr').distance_km).toBe('1234,567');
+  });
+});
+
+describe('activityDraft', () => {
+  it('reads the start, the duration and the distance entered', () => {
+    expect(activityDraft(valid, 'America/Toronto')).toEqual({
+      start: new Date(STARTED_AT),
+      durationSeconds: 3723,
+      distanceMeters: 12_500,
+    });
+  });
+
+  it('leaves out what does not read as a value yet', () => {
+    expect(
+      activityDraft(
+        {
+          ...valid,
+          start_time: '',
+          hours: '',
+          minutes: '0',
+          seconds: '',
+          distance_km: '12,',
+        },
+        'America/Toronto',
+      ),
+    ).toEqual({});
+    expect(activityDraft({ ...valid, hours: '25', distance_km: '0' }, 'America/Toronto')).toEqual({
+      start: new Date(STARTED_AT),
+    });
   });
 });

@@ -12,6 +12,18 @@ export function formatKm(km: number, locale: string): string {
   }).format(km);
 }
 
+/**
+ * Kilometers as typed, to the meter (3 decimals at most): "10,04 km". For an
+ * entry, whose value is sent as is.
+ */
+export function formatEnteredKm(km: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: 'kilometer',
+    maximumFractionDigits: 3,
+  }).format(km);
+}
+
 /** A distance factor ("×0,3" / "×0.3"), two decimals at most. */
 export function formatFactor(factor: number, locale: string): string {
   return `×${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(factor)}`;

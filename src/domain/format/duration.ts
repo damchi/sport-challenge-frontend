@@ -12,3 +12,16 @@ export function formatActivityDuration(seconds: number): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${Math.floor(minutes / 60)}:${pad(minutes % 60)}:${pad(seconds % 60)}`;
 }
+
+/**
+ * A pace the API gives in seconds per kilometer, to the second, as m:ss
+ * ("5:07"), h:mm:ss from an hour ("1:02:05"); the unit is the caller's.
+ */
+export function formatPace(secondsPerKm: number): string {
+  const seconds = Math.round(secondsPerKm);
+  const minutes = Math.floor(seconds / 60);
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return minutes >= 60
+    ? `${Math.floor(minutes / 60)}:${pad(minutes % 60)}:${pad(seconds % 60)}`
+    : `${minutes}:${pad(seconds % 60)}`;
+}
