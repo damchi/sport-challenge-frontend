@@ -900,9 +900,16 @@ export interface components {
             cumulative_distance?: components["schemas"]["CumulativeDistanceCreate"];
             elimination?: components["schemas"]["EliminationCreate"];
             points?: components["schemas"]["PointsCreate"];
+            cumulative_elevation?: components["schemas"]["CumulativeElevationCreate"];
         };
         /** @description Cumulative distance, with the factors of `distance_factors`; no settings of its own. */
         CumulativeDistanceCreate: Record<string, never>;
+        /**
+         * @description Cumulative elevation gain: the elevation gains of the activities of
+         *     every sport that takes one, in real meters, without factor (an
+         *     activity without is 0 m); no settings.
+         */
+        CumulativeElevationCreate: Record<string, never>;
         /** @description Elimination, run in the reference sport. */
         EliminationCreate: {
             /** @description Increment X, in meters. */
@@ -957,8 +964,8 @@ export interface components {
         };
         Category: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
-            /** @description Fixed by type, gaps left by the missing categories (cumulative_time 1, cumulative_distance 2, elimination 3, points 4). */
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points" | "cumulative_elevation";
+            /** @description Fixed by type, gaps left by the missing categories (cumulative_time 1, cumulative_distance 2, elimination 3, points 4, cumulative_elevation 5). */
             position: number;
             params: components["schemas"]["CategoryParams"];
         };
@@ -1048,7 +1055,7 @@ export interface components {
         };
         CategoryRanking: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points" | "cumulative_elevation";
             /**
              * @description How many participants are ranked in the category, abandoned ones
              *     and deleted accounts left out: the `ranked_count` of `MyRanking`,
@@ -1058,8 +1065,9 @@ export interface components {
             /**
              * @description Every participant but the deleted accounts. Ranked ones first,
              *     best first; abandoned ones last. `value` is in seconds for
-             *     `cumulative_time`, in meters for `cumulative_distance` and
-             *     `elimination`, in points acquired for `points`.
+             *     `cumulative_time`, in meters for `cumulative_distance`,
+             *     `elimination` and `cumulative_elevation`, in points acquired for
+             *     `points`.
              */
             entries: components["schemas"]["LeaderboardEntry"][];
         };
@@ -1183,7 +1191,7 @@ export interface components {
          */
         BestResult: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points" | "cumulative_elevation";
             /** @description The user's rank in the category; equal values share it (1, 1, 3). */
             rank: number;
             /** @description How many participants are ranked in the category, abandoned ones and deleted accounts left out. */
@@ -1202,7 +1210,7 @@ export interface components {
         };
         MyRanking: {
             /** @enum {string} */
-            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points";
+            type: "cumulative_time" | "cumulative_distance" | "elimination" | "points" | "cumulative_elevation";
             /** @description The user's rank, as in the leaderboard; equal values share it (1, 1, 3). */
             rank: number;
             /** @description How many participants are ranked in the category, abandoned ones and deleted accounts left out. */
@@ -1402,8 +1410,9 @@ export interface components {
             /** @description Required or refused according to the sport's `distance_mode`. */
             distance_meters?: number;
             /**
-             * @description Positive elevation gain in meters, optional; display only (no
-             *     category, no badge counts it). Refused (`elevation_not_allowed`)
+             * @description Positive elevation gain in meters, optional; it counts for the
+             *     `cumulative_elevation` category alone (no other category, no
+             *     badge). Refused (`elevation_not_allowed`)
              *     when the sport's `elevation_allowed` is false or the activity has
              *     no distance. On a change, leaving it out removes it.
              */

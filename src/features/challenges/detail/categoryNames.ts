@@ -9,6 +9,7 @@ const CATEGORY_NAMES: Record<Exclude<CategoryType, 'elimination'>, string> = {
   cumulative_time: 'challengeCreate.categories.time.name',
   cumulative_distance: 'challengeCreate.categories.distance.name',
   points: 'challengeDetail.categories.points',
+  cumulative_elevation: 'challengeCreate.categories.elevation.name',
 };
 
 /**
@@ -35,4 +36,5 @@ export const CATEGORY_EXPLANATIONS: Record<CategoryType, string> = {
   cumulative_distance: 'challengeCreate.categories.distance.explanation',
   elimination: 'challengeCreate.categories.elimination.explanation',
   points: 'challengeCreate.categories.points.explanation',
+  cumulative_elevation: 'challengeCreate.categories.elevation.explanation',
 };

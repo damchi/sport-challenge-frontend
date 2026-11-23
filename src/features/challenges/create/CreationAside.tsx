@@ -18,21 +18,32 @@ export function CreationPreview({ now }: { now: Date }) {
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
   const { control } = useFormContext<ChallengeCreateInput>();
-  const [title, visibility, weeks, startDate, timeZone, reference, distance, elimination, points] =
-    useWatch({
-      control,
-      name: [
-        'title',
-        'visibility',
-        'weeks',
-        'start_date',
-        'timezone',
-        'reference_sport',
-        'cumulative_distance',
-        'elimination',
-        'points',
-      ],
-    });
+  const [
+    title,
+    visibility,
+    weeks,
+    startDate,
+    timeZone,
+    reference,
+    distance,
+    elimination,
+    points,
+    elevation,
+  ] = useWatch({
+    control,
+    name: [
+      'title',
+      'visibility',
+      'weeks',
+      'start_date',
+      'timezone',
+      'reference_sport',
+      'cumulative_distance',
+      'elimination',
+      'points',
+      'cumulative_elevation',
+    ],
+  });
   const period = isTimeZone(timeZone)
     ? windowPreview(startDate, weeks, timeZone, now, locale)
     : undefined;
@@ -46,6 +57,7 @@ export function CreationPreview({ now }: { now: Date }) {
       ? [t('challengeDetail.categories.elimination', { sport: sportName(reference) })]
       : []),
     ...(points ? [t('challengeDetail.categories.points')] : []),
+    ...(elevation ? [t('challengeCreate.categories.elevation.name')] : []),
   ];
 
   return (

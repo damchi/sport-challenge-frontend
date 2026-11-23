@@ -225,6 +225,15 @@ export function RecapStep({
             )
           }
         />
+        <Row
+          label={t('challengeCreate.categories.elevation.name')}
+          value={t(
+            values.cumulative_elevation
+              ? 'challengeCreate.recap.included'
+              : 'challengeCreate.recap.excluded',
+          )}
+          detail={values.cumulative_elevation && t('challengeCreate.recap.elevationDetail')}
+        />
         {usesDistanceFactors(values) && (
           <Row
             label={t('challengeCreate.recap.factors')}

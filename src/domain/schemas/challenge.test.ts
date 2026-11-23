@@ -22,6 +22,7 @@ const valid = {
   points_criteria: ['longest_duration', 'session_count'],
   points_podium: '10',
   points_min_session_minutes: 20,
+  cumulative_elevation: true,
   factors: { ride: 0.3 },
 };
 
@@ -55,6 +56,7 @@ describe('challengeCreateSchema', () => {
       points_criteria: ['longest_duration', 'session_count'],
       points_podium: '10',
       points_min_session_minutes: 20,
+      cumulative_elevation: true,
       factors: { ride: 0.3 },
     });
   });

@@ -80,7 +80,7 @@ Ces numéros n'existent plus comme tickets : leur contenu est entré dans le tic
 | 013 Jetons de design et thèmes | 003 |
 | 014 Composants réutilisables et états d'écran | 018, 020, 022, 025 (chacun crée ce qu'il utilise) |
 
-Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 064, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
+Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en place de l'i18n). Nouveaux : 052 (Claude relecteur des pull requests), 053 (nom et prénom à l'onboarding, e-mail du jeton, affichés dans le profil), puis 054 à 103, créés pendant le développement (voir leurs sections). Abandonné : 042 (pages légales et consentement), l'app étant réservée à un cercle d'amis (décision du 2026-11-20, voir sa section).
 
 ## Décisions à confirmer
 
@@ -96,20 +96,20 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **166 points** (57 tickets), dont **152 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
+Total : **277 points** (97 tickets), dont **263 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
 
 | Épopée | Contenu | Tickets |
 |---|---|---|
 | F0 | Fondations minimales et CI | 001, 003, 005, 052, 062 |
 | F1 | Contrat et client d'API | 007, 008, 009, 010 |
 | F2 | Internationalisation | 012 |
-| F3 | Authentification et coque | 016, 017, 018, 019, 054 |
-| F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 056, 057, 058, 061 |
-| F5 | Classement | 030, 031, 032, 033, 055, 059, 063 |
-| F6 | Activités | 034, 035, 036, 037, 060 |
-| F7 | Invitations | 038, 039 |
-| F8 | Profil et compte | 040, 053, 041 |
-| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 064, 047, 048 |
+| F3 | Authentification et coque | 016, 017, 018, 019, 054, 067, 077 |
+| F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 056, 057, 058, 061, 068, 069, 072, 073, 083, 097, 100 |
+| F5 | Classement | 030, 031, 032, 033, 055, 059, 063, 098, 099, 102 |
+| F6 | Activités | 034, 035, 036, 037, 060, 071, 074, 075, 076, 080, 081, 082, 101, 103 |
+| F7 | Invitations | 038, 039, 070 |
+| F8 | Profil et compte | 040, 053, 041, 042, 078, 079 |
+| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 064, 047, 066, 048, 065 |
 | F10 | Reportés en V1.1 (avatar, badges) | 049, 050, 051 |
 | F11 | Administration (section `/admin`, rôle Auth0 « admin ») | 084, 085, 086, 087, 088, 089, 090, 091, 092, 093, 094, 095, 096 |
 
@@ -721,6 +721,113 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Commit** : `feat(challenges): lay out the creation wizard like the mockups`
 **Statut** : À faire
 
+
+### SC-WEB-069 · Accueil « Mes défis » conforme aux maquettes web et mobile
+`F4` · Story · Phase 9 · Estimation 5 · Dépend de : 020 · Backend : à compléter (voir « Contrat »)
+
+**Contexte** : l'accueil ne ressemble pas aux maquettes `docs/design/maquettes/mes-defis-web.png` (web, 1280 px) et `mes-defis-mobile.png` (mobile, 360 px). Aujourd'hui (`HomePage`, `ChallengeList`, `ChallengeCard`, `MyWeekSummary`) : titre, onglets Publics / Mes défis (Publics par défaut), puces de statut filtrées par le serveur, liste paginée à plat avec « Charger plus », tuile « Créer un défi » en fin de liste.
+
+**Mise en page cible**
+- **En-tête** : « Salut <prénom> » puis titre « Défis » ; en web, bouton principal « + Créer un défi » à droite ; en mobile, bouton flottant « + Créer un défi » au-dessus de la barre de navigation.
+- **Onglets** « Mes défis » (sélectionné dans la maquette) / « Publics ».
+- **Puces de statut avec compteur** : Tous 4 · En cours 2 · À venir 1 · Terminés 1 ; défilement horizontal en mobile.
+- **Sous « Tous », sections** « En cours », « À venir », « Terminés ».
+- **Carte en cours** : titre ; badge « À risque » (bordure d'avertissement sur la carte) ; « Public · 8 participants · tu l'as créé » ; bandeau sombre « Semaine 3 sur 4 · se termine samedi 28 nov. à 0 h » (« Sem. » et jour abrégé en mobile) ; une ligne par catégorie : nom et rang (« 4e sur 8 », « ex æquo » sous le nom) ; élimination avec badge « À risque », « 18 / 25 km » et barre, ou « 12 km » + « Pas d'élimination en semaine 1 » ; Grand prix (« Points » dans la maquette) avec « +4 points provisoires cette semaine ».
+- **Carte à venir** : titre ; pastille « Tu as abandonné » (« Abandonné » en mobile) ; « Commence mardi 1 déc. · dans 9 jours » avec icône calendrier ; « Du 1 déc. 2026 au 11 janv. 2027 · Public · 1 participant · tu l'as créé ».
+- **Carte terminée** : titre ; « 2e en distance cumulée · ton meilleur résultat » avec icône de médaille ; « Terminé le 31 oct. · Privé · 5 participants ».
+- Web : grille de cartes à 2 colonnes (≈ 340 px).
+
+**Questions à trancher avant de coder** (❓)
+1. Onglet par défaut : « Mes défis » (maquette) au lieu de « Publics » ?
+2. « Créer un défi » : bouton d'en-tête (web) et bouton flottant (mobile) remplacent-ils la tuile en fin de liste (SC-WEB-054) ? Le 2026-11-20, on a choisi de ne pas mettre de bouton flottant pour « Ajouter une activité ».
+3. Sections sous « Tous » avec la pagination par curseur : une requête par statut (chacune avec « Charger plus »), ou la liste à plat ? Dans quel ordre trier les cartes d'une section (à risque d'abord, comme dans design.md) ?
+4. Onglet « Publics » : mêmes sections et mêmes cartes (sans les lignes « Où tu en es » pour les défis où je ne participe pas) ?
+5. « Ton meilleur résultat » : quelle catégorie montrer en cas d'égalité de rang, et que montrer à quelqu'un qui a abandonné ?
+
+**Contrat** (rien ne se recalcule côté client) :
+- **Compteurs des puces** : absents de `GET /challenges`, à demander au backend.
+- **Nombre total de semaines** (« sur 4 ») : absent de `ChallengeSummary` et de `MyWeek`, à demander au backend.
+- **Meilleur résultat d'un défi terminé** : absent (`my_week` est null quand le défi est terminé), à demander au backend.
+- « dans 9 jours » : calculé depuis `starts_at` dans le fuseau du défi, avec la date injectée dans les tests.
+
+**Critères d'acceptation** (à préciser après les décisions)
+- [ ] Mise en page web et mobile conforme à `mes-defis-web.png` et `mes-defis-mobile.png`, jetons uniquement, clair et sombre.
+- [ ] `docs/design/design.md` (§ Écrans de référence, 1. « Accueil ») mis à jour selon les nouvelles maquettes (fichier local, hors git).
+- [ ] Tous les textes en FR/EN ; dates dans le fuseau du défi, fuseau nommé s'il diffère ; distances en km selon la langue ; rangs ordinaux.
+- [ ] États chargement, erreur avec réessai, vide ; zones tactiles ≥ 44 px ; le statut n'est jamais donné par la couleur seule.
+
+**Tests** : carte en cours (à risque, semaine 1, ex aequo, Grand prix provisoire), carte à venir (abandonné, « dans N jours » avec la date injectée), carte terminée, sections et compteurs, états (MSW).
+**Revue** : `ux-reviewer`, `spec-guardian`, `ts-reviewer`.
+**Commit** : `feat(challenges): lay out the home page like the mockup`
+**Statut** : À faire
+
+### SC-WEB-083 · Landing page publique : fonctionnement de l'app et des défis
+`F4` · Story · Phase 9 · Estimation 5 · Dépend de : — · Backend : damchi/sport-challenge-api#288 (SC-API-151), bloquant pour le contenu (texte de référence dans le README de l'API), aucune route
+
+**Contexte** : aujourd'hui, un visiteur non connecté qui ouvre `/` est envoyé directement vers Auth0 (`RequireAuth`), sans rien savoir de l'app. On veut une **landing page publique** qui explique le fonctionnement de l'app et ses différents défis.
+
+**Décisions du propriétaire du produit du 2026-11-23**
+- Landing page à **`/` pour un visiteur non connecté** ; une personne connectée voit toujours ses défis (`HomePage`) à `/`.
+- Les liens profonds (`/invite`, `/challenges/:id`…) gardent leur comportement : connexion puis retour à la page demandée.
+- **Contenu statique** : aucune requête à l'API (toutes ses routes exigent une connexion). Le texte suit la section du README de l'API (SC-API-151).
+
+**Proposition**
+- Route `/` : si `auth.isAuthenticated`, rendu actuel (coque + `HomePage`) ; sinon `LandingPage`, hors coque, chargée en différé (`lazy`) pour ne pas alourdir l'application connectée.
+- Sections de la page :
+  1. En-tête : logo + « Sport Challenge », bouton « Se connecter » ; accroche et appel à l'action « Créer un compte / Commencer » (`auth.signIn('/')`).
+  2. **Comment ça marche**, en 3 ou 4 étapes : créer ou rejoindre un défi, inviter ses amis, saisir ses activités une seule fois, suivre les classements semaine après semaine.
+  3. **Les défis** : une carte par catégorie (temps cumulé, distance cumulée, élimination, Points) avec une explication courte et un exemple chiffré ; le sport de référence et les équivalences de distance.
+  4. **Les semaines** : verrouillage à 7 h le premier jour de la semaine suivante, abandon, inscription jusqu'à la fin de la semaine 1.
+  5. Appel à l'action final + pied de page (langue FR/EN, lien vers la politique de confidentialité si elle existe).
+- **Maquettes web et mobile à venir** (propriétaire du produit, 2026-11-23) : ne pas coder avant leur ajout dans `docs/design/maquettes` ; la page devra y être conforme. Les sections ci-dessus sont indicatives et s'aligneront sur les maquettes.
+
+**Critères d'acceptation**
+- [ ] Visiteur non connecté sur `/` : landing page, sans redirection vers Auth0 ni appel d'API ; connecté : défis, sans changement.
+- [ ] Liens profonds inchangés (redirection vers la connexion puis retour).
+- [ ] Les boutons « Se connecter » / « Commencer » lancent la connexion Auth0 ; échec ou hors ligne gérés comme dans `RequireAuth` (réessayer, attente du réseau).
+- [ ] Contenu conforme au README de l'API (SC-API-151), aucune règle inventée ; textes FR/EN ; nombres formatés selon la langue.
+- [ ] Mise en page web et mobile (360 px) conforme aux maquettes, jetons uniquement, clair et sombre ; titres hiérarchisés, zones tactiles ≥ 44 px, contraste AA.
+- [ ] Titre de page et balises `meta` (description) pour le partage ; le service worker sert la page hors ligne comme l'accueil.
+
+**Tests** : rendu connecté / déconnecté sur `/`, clic « Commencer » appelle `signIn`, lien profond toujours protégé, FR/EN, clair/sombre ; e2e Playwright du parcours visiteur.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(landing): add the public landing page`
+**Statut** : Bloqué
+
+### SC-WEB-097 · Création : catégorie D+ cumulé
+`F4` · Story · Phase 9 · Estimation 2 · Dépend de : 058 · Backend : damchi/sport-challenge-api#309 (SC-API-169), bloquant · règles : damchi/sport-challenge-api#308 (SC-API-168)
+
+**Contexte** : nouvelle catégorie facultative **D+ cumulé** (défi dénivelé) : classement par mètres de dénivelé positif cumulés sur tout le défi, tous sports où le D+ est autorisé, en mètres réels, sans coefficient.
+
+**Critères d'acceptation**
+- [ ] Étape « Catégories » de l'assistant de création : catégorie D+ cumulé activable, avec icône et courte explication (FR/EN) ; aucun réglage propre (pas de coefficient).
+- [ ] Requête `categories.cumulative_elevation` ; erreurs serveur rattachées au champ ; récapitulatif et panneau latéral (`CreationAside`) à jour.
+- [ ] Le conseil « Pense à ajouter une catégorie… » cite le D+.
+- [ ] `categoryNames` / `categoryIcons` et types du domaine à jour (`make`/`pnpm generate` depuis le contrat).
+
+**Tests** : activation et envoi, récapitulatif, erreur serveur (MSW), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): create a cumulative elevation category`
+**Statut** : À faire
+
+### SC-WEB-100 · Choix « 10 / 50 / Tout » : page Défis et participants d'un défi
+`F4` · Story · Phase 9 · Estimation 3 · Dépend de : — · Backend : aucun changement (listes déjà paginées par curseur, `limit` de 1 à 100)
+
+**Contexte** : décision du propriétaire du produit du 2026-11-23 : partout où une liste s'affiche, l'utilisateur choisit d'afficher **10, 50 ou tout**. Aujourd'hui les listes chargent 20 éléments, avec « Charger plus ».
+
+**Proposition (🟡 à confirmer au début du ticket)** : un composant commun « Afficher : 10 · 50 · Tout » (contrôle segmenté) au-dessus de la liste. 10 ou 50 fixe la taille de page (`limit`), avec « Charger plus » pour la suite. « Tout » enchaîne les pages jusqu'à un `next_cursor` nul, en pages de 100 : la liste se remplit au fil des pages et une erreur garde les éléments déjà chargés, avec « Réessayer ». Valeur par défaut : 10. Le choix est mémorisé par liste dans le navigateur.
+
+**Critères d'acceptation**
+- [ ] Composant commun accessible (groupe de boutons radio, libellés FR/EN), réutilisé par tous les tickets de pagination.
+- [ ] Page **Défis** (`ChallengeList`, toutes ses portées et filtres) : choix 10 / 50 / Tout.
+- [ ] Onglet **Participants** d'un défi (`ChallengeParticipants`) : choix 10 / 50 / Tout.
+- [ ] Changer de choix recharge la liste depuis le début, avec le cache TanStack Query séparé par taille.
+- [ ] Respect des maquettes de la page Défis et de la page d'un défi (mobile et web).
+
+**Tests** : requête envoyée avec `limit` 10 / 50 ; « Tout » qui enchaîne les pages ; erreur au milieu de « Tout » ; choix mémorisé et stockage indisponible ; FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(lists): choose to show 10, 50 or all challenges and participants`
+**Statut** : À faire
 ---
 
 # F5 — Classement
@@ -834,6 +941,55 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Commit** : `refactor(leaderboard): read distance_meters in the elimination progress`
 **Statut** : À faire
 
+
+### SC-WEB-098 · Classement, page du défi et Mes défis : catégorie D+ cumulé
+`F5` · Story · Phase 9 · Estimation 2 · Dépend de : 097 · Backend : damchi/sport-challenge-api#309 (SC-API-169), bloquant
+
+**Contexte** : la catégorie D+ cumulé s'affiche partout où les autres catégories s'affichent.
+
+**Critères d'acceptation**
+- [ ] Classement : podium et liste de la catégorie D+ cumulé, valeur en mètres (« 1 250 m D+ »), ex aequo (1, 1, 3), abandons « a abandonné » sans rang ; résultats figés une fois le défi terminé.
+- [ ] Page du défi (`CategoryParams`) : la catégorie apparaît avec son explication (tous sports avec D+, mètres réels).
+- [ ] « Mes défis » (`MyStandings`) et carte du défi : rang dans la catégorie D+ cumulé.
+- [ ] Textes FR/EN ; respect des maquettes de la page d'un défi et de l'accueil.
+
+**Tests** : rendu avec et sans D+, ex aequo, défi terminé, défi sans la catégorie (rien d'affiché).
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(leaderboard): show the cumulative elevation category`
+**Statut** : À faire
+
+### SC-WEB-099 · Grand prix : critère « D+ de la semaine »
+`F5` · Story · Phase 9 · Estimation 2 · Dépend de : 058, 059 · Backend : damchi/sport-challenge-api#310 (SC-API-170), bloquant · règles : damchi/sport-challenge-api#308 (SC-API-168)
+
+**Contexte** : quatrième critère du Grand prix (catégorie Points) : **D+ de la semaine**. Chaque semaine, mini-classement sur le D+ cumulé de la semaine, points au top 5 ou au top 10 comme les autres critères ; un D+ nul ne marque pas.
+
+**Critères d'acceptation**
+- [ ] Création : critère « D+ de la semaine » à cocher avec les trois autres (au moins un) ; envoyé comme `weekly_elevation` ; récapitulatif à jour.
+- [ ] Page du défi : le critère apparaît dans les réglages du Grand prix.
+- [ ] Explication courte du critère (FR/EN) là où les critères sont expliqués.
+- [ ] Classement et « Mes défis » inchangés (les points restent un total).
+
+**Tests** : cocher/décocher, requête envoyée, au moins un critère, affichage des réglages, FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): add the weekly elevation criterion to the grand prix`
+**Statut** : À faire
+
+### SC-WEB-102 · Classement : podium toujours visible, puis liste paginée
+`F5` · Story · Phase 9 · Estimation 3 · Dépend de : 100 · Backend : damchi/sport-challenge-api#312 (SC-API-171), bloquant
+
+**Contexte** : décision du propriétaire du produit du 2026-11-23 : dans l'onglet **Classement** d'un défi, le **podium (top 3) est toujours visible**, puis vient la liste, avec le choix 10 / 50 / Tout.
+
+**Critères d'acceptation**
+- [ ] Podium toujours affiché en entier, ex aequo compris, quel que soit le choix.
+- [ ] La liste après le podium suit le choix 10 / 50 / Tout (composant de SC-WEB-100), catégorie par catégorie, avec « Charger plus » (`category`, `limit`, `cursor`).
+- [ ] Les abandons restent en fin de liste ; changer de catégorie garde le choix.
+- [ ] Classement figé d'un défi terminé : même affichage.
+- [ ] Ma ligne toujours visible (décision du 2026-11-23) : si elle n'est ni dans le podium ni dans la partie chargée, elle s'affiche à part, mise en évidence, avec son rang (champ `me`) ; pas de doublon une fois chargée la page qui la contient.
+
+**Tests** : ma ligne (dans le podium, dans la page, hors de la page, non participant), podium avec ex aequo au 3ᵉ rang, pages successives, « Tout », défi terminé, erreur de « Charger plus » (MSW), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(leaderboard): show the podium then a paginated list`
+**Statut** : À faire
 ---
 
 # F6 — Activités
@@ -939,7 +1095,7 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 
 **Contexte** : on veut saisir le dénivelé positif d'une activité dans le formulaire d'ajout et de modification.
 
-**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement. Remplacé le même jour par SC-API-168 (README backend §2.3) : le D+ compte pour la catégorie D+ cumulé (SC-WEB-097, SC-WEB-098) et le critère « D+ de la semaine » du Grand prix (SC-WEB-099), et pour rien d'autre.
 
 **Contrat** (SC-API-149) : `Sport.elevation_allowed` ; `ActivityCreate.elevation_gain_meters` (entier de 0 à 20 000, facultatif, non nullable : en modification, l'omettre le retire) ; erreur `elevation_not_allowed` (422).
 
@@ -959,7 +1115,7 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 
 **Contexte** : le D+ saisi doit apparaître dans la liste et le détail des activités.
 
-**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement. Remplacé le même jour par SC-API-168 (README backend §2.3) : le D+ compte pour la catégorie D+ cumulé (SC-WEB-097, SC-WEB-098) et le critère « D+ de la semaine » du Grand prix (SC-WEB-099), et pour rien d'autre.
 
 **Contrat** (SC-API-149) : `Activity.elevation_gain_meters` (null = non saisi).
 
@@ -977,7 +1133,7 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 
 **Contexte** : les totaux de la semaine de « Mes activités » affichent séances, durée et distance ; on y ajoute le **D+ cumulé**.
 
-**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement. Remplacé le même jour par SC-API-168 (README backend §2.3) : le D+ compte pour la catégorie D+ cumulé (SC-WEB-097, SC-WEB-098) et le critère « D+ de la semaine » du Grand prix (SC-WEB-099), et pour rien d'autre.
 
 **Contrat** (SC-API-150) : `ActivityWeek.elevation_gain_meters` et `CurrentActivityWeek.elevation_gain_meters` (entiers requis, 0 sans D+).
 
@@ -990,6 +1146,138 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Commit** : `feat(activities): show the weekly elevation gain`
 **Statut** : À faire
 
+
+### SC-WEB-071 · Onglet Activités de la page d'un défi
+`F6` · Story · Phase 9 · Estimation 3 · Dépend de : 024, 037 · Backend : route à créer, demandée dans damchi/sport-challenge-api#274 (SC-API-143) ; aujourd'hui seulement `GET /challenges/{id}/participants/{userId}/activities` et `GET /me/activities`
+
+**Constat** : l'onglet **Activités** de la page d'un défi (`/challenges/:challengeId/activities`) affiche « Cette section arrive bientôt. » (`TabPending`, route `pages.pending` dans `src/routes/routes.tsx`). SC-WEB-024 a créé les trois onglets, mais aucun ticket ne remplit celui-ci : SC-WEB-036 couvre « Mes activités » (`/activities`, tous défis confondus) et SC-WEB-037 les activités d'**un** participant (depuis le classement ou les participants).
+
+**Décision du 2026-11-21** : l'onglet liste **toutes les activités de tous les participants** du défi (fil du défi).
+
+**Contrat** : manque une route qui liste les activités de tous les participants d'un défi (ex. `GET /challenges/{id}/activities`, paginée, activités de la fenêtre du défi, avec l'auteur de chaque activité, mêmes droits que SC-API-046). Demandée dans damchi/sport-challenge-api#274 (SC-API-143), plutôt que d'agréger les participants côté client. **Bloquant** jusqu'à sa fusion, puis `pnpm api:sync` et `pnpm api:generate`.
+
+**Décisions du 2026-11-21** (réponses du propriétaire du produit)
+1. Ordre du fil : les plus récentes d'abord.
+2. Les activités d'un participant qui a abandonné **restent** dans le fil.
+3. Un visiteur non participant d'un défi public **ne voit pas** l'onglet Activités.
+4. Les activités du fil **ne sont pas cliquables** (ni l'activité, ni son auteur).
+
+**Critères d'acceptation** (à préciser après les décisions)
+- [ ] L'onglet Activités n'affiche plus « Cette section arrive bientôt. » ; `TabPending` et la clé `challengeDetail.tabs.pending` supprimés s'ils ne servent plus.
+- [ ] Fil des activités de tous les participants, avec l'auteur (avatar à initiales, nom) de chacune, dans la fenêtre du défi, dates dans le fuseau du défi (fuseau nommé s'il diffère), distances en km et durées formatées selon la langue, mention « manuelle ».
+- [ ] Fil trié des plus récentes aux plus anciennes (ordre du serveur), activités des participants qui ont abandonné comprises.
+- [ ] Onglet Activités masqué pour un visiteur non participant (défi public) ; droits identiques à SC-WEB-037 : 404 sans révéler l'existence pour un non-autorisé.
+- [ ] Aucun élément du fil n'est cliquable (pas de lien vers l'activité ni vers son auteur).
+- [ ] États chargement, erreur avec réessai, vide, connexion requise ; textes FR/EN ; zones tactiles ≥ 44 px ; clair et sombre.
+
+**Tests** : rendu de la liste avec MSW (auteur de chaque activité, participant qui a abandonné, aucun lien), onglet masqué pour un visiteur, pagination, vide, erreur, 404, fuseau différent.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`, `security-reviewer`.
+**Commit** : `feat(challenges): fill the challenge activities tab`
+**Statut** : À faire
+
+### SC-WEB-074 · Formulaire d'ajout d'activité conforme aux maquettes web et mobile
+`F6` · Story · Phase 9 · Estimation 5 · Dépend de : 034, 036 · Backend : aucun (voir « Contrat »)
+
+**Contexte** : le formulaire de saisie d'activité (`/activities/new`, `ActivityForm` / `ActivityFormFields`) ne ressemble pas aux maquettes `docs/design/maquettes/AjoutActivite.png` (mobile, 360 px) et `WebAjoutActivite.png` (web, 1280 px) : sport dans une liste déroulante, date et heure dans un seul champ, pas de résumé.
+
+**Mise en page cible**
+- **Cadre mobile** : en-tête « ‹ Ajouter une activité » ; bouton « Enregistrer l'activité » collé en bas de l'écran ; carte « Résumé » sous les champs ; pas de bouton « Annuler ».
+- **Quitter** (‹ en mobile, « ‹ Mes activités » et « Annuler » en web) : avertissement de saisie perdue quand le formulaire a été modifié, comme la création de défi.
+- **Cadre web** : lien « ‹ Mes activités », titre « Ajouter une activité » ; formulaire dans une carte, pied de carte « Enregistrer l'activité » + « Annuler » ; colonne de droite « Résumé » avec la phrase « Après l'enregistrement, tu verras ce que l'activité apporte à chacun de tes défis. »
+- **Sport** : grille de puces (3 colonnes en mobile, 5 en web), une seule sélectionnée (bordure et fond d'accent), dans **l'ordre de la maquette** : Course, Vélo, Marche, Randonnée, Natation, Aviron, Roller, Ski de fond, Yoga, Escalade, Musculation, puis les éventuels autres sports du catalogue, « Autre » en dernier (fait apparaître le libellé libre).
+- **Début** : deux champs côte à côte « Date » et « Heure » ; aide sous les champs : fuseau nommé (« Heure de l'Est ») + « Ni le début ni la fin ne peuvent être dans le futur. »
+- **Durée** : trois champs h / min / s avec l'unité en suffixe dans le champ ; aide « Obligatoire, 24 h au plus. »
+- **Distance** : titre avec mention « obligatoire pour ce sport » (ou « facultative » pour « Autre ») ; champ suffixé « km » ; absent pour un sport sans distance (comportement actuel).
+- **Résumé** : lignes libellé / valeur — Sport, Début (« samedi 21 nov. à 7 h 30 », dans le fuseau de saisie), Durée, Distance ; **pas d'allure ni de vitesse** (rien n'est calculé côté client avant l'enregistrement) ; se met à jour pendant la saisie. Texte web : « Après l'enregistrement, tu verras ce que l'activité apporte à chacun de tes défis. »
+- **Page de modification** (`ActivityEdit`, mêmes champs) : même mise en page (titre « Modifier l'activité », retour vers « Mes activités »).
+- **Liste des activités** (`ActivityCard`) : l'allure (`pace_seconds_per_km`) s'ajoute à la vitesse (`speed_mps`), toutes deux fournies par l'API.
+
+**Décisions du propriétaire (2026-11-22)**
+1. Pas d'allure dans le résumé avant enregistrement.
+2. Liste des activités : allure **et** vitesse, telles que l'API les donne (`pace_seconds_per_km`, `speed_mps`), sans recalcul.
+3. Puces de sport dans l'ordre de la maquette.
+4. La page de modification prend la même mise en page.
+5. Avertissement de saisie perdue en quittant le formulaire.
+
+**Contrat** : la requête de création ne change pas (clé d'idempotence, champs, erreurs rattachées aux champs).
+
+**Critères d'acceptation**
+- [ ] Mise en page mobile et web conforme aux deux maquettes, jetons uniquement, clair et sombre.
+- [ ] Comportement inchangé : fuseau de saisie (décision du 2026-11-20), validation, distance selon le sport, erreurs serveur sur les champs, idempotence, écran « enregistrée » avec les apports par défi.
+- [ ] Résumé mis à jour pendant la saisie, sans allure, dates dans le fuseau de saisie, distances en km selon la langue.
+- [ ] Modification d'une activité dans la même mise en page ; avertissement en quittant un formulaire modifié.
+- [ ] Carte d'activité : allure (min/km) et vitesse (km/h) quand l'API donne une vitesse.
+- [ ] README §2 Activités : allure affichée en plus de la vitesse, toutes deux issues de l'API.
+- [ ] `docs/design/design.md` (§ Écrans de référence) complété pour l'écran d'ajout d'activité.
+- [ ] Tous les textes en FR/EN.
+- [ ] Zones tactiles ≥ 44 px ; puces de sport en groupe radio accessible au clavier et au lecteur d'écran (rôle, état, libellé) ; la sélection n'est jamais donnée par la couleur seule.
+
+**Tests** : ordre des puces, choix d'un sport par puce (et « Autre » avec libellé), avertissement en quittant, formatage de l'allure (FR/EN), date + heure lues dans le fuseau (date injectée), résumé selon la saisie, distance masquée pour un sport sans km, requête envoyée inchangée (MSW) ; e2e de saisie d'activité mis à jour.
+**Revue** : `ux-reviewer`, `spec-guardian`, `ts-reviewer`.
+**Commit** : `feat(activities): lay out the activity form like the mockups`
+**Statut** : À faire
+
+### SC-WEB-075 · Mes activités conforme aux maquettes web et mobile
+`F6` · Story · Phase 9 · Estimation 5 · Dépend de : 036, 074 · Backend : aucun (les totaux, le résumé de la semaine et les filtres sont dans SC-WEB-076, bloqué par damchi/sport-challenge-api#282)
+
+**Contexte** : la page « Mes activités » (`/activities`, `ActivitiesPage`, `ActivityList`, `ActivityItem`) ne ressemble pas aux maquettes `docs/design/maquettes/Activites.png` (mobile) et `WebActivites.png` (web) : tuile « Ajouter une activité » en pointillés, grille de cartes, boutons « Modifier » / « Supprimer » visibles, pas de regroupement par semaine.
+
+**Mise en page cible**
+- **En-tête** : titre « Mes activités » et bouton principal « + Ajouter » (mobile) / « + Ajouter une activité » (web) à droite ; **la tuile en pointillés disparaît** (remplace la décision du 2026-11-20).
+- **Groupes par semaine**, des plus récentes aux plus anciennes : titre « Cette semaine », « Semaine dernière », sinon « Semaine du 9 nov. », suivi des dates « · 17 – 23 nov. ». Semaine **du lundi au dimanche**, dans le fuseau de saisie des activités (décision du 2026-11-20). Les activités d'une semaine sont dans une seule carte, séparées par un filet. Une semaine coupée par la pagination se complète au chargement suivant.
+- **Activité** : pastille d'icône du sport (Lucide, pas d'emoji : `design.md`), sport, début (« Aujourd'hui à 8 h 05 », « Hier à … », sinon « ven. 20 nov. à 12 h »), « Compte pour : Défi d'automne · Les ruelles du Plateau » (titres des `contributions`), « (temps seulement) » quand l'activité n'a pas de distance (elle n'apporte alors que du temps) ; chiffres Durée, Distance (« — » sans distance), Allure (min/km) et Vitesse (km/h) quand l'API les donne (décision SC-WEB-074 conservée : les deux, aucune règle par sport). Mention « manuelle » conservée.
+- **Actions** : activité non verrouillée → bouton « … » (44 px, libellé accessible) ouvrant un menu « Modifier » / « Supprimer » (même confirmation qu'aujourd'hui). Activité verrouillée (`locked`) → cadenas seul en mobile, pastille « 🔒 Semaine jugée » en web, avec le même texte accessible.
+- **Mise en page web** : une ligne par activité (icône, textes, trois chiffres en colonnes, action à droite).
+- **Pied de page** : « Une activité se modifie ou se supprime tant que sa semaine n'est pas jugée dans tes défis. »
+
+**Décisions du propriétaire (2026-11-22)**
+1. Bouton « Ajouter » de la maquette à la place de la tuile en pointillés.
+2. Semaine du lundi au dimanche, fuseau de saisie.
+3. Allure **et** vitesse, comme SC-WEB-074 (la maquette n'en montre qu'une).
+4. Résumé de la semaine, filtres par sport et totaux par semaine : demandés au backend (#282), ticket SC-WEB-076.
+
+**Critères d'acceptation**
+- [ ] Mise en page mobile et web conforme aux maquettes (sans résumé, filtres ni totaux), jetons uniquement, clair et sombre.
+- [ ] Regroupement par semaine (fonction pure de `src/domain`, testée, date injectée), titres relatifs, dates dans le fuseau de saisie, fuseau nommé s'il diffère de l'appareil.
+- [ ] Menu « … » accessible (clavier, Échap, focus rendu) ; modification et suppression inchangées (confirmation, erreurs, `week_locked`, annonce « Activité supprimée »).
+- [ ] Verrouillage d'après `locked` uniquement ; « Compte pour » d'après `contributions` uniquement.
+- [ ] Bouton d'ajout dans l'en-tête ; tuile `AddActivityLink` et ses clés supprimées si elles ne servent plus ; `design.md` (Boutons, Écrans de référence) et README mis à jour.
+- [ ] États chargement, erreur avec réessai, vide, connexion requise ; textes FR/EN ; zones tactiles ≥ 44 px.
+
+**Tests** : regroupement par semaine (lundi, changement d'heure, fuseau), titres « Cette semaine » / « Semaine dernière » / « Semaine du … », « Aujourd'hui » / « Hier », « Compte pour » et « temps seulement », menu « … » (modifier, supprimer), activité verrouillée, pagination qui complète une semaine ; e2e de saisie d'activité mis à jour.
+**Revue** : `ux-reviewer`, `spec-guardian`, `ts-reviewer`.
+**Commit** : `feat(activities): lay out my activities like the mockups`
+**Statut** : À faire
+
+### SC-WEB-101 · Choix « 10 / 50 / Tout » : listes d'activités
+`F6` · Story · Phase 9 · Estimation 2 · Dépend de : 100 · Backend : aucun changement (listes déjà paginées par curseur)
+
+**Contexte** : le choix « 10 / 50 / Tout » (SC-WEB-100) s'applique aussi aux listes d'activités.
+
+**Critères d'acceptation**
+- [ ] Page **Activités** (`ActivityList`, avec le filtre de sport) : choix 10 / 50 / Tout ; les totaux de la semaine (`useWeekTotals`) restent justes quelle que soit la taille choisie.
+- [ ] Onglet **Activités** d'un défi (`ChallengeActivities`) et activités d'un participant (`ParticipantActivities`) : choix 10 / 50 / Tout.
+- [ ] Les chargements internes qui parcourent toutes les pages (`ActivityEdit`, `useActivityTimeZone`) ne dépendent pas du choix affiché.
+
+**Tests** : `limit` envoyé par liste, « Tout », filtre de sport combiné, modification d'une activité au-delà de la 1re page, FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(activities): choose to show 10, 50 or all activities`
+**Statut** : À faire
+
+### SC-WEB-103 · Cadenas « Semaine jugée » étiré sur téléphone
+`F6` · Task · Phase 9 · Estimation 1 · Dépend de : — · Backend : aucun
+
+**Contexte** : dans « Mes activités » (SC-WEB-075), sur téléphone, le cadenas d'une activité dont la semaine est jugée (`ActivityItem.tsx`, `activity.locked`) s'étire sur toute la hauteur de la ligne : une pilule grise verticale à droite au lieu d'un rond de 44 px. Le conteneur de l'action (`flex flex-none justify-end`) est étiré par l'article (`flex flex-wrap`, alignement par défaut `stretch`) et la pilule (`inline-flex`) le suit. Sur grand écran (`lg:items-center`), le rendu est correct. Vu le 2026-11-23 pendant SC-WEB-081.
+
+**Critères d'acceptation**
+- [ ] Sur téléphone (360 px), le cadenas garde sa taille (zone de 44 px au moins), sans s'étirer, aligné comme le bouton « … » des activités modifiables.
+- [ ] Rendu inchangé sur grand écran (cadenas et libellé « Semaine jugée »).
+- [ ] Texte agrandi : la ligne reste lisible, l'action passe dessous comme aujourd'hui.
+
+**Tests** : vérification visuelle mobile et bureau (capture Playwright), clair et sombre.
+**Revue** : `ux-reviewer`.
+**Commit** : `fix(activities): keep the lock of a judged week at its size`
+**Statut** : À faire
 ---
 
 # F7 — Invitations
@@ -1307,6 +1595,307 @@ Décision du 2026-11-21 : le déploiement en production devient automatique apr�
 **Revue** : `ux-reviewer`, `ts-reviewer`.
 **Commit** : `feat(ui): add hover states to buttons`
 **Statut** : À faire
+
+---
+
+# F11 — Administration (section `/admin`, rôle Auth0 « admin »)
+
+### SC-WEB-084 · Administration : accès, routes et sous-navigation
+`F11` · Story · Phase 10 · Estimation 3 · Dépend de : — · Backend : damchi/sport-challenge-api#293 (SC-API-153) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 1, local, non versionné)
+
+**Description** : Ouvrir une section `/admin` aux seuls comptes qui ont le rôle Auth0 « admin ». Le garde de route n'est qu'un confort d'affichage : l'API répond 404 à un non-admin.
+
+**Critères d'acceptation**
+- [ ] `is_admin` lu dans `GET /me` ; lien « Administration » dans le profil (`ProfileLinks`) pour un admin seulement.
+- [ ] Routes `/admin`, `/admin/challenges`, `/admin/challenges/:id`, `/admin/users`, `/admin/users/:id`, `/admin/journal`, dans la coque, gardées (un non-admin voit la page 404 de l'app) et chargées à part : jamais dans le bundle d'un non-admin.
+- [ ] Sous-navigation : Tableau de bord, Défis, Comptes, Journal (onglets de la barre web en `md`, sélecteur en mobile).
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : lien visible ou non selon `is_admin`, garde (admin, non-admin, non connecté), sous-navigation, chunk séparé vérifié par le budget.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`.
+**Commit** : `feat(admin): open the admin section to admins` (`Closes #N` puis `Refs: SC-WEB-084`)
+**Statut** : À faire
+
+### SC-WEB-085 · Administration : tableau de bord
+`F11` · Story · Phase 10 · Estimation 2 · Dépend de : 084 · Backend : damchi/sport-challenge-api#296 (SC-API-156) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 2, local, non versionné)
+
+**Description** : Page d'accueil de l'administration : chiffres de l'app et santé du worker.
+
+**Critères d'acceptation**
+- [ ] Tuiles de chiffres : comptes, défis par statut, activités de la semaine, suppressions Auth0 en attente.
+- [ ] Carte « Worker » : dernier passage et dernier échec de chaque tâche ; un échec en rouge seulement avec une icône et un libellé.
+- [ ] Version de l'API.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : rendu avec MSW (valeurs, aucun échec, échec), erreur avec réessai.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(admin): add the dashboard` (`Closes #N` puis `Refs: SC-WEB-085`)
+**Statut** : À faire
+
+### SC-WEB-086 · Administration : liste et fiche des défis
+`F11` · Story · Phase 10 · Estimation 5 · Dépend de : 084 · Backend : damchi/sport-challenge-api#294 (SC-API-154), damchi/sport-challenge-api#297 (SC-API-157) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 3, local, non versionné)
+
+**Description** : Voir tous les défis, privés et supprimés compris, et ouvrir leur fiche d'administration.
+
+**Critères d'acceptation**
+- [ ] Liste : recherche sur le titre, puces de statut, visibilité, « Supprimés » ; colonnes titre, créateurs, participants, période, statut ; « Charger plus ».
+- [ ] Fiche : réglages, liens d'invitation (actifs, expirés, révoqués), semaines verrouillées, éliminations, résultats figés, dernières actions admin.
+- [ ] Lien « Voir la page du défi » vers la page normale, lisible par l'admin grâce à la lecture admin des routes existantes.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+- [ ] Choix « 10 / 50 / Tout » (composant de SC-WEB-100, #167) sur la liste des défis (décision du 2026-11-23).
+
+**Tests** : filtres et recherche (paramètres envoyés), pagination, fiche d'un défi supprimé, états vides et erreurs.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(admin): list and open every challenge` (`Closes #N` puis `Refs: SC-WEB-086`)
+**Statut** : À faire
+
+### SC-WEB-087 · Administration : liste et fiche des comptes
+`F11` · Story · Phase 10 · Estimation 3 · Dépend de : 084 · Backend : damchi/sport-challenge-api#298 (SC-API-158) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 4, local, non versionné)
+
+**Description** : Voir tous les comptes et ouvrir leur fiche d'administration.
+
+**Critères d'acceptation**
+- [ ] Liste : recherche (pseudo, nom, e-mail), état en pastille (actif, bloqué, supprimé, suppression Auth0 en attente), inscription, dernière activité, nombre de défis.
+- [ ] Fiche : profil avec e-mail, défis (rôle, statut, lien vers la fiche du défi), activités (pagination).
+- [ ] Aucun e-mail ni nom dans les logs ni dans Sentry.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+- [ ] Liste des comptes, défis et activités de la fiche : pagination « Charger plus » avec le choix « 10 / 50 / Tout » (composant de SC-WEB-100, #167 ; décision du 2026-11-23).
+
+**Tests** : recherche, pastilles d'état, fiche, pagination des activités, états vides et erreurs.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`.
+**Commit** : `feat(admin): list and open every account` (`Closes #N` puis `Refs: SC-WEB-087`)
+**Statut** : À faire
+
+### SC-WEB-088 · Administration : journal et boîte « Motif »
+`F11` · Story · Phase 10 · Estimation 3 · Dépend de : 084 · Backend : damchi/sport-challenge-api#299 (SC-API-159) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 5, local, non versionné)
+
+**Description** : Toute modification admin exige un motif ; le journal les retrace.
+
+**Critères d'acceptation**
+- [ ] `ReasonDialog` : résumé de l'action, champ « Motif » (3 à 500 caractères, compteur), « Annuler » avec le focus, bouton de confirmation désactivé sous 3 caractères, variante « danger » pour une suppression ou un blocage.
+- [ ] `/admin/journal` : date, admin, action, cible (lien), motif, ancienne et nouvelle valeur dépliables ; filtres par cible ; pagination.
+- [ ] Erreur `validation_failed` sur `reason` traduite.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+- [ ] Choix « 10 / 50 / Tout » (composant de SC-WEB-100, #167) sur le journal (décision du 2026-11-23).
+
+**Tests** : bornes du motif (2, 3, 500, 501 caractères), focus initial, variante danger, journal avec MSW (filtres, dépliage).
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(admin): add the journal and the reason dialog` (`Closes #N` puis `Refs: SC-WEB-088`)
+**Statut** : À faire
+
+### SC-WEB-089 · Administration : aperçu du recalcul
+`F11` · Story · Phase 10 · Estimation 5 · Dépend de : 088 · Backend : damchi/sport-challenge-api#300 (SC-API-160) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 6, local, non versionné)
+
+**Description** : Une action qui recalcule les classements montre son effet avant d'être confirmée. Un seul composant d'aperçu sert toutes les modifications.
+
+**Critères d'acceptation**
+- [ ] `RecomputePreview` : pour chaque défi touché, classement avant et après par catégorie ; rangs qui bougent signalés par une flèche et un texte, pas par la couleur seule ; éliminations qui changent.
+- [ ] Parcours commun de toute action qui recalcule : saisie → aperçu (`dry_run`) → motif → confirmation.
+- [ ] Le classement s'affiche comme ailleurs (ex aequo au même rang, « a abandonné » hors podium).
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : aperçu avec MSW (rang qui monte, descend, ex aequo, élimination annulée), parcours complet, `dry_run` envoyé avant la confirmation.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(admin): preview the recompute before confirming` (`Closes #N` puis `Refs: SC-WEB-089`)
+**Statut** : À faire
+
+### SC-WEB-090 · Administration : modifier les réglages d'un défi
+`F11` · Story · Phase 10 · Estimation 5 · Dépend de : 086, 089 · Backend : damchi/sport-challenge-api#301 (SC-API-161) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 7, local, non versionné)
+
+**Description** : L'admin peut changer tout réglage d'un défi, mêmes validations qu'à la création.
+
+**Critères d'acceptation**
+- [ ] L'assistant de création en mode admin, pré-rempli avec les réglages du défi, toutes les étapes modifiables.
+- [ ] Avertissement « les classements seront recalculés » ; aperçu puis motif avant la confirmation.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : pré-remplissage, envoi `PATCH /admin/challenges/{id}` avec motif, aperçu, erreurs de validation.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(admin): edit any challenge setting` (`Closes #N` puis `Refs: SC-WEB-090`)
+**Statut** : À faire
+
+### SC-WEB-091 · Administration : participants et créateurs d'un défi
+`F11` · Story · Phase 10 · Estimation 3 · Dépend de : 086, 089 · Backend : damchi/sport-challenge-api#302 (SC-API-162) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 8, local, non versionné)
+
+**Description** : Gérer les participants et les créateurs depuis la fiche d'un défi.
+
+**Critères d'acceptation**
+- [ ] Ajouter un participant (recherche d'un compte), réintégrer, exclure (créateur compris).
+- [ ] Nommer ou retirer un créateur ; `last_creator` traduit.
+- [ ] Aperçu, motif et confirmation (danger pour une exclusion).
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : chaque action avec MSW, recherche de compte, erreur `last_creator`.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(admin): manage participants and creators` (`Closes #N` puis `Refs: SC-WEB-091`)
+**Statut** : À faire
+
+### SC-WEB-092 · Administration : activités d'un compte
+`F11` · Story · Phase 10 · Estimation 3 · Dépend de : 087, 089 · Backend : damchi/sport-challenge-api#303 (SC-API-163) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 9, local, non versionné)
+
+**Description** : Ajouter, modifier ou supprimer une activité d'un compte, dans n'importe quelle semaine.
+
+**Critères d'acceptation**
+- [ ] Dans la fiche d'un compte : formulaire d'activité réutilisé, sans verrou de semaine ni de fin de défi ; clé d'idempotence à la création.
+- [ ] L'aperçu liste tous les défis touchés ; motif et confirmation (danger pour une suppression).
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : ajout, modification, suppression avec MSW, semaine verrouillée acceptée, aperçu de plusieurs défis.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(admin): edit any activity` (`Closes #N` puis `Refs: SC-WEB-092`)
+**Statut** : À faire
+
+### SC-WEB-093 · Administration : supprimer et restaurer un défi
+`F11` · Story · Phase 10 · Estimation 2 · Dépend de : 086, 089 · Backend : damchi/sport-challenge-api#304 (SC-API-164) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 10, local, non versionné)
+
+**Description** : Supprimer un défi, ou restaurer un défi supprimé, depuis sa fiche.
+
+**Critères d'acceptation**
+- [ ] « Supprimer » (motif, variante danger).
+- [ ] « Restaurer » pour un défi supprimé, avec aperçu du recalcul et motif.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : suppression, restauration avec aperçu, boutons selon l'état du défi.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(admin): delete and restore a challenge` (`Closes #N` puis `Refs: SC-WEB-093`)
+**Statut** : À faire
+
+### SC-WEB-094 · Administration : modifier, bloquer, supprimer un compte ; page « Compte bloqué »
+`F11` · Story · Phase 10 · Estimation 3 · Dépend de : 087, 088 · Backend : damchi/sport-challenge-api#305 (SC-API-165) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 11, local, non versionné)
+
+**Description** : Gérer un compte depuis sa fiche, et informer l'utilisateur bloqué.
+
+**Critères d'acceptation**
+- [ ] Fiche d'un compte : modifier pseudo, prénom, nom (mêmes règles que le profil) ; bloquer, débloquer ; supprimer le compte (motif, variante danger).
+- [ ] Côté utilisateur : l'erreur `account_blocked` (403) mène à une page « Compte bloqué » (même mécanique que la fin de session), avec la déconnexion ; clé `errors.account_blocked` FR et EN.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : chaque action avec MSW, `account_blocked` sur n'importe quelle requête mène à la page, déconnexion.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`.
+**Commit** : `feat(admin): edit, block and delete an account` (`Closes #N` puis `Refs: SC-WEB-094`)
+**Statut** : À faire
+
+### SC-WEB-095 · « Corrigé par l'administrateur » sur la page d'un défi
+`F11` · Story · Phase 10 · Estimation 1 · Dépend de : — · Backend : damchi/sport-challenge-api#306 (SC-API-166) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 12, local, non versionné)
+
+**Description** : Transparence : tous ceux qui voient un défi savent qu'un admin l'a corrigé (jamais le motif ni l'auteur).
+
+**Critères d'acceptation**
+- [ ] Page d'un défi, « Détails » : « Corrigé par l'administrateur le <date> » quand `admin_corrected_at` est renseigné, date dans le fuseau du défi.
+- [ ] FAQ de la landing (si elle existe déjà, SC-WEB-083) : « Ton e-mail n'est visible que de toi et de l'administrateur de l'app. »
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : mention présente ou absente selon `admin_corrected_at`, format de date FR/EN dans le fuseau du défi.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): show when an admin corrected a challenge` (`Closes #N` puis `Refs: SC-WEB-095`)
+**Statut** : À faire
+
+### SC-WEB-096 · 🟡 Administration : annuler ou forcer une élimination
+`F11` · Story · Phase 10 · Estimation 2 · Dépend de : 086, 089 · Backend : damchi/sport-challenge-api#307 (SC-API-167) ; sans lui, travailler contre les mocks MSW et le signaler.
+
+Spec : `docs/superpowers/specs/2026-11-23-administration-design.md` et README §2.11 de `sport-challenge-api` · plan frontend : `docs/superpowers/plans/2026-11-23-administration.md` (tâche 13, local, non versionné)
+
+**Description** : 🟡 À confirmer avant de commencer (comme le ticket backend) : les autres corrections (activités, réglages) suffisent peut-être.
+
+**Critères d'acceptation**
+- [ ] Fiche d'un défi, section Éliminations : « Annuler l'élimination » et « Éliminer à la semaine N ».
+- [ ] Aperçu, motif et confirmation.
+
+**Contraintes communes**
+- Contrat synchronisé (`pnpm api:sync`, `pnpm api:generate`) avant d'appeler une route ; hooks de `src/api`, aucun appel HTTP dans un composant.
+- Textes FR **et** EN, erreurs par `errors.<code>` ; états chargement, erreur avec réessai, vide, connexion requise.
+- Design `docs/design/design.md` ; tableaux en `<table>` dans une carte qui défile horizontalement en mobile ; zones tactiles de 44 px ; clair et sombre.
+- Pages admin chargées à part (`lazy`) ; `pnpm check` et `pnpm bundle:check` passent.
+
+**Tests** : chaque action avec MSW, aperçu.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(admin): override an elimination` (`Closes #N` puis `Refs: SC-WEB-096`)
+**Statut** : À valider
+
 
 ---
 

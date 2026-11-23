@@ -41,6 +41,7 @@ const STEP_FIELDS = [
     'points_criteria',
     'points_podium',
     'points_min_session_minutes',
+    'cumulative_elevation',
     'factors',
   ],
 ] as const;
@@ -60,6 +61,7 @@ const FIELD_LABELS: Record<string, string> = {
   points_criteria: 'challengeCreate.fields.pointsCriteria.label',
   points_podium: 'challengeCreate.fields.pointsPodium.label',
   points_min_session_minutes: 'challengeCreate.fields.minSession.label',
+  cumulative_elevation: 'challengeCreate.categories.elevation.name',
 };
 
 // Montréal's time zone (IANA names it after Toronto): the product's default.
@@ -114,6 +116,7 @@ export function ChallengeCreateWizard({
       points: false,
       points_criteria: [],
       points_min_session_minutes: DEFAULT_MIN_SESSION_MINUTES,
+      cumulative_elevation: false,
       factors: {},
     },
   });
