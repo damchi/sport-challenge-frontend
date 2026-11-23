@@ -48,8 +48,9 @@ test('the lock of a judged week keeps its size, as the menu of the others', asyn
   expect(lockBox.height).toBeGreaterThanOrEqual(44);
   expect(lockBox.height).toBeLessThanOrEqual(menuBox.height);
   expect(lockBox.width).toBeGreaterThanOrEqual(44);
-  // At the same place in its row as the menu in its own (rows of the same height on a phone).
-  if (lockRow.height === menuRow.height) {
+  // On a phone, at the top of its row, as the menu in its own, whatever their
+  // heights (from `lg`, the rows center their action).
+  if ((page.viewportSize()?.width ?? 0) < 1024) {
     expect(Math.abs(lockBox.y - lockRow.y - (menuBox.y - menuRow.y))).toBeLessThanOrEqual(1);
   }
 });
