@@ -64,6 +64,18 @@ describe('ProfilePage', () => {
     expect(screen.queryByText(/^@\w/)).not.toBeInTheDocument();
   });
 
+  it('shows the pseudo once when the profile has no names', async () => {
+    server.use(
+      http.get('*/api/v1/me', () =>
+        HttpResponse.json({ ...mockMe, pseudo: 'draffi', first_name: null, last_name: null }),
+      ),
+    );
+    renderProfile();
+
+    expect(await screen.findByText('draffi')).toBeInTheDocument();
+    expect(screen.queryByText('@draffi')).not.toBeInTheDocument();
+  });
+
   it('shows the preferences and the account', async () => {
     renderProfile();
 

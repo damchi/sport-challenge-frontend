@@ -17,7 +17,8 @@ export function ProfileHeader({ me }: { me: Me }) {
     <div className={`${PROFILE_CARD} flex flex-col items-center text-center`}>
       <Avatar userId={me.id} user={me} size="lg" />
       {name && <p className="mt-4 max-w-full font-display text-xl font-bold break-words">{name}</p>}
-      {me.pseudo && (
+      {/* Without names, the pseudo is already the name above. */}
+      {me.pseudo && name !== me.pseudo && (
         <p className="mt-1 max-w-full break-words text-muted">
           {t('profile.handle', { pseudo: me.pseudo })}
         </p>
