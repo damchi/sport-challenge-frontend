@@ -660,7 +660,8 @@
         "podium_5": "Top 5 of each week and criterion: 10, 8, 6, 4 and 2 points",
         "podium_10": "Top 10 of each week and criterion: 25, 18, 15, 12, 10, 8, 6, 4, 2 and 1 point",
         "minSession": "A session counts from {{minutes}} min"
-      }
+      },
+      "elevationInSentence": "total elevation gain"
     },
     "tabs": {
       "label": "Challenge sections",
@@ -843,7 +844,8 @@
       "progress": "{{done}} of {{minimum}} this week",
       "firstWeek": "No elimination in week 1: the first minimum applies in week 2.",
       "rule": "Next week's minimum = your distance this week + {{step}}. Go beyond the minimum and your distance becomes the new base."
-    }
+    },
+    "elevation": "{{elevation}} climbed"
   },
   "standings": {
     "title": "Where you stand",
@@ -851,7 +853,8 @@
     "distance": "in {{sport}} equivalent",
     "elimination": "{{sport}} only",
     "eliminationWeek": "{{sport}} only, this week",
-    "eliminationValue": "{{done}} / {{minimum}}"
+    "eliminationValue": "{{done}} / {{minimum}}",
+    "elevation": "of elevation gain, every sport"
   },
   "invitations": {
     "button": "Invite friends",

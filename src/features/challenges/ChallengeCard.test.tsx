@@ -233,6 +233,27 @@ describe('ChallengeCard', () => {
     expect(card).toHaveTextContent('1er en Grand prix');
   });
 
+  it('keeps the capitals of the total elevation gain in my best result', () => {
+    const card = renderCard({
+      ...base,
+      status: 'finished',
+      my_week: null,
+      best_result: { type: 'cumulative_elevation', rank: 1, ranked_count: 5 },
+    });
+
+    expect(card).toHaveTextContent('1er en D+ cumulé');
+  });
+
+  it('shows my rank in the total elevation gain of an ongoing challenge', () => {
+    const card = renderCard(
+      ongoing(2, [rank('cumulative_time', 3, 6), rank('cumulative_elevation', 1, 6)]),
+    );
+
+    const rows = within(card).getAllByRole('listitem');
+    expect(rows[1]).toHaveTextContent('D+ cumulé');
+    expect(rows[1]).toHaveTextContent('1er sur 6');
+  });
+
   it('says I abandoned an ongoing challenge, with its week but without my lines', () => {
     const card = renderCard({
       ...ongoing(2, []),

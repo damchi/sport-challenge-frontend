@@ -295,6 +295,66 @@ describe('ChallengeLeaderboard', () => {
     ]);
   });
 
+  it('shows the meters climbed of the total elevation gain, ties sharing a rank', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    leaderboard([
+      { type: 'cumulative_time', ranked_count: 0, entries: time },
+      {
+        type: 'cumulative_elevation',
+        ranked_count: 0,
+        entries: [
+          entry('julie', 1, 1_250),
+          entry('marc', 1, 1_250),
+          entry('sofia', 3, 420),
+          // Without any elevation gain entered: ranked on 0 m.
+          entry('nina', 4, 0),
+          entry('leo', null, null),
+        ],
+      },
+    ]);
+    renderAt(`/challenges/${id}?category=cumulative_elevation`);
+
+    const podium = within(await section('Podium')).getAllByRole('listitem');
+    const [first, second, third] = podium as [HTMLElement, HTMLElement, HTMLElement];
+    expect(first).toHaveTextContent('1er');
+    expect(first).toHaveTextContent('ex æquo');
+    expect(first).toHaveTextContent('1 250 m D+');
+    expect(second).toHaveTextContent('1er');
+    expect(second).toHaveTextContent('1 250 m D+');
+    expect(third).toHaveTextContent('3e');
+    expect(third).toHaveTextContent('420 m D+');
+    expect(within(await section('Suite du classement')).getByText('0 m D+')).toBeInTheDocument();
+    const out = within(await section('Éliminés'));
+    expect(out.getByText('A abandonné')).toBeInTheDocument();
+    expect(out.queryByText(/m D\+/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Le dénivelé positif de toutes les activités qui en ont un, tous sports confondus, en mètres réels, sans coefficient.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'D+ cumulé' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('offers no total elevation gain to a challenge without it', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    leaderboard(threeCategories);
+    renderAt(`/challenges/${id}?category=cumulative_elevation`);
+
+    // The address asks for a category the challenge lacks: the first one is shown.
+    const categories = within(
+      await screen.findByRole('group', { name: 'Catégorie du classement' }),
+    );
+    expect(categories.queryByRole('button', { name: 'D+ cumulé' })).not.toBeInTheDocument();
+    expect(categories.getByRole('button', { name: 'Temps cumulé' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.queryByText(/m D\+/)).not.toBeInTheDocument();
+  });
+
   it('offers no category choice when the challenge has the cumulative time only', async () => {
     answer({ categories: [{ type: 'cumulative_time', position: 1, params: {} }] });
     leaderboard([{ type: 'cumulative_time', ranked_count: 0, entries: time }]);
@@ -493,6 +553,25 @@ describe('ChallengeLeaderboard, finished challenge', () => {
     // Frozen: no update time to follow.
     expect(screen.queryByText(/mis à jour/)).not.toBeInTheDocument();
     expect(within(await section('Podium')).getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  it('shows the frozen meters of the total elevation gain once the challenge is finished', async () => {
+    deviceIn(summary.timezone);
+    answer(finished);
+    leaderboard([
+      { type: 'cumulative_time', ranked_count: 0, entries: time },
+      {
+        type: 'cumulative_elevation',
+        ranked_count: 2,
+        entries: [entry('julie', 1, 2_300), entry('marc', 2, 900)],
+      },
+    ]);
+    renderAt(`/challenges/${id}?category=cumulative_elevation`);
+
+    expect(
+      await screen.findByText("Résultats définitifs : le défi s'est terminé le 29 nov. 2026"),
+    ).toBeInTheDocument();
+    expect(within(await section('Podium')).getByText('2 300 m D+')).toBeInTheDocument();
   });
 
   it('names the challenge time zone when the device is elsewhere', async () => {

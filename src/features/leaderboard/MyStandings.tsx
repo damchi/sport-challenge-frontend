@@ -7,7 +7,7 @@ import {
   type LeaderboardEntry,
 } from '../../api/hooks/useChallenges';
 import { useMe } from '../../api/hooks/useMe';
-import { formatKm } from '../../domain/format/distance';
+import { formatKm, formatMeters } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
 import { CATEGORY_ICONS } from '../challenges/detail/categoryIcons';
 import { useCategoryName } from '../challenges/detail/categoryNames';
@@ -112,6 +112,9 @@ function StandingCard({
     } else if (category.type === 'cumulative_distance') {
       value = km(entry.value);
       detail = t('standings.distance', { sport });
+    } else if (category.type === 'cumulative_elevation') {
+      value = formatMeters(entry.value, locale);
+      detail = t('standings.elevation');
     } else if (category.type === 'points') {
       value = t('leaderboard.points', { count: entry.value });
       detail = entry.provisional_points
