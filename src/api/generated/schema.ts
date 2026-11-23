@@ -254,6 +254,9 @@ export interface paths {
          *     and fields computed by the server from the current instant. A
          *     challenge that does not exist, was deleted, or is private and not
          *     visible to the user answers the same 404 `challenge_not_found`.
+         *     An admin (permission `admin` of the access token) sees every
+         *     challenge not deleted; `my_role` and `can_join` stay those of their
+         *     own membership: this route gives them no write.
          */
         get: operations["getChallenge"];
         put?: never;
@@ -343,9 +346,10 @@ export interface paths {
         /**
          * List the participants
          * @description Visible to whoever sees the challenge: every user for a public one;
-         *     its creators, participants (abandoned included) and invited users
-         *     for a private one. Anyone else, like a missing or deleted challenge,
-         *     gets the same 404 `challenge_not_found`. Every participant is listed,
+         *     its creators, participants (abandoned included), invited users and
+         *     admins (permission `admin` of the access token) for a private one.
+         *     Anyone else, like a missing or deleted challenge, gets the same 404
+         *     `challenge_not_found`. Every participant is listed,
          *     abandoned or excluded ones included (shown as abandoned), in order
          *     of registration; a deleted account is not listed at all.
          */
@@ -370,9 +374,10 @@ export interface paths {
          * @description The ranking of each category of the challenge, always computed from the
          *     raw activities at `computed_at`. Visible to whoever sees the
          *     challenge: every user for a public one (a non-participant sees the
-         *     ranking only); its creators, participants (abandoned included) and
-         *     invited users for a private one. Anyone else, like a missing or
-         *     deleted challenge, gets the same 404 `challenge_not_found`.
+         *     ranking only); its creators, participants (abandoned included),
+         *     invited users and admins (permission `admin` of the access token)
+         *     for a private one. Anyone else, like a missing or deleted challenge,
+         *     gets the same 404 `challenge_not_found`.
          *
          *     Equal values share a rank (1, 1, 3). Participants who abandoned
          *     (also the excluded) are listed last in every category, with
@@ -446,11 +451,12 @@ export interface paths {
          * @description The activities of participant `userId` started in the window of the
          *     challenge, deleted ones left out, most recent first (`started_at`,
          *     then `id`). Visible to the participants of the challenge (abandoned
-         *     or excluded ones included) and its creators. A challenge the user
-         *     may not see answers 404 `challenge_not_found`; a visible one the
-         *     user never joined (a public challenge shows them its leaderboard
-         *     only), or a `userId` who never joined it or whose account was
-         *     deleted, answers 404 `not_found`.
+         *     or excluded ones included), its creators and the admins (permission
+         *     `admin` of the access token), on every challenge not deleted. A
+         *     challenge the user may not see answers 404 `challenge_not_found`; a
+         *     visible one the user never joined (a public challenge shows them its
+         *     leaderboard only), or a `userId` who never joined it or whose account
+         *     was deleted, answers 404 `not_found`.
          *     `contributions` and `locked` are read from this challenge only, never
          *     from the other challenges of the participant: `contributions` holds
          *     it when the activity counts in it (never for a participant who
@@ -484,7 +490,8 @@ export interface paths {
          *     out, most recent first (`started_at`, then `id`), each with its
          *     author. A deleted account is never listed, nor are its activities.
          *     Visible to the participants of the challenge (abandoned or excluded
-         *     ones included) and its creators, as the list of a participant
+         *     ones included), its creators and the admins (permission `admin` of
+         *     the access token), as the list of a participant
          *     (`listParticipantActivities`). A challenge the user may not see
          *     answers 404 `challenge_not_found`; a visible one the user never
          *     joined (a public challenge shows them its leaderboard only)
@@ -714,7 +721,7 @@ export interface components {
          * @description Stable error codes. Each ticket adds the codes it returns.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "week_locked" | "activity_overlap" | "rate_limited" | "not_found" | "validation_failed" | "internal_error";
+        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "rate_limited" | "not_found" | "validation_failed" | "internal_error";
         Health: {
             /** @enum {string} */
             status: "ok";
@@ -771,6 +778,13 @@ export interface components {
             language: (string & components["schemas"]["Language"]) | null;
             /** @description True once the first name and the last name are set, with or without a pseudo. */
             profile_complete: boolean;
+            /**
+             * @description True when the access token of the request carries the `admin`
+             *     permission (Auth0 role, README §2.12); never stored. Only lets the
+             *     apps show the administration: every admin route checks the
+             *     permission again.
+             */
+            is_admin: boolean;
         };
         MeUpdate: {
             /** @description `null` removes the pseudo. */
@@ -799,6 +813,12 @@ export interface components {
              * @example 0.3
              */
             suggested_factor: number | null;
+            /**
+             * @description Whether an activity of this sport may have an elevation gain
+             *     (`elevation_gain_meters`), with a distance; always false for a
+             *     sport without distance.
+             */
+            elevation_allowed: boolean;
         };
         ChallengeCreate: {
             /**
@@ -1381,6 +1401,13 @@ export interface components {
             duration_seconds: number;
             /** @description Required or refused according to the sport's `distance_mode`. */
             distance_meters?: number;
+            /**
+             * @description Positive elevation gain in meters, optional; display only (no
+             *     category, no badge counts it). Refused (`elevation_not_allowed`)
+             *     when the sport's `elevation_allowed` is false or the activity has
+             *     no distance. On a change, leaving it out removes it.
+             */
+            elevation_gain_meters?: number;
         };
         Activity: {
             /** Format: uuid */
@@ -1392,6 +1419,8 @@ export interface components {
             started_at: string;
             duration_seconds: number;
             distance_meters: number | null;
+            /** @description Positive elevation gain in meters; null when not entered. */
+            elevation_gain_meters: number | null;
             /** @enum {string} */
             source: "manual";
             /**
@@ -1455,6 +1484,8 @@ export interface components {
             duration_seconds: number;
             /** @description Sum of the distances entered; an activity without distance adds 0. */
             distance_meters: number;
+            /** @description Sum of the elevation gains entered, over the same activities as `distance_meters`; an activity without one adds 0. */
+            elevation_gain_meters: number;
         };
         ActivityWeekPage: {
             items: components["schemas"]["ActivityWeek"][];
@@ -1485,6 +1516,8 @@ export interface components {
             duration_seconds: number;
             /** @description Sum of the distances entered; an activity without distance adds 0. */
             distance_meters: number;
+            /** @description Sum of the elevation gains entered, over the same activities as `distance_meters`; an activity without one adds 0. */
+            elevation_gain_meters: number;
             /** @description The 7 days of the week, Monday to Sunday, empty ones included. */
             days: components["schemas"]["ActivityDay"][];
         };
@@ -1524,6 +1557,8 @@ export interface components {
             started_at: string;
             duration_seconds: number;
             distance_meters: number | null;
+            /** @description Positive elevation gain in meters; null when not entered. */
+            elevation_gain_meters: number | null;
             /** @enum {string} */
             source: "manual";
             /**
@@ -2611,7 +2646,9 @@ export interface operations {
             /**
              * @description The profile is incomplete (`profile_incomplete`), the sport needs
              *     a distance (`distance_required`) or takes none
-             *     (`distance_not_allowed`), the activity overlaps another of the
+             *     (`distance_not_allowed`), an elevation gain is sent for a sport
+             *     or an activity that takes none (`elevation_not_allowed`), the
+             *     activity overlaps another of the
              *     user (`activity_overlap`), or the week of `started_at` is locked
              *     in a challenge where the activity counts, or was already locked
              *     when the user left a challenge (`week_locked`).
@@ -2691,7 +2728,9 @@ export interface operations {
             404: components["responses"]["ActivityNotFound"];
             /**
              * @description The sport needs a distance (`distance_required`) or takes none
-             *     (`distance_not_allowed`), it would overlap another activity of
+             *     (`distance_not_allowed`), an elevation gain is sent for a sport
+             *     or an activity that takes none (`elevation_not_allowed`), it
+             *     would overlap another activity of
              *     the user (`activity_overlap`), or the week of the current or the
              *     new `started_at` is locked in a challenge where the activity
              *     counts, or was already locked when the user left a challenge

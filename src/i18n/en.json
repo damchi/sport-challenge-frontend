@@ -16,6 +16,7 @@
     "challenge_not_found": "This challenge doesn't exist or you don't have access to it.",
     "distance_not_allowed": "This sport takes no distance.",
     "distance_required": "This sport needs a distance.",
+    "elevation_not_allowed": "Elevation gain needs a sport that allows it and a distance.",
     "field_not_editable": "Only the title and description of a challenge can be edited.",
     "forbidden": "You don't have access to this page.",
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
@@ -280,6 +281,13 @@
         "hintOptional": "If you enter it, the activity also counts for distance.",
         "required": "Enter the distance.",
         "range": "Enter a distance in km, from 0.001 to 1000, with 3 decimals at most."
+      },
+      "elevation": {
+        "label": "Elevation gain",
+        "unitLong": "in meters",
+        "unit": "m",
+        "tagOptional": "optional",
+        "range": "Enter an elevation gain in meters, a whole number from 0 to 20,000."
       },
       "serverInvalid": "Value refused. Check it."
     },

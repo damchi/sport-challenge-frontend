@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState, type FocusEvent } from 'react';
+import { useEffect, useRef, useState, type FocusEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -14,6 +14,7 @@ import {
   activityCreateSchema,
   activityFormFieldOf,
   clockTime,
+  takesElevation,
   type ActivityCreateInput,
   type ActivityCreateValues,
 } from '../../domain/schemas/activity';
@@ -53,6 +54,7 @@ const EMPTY: ActivityCreateInput = {
   minutes: '',
   seconds: '',
   distance_km: '',
+  elevation_m: '',
 };
 
 /**
@@ -118,7 +120,9 @@ export function ActivityForm({
  * The fields: a sport of the catalogue, picked among chips in the mockups'
  * order (or "other", with a free label), the start's day and time, read in
  * `timeZone` and said so, the duration (always) and the distance, shown only
- * when the sport has one: required, or optional for "other". No speed: the
+ * when the sport has one: required, or optional for "other", then the
+ * optional elevation gain, shown only when the sport takes one and a
+ * distance is typed (emptied once hidden). No speed: the
  * API computes it. A summary of the entry goes with them. They open with
  * `initialValues`; `save` sends the request and throws the API's refusal,
  * shown here: on the refused fields, or above the button (`weekLockedKey`
@@ -168,7 +172,19 @@ export function ActivityFormFields({
   // Saved, the form gives way to the outcome: the warning goes with it.
   const blocker = useLeaveWarning(Object.keys(dirtyFields).length > 0);
   const sportCode = useWatch({ control: form.control, name: 'sport_code' });
-  const mode = sports.find((sport) => sport.code === sportCode)?.distance_mode;
+  const distanceKm = useWatch({ control: form.control, name: 'distance_km' });
+  const sport = sports.find((candidate) => candidate.code === sportCode);
+  const mode = sport?.distance_mode;
+  const hasElevation = takesElevation(sport, distanceKm);
+  // Hidden, it holds nothing: shown again, it opens empty. Only the user's
+  // change of sport or distance hides it, and that change alone tells
+  // whether the entry is changed: emptying it marks nothing.
+  useEffect(() => {
+    if (!hasElevation && form.getValues('elevation_m') !== '') {
+      form.setValue('elevation_m', '');
+      form.clearErrors('elevation_m');
+    }
+  }, [hasElevation, form]);
 
   // validation_failed names the refused fields: each shows an error where it
   // is entered. Other codes are said above the button.
@@ -219,6 +235,7 @@ export function ActivityFormFields({
   const startError = errors.start_date?.message;
   const durationError = errors.hours?.message;
   const distanceError = errors.distance_km?.message;
+  const elevationError = errors.elevation_m?.message;
   const hasDistance = mode === 'required' || mode === 'optional';
   const [today] = toZonedDateTime(now(), timeZone).split('T');
 
@@ -400,6 +417,38 @@ export function ActivityFormFields({
                 </p>
               )}
               <FieldError id="distance_km-error" message={distanceError} />
+            </div>
+          )}
+
+          {hasElevation && (
+            <div>
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <label htmlFor="elevation_m" className={legendClass}>
+                  {t('activityForm.fields.elevation.label')}{' '}
+                  <span className="sr-only">{t('activityForm.fields.elevation.unitLong')}</span>
+                </label>
+                <span id="elevation_m-tag" className="text-sm text-muted">
+                  {t('activityForm.fields.elevation.tagOptional')}
+                </span>
+              </div>
+              <div className="relative mt-3 lg:max-w-sm">
+                <input
+                  id="elevation_m"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  aria-invalid={elevationError ? true : undefined}
+                  aria-describedby={[
+                    'elevation_m-tag',
+                    ...(elevationError ? ['elevation_m-error'] : []),
+                  ].join(' ')}
+                  className={`${inputClass} mt-0! h-13 w-full pr-14`}
+                  {...register('elevation_m')}
+                />
+                <span aria-hidden="true" className={unitClass}>
+                  {t('activityForm.fields.elevation.unit')}
+                </span>
+              </div>
+              <FieldError id="elevation_m-error" message={elevationError} />
             </div>
           )}
         </div>

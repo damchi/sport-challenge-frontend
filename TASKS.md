@@ -367,6 +367,52 @@ Total : **166 points** (57 tickets), dont **152 pour la V1** ; 14 points sont re
 **Commit** : `feat(challenges): end the home list with a create tile`
 **Statut** : À faire
 
+### SC-WEB-067 · Après l'onboarding : accueil, sauf invitation
+`F3` · Bug · Phase 3 · Estimation 1 · Dépend de : 018, 039 · Backend : aucun
+
+**Contexte** : à la fin de l'onboarding, `ProfileGate` renvoie vers la page demandée avant la redirection vers `/onboarding` (`state.returnTo`). Un nouvel utilisateur arrivé sur `/challenges/new` (lien partagé, page restée en mémoire) se retrouve sur la création de défi au lieu de l'accueil. Décision du 2026-11-21 : après l'onboarding, **toujours l'accueil**, sauf si l'onboarding a interrompu une invitation (`/invite#<jeton>`), qui se rouvre pour pouvoir être acceptée (« retour après onboarding » de SC-WEB-039).
+
+**Critères d'acceptation**
+- [ ] Profil devenu complet sur `/onboarding` : redirection vers `/`, quelle que soit la page demandée (`/challenges/new`, `/challenges/:id`, etc.).
+- [ ] Exception : si la page demandée est `/invite` (chemin exact), retour sur l'invitation avec son fragment (jeton) intact.
+- [ ] `safeReturnTo` reste appliqué (pas de redirection hors de l'app) ; un `returnTo` invalide ou absent mène à `/`.
+- [ ] Commentaire de `ProfileGate` mis à jour.
+
+**Tests** : `ProfileGate.test.tsx` (retour à `/invite#…` ; `/challenges/new`, `/challenges/42`, `/invitex`, adresse externe, valeur invalide → `/`) ; `onboarding.test.tsx` (parcours complet → `/`) ; test d'invitation existant (retour à l'invitation) toujours vert.
+**Revue** : `ts-reviewer`, `security-reviewer` (redirection).
+**Commit** : `fix(profile): open the home page after onboarding`
+**Statut** : À faire
+
+### SC-WEB-077 · Onboarding conforme aux maquettes web et mobile
+`F3` · Story · Phase 9 · Estimation 3 · Dépend de : 018, 053 · Backend : aucun (`GET /me`, `PATCH /me` existants)
+
+**Contexte** : l'écran d'onboarding (`/onboarding`, `OnboardingPage`, `OnboardingForm`) ne ressemble pas aux maquettes `docs/design/maquettes/WebBienvenue.png` (web) et `Bienvenue.png` (mobile, 360 px). Aujourd'hui : titre « Bienvenue », long texte d'intro, champs, bouton « Continuer ».
+
+**Ce que montrent les maquettes**
+- En-tête : logo (trophée) + « Sport Challenge », sans navigation. Web : formulaire dans une carte centrée ; mobile : pleine largeur.
+- Titre « Bienvenue ! », sous-titre court « Présente-toi en quelques secondes. Ton courriel reste privé. »
+- Encart d'aperçu **« Les autres te verront ainsi »** : avatar à initiales + nom affiché, mis à jour pendant la saisie (pseudo s'il est rempli, sinon prénom et nom, même règle que `displayName`).
+- Prénom et Nom côte à côte sur web, l'un sous l'autre sur mobile.
+- Pseudo (facultatif) avec préfixe `@`, exemple en placeholder (« ex. : coureur_du_dimanche »), aide « S'il est rempli, il remplace ton nom dans les défis. 3 à 20 caractères : lettres, chiffres, _, . ou - ».
+- Langue en contrôle segmenté Français / English.
+- Bouton pleine largeur « C'est parti », puis « Tout se change plus tard dans ton profil. »
+
+**Questions à trancher avant de coder** (❓)
+1. « Courriel » (maquette) ou « e-mail » (textes actuels, profil compris) : quel terme en français, partout ?
+2. Encart d'aperçu tant que prénom et nom sont vides : initiales et nom masqués, ou texte d'attente ?
+
+**Critères d'acceptation**
+- [ ] Mise en page web et mobile conforme aux deux maquettes, jetons uniquement, clair et sombre.
+- [ ] Aperçu « Les autres te verront ainsi » mis à jour en direct, avec la règle d'affichage existante (aucune règle nouvelle).
+- [ ] Validation inchangée (schémas de `src/domain/schemas`), erreurs serveur traduites (`errors.<code>`).
+- [ ] Choisir la langue change l'interface tout de suite ; la destination après l'envoi est inchangée (accueil, sauf invitation, SC-WEB-067).
+- [ ] Textes FR/EN ; zones tactiles ≥ 44 px ; libellés sur tous les champs ; `docs/design/design.md` mis à jour si besoin (fichier local, hors git).
+
+**Tests** : aperçu (pseudo vide puis rempli), validation, envoi et redirection, changement de langue, états (envoi en cours, erreur).
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(profile): lay out the onboarding like the mockups`
+**Statut** : À faire
+
 ---
 
 # F4 — Accueil et challenges
@@ -580,6 +626,101 @@ Spec (dépôt backend) : `docs/superpowers/specs/2026-11-20-categories-a-la-cart
 **Commit** : `docs: align agents and skills with the optional categories`
 **Statut** : À faire
 
+### SC-WEB-068 · Page d'un défi conforme aux maquettes web et mobile
+`F4` · Story · Phase 9 · Estimation 5 · Dépend de : 024 · Backend : rien a priori (voir « Contrat »)
+
+**Contexte** : la page d'un défi ne ressemble pas aux maquettes `docs/design/maquettes/defi-web.png` (web, 1280 px) et `defi-mobile.png` (mobile, 360 px). Ces maquettes remplacent `defi.png` et `defi-sombre.png` (supprimées) et tiennent compte des **catégories à la carte**. Aujourd'hui (`ChallengeDetailView`, `ChallengeHeader`) : lien retour, titre, pastilles de statut et de rôle, période et visibilité, encart « Semaine N », description, puis onglets Classement / Participants / Activités avec le classement par catégorie à gauche et la carte des catégories à droite.
+
+**Mise en page cible (web)**
+- **En-tête** : lien « ‹ Mes défis » ; titre ; méta sur une ligne « 8 participants · 4 catégories · Semaine 3 sur 4 » + pastille « Tu participes » ; description. À droite : bouton secondaire « Inviter des amis » et bouton rond « … » (menu).
+- **Bandeau de clôture** (fond sombre, pleine largeur) : « Semaine 3 · se termine samedi 28 novembre à 0 h » à gauche, « Classements mis à jour le 21 nov. à 20 h 45 » à droite (`computed_at` du classement), dans le fuseau du défi.
+- **« Où tu en es »** : une carte par catégorie du défi, dans leur ordre (grille de 4 en web) : libellé en majuscules avec icône, grand chiffre, sous-titre, rang « 4e sur 8 ».
+  - Temps cumulé : « 4 h 12 », « tous sports confondus ».
+  - Distance cumulée : « 41,8 km », « en équivalent course ».
+  - Course avec élimination : « 18 / 25 km », « en course à pied, cette semaine », barre de progression, « 5e sur 6 en course », badge « À risque » ; carte à bordure d'avertissement quand elle est à risque.
+  - Grand prix (la maquette dit « Points », décision du 2026-11-21 : « Grand prix ») : « 19 pts », « +4 provisoires cette semaine ».
+  - La carte de la catégorie affichée dans le classement est mise en avant (bordure accent, fond accent léger).
+- **Colonne de gauche** : onglets Classement / Participants / Activités (conservés). Onglet Classement : carte « Classement · <catégorie> » + phrase qui décrit la catégorie ; **Podium** (3 cartes : rang, « ex æquo » le cas échéant, avatar, nom, valeur) ; **Suite du classement** (rang, avatar, nom, valeur) ; ma ligne « Toi » en accent.
+- **Colonne de droite** : carte « Règles des catégories » (« Fixées à la création du défi, elles ne changent plus. ») avec la règle de chaque catégorie ; pour la distance, le tableau des coefficients par sport et le sport de référence. Remplace la carte des catégories actuelle.
+- **Mobile (360 px)** : retour en icône, « Inviter » et « … » en boutons ronds à icône (libellés accessibles) ; méta sur deux lignes ; cartes « Où tu en es » en défilement horizontal ; podium sur 3 colonnes ; « Règles des catégories » en section repliable sous le classement.
+- Disparaissent : les pastilles de statut et de rôle actuelles (sauf « Tu participes »), l'encart « Semaine N » (remplacé par le bandeau), la période et la visibilité dans l'en-tête (❓ voir plus bas).
+
+**Questions à trancher avant de coder** (❓)
+1. Que contient le menu « … » (abandonner, période et visibilité, autre) ? Le bouton « Abandonner » existe déjà (condition : `my_status` active et défi non terminé).
+2. Quelle catégorie est affichée au départ, et cliquer sur une carte « Où tu en es » change-t-il la catégorie du classement (🟡 lecture de la maquette) ?
+3. Le sélecteur « Semaine N » / « Général » disparaît : le classement est-il seulement le général ? Où voit-on les éliminés de la catégorie élimination (section « Éliminés » sous la suite, hors podium, comme décidé le 2026-11-20) ?
+4. « Où tu en es » et bandeau pour un visiteur non participant, un participant qui a abandonné, un défi à venir ou terminé : masqués, ou une autre version ?
+5. Que deviennent la période (dates) et la visibilité (public / privé), absentes de la maquette ?
+
+**Contrat** : `GET /challenges/{id}/leaderboard` couvre la maquette : `computed_at` (« mis à jour le »), ma ligne dans chaque catégorie (`rank`, `value`, `elimination.minimum_meters` / `distance_meters` / `status`, `provisional_points`). Manque le **nombre de classés** (« 4e sur 8 », « 5e sur 6 en course ») : `ranked_count` n'existe que dans `my_week` de la liste `mine`. À demander au backend dans le classement (ou `my_week` dans `GET /challenges/{id}`) plutôt que de le compter côté client.
+
+**Critères d'acceptation** (à préciser après les décisions)
+- [ ] Mise en page web et mobile conforme à `defi-web.png` et `defi-mobile.png`, jetons uniquement, clair et sombre.
+- [ ] `docs/design/design.md` (§ Écrans de référence, 2. « Page d'un défi ») mis à jour selon les nouvelles maquettes (fichier local, hors git).
+- [ ] Tous les textes en FR/EN ; dates dans le fuseau du défi, fuseau nommé s'il diffère ; distances en km et durées formatées selon la langue.
+- [ ] États chargement, erreur avec réessai, vide ; zones tactiles ≥ 44 px ; classement en `<ol>`, ex aequo au même rang (podium compris) ; abandons hors podium.
+- [ ] Défis à 1, 2 ou 4 catégories, avec et sans élimination.
+
+**Tests** : rendu de chaque carte « Où tu en es » avec MSW (temps, distance, élimination à risque, Grand prix avec points provisoires), podium avec ex aequo, ma ligne mise en avant, règles des catégories, défi à une seule catégorie, états.
+**Revue** : `ux-reviewer`, `spec-guardian`, `ts-reviewer`.
+**Commit** : `feat(challenges): lay out the challenge page like the mockup`
+**Statut** : À faire
+
+### SC-WEB-072 · Bandeau de semaine sur toutes les cartes en cours de l'accueil
+`F4` · Story · Phase 9 · Estimation 1 · Dépend de : 069 · Backend : damchi/sport-challenge-api#280 (SC-API-146), `current_week` et `week_ends_at` dans `ChallengeSummary`
+
+**Contexte** : sur l'accueil (SC-WEB-069, PR #129), le bandeau « Semaine 3 sur 4 · se termine … » d'une carte en cours se lit dans `my_week`, qui est null pour un non-participant (onglet « Publics »), pour un participant qui a abandonné et pour un exclu. Ces cartes n'ont donc pas de bandeau, alors que la décision du 2026-11-22 veut les mêmes cartes dans « Publics » (seules les lignes « où tu en es » sont réservées aux participants).
+
+**À faire**
+- `pnpm api:sync` puis `pnpm api:generate` une fois #280 livré.
+- `ChallengeCard` : le bandeau lit `current_week` et `week_ends_at` (plus `my_week`) ; les lignes par catégorie restent celles de `my_week`.
+- Mocks MSW à jour.
+
+**Critères d'acceptation**
+- [ ] Une carte en cours affiche le bandeau de semaine pour tout le monde (« Mes défis », « Publics », abandon), dans le fuseau du défi.
+- [ ] Les lignes « où tu en es » restent réservées à `my_week`.
+- [ ] Rien n'est recalculé côté client.
+
+**Tests** : carte en cours d'un non-participant et d'un participant qui a abandonné (bandeau présent, pas de lignes) ; défi en cours avec `current_week` null (pas de bandeau).
+**Revue** : `ts-reviewer`, `spec-guardian`.
+**Commit** : `feat(challenges): show the current week on every ongoing card`
+**Statut** : À faire
+
+### SC-WEB-073 · Formulaire de création de défi conforme aux maquettes web et mobile
+`F4` · Story · Phase 9 · Estimation 5 · Dépend de : 058 · Backend : aucun a priori (voir « Contrat »)
+
+**Contexte** : l'assistant de création (`ChallengeCreateWizard`, `InfoStep`, `DurationStep`, `CategoriesStep`, `RecapStep`) ne ressemble pas aux nouvelles maquettes `docs/design/maquettes/CreerDefi1.png` à `CreerDefi4.png` (mobile, 360 px) et `WebCreerDefi1.png` à `WebCreerDefi4.png` (web, 1280 px). Ces maquettes ne sont pas encore suivies par git : elles entrent dans le commit de ce ticket (avec les autres maquettes non suivies du dossier).
+
+**Mise en page cible**
+- **Cadre mobile** : en-tête « ✕ Créer un défi » (✕ = quitter, avec l'avertissement de saisie perdue) ; « Étape 1 sur 4 · Infos » au-dessus d'une barre de progression en 4 segments ; boutons « Retour » / « Suivant » collés en bas de l'écran (« Suivant » seul à l'étape 1).
+- **Cadre web** : lien « ‹ Défis », titre « Créer un défi », barre d'étapes numérotées (Infos · Dates · Catégories · Vérifier ; coche sur les étapes faites) ; formulaire dans une carte (« Étape N sur 4 » + titre) ; pied de carte « Annuler » (étape 1) ou « ‹ Retour », et « Suivant » / « Créer le défi » ; colonne de droite « Aperçu dans la liste des défis » (pastilles « À venir » et visibilité, titre, « 22 nov. → 2 janv. · 6 semaines », catégories choisies, sport de référence) et encadré « Bon à savoir » propre à chaque étape.
+- **Étape 1 « Le défi »** : titre avec compteur « 14 / 80 » ; description (facultative) ; « Qui peut voir le défi ? » en cartes radio Privé / Public (« Listé dans l'onglet Publics : tout le monde peut le voir et s'inscrire. ») ; carte « Les participants peuvent inviter » avec interrupteur. En web, Privé et Public côte à côte.
+- **Étape 2 « Quand ça se passe »** : durée en compteur − / + (« 6 semaines », de 2 à 52) ; « Premier jour » ; fuseau ; bloc « Calendrier du défi » (« Du dimanche 22 novembre 2026 au samedi 2 janvier 2027 inclus », « Chaque semaine commence le dimanche à minuit, heure de l'Est. ») avec une tuile par semaine (« Semaine 1 · 22 nov. – 28 nov. »), 2 colonnes en mobile, 4 en web. En web, durée et premier jour côte à côte.
+- **Étape 3 « Comment on gagne »** : sport de référence ; « Catégories » en cartes avec icône : Temps cumulé (« Toujours inclus »), Distance cumulée, Élimination · <sport>, Grand prix, chacune avec un interrupteur ; réglages dans la carte ouverte : « Hausse minimale d'une semaine à l'autre » (champ suffixé « km ») et encadré « Exemple » ; critères du Grand prix en puces à cocher ; barème en cartes radio Top 5 / Top 10 avec les points ; carte « Coefficients de distance » repliée en puces (« Course ×1 (référence) », « Vélo ×0,3 »…) avec lien « Personnaliser » qui ouvre la saisie.
+- **Étape 4 « Tout vérifier »** : sections Infos, Dates, Catégories, chacune avec un lien « Modifier » qui ramène à l'étape ; lignes libellé / valeur / précision (web : libellé à gauche) ; « Coefficients : Valeurs proposées » ou personnalisées ; avertissement « Après la création, les catégories, le sport de référence et leurs réglages ne pourront plus être modifiés. » ; bouton « Créer le défi ».
+
+**Questions à trancher avant de coder** (❓)
+1. **Durée minimale d'une séance** (Grand prix, critère « Nombre de séances ») : absente de la maquette. On la garde dans la carte Grand prix quand le critère est coché (SC-WEB-058) ?
+2. **« Les participants peuvent inviter »** : activé dans la maquette, désactivé par défaut aujourd'hui. On change la valeur par défaut ?
+3. **Pastille « À venir » de l'aperçu web** : un défi qui commence aujourd'hui est déjà en cours à sa création. Pastille selon le premier jour choisi, ou toujours « À venir » ?
+4. **Libellés** : on adopte ceux de la maquette (« Infos », « Dates », « Vérifier », « Hausse minimale d'une semaine à l'autre » au lieu de « Incrément X », « Premier jour » au lieu de « Date de début ») ?
+5. **Valeurs par défaut des catégories** : la maquette montre tout activé ; on garde le temps cumulé seul au départ (décision « catégories à la carte ») ?
+
+**Contrat** : rien de nouveau a priori, la requête de création ne change pas. Le calendrier et l'aperçu se lisent dans la saisie (avant création, aucune donnée serveur) : ils réutilisent `windowPreview` sans dupliquer de règle produit.
+
+**Critères d'acceptation**
+- [ ] Mise en page mobile et web conforme aux huit maquettes, jetons uniquement, clair et sombre.
+- [ ] Comportement inchangé : validation par étape, erreurs serveur rattachées aux champs, avertissement en quittant, idempotence de l'envoi, ouverture de la page du défi après création.
+- [ ] « Modifier » du récapitulatif ramène à la bonne étape et garde la saisie.
+- [ ] `docs/design/design.md` (§ Écrans de référence) complété pour l'écran de création.
+- [ ] Tous les textes en FR/EN ; dates dans le fuseau choisi ; distances en km et coefficients selon la langue.
+- [ ] Zones tactiles ≥ 44 px ; interrupteurs, cartes radio et puces à cocher accessibles au clavier et au lecteur d'écran (rôle, état, libellé) ; l'état n'est jamais donné par la couleur seule.
+
+**Tests** : compteur du titre, compteur de durée (bornes 2 et 52), tuiles de semaines (date injectée), cartes de catégories et réglages, « Personnaliser » les coefficients, « Modifier » depuis le récapitulatif, requête envoyée inchangée (MSW).
+**Revue** : `ux-reviewer`, `spec-guardian`, `ts-reviewer`.
+**Commit** : `feat(challenges): lay out the creation wizard like the mockups`
+**Statut** : À faire
+
 ---
 
 # F5 — Classement
@@ -771,6 +912,84 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Commit** : `feat(ui): add a danger variant to the confirmation dialog`
 **Statut** : À valider
 
+### SC-WEB-076 · Mes activités : résumé de la semaine, filtres par sport et totaux
+`F6` · Story · Phase 9 · Estimation 3 · Dépend de : 075 · Backend : damchi/sport-challenge-api#282 (SC-API-147) : filtre `sport` de `/me/activities`, `/me/activities/summary`, `/me/activities/weeks`. **Bloquant** jusqu'à sa fusion, puis `pnpm api:sync` et `pnpm api:generate`.
+
+**Contexte** : suite de SC-WEB-075 pour les maquettes `Activites.png` / `WebActivites.png` : les parties qui demandent des totaux du serveur.
+
+**À faire**
+- **Carte « Cette semaine · 17 – 23 nov. »** sous l'en-tête : séances, durée (« 1 h 10 de mouvement »), distance (« 32 km parcourus ») ; barres des 7 jours **L M M J V S D** (hauteur selon la durée du jour, jour courant en gras) ; en web, chiffres à gauche et barres à droite.
+- **Filtres par sport** : puces « Tous 6 », « Course 4 »… (ordre et nombres du serveur), une seule sélectionnée, groupe accessible ; la liste et les totaux par semaine suivent le filtre.
+- **Totaux par semaine** à côté du titre de chaque groupe (« 4 séances · 2 h 36 · 26 km »), sous le titre en mobile, à droite en web.
+- `tz` envoyé = fuseau de saisie des activités.
+
+**Critères d'acceptation**
+- [ ] Données uniquement par les nouvelles routes (aucun total calculé côté client).
+- [ ] Carte de la semaine, filtres et totaux conformes aux maquettes, clair et sombre, FR/EN (pluriels « séance »/« séances »).
+- [ ] États chargement, erreur avec réessai, vide (semaine sans activité, filtre sans résultat).
+- [ ] Puces en groupe radio accessible ; barres avec un texte accessible (durée de chaque jour).
+
+**Tests** : MSW pour les trois routes, filtre appliqué à la liste et aux totaux, semaine vide, pluriels, erreur.
+**Revue** : `ux-reviewer`, `spec-guardian`, `ts-reviewer`.
+**Commit** : `feat(activities): show my weekly totals and sport filters`
+**Statut** : À faire
+
+### SC-WEB-080 · Saisie du dénivelé positif dans le formulaire d'activité
+`F6` · Story · Phase 9 · Estimation 2 · Dépend de : 074 · Backend : SC-API-149 (damchi/sport-challenge-api#286)
+
+**Contexte** : on veut saisir le dénivelé positif d'une activité dans le formulaire d'ajout et de modification.
+
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+
+**Contrat** (SC-API-149) : `Sport.elevation_allowed` ; `ActivityCreate.elevation_gain_meters` (entier de 0 à 20 000, facultatif, non nullable : en modification, l'omettre le retire) ; erreur `elevation_not_allowed` (422).
+
+**Critères d'acceptation**
+- [ ] Champ « Dénivelé positif (m) » facultatif, affiché seulement si le sport l'autorise **et** qu'une distance est saisie ; masqué et vidé sinon (changement de sport, distance effacée).
+- [ ] Pré-rempli en modification ; vider le champ omet `elevation_gain_meters`, ce qui retire le D+ (le contrat n'accepte pas `null`).
+- [ ] Validation côté client (entier ≥ 0, borne du contrat) ; erreurs du serveur traduites d'après le code.
+- [ ] Respect des maquettes du formulaire (SC-WEB-074) et du verrouillage des semaines existant.
+
+**Tests** : affichage selon le sport et la distance, envoi avec/sans D+, modification, erreur `elevation_not_allowed` (MSW), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(activities): enter the elevation gain`
+**Statut** : À faire
+
+### SC-WEB-081 · Dénivelé positif dans la liste et le détail des activités
+`F6` · Story · Phase 9 · Estimation 1 · Dépend de : 080 · Backend : SC-API-149 (damchi/sport-challenge-api#286)
+
+**Contexte** : le D+ saisi doit apparaître dans la liste et le détail des activités.
+
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+
+**Contrat** (SC-API-149) : `Activity.elevation_gain_meters` (null = non saisi).
+
+**Critères d'acceptation**
+- [ ] « Mes activités » (SC-WEB-075) et onglet Activités d'un défi (SC-WEB-071) : D+ affiché à côté de la distance (ex. « ↗ 450 m »), nombres formatés selon la langue.
+- [ ] Rien d'affiché quand `elevation_gain_meters` est null (pas de « 0 m » inventé) ; 0 saisi s'affiche « 0 m ».
+
+**Tests** : rendu avec MSW (null, 0, valeur), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(activities): show the elevation gain`
+**Statut** : À faire
+
+### SC-WEB-082 · Dénivelé positif cumulé dans les totaux de la semaine
+`F6` · Story · Phase 9 · Estimation 1 · Dépend de : 076 · Backend : SC-API-150 (damchi/sport-challenge-api#287)
+
+**Contexte** : les totaux de la semaine de « Mes activités » affichent séances, durée et distance ; on y ajoute le **D+ cumulé**.
+
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+
+**Contrat** (SC-API-150) : `ActivityWeek.elevation_gain_meters` et `CurrentActivityWeek.elevation_gain_meters` (entiers requis, 0 sans D+).
+
+**Critères d'acceptation**
+- [ ] D+ cumulé dans le résumé de la semaine en cours et dans les totaux par semaine, nombres formatés selon la langue.
+- [ ] Valeur fournie par le serveur (aucune somme côté client).
+
+**Tests** : rendu avec MSW (0, valeur), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(activities): show the weekly elevation gain`
+**Statut** : À faire
+
 ---
 
 # F7 — Invitations
@@ -801,6 +1020,30 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Tests** : parcours connecté et non connecté, chaque erreur, retour après onboarding.
 **Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer`, `spec-guardian`.
 **Commit** : `feat(invitations): add invitation page and acceptance flow`
+**Statut** : À faire
+
+### SC-WEB-070 · Retour arrière après « Voir le défi » depuis une invitation : page d'erreur
+`F7` · Bug · Phase 7 · Estimation 2 · Dépend de : 039, 067 · Backend : aucun
+
+**Constat** : un nouvel utilisateur ouvre un lien d'invitation (`/invite#<jeton>`), se connecte (ou crée son compte), fait son onboarding et revient sur l'invitation (« Rejoindre » / « Voir le défi »). S'il touche **« Voir le défi »** puis la **flèche retour du navigateur**, il arrive sur une page d'erreur au lieu de revenir à l'invitation.
+
+**Reproduction**
+1. Déconnecté, ouvrir un lien d'invitation valide.
+2. Se connecter avec un compte neuf, terminer l'onboarding.
+3. Sur l'invitation, toucher « Voir le défi ».
+4. Flèche retour du navigateur → page d'erreur.
+
+**Piste (à confirmer en reproduisant)** : chaque étape interne remplace l'entrée d'historique (`/callback` → `/invite` dans `App.tsx` ; `ProfileGate` vers `/onboarding` puis retour ; lien « Voir le défi » en `replace` dans `InvitationView.tsx`). L'entrée précédant la page du défi est donc la page de connexion **Auth0** (`/u/login?state=…`), dont la transaction est déjà consommée : Auth0 affiche une erreur. À vérifier : quelle page d'erreur exactement (Auth0 ou celle de l'app), et si le même cas existe avec « Rejoindre » (aussi en `replace`) ou sans onboarding.
+
+**Critères d'acceptation**
+- [ ] Après invitation → connexion → onboarding → « Voir le défi », la flèche retour n'affiche aucune page d'erreur (ni Auth0 ni app).
+- [ ] Décision du 2026-11-21 : depuis la page du défi ouverte par « Voir le défi », la flèche retour **revient à l'invitation** (`/invite#<jeton>`), qui permet encore de rejoindre. Après « Rejoindre », le jeton quitte toujours l'historique (SC-WEB-039, inchangé).
+- [ ] Même vérification pour « Rejoindre » et pour un utilisateur déjà connecté / déjà onboardé (pas de régression).
+- [ ] Les entrées d'historique de la connexion (`/callback`, pages Auth0) ne sont plus atteignables par le retour, ou y mènent sans erreur.
+
+**Tests** : `InvitationView.test.tsx` (« Voir le défi » ajoute une entrée d'historique : le retour rouvre l'invitation) ; e2e Playwright du parcours d'invitation avec retour arrière si la connexion simulée le permet.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer` (historique et jeton d'invitation).
+**Commit** : `fix(invitations): keep the browser back button off the sign-in pages`
 **Statut** : À faire
 
 ---
@@ -862,6 +1105,58 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Abandonné le 2026-11-20** : l'app est réservée à un cercle d'amis, sans politique de confidentialité, conditions d'utilisation, pied de page légal ni mécanisme de consentement. L'information utile reste dans l'app : les activités, le prénom et le nom sont visibles des autres participants, ce que l'écran du challenge indique avant de rejoindre. À rouvrir si l'app s'ouvre au-delà de ce cercle (et avant toute analytics produit).
 
 **Statut** : Abandonné
+
+### SC-WEB-078 · Page Profil conforme aux maquettes web et mobile
+`F8` · Story · Phase 9 · Estimation 5 · Dépend de : 040, 053 · Backend : aucun pour la mise en page (les chiffres de la carte sont dans #142 SC-WEB-079)
+
+**Contexte** : la page Profil (`/me`, `ProfilePage`) ne ressemble pas aux maquettes `docs/design/maquettes/WebProfil.png` (web) et `Profil.png` (mobile, 360 px). Aujourd'hui : avatar et nom, Identité (prénom et nom avec leur propre bouton, e-mail), formulaire du pseudo séparé, lien « Mes activités », réglages, suppression du compte, l'un sous l'autre.
+
+**Ce que montrent les maquettes**
+- **Web** : deux colonnes. À gauche, la carte d'identité ; à droite, les cartes Identité, Préférences, Compte. **Mobile** : les mêmes cartes l'une sous l'autre.
+- **Carte d'identité** : grand avatar à initiales, prénom et nom complets, `@pseudo` dessous (s'il existe), puis les chiffres (défis, activités, heures, **#142 SC-WEB-079**, hors de ce ticket), puis la ligne « Mes activités » (icône activité, chevron) vers `/activities`.
+- **Identité** (« Ce que les autres participants voient de toi. ») : Prénom et Nom (côte à côte sur web), Pseudo (facultatif) avec préfixe `@` et aide « 3 à 20 caractères… », encart en lecture seule « Adresse courriel » + adresse + « Celle de ta connexion : elle ne se change pas ici. », **un seul** bouton « Enregistrer » pour prénom, nom et pseudo (à droite sur web, pleine largeur sur mobile).
+- **Préférences** (« Appliquées tout de suite. ») : Langue (Français / English) et Thème (Système / Clair / Sombre) en contrôles segmentés.
+- **Compte** : « Se déconnecter » (icône sortie) et « Supprimer mon compte » (icône corbeille, couleur danger), en lignes.
+
+**Décisions du 2026-11-23**
+1. Un seul « Enregistrer » pour prénom, nom et pseudo (un seul `PATCH /me`, pseudo vidé → `pseudo: null`), message unique « Profil enregistré. ».
+2. « **Courriel** » partout en français (profil, onboarding, suppression du compte). Thème : « **Système** » / « Clair » / « Sombre ».
+3. Adresse absente (`email: null`) : « Non renseigné » dans l'encart.
+
+**Critères d'acceptation**
+- [ ] Mise en page web et mobile conforme aux deux maquettes (sans les chiffres), jetons uniquement, clair et sombre.
+- [ ] Prénom, nom et pseudo enregistrés ensemble ; validation et erreurs inchangées (`pseudo_taken`, etc. traduits).
+- [ ] Langue et thème appliqués tout de suite (comportement actuel conservé) ; déconnexion et suppression du compte inchangées (confirmation, défis bloquants).
+- [ ] « Supprimer mon compte » en style danger (jeton existant, voir le bouton danger de `ConfirmDialog`).
+- [ ] Textes FR/EN ; zones tactiles ≥ 44 px ; `docs/design/design.md` mis à jour si besoin (fichier local, hors git).
+
+**Tests** : enregistrement groupé (prénom, nom, pseudo ; retrait du pseudo), erreur de pseudo pris, carte d'identité avec et sans pseudo, préférences, déconnexion, suppression.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `security-reviewer` (déconnexion, suppression).
+**Commit** : `feat(profile): lay out the profile page like the mockups`
+**Statut** : À faire
+
+### SC-WEB-079 · Profil : nombre de défis, d'activités et d'heures
+`F8` · Story · Phase 9 · Estimation 2 · Dépend de : 078 · Backend : damchi/sport-challenge-api#284 (SC-API-148), bloquant
+
+**Contexte** : la carte d'identité du profil (maquettes `WebProfil.png`, `Profil.png`) affiche trois chiffres sous le nom : **défis**, **activités**, **heures** (ex. « 3 défis · 18 activités · 14 heures »).
+
+**Contrat**
+- **Activités** : `GET /me/activities/summary` donne `total` (toutes mes activités, supprimées exclues). ✔
+- **Défis** : aucun champ. Le compter côté client à partir de `GET /challenges?filter=mine` (paginé, et quels statuts comptent ?) dupliquerait une règle : demandé dans damchi/sport-challenge-api#284 (`challenge_count`).
+- **Heures** : aucun champ (le résumé ne donne la durée que de la semaine en cours). Demandé dans damchi/sport-challenge-api#284 (`total_duration_seconds` dans `ActivitySummary`).
+
+**Décision du propriétaire du produit du 2026-11-23** : le nombre de défis compte les défis que l'utilisateur a **rejoints**, quel que soit leur statut (à venir, en cours, terminés), **abandonnés compris** ; pas ceux qu'il a seulement créés sans y participer ; pas les défis supprimés.
+
+**Décision du 2026-11-23** : la durée totale s'affiche en **heures et minutes** (ex. « 14 h 30 »), formatée selon la langue, secondes ignorées.
+
+**Critères d'acceptation**
+- [ ] Trois chiffres dans la carte d'identité, valeurs fournies par le serveur, nombres formatés selon la langue, au singulier et au pluriel (« 1 défi », « 3 défis »).
+- [ ] Chargement (squelette) et erreur sans bloquer le reste du profil.
+
+**Tests** : rendu avec MSW (0, 1, plusieurs), pluriels FR/EN, durée en heures et minutes (0 min, moins d'une heure, heures pile, heures et minutes), erreur du résumé.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(profile): show challenge, activity and hour counts on the profile`
+**Statut** : À faire
 
 ---
 
@@ -993,6 +1288,24 @@ Décision du 2026-11-21 : le déploiement en production devient automatique apr�
 
 **Revue** : `security-reviewer`.
 **Commit** : `docs: add frontend runbook and production readiness checklist`
+**Statut** : À faire
+
+### SC-WEB-065 · Survol des boutons (web)
+`F9` · Story · Phase 9 · Estimation 2 · Backend : aucun
+
+**Contexte** : sur le web, les boutons ne réagissent pas au passage de la souris : rien n'indique qu'ils sont cliquables avant le clic. Seule `ChallengeCard` a un survol (`[@media(hover:hover)]:hover:border-muted`). `docs/design/design.md` (§ Mise en page, « Survol » 🟡) ne traite que les cartes cliquables et les liens d'action ; la section « Boutons » ne définit aucun état de survol. Le style est donc à décider avant de coder.
+
+**Critères d'acceptation**
+- [ ] Décision de design : état de survol de chaque type de bouton (principal, secondaire, icône seule, tuiles « Créer un défi » / « Ajouter une activité »), en clair et en sombre, avec des jetons existants ou nouveaux (contraste AA conservé). Ajouté à `docs/design/design.md` (section « Boutons ») ; le 🟡 « Survol » passe en ✅ si validé.
+- [ ] Le survol ne s'applique que sous `@media (hover: hover)` (rien de collant sur téléphone après un toucher).
+- [ ] Un style partagé (classe ou variante Tailwind) plutôt qu'une répétition par composant ; couleurs uniquement via les jetons, jamais en dur.
+- [ ] Les boutons désactivés et en cours d'envoi ne changent pas au survol ; `cursor: pointer` sur les éléments actifs.
+- [ ] Le survol ne remplace pas le focus clavier (`:focus-visible` inchangé) et aucune information n'est disponible uniquement au survol.
+- [ ] Transition courte, désactivée sous `prefers-reduced-motion: reduce`.
+
+**Tests** : rendu des variantes (classes de survol présentes, absentes quand désactivé) ; vérification visuelle clair/sombre.
+**Revue** : `ux-reviewer`, `ts-reviewer`.
+**Commit** : `feat(ui): add hover states to buttons`
 **Statut** : À faire
 
 ---

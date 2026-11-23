@@ -40,6 +40,7 @@ export function ActivitySummary({
       minutes: input.minutes ?? '',
       seconds: input.seconds ?? '',
       distance_km: input.distance_km ?? '',
+      elevation_m: input.elevation_m ?? '',
     },
     timeZone,
   );

@@ -10,12 +10,14 @@ import { characterCount, hasOnlyAllowedCharacters, visibleCount } from './text';
 export interface ActivitySport {
   code: string;
   distance_mode: 'required' | 'none' | 'optional';
+  elevation_allowed: boolean;
 }
 
 const LABEL_MIN = 2;
 const LABEL_MAX = 40;
 const MAX_DURATION_SECONDS = 86_400;
 const MAX_DISTANCE_METERS = 1_000_000;
+const MAX_ELEVATION_METERS = 20_000;
 // The server accepts an end up to 5 minutes ahead (clocks drift).
 const END_TOLERANCE_MS = 5 * 60 * 1000;
 const EARLIEST_START = Date.UTC(2000, 0, 1);
@@ -52,6 +54,31 @@ function distanceMeters(value: string): number | undefined {
   return Math.round(Number(text.replace(',', '.')) * 1000);
 }
 
+/**
+ * Whether the entry takes an elevation gain: the sport allows one (the
+ * catalogue says so) and a distance is typed.
+ */
+export function takesElevation(
+  sport: ActivitySport | undefined,
+  distanceKm: string | undefined,
+): boolean {
+  // A sport without distance hides its field: text left there is no distance.
+  return (
+    sport?.elevation_allowed === true &&
+    sport.distance_mode !== 'none' &&
+    (distanceKm ?? '').trim() !== ''
+  );
+}
+
+// Meters of an elevation gain typed as a whole number, or undefined when it
+// is not one.
+function elevationMeters(value: string): number | undefined {
+  const text = value.trim();
+  if (!WHOLE.test(text)) return undefined;
+  const number = Number(text);
+  return number <= MAX_ELEVATION_METERS ? number : undefined;
+}
+
 // A time of day as typed, on 24 hours: "07:30", "7:30", "7h30", "7.30",
 // "0730" or "7h".
 const CLOCK = /^(\d{1,2})(?:\s*[:hH.]?\s*(\d{2})|\s*[hH])$/;
@@ -82,7 +109,8 @@ function startOf(date: string, time: string, timeZone: string): Date | undefined
  * Activity entry input. `now` gives the current instant at each check: the
  * activity is entered once done, so neither its start nor its end is in the
  * future. `sports` is the catalogue, whose distance mode tells whether the
- * distance is required, optional (the "other" sport) or absent. The start,
+ * distance is required, optional (the "other" sport) or absent, and which
+ * sports take an elevation gain (optional, with a distance). The start,
  * a day as a native field gives it and a time typed on 24 hours, is read in
  * `timeZone`; its one error goes on the day.
  */
@@ -91,7 +119,13 @@ export function activityCreateSchema(
   sports: readonly ActivitySport[],
   timeZone: string,
 ) {
-  const modeOf = (code: string) => sports.find((sport) => sport.code === code)?.distance_mode;
+  const sportOf = (code: string) => sports.find((sport) => sport.code === code);
+  const modeOf = (code: string) => sportOf(code)?.distance_mode;
+  // Typed and taken by the entry: otherwise it is neither checked nor sent.
+  const elevationOf = (input: { sport_code: string; distance_km: string; elevation_m: string }) =>
+    takesElevation(sportOf(input.sport_code), input.distance_km) && input.elevation_m.trim() !== ''
+      ? input.elevation_m
+      : undefined;
 
   return z
     .object({
@@ -103,6 +137,7 @@ export function activityCreateSchema(
       minutes: z.string(),
       seconds: z.string(),
       distance_km: z.string(),
+      elevation_m: z.string(),
     })
     .superRefine((input, context) => {
       const issue = (path: string, message: string) =>
@@ -151,10 +186,18 @@ export function activityCreateSchema(
           issue('distance_km', 'activityForm.fields.distance.range');
         }
       }
+
+      const elevation = elevationOf(input);
+      if (elevation !== undefined && elevationMeters(elevation) === undefined) {
+        issue('elevation_m', 'activityForm.fields.elevation.range');
+      }
     })
     .transform((input) => {
       const mode = modeOf(input.sport_code);
       const meters = mode === 'none' ? undefined : distanceMeters(input.distance_km);
+      // Left out when empty: on a change, that removes it.
+      const elevation = elevationOf(input);
+      const climb = elevation === undefined ? undefined : elevationMeters(elevation);
       // Valid by now: the refinement above passed.
       const start = startOf(input.start_date, input.start_time, timeZone) ?? new Date(Number.NaN);
       return {
@@ -163,6 +206,7 @@ export function activityCreateSchema(
         started_at: start.toISOString(),
         duration_seconds: durationSeconds(input.hours, input.minutes, input.seconds) ?? 0,
         ...(meters !== undefined && { distance_meters: meters }),
+        ...(climb !== undefined && { elevation_gain_meters: climb }),
       };
     });
 }
@@ -206,19 +250,24 @@ export interface RecordedActivity {
   started_at: string;
   duration_seconds: number;
   distance_meters: number | null;
+  elevation_gain_meters: number | null;
 }
 
 /**
  * What the form holds to change a recorded activity: its start read in
  * `timeZone` (day and time to the minute, as entered), its duration in parts, its distance
- * in km written in the user's language.
+ * in km written in the user's language, its elevation gain in meters.
  */
 export function activityFormValues(
   activity: RecordedActivity,
   timeZone: string,
   locale: string,
 ): ActivityCreateInput {
-  const { duration_seconds: duration, distance_meters: meters } = activity;
+  const {
+    duration_seconds: duration,
+    distance_meters: meters,
+    elevation_gain_meters: elevation,
+  } = activity;
   const part = (value: number) => (value === 0 ? '' : String(value));
   const [startDate = '', startTime = ''] = toZonedDateTime(
     new Date(activity.started_at),
@@ -238,18 +287,20 @@ export function activityFormValues(
         : new Intl.NumberFormat(locale, { maximumFractionDigits: 3, useGrouping: false }).format(
             meters / 1000,
           ),
+    elevation_m: elevation === null ? '' : String(elevation),
   };
 }
 
 // Form field of each request field: the start is two fields and the
 // duration three, whose error goes on the first one; the distance is typed
-// in km.
+// in km, the elevation gain in meters.
 const FORM_FIELDS = {
   sport_code: 'sport_code',
   sport_label: 'sport_label',
   started_at: 'start_date',
   duration_seconds: 'hours',
   distance_meters: 'distance_km',
+  elevation_gain_meters: 'elevation_m',
 } as const;
 
 export type ActivityFormField = (typeof FORM_FIELDS)[keyof typeof FORM_FIELDS];

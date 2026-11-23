@@ -27,6 +27,7 @@ const run: Activity = {
   started_at: '2026-11-19T12:30:00.000Z',
   duration_seconds: 2730,
   distance_meters: 8200,
+  elevation_gain_meters: null,
   source: 'manual',
   speed_mps: 3,
   pace_seconds_per_km: 333,

@@ -73,6 +73,9 @@ test('a user records an activity with the keyboard only', async ({ page, isMobil
     'Distance en kilomètres',
   ]);
   await page.keyboard.type('8,2');
+  // With a distance, the run takes an elevation gain, next in the order.
+  expect(await tabTo(page, 'Dénivelé positif en mètres')).toEqual(['Dénivelé positif en mètres']);
+  await page.keyboard.type('85');
   expect(await tabTo(page, "Enregistrer l'activité")).toEqual(["Enregistrer l'activité"]);
   const recording = page.waitForRequest(
     (request) => request.method() === 'POST' && request.url().endsWith('/api/v1/activities'),
@@ -85,6 +88,7 @@ test('a user records an activity with the keyboard only', async ({ page, isMobil
     started_at: '2026-11-19T12:30:00.000Z',
     duration_seconds: 2700,
     distance_meters: 8200,
+    elevation_gain_meters: 85,
   });
   await expect(page.getByText('Activité enregistrée.')).toBeVisible();
 });

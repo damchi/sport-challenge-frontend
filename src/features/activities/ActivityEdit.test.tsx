@@ -24,6 +24,7 @@ const run: Activity = {
   started_at: '2026-11-19T12:30:00.000Z',
   duration_seconds: 2730,
   distance_meters: 8200,
+  elevation_gain_meters: null,
   source: 'manual',
   speed_mps: 3,
   pace_seconds_per_km: 333,
@@ -187,6 +188,52 @@ describe('ActivityEdit', () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: 'Sport' })).not.toBeInTheDocument();
+  });
+
+  describe('elevation gain', () => {
+    const elevation = () => screen.findByRole('textbox', { name: 'Dénivelé positif en mètres' });
+
+    it('opens with the one recorded and sends it changed', async () => {
+      listing([{ ...run, elevation_gain_meters: 85 }]);
+      const sent = replaceWith((body) => HttpResponse.json<Activity>({ ...run, ...body }));
+      renderEdit();
+      const field = await elevation();
+      expect(field).toHaveValue('85');
+
+      fireEvent.change(field, { target: { value: '120' } });
+      fireEvent.click(save());
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body.elevation_gain_meters).toBe(120);
+    });
+
+    it('keeps an untouched activity untouched: leaving asks nothing', async () => {
+      listing([{ ...run, elevation_gain_meters: 85 }]);
+      renderEdit();
+      expect(await elevation()).toHaveValue('85');
+
+      fireEvent.click(screen.getByRole('link', { name: 'Annuler' }));
+
+      expect(await screen.findByText('Mes activités (page)')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('is removed once emptied: the change leaves it out', async () => {
+      listing([{ ...run, elevation_gain_meters: 85 }]);
+      const sent = replaceWith((body) => HttpResponse.json<Activity>({ ...run, ...body }));
+      renderEdit();
+
+      fireEvent.change(await elevation(), { target: { value: '' } });
+      fireEvent.click(save());
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body).toEqual({
+        sport_code: 'run',
+        started_at: '2026-11-19T12:30:00.000Z',
+        duration_seconds: 2730,
+        distance_meters: 8200,
+      });
+    });
   });
 
   it('offers no distance for a sport without one', async () => {

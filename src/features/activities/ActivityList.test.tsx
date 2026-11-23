@@ -24,6 +24,7 @@ const run: Activity = {
   started_at: '2026-11-19T12:30:00.000Z',
   duration_seconds: 2730,
   distance_meters: 8200,
+  elevation_gain_meters: null,
   source: 'manual',
   speed_mps: 3,
   pace_seconds_per_km: 333,
@@ -85,6 +86,7 @@ function summary({
       sessions,
       duration_seconds: duration,
       distance_meters: distance,
+      elevation_gain_meters: 0,
       days: days(...durations),
     },
     sports,
@@ -125,6 +127,7 @@ const weekOf = (monday: string, sessions: number, duration: number, distance: nu
   sessions,
   duration_seconds: duration,
   distance_meters: distance,
+  elevation_gain_meters: 0,
 });
 
 // The device in the time zone of the mock challenges, unless said otherwise.

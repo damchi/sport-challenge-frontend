@@ -40,6 +40,7 @@ export const mockMe: Me = {
   avatar: null,
   language: 'fr',
   profile_complete: true,
+  is_admin: false,
 };
 
 type Role = ChallengeSummary['my_role'];
@@ -145,6 +146,10 @@ function weekTotals(
     sessions: inWeek.length,
     duration_seconds: inWeek.reduce((sum, activity) => sum + activity.duration_seconds, 0),
     distance_meters: inWeek.reduce((sum, activity) => sum + (activity.distance_meters ?? 0), 0),
+    elevation_gain_meters: inWeek.reduce(
+      (sum, activity) => sum + (activity.elevation_gain_meters ?? 0),
+      0,
+    ),
   };
 }
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -269,10 +274,10 @@ const mockLeaderboard: Leaderboard = {
 };
 
 const MOCK_SPORTS = [
-  { sport_code: 'run', sport_label: null, distance_meters: 8200 },
-  { sport_code: 'yoga', sport_label: null, distance_meters: null },
-  { sport_code: 'other', sport_label: 'Padel', distance_meters: null },
-  { sport_code: 'ride', sport_label: null, distance_meters: 31_500 },
+  { sport_code: 'run', sport_label: null, distance_meters: 8200, elevation_gain_meters: 85 },
+  { sport_code: 'yoga', sport_label: null, distance_meters: null, elevation_gain_meters: null },
+  { sport_code: 'other', sport_label: 'Padel', distance_meters: null, elevation_gain_meters: null },
+  { sport_code: 'ride', sport_label: null, distance_meters: 31_500, elevation_gain_meters: null },
 ] as const;
 
 /**
@@ -555,18 +560,43 @@ export const handlers = [
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({
       sports: [
-        { code: 'climbing', distance_mode: 'none', suggested_factor: null },
-        { code: 'hike', distance_mode: 'required', suggested_factor: 1 },
-        { code: 'other', distance_mode: 'optional', suggested_factor: 1 },
-        { code: 'ride', distance_mode: 'required', suggested_factor: 0.3 },
-        { code: 'roller', distance_mode: 'required', suggested_factor: 0.5 },
-        { code: 'rowing', distance_mode: 'required', suggested_factor: 0.5 },
-        { code: 'run', distance_mode: 'required', suggested_factor: 1 },
-        { code: 'strength', distance_mode: 'none', suggested_factor: null },
-        { code: 'swim', distance_mode: 'required', suggested_factor: 1 },
-        { code: 'walk', distance_mode: 'required', suggested_factor: 1 },
-        { code: 'xc_ski', distance_mode: 'required', suggested_factor: 0.5 },
-        { code: 'yoga', distance_mode: 'none', suggested_factor: null },
+        {
+          code: 'climbing',
+          distance_mode: 'none',
+          suggested_factor: null,
+          elevation_allowed: false,
+        },
+        { code: 'hike', distance_mode: 'required', suggested_factor: 1, elevation_allowed: true },
+        { code: 'other', distance_mode: 'optional', suggested_factor: 1, elevation_allowed: true },
+        { code: 'ride', distance_mode: 'required', suggested_factor: 0.3, elevation_allowed: true },
+        {
+          code: 'roller',
+          distance_mode: 'required',
+          suggested_factor: 0.5,
+          elevation_allowed: true,
+        },
+        {
+          code: 'rowing',
+          distance_mode: 'required',
+          suggested_factor: 0.5,
+          elevation_allowed: false,
+        },
+        { code: 'run', distance_mode: 'required', suggested_factor: 1, elevation_allowed: true },
+        {
+          code: 'strength',
+          distance_mode: 'none',
+          suggested_factor: null,
+          elevation_allowed: false,
+        },
+        { code: 'swim', distance_mode: 'required', suggested_factor: 1, elevation_allowed: false },
+        { code: 'walk', distance_mode: 'required', suggested_factor: 1, elevation_allowed: true },
+        {
+          code: 'xc_ski',
+          distance_mode: 'required',
+          suggested_factor: 0.5,
+          elevation_allowed: true,
+        },
+        { code: 'yoga', distance_mode: 'none', suggested_factor: null, elevation_allowed: false },
       ],
     }),
   ),
@@ -583,6 +613,7 @@ export const handlers = [
         started_at: body.started_at,
         duration_seconds: body.duration_seconds,
         distance_meters: distance,
+        elevation_gain_meters: body.elevation_gain_meters ?? null,
         source: 'manual',
         speed_mps: distance === null ? null : distance / body.duration_seconds,
         pace_seconds_per_km: distance === null ? null : body.duration_seconds / (distance / 1000),

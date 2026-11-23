@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
+import i18n from 'i18next';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Activity, ActivityContribution, ActivityCreate } from '../../api/hooks/useActivities';
 import type { components } from '../../api/generated/schema';
@@ -81,6 +82,7 @@ function recorded(contributions: ActivityContribution[] = []) {
       started_at: STARTED_AT,
       duration_seconds: 2700,
       distance_meters: 8200,
+      elevation_gain_meters: null,
       source: 'manual',
       speed_mps: 3.04,
       pace_seconds_per_km: 329,
@@ -117,6 +119,12 @@ const startTime = () => screen.getByLabelText('Heure');
 const hours = () => screen.getByRole('textbox', { name: 'Heures' });
 const minutes = () => screen.getByRole('textbox', { name: 'Minutes' });
 const distance = () => screen.queryByRole('textbox', { name: 'Distance en kilomètres' });
+/** The distance field, failing at once when it is not shown. */
+const distanceField = () => screen.getByRole('textbox', { name: 'Distance en kilomètres' });
+const ELEVATION = { name: 'Dénivelé positif en mètres' };
+const elevation = () => screen.queryByRole('textbox', ELEVATION);
+/** Types the elevation gain, its field shown by now. */
+const typeElevation = (value: string) => type(screen.getByRole('textbox', ELEVATION), value);
 const save = () => screen.getByRole('button', { name: /Enregistr/ });
 
 /** Picks the sport named `name` among the chips, once they are shown. */
@@ -441,6 +449,105 @@ describe('ActivityForm', () => {
     });
   });
 
+  describe('elevation gain', () => {
+    it('is offered, optional, once a sport that takes one has a distance', async () => {
+      renderForm();
+      await pick('Course');
+      expect(elevation()).not.toBeInTheDocument();
+
+      type(distanceField(), '8,2');
+      expect(elevation()).toBeInTheDocument();
+      expect(screen.getByText('facultatif')).toBeInTheDocument();
+    });
+
+    it('is not offered for a sport that takes none, even with a distance', async () => {
+      renderForm();
+      await fill({ sport: 'Natation', km: '1,5' });
+      expect(distance()).toHaveValue('1,5');
+      expect(elevation()).not.toBeInTheDocument();
+    });
+
+    it('is sent in meters with the activity', async () => {
+      const sent = recordWith(() => recorded());
+      renderForm();
+      await fill();
+      typeElevation('85');
+      fireEvent.click(save());
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body).toEqual({
+        sport_code: 'run',
+        started_at: STARTED_AT,
+        duration_seconds: 2700,
+        distance_meters: 8200,
+        elevation_gain_meters: 85,
+      });
+    });
+
+    it('wants a whole number of meters', async () => {
+      const sent = recordWith(() => recorded());
+      renderForm();
+      await fill();
+      typeElevation('12,5');
+      fireEvent.click(save());
+
+      expect(
+        await screen.findByText('Indique un dénivelé en mètres, nombre entier de 0 à 20 000.'),
+      ).toBeInTheDocument();
+      expect(elevation()).toHaveAttribute('aria-invalid', 'true');
+      expect(sent).toHaveLength(0);
+    });
+
+    it.each([
+      ['the distance is erased', () => type(distanceField(), '')],
+      [
+        'the sport takes none',
+        () => fireEvent.click(screen.getByRole('radio', { name: 'Natation' })),
+      ],
+    ])('is hidden and emptied once %s', async (_, change) => {
+      renderForm();
+      await fill();
+      typeElevation('85');
+
+      change();
+      await waitFor(() => expect(elevation()).not.toBeInTheDocument());
+      // Shown again, it opens empty.
+      fireEvent.click(screen.getByRole('radio', { name: 'Course' }));
+      type(distanceField(), '8,2');
+      expect(elevation()).toHaveValue('');
+    });
+
+    it('is sent with the optional distance of the "other" sport', async () => {
+      const sent = recordWith(() => recorded());
+      renderForm();
+      await fill({ sport: 'Autre', km: '' });
+      type(screen.getByRole('textbox', { name: 'Quel sport ?' }), 'Kayak');
+      expect(elevation()).not.toBeInTheDocument();
+      type(distanceField(), '3');
+      typeElevation('12');
+      fireEvent.click(save());
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body).toEqual(
+        expect.objectContaining({ distance_meters: 3000, elevation_gain_meters: 12 }),
+      );
+    });
+
+    it('is said in English', async () => {
+      await i18n.changeLanguage('en');
+      try {
+        renderForm();
+        await pick('Running');
+        type(screen.getByRole('textbox', { name: 'Distance in kilometers' }), '8.2');
+        expect(
+          screen.getByRole('textbox', { name: 'Elevation gain in meters' }),
+        ).toBeInTheDocument();
+      } finally {
+        await i18n.changeLanguage('fr');
+      }
+    });
+  });
+
   it('asks for the label of the "other" sport, its distance optional', async () => {
     const sent = recordWith(() => recorded());
     renderForm();
@@ -532,6 +639,7 @@ describe('ActivityForm', () => {
     ['activity_overlap', /chevauche une autre de tes activités/],
     ['distance_required', /Ce sport demande une distance/],
     ['distance_not_allowed', /Ce sport ne prend pas de distance/],
+    ['elevation_not_allowed', /dénivelé n'est possible qu'avec un sport qui le permet/],
     ['profile_incomplete', /Indique d'abord ton prénom et ton nom/],
   ])('says why the server refuses it (%s)', async (code, message) => {
     refuse(code);
