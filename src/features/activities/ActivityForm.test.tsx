@@ -45,6 +45,7 @@ function renderForm({ deviceTimeZone = 'Asia/Tokyo' }: { deviceTimeZone?: string
         ),
       },
       { path: '/', element: <p>Page d'accueil</p> },
+      { path: '/activities', element: <p>Mes activités (page)</p> },
     ],
     { initialEntries: ['/activities/new'] },
   );
@@ -111,17 +112,28 @@ function type(field: HTMLElement, value: string) {
   fireEvent.blur(field);
 }
 
-const sport = () => screen.getByRole('combobox', { name: 'Sport' });
-const start = () => screen.getByLabelText('Début');
+const startDate = () => screen.getByLabelText('Date');
+const startTime = () => screen.getByLabelText('Heure');
 const hours = () => screen.getByRole('textbox', { name: 'Heures' });
 const minutes = () => screen.getByRole('textbox', { name: 'Minutes' });
-const distance = () => screen.queryByRole('textbox', { name: 'Distance (km)' });
+const distance = () => screen.queryByRole('textbox', { name: 'Distance en kilomètres' });
 const save = () => screen.getByRole('button', { name: /Enregistr/ });
 
+/** Picks the sport named `name` among the chips, once they are shown. */
+async function pick(name: string) {
+  fireEvent.click(await screen.findByRole('radio', { name }));
+}
+
+/** Types the start's day and time. */
+function typeStart(date: string, time: string) {
+  type(startDate(), date);
+  type(startTime(), time);
+}
+
 /** A run of 45 min and 8,2 km this morning, unless said otherwise. */
-async function fill({ code = 'run', km = '8,2' }: { code?: string; km?: string } = {}) {
-  type(await screen.findByRole('combobox', { name: 'Sport' }), code);
-  type(start(), '2026-11-20T07:30');
+async function fill({ sport = 'Course', km = '8,2' }: { sport?: string; km?: string } = {}) {
+  await pick(sport);
+  typeStart('2026-11-20', '07:30');
   type(minutes(), '45');
   const field = distance();
   if (field && km) type(field, km);
@@ -132,18 +144,83 @@ describe('ActivityForm', () => {
     server.events.removeAllListeners();
   });
 
-  it('offers the sports of the catalogue by name, "other" last, and no speed field', async () => {
+  it('offers the sports of the catalogue in the order of the mockups, "other" last', async () => {
     renderForm();
-    const options = within(await screen.findByRole('combobox', { name: 'Sport' }))
-      .getAllByRole('option')
-      .map((option) => option.textContent);
-    expect(options[0]).toBe('Choisis un sport');
-    expect(options).toContain('Course');
-    expect(options).toContain('Yoga');
-    expect(options.at(-1)).toBe('Autre (préciser)');
+    const chips = within(await screen.findByRole('group', { name: 'Sport' }))
+      .getAllByRole('radio')
+      .map((chip) => chip.closest('label')?.textContent);
+    expect(chips).toEqual([
+      'Course',
+      'Vélo',
+      'Marche',
+      'Randonnée',
+      'Natation',
+      'Aviron',
+      'Roller',
+      'Ski de fond',
+      'Yoga',
+      'Escalade',
+      'Renforcement musculaire',
+      'Autre',
+    ]);
+    expect(screen.queryAllByRole('radio', { checked: true })).toHaveLength(0);
     expect(screen.queryByRole('textbox', { name: /vitesse|allure/i })).not.toBeInTheDocument();
-    expect(start()).toHaveAttribute('type', 'datetime-local');
-    expect(start()).toHaveAttribute('max', '2026-11-20T12:00');
+    expect(startDate()).toHaveAttribute('type', 'date');
+    expect(startDate()).toHaveAttribute('max', '2026-11-20');
+    // On 24 hours whatever the browser's language: not a native time field.
+    expect(startTime()).not.toHaveAttribute('type', 'time');
+    type(startTime(), '7h30');
+    expect(startTime()).toHaveValue('07:30');
+  });
+
+  it('sums up the entry as it goes, without pace nor speed', async () => {
+    renderForm();
+    const summary = await screen.findByRole('region', { name: 'Résumé' });
+    expect(summary).toHaveTextContent('Il se remplit au fil de ta saisie.');
+    await fill();
+    type(hours(), '1');
+
+    const rows = within(summary)
+      .getAllByRole('term')
+      .map((term) => [term.textContent, term.nextElementSibling?.textContent]);
+    expect(rows).toEqual([
+      ['Sport', 'Course'],
+      ['Début', 'vendredi 20 nov., 7:30'],
+      ['Durée', '1:45:00'],
+      ['Distance', '8,2\u202fkm'],
+    ]);
+    expect(summary).not.toHaveTextContent(/Allure|Vitesse/);
+
+    // A sport without km has no distance; "other" shows its label.
+    await pick('Yoga');
+    expect(within(summary).queryByText('Distance')).not.toBeInTheDocument();
+    await pick('Autre');
+    type(screen.getByRole('textbox', { name: 'Quel sport ?' }), '  Padel ');
+    expect(within(summary).getByText('Padel')).toBeInTheDocument();
+  });
+
+  it('asks before leaving a changed entry', async () => {
+    renderForm();
+    fireEvent.click(await screen.findByRole('link', { name: 'Annuler' }));
+    // Nothing entered: it leaves at once.
+    expect(await screen.findByText('Mes activités (page)')).toBeInTheDocument();
+  });
+
+  it('keeps a changed entry when leaving is called off', async () => {
+    renderForm();
+    await pick('Course');
+    fireEvent.click(screen.getByRole('link', { name: 'Annuler' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Quitter la saisie ?' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Continuer la saisie' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('radio', { name: 'Course' })).toBeChecked();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Annuler' }));
+    fireEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Quitter' }),
+    );
+    expect(await screen.findByText('Mes activités (page)')).toBeInTheDocument();
   });
 
   /** The user's ongoing challenges, in these time zones. */
@@ -169,7 +246,7 @@ describe('ActivityForm', () => {
   it("reads the start in the time zone of the user's ongoing challenges", async () => {
     renderForm();
     expect(
-      await screen.findByText('Date et heure de début, heure de l’Est nord-américain.'),
+      await screen.findByText(/^Date et heure de début, heure de l’Est nord-américain\./),
     ).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Fuseau horaire' })).not.toBeInTheDocument();
   });
@@ -179,10 +256,10 @@ describe('ActivityForm', () => {
     const sent = recordWith(() => recorded());
     renderForm({ deviceTimeZone: 'Europe/Paris' });
     expect(
-      await screen.findByText('Date et heure de début, heure normale d’Europe centrale.'),
+      await screen.findByText(/^Date et heure de début, heure normale d’Europe centrale\./),
     ).toBeInTheDocument();
     // 18:00 in Paris.
-    expect(start()).toHaveAttribute('max', '2026-11-20T18:00');
+    expect(startDate()).toHaveAttribute('max', '2026-11-20');
     await fill();
     fireEvent.click(save());
 
@@ -196,7 +273,7 @@ describe('ActivityForm', () => {
     const sent = recordWith(() => recorded());
     renderForm({ deviceTimeZone: 'America/Toronto' });
     expect(
-      await screen.findByText('Date et heure de début, heure de l’Est nord-américain.'),
+      await screen.findByText(/^Date et heure de début, heure de l’Est nord-américain\./),
     ).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: /fuseau/i })).not.toBeInTheDocument();
     await fill();
@@ -232,7 +309,7 @@ describe('ActivityForm', () => {
 
     // Montréal on the first page, Paris on the second: the device's zone.
     expect(
-      await screen.findByText('Date et heure de début, heure normale d’Europe centrale.'),
+      await screen.findByText(/^Date et heure de début, heure normale d’Europe centrale\./),
     ).toBeInTheDocument();
   });
 
@@ -335,7 +412,7 @@ describe('ActivityForm', () => {
     const sent = recordWith(() => recorded());
     renderForm();
     await fill({ km: '' });
-    expect(screen.getByText('Obligatoire pour ce sport.')).toBeInTheDocument();
+    expect(screen.getByText('obligatoire pour ce sport')).toBeInTheDocument();
     fireEvent.click(save());
 
     expect(await screen.findByText('Indique la distance.')).toBeInTheDocument();
@@ -346,13 +423,13 @@ describe('ActivityForm', () => {
   it('shows no distance for a sport without km, and sends none', async () => {
     const sent = recordWith(() => recorded());
     renderForm();
-    type(await screen.findByRole('combobox', { name: 'Sport' }), 'run');
+    await pick('Course');
     const typed = distance();
     expect(typed).toBeInTheDocument();
     if (typed) type(typed, '5');
-    type(sport(), 'yoga');
+    await pick('Yoga');
     expect(distance()).not.toBeInTheDocument();
-    type(start(), '2026-11-20T07:30');
+    typeStart('2026-11-20', '07:30');
     type(hours(), '1');
     fireEvent.click(save());
 
@@ -367,8 +444,9 @@ describe('ActivityForm', () => {
   it('asks for the label of the "other" sport, its distance optional', async () => {
     const sent = recordWith(() => recorded());
     renderForm();
-    await fill({ code: 'other', km: '' });
-    expect(screen.getByText(/Facultative/)).toBeInTheDocument();
+    await fill({ sport: 'Autre', km: '' });
+    expect(screen.getByText('facultative')).toBeInTheDocument();
+    expect(screen.getByText(/compte aussi pour la distance/)).toBeInTheDocument();
     const label = screen.getByRole('textbox', { name: 'Quel sport ?' });
     type(label, 'a');
     expect(await screen.findByText('Écris entre 2 et 40 caractères.')).toBeInTheDocument();
@@ -388,8 +466,8 @@ describe('ActivityForm', () => {
   it('always asks for the duration and refuses a start in the future', async () => {
     const sent = recordWith(() => recorded());
     renderForm();
-    type(await screen.findByRole('combobox', { name: 'Sport' }), 'yoga');
-    type(start(), '2026-11-20T12:30');
+    await pick('Yoga');
+    typeStart('2026-11-20', '12:30');
     fireEvent.click(save());
 
     expect(
@@ -475,10 +553,11 @@ describe('ActivityForm', () => {
     fireEvent.click(save());
 
     expect(await screen.findByText(/Certaines informations sont invalides/)).toBeInTheDocument();
-    expect(start()).toHaveAttribute('aria-invalid', 'true');
+    expect(startDate()).toHaveAttribute('aria-invalid', 'true');
+    expect(startTime()).toHaveAttribute('aria-invalid', 'true');
     expect(hours()).toHaveAttribute('aria-invalid', 'true');
     // The first refused field takes the focus.
-    await waitFor(() => expect(start()).toHaveFocus());
+    await waitFor(() => expect(startDate()).toHaveFocus());
     expect(screen.getAllByText('Valeur refusée. Vérifie-la.')).toHaveLength(2);
   });
 
@@ -498,6 +577,6 @@ describe('ActivityForm', () => {
     fail = false;
     fireEvent.click(retry);
 
-    expect(await screen.findByRole('combobox', { name: 'Sport' })).toBeInTheDocument();
+    expect(await screen.findByRole('radio', { name: 'Course' })).toBeInTheDocument();
   });
 });

@@ -3,10 +3,15 @@ import { expect, signInAt, test } from './fixtures';
 test('a user records an activity with an idempotency key', async ({ page }) => {
   await signInAt(page, '/activities/new');
 
-  await page.getByRole('combobox', { name: 'Sport' }).selectOption({ label: 'Course' });
-  await page.getByLabel('Début').fill('2026-11-19T07:30');
+  await page
+    .locator('label')
+    .filter({ hasText: /^Course$/ })
+    .click();
+  await page.getByLabel('Date', { exact: true }).fill('2026-11-19');
+  await page.getByLabel('Heure', { exact: true }).fill('07:30');
   await page.getByRole('textbox', { name: 'Minutes' }).fill('45');
-  await page.getByRole('textbox', { name: 'Distance (km)' }).fill('8,2');
+  await page.getByRole('textbox', { name: 'Distance en kilomètres' }).fill('8,2');
+  await expect(page.getByRole('region', { name: 'Résumé' })).toContainText('8,2');
   const recording = page.waitForRequest(
     (request) => request.method() === 'POST' && request.url().endsWith('/api/v1/activities'),
   );

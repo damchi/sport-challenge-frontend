@@ -1,4 +1,4 @@
-import { formatFactor, formatKm, formatSpeed } from './distance';
+import { formatEnteredKm, formatFactor, formatKm, formatSpeed } from './distance';
 
 describe('formatKm', () => {
   it('writes km in the language, one decimal for short distances', () => {
@@ -28,5 +28,13 @@ describe('formatSpeed', () => {
     expect(formatSpeed(3, 'fr')).toBe('10,8\u202fkm/h');
     expect(formatSpeed(3, 'en')).toBe('10.8 km/h');
     expect(formatSpeed(2.5, 'en')).toBe('9 km/h');
+  });
+});
+
+describe('formatEnteredKm', () => {
+  it('keeps the distance as typed, to the meter', () => {
+    expect(formatEnteredKm(10.04, 'fr')).toBe('10,04\u202fkm');
+    expect(formatEnteredKm(8.215, 'en')).toBe('8.215 km');
+    expect(formatEnteredKm(8.2, 'fr')).toBe('8,2\u202fkm');
   });
 });

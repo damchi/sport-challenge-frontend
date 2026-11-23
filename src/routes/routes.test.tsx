@@ -62,7 +62,7 @@ describe('routes', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: "Modifier l'activité" }),
     ).toBeInTheDocument();
-    expect(await screen.findByRole('combobox', { name: 'Sport' })).toHaveValue('run');
+    expect(await screen.findByRole('radio', { name: 'Course' })).toBeChecked();
   });
 
   it('sends a signed-out visitor to sign in, back to the requested page', async () => {

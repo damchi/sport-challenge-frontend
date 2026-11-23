@@ -142,6 +142,8 @@
     "duration": "Duration",
     "distance": "Distance",
     "speed": "Speed",
+    "pace": "Pace",
+    "paceValue": "{{pace}} /km",
     "locked": "The week of this activity has ended in one of your challenges: it can no longer be changed or deleted.",
     "lockedRefused": "The week of this activity has just ended in one of your challenges: it can no longer be changed or deleted.",
     "edit": "Edit",
@@ -168,8 +170,6 @@
     "fields": {
       "sport": {
         "label": "Sport",
-        "placeholder": "Choose a sport",
-        "other": "Other (specify)",
         "required": "Choose a sport."
       },
       "sportLabel": {
@@ -180,24 +180,34 @@
       },
       "startedAt": {
         "label": "Start",
-        "hint": "Start date and time, {{zone}}.",
+        "date": "Date",
+        "time": "Time",
+        "timePlaceholder": "07:30",
+        "hint": "Start date and time, {{zone}}. Neither the start nor the end can be in the future.",
         "required": "Enter the start date and time.",
-        "range": "The start cannot be in the future, nor before 2000."
+        "range": "The start cannot be in the future, nor before 2000.",
+        "timeFormat": "Enter the time on 24 hours, for example 07:30 or 18:45."
       },
       "duration": {
         "label": "Duration",
         "hours": "Hours",
         "minutes": "Minutes",
         "seconds": "Seconds",
-        "hint": "Required, 24 h at most. The speed is computed from the duration and the distance.",
+        "hint": "Required, 24 h at most.",
         "invalid": "Enter whole numbers: 24 hours at most, minutes and seconds from 0 to 59.",
         "range": "Enter a duration between 1 second and 24 hours.",
-        "future": "The activity must be over: its start plus its duration is past the current time."
+        "future": "The activity must be over: its start plus its duration is past the current time.",
+        "unitHours": "h",
+        "unitMinutes": "min",
+        "unitSeconds": "s"
       },
       "distance": {
-        "label": "Distance (km)",
-        "hintRequired": "Required for this sport.",
-        "hintOptional": "Optional: if you enter it, the activity also counts for distance.",
+        "label": "Distance",
+        "unitLong": "in kilometers",
+        "unit": "km",
+        "tagRequired": "required for this sport",
+        "tagOptional": "optional",
+        "hintOptional": "If you enter it, the activity also counts for distance.",
         "required": "Enter the distance.",
         "range": "Enter a distance in km, from 0.001 to 1000, with 3 decimals at most."
       },
@@ -206,6 +216,22 @@
     "submit": {
       "label": "Save the activity",
       "busy": "Saving…"
+    },
+    "cancel": "Cancel",
+    "summary": {
+      "title": "Summary",
+      "sport": "Sport",
+      "start": "Start",
+      "duration": "Duration",
+      "distance": "Distance",
+      "empty": "It fills in as you type.",
+      "note": "Pace and speed are computed from the duration and the distance. Once saved, you'll see what the activity brings to each of your challenges."
+    },
+    "leave": {
+      "title": "Leave this entry?",
+      "message": "Your entry isn't saved: it will be lost.",
+      "confirm": "Leave",
+      "cancel": "Keep editing"
     },
     "saved": {
       "title": "Activity saved.",

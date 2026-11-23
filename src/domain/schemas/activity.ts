@@ -52,12 +52,39 @@ function distanceMeters(value: string): number | undefined {
   return Math.round(Number(text.replace(',', '.')) * 1000);
 }
 
+// A time of day as typed, on 24 hours: "07:30", "7:30", "7h30", "7.30",
+// "0730" or "7h".
+const CLOCK = /^(\d{1,2})(?:\s*[:hH.]?\s*(\d{2})|\s*[hH])$/;
+
+/**
+ * A time of day typed on 24 hours, written HH:MM ("7h30" → "07:30"), or
+ * undefined when it is not one. A native time field is not used: it follows
+ * the browser's language, AM/PM in English whatever the app's language.
+ */
+export function clockTime(text: string): string | undefined {
+  const match = CLOCK.exec(text.trim());
+  if (!match) return undefined;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] ?? '0');
+  if (hours > 23 || minutes > 59) return undefined;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}`;
+}
+
+// The start, a day as a native date field gives it and a time as typed,
+// read in `timeZone`.
+function startOf(date: string, time: string, timeZone: string): Date | undefined {
+  const clock = clockTime(time);
+  return clock === undefined ? undefined : zonedDateTime(`${date}T${clock}`, timeZone);
+}
+
 /**
  * Activity entry input. `now` gives the current instant at each check: the
  * activity is entered once done, so neither its start nor its end is in the
  * future. `sports` is the catalogue, whose distance mode tells whether the
  * distance is required, optional (the "other" sport) or absent. The start,
- * as a native field gives it, is read in `timeZone`.
+ * a day as a native field gives it and a time typed on 24 hours, is read in
+ * `timeZone`; its one error goes on the day.
  */
 export function activityCreateSchema(
   now: () => Date,
@@ -70,7 +97,8 @@ export function activityCreateSchema(
     .object({
       sport_code: z.string(),
       sport_label: z.string(),
-      started_at: z.string(),
+      start_date: z.string(),
+      start_time: z.string(),
       hours: z.string(),
       minutes: z.string(),
       seconds: z.string(),
@@ -92,11 +120,18 @@ export function activityCreateSchema(
         }
       }
 
-      const start = zonedDateTime(input.started_at, timeZone);
+      const start = startOf(input.start_date, input.start_time, timeZone);
       const current = now().getTime();
-      if (!start) issue('started_at', 'activityForm.fields.startedAt.required');
-      else if (start.getTime() < EARLIEST_START || start.getTime() > current) {
-        issue('started_at', 'activityForm.fields.startedAt.range');
+      if (!start) {
+        const unreadTime = input.start_time.trim() !== '' && !clockTime(input.start_time);
+        issue(
+          'start_date',
+          unreadTime
+            ? 'activityForm.fields.startedAt.timeFormat'
+            : 'activityForm.fields.startedAt.required',
+        );
+      } else if (start.getTime() < EARLIEST_START || start.getTime() > current) {
+        issue('start_date', 'activityForm.fields.startedAt.range');
       }
 
       const duration = durationSeconds(input.hours, input.minutes, input.seconds);
@@ -121,7 +156,7 @@ export function activityCreateSchema(
       const mode = modeOf(input.sport_code);
       const meters = mode === 'none' ? undefined : distanceMeters(input.distance_km);
       // Valid by now: the refinement above passed.
-      const start = zonedDateTime(input.started_at, timeZone) ?? new Date(Number.NaN);
+      const start = startOf(input.start_date, input.start_time, timeZone) ?? new Date(Number.NaN);
       return {
         sport_code: input.sport_code,
         ...(input.sport_code === 'other' && { sport_label: cleanSportLabel(input.sport_label) }),
@@ -137,6 +172,33 @@ export type ActivityCreateInput = z.input<ReturnType<typeof activityCreateSchema
 /** The request, once the form is valid. */
 export type ActivityCreateValues = z.output<ReturnType<typeof activityCreateSchema>>;
 
+/** What is entered so far that reads as a value, for a summary of the entry. */
+interface ActivityDraft {
+  start?: Date;
+  durationSeconds?: number;
+  distanceMeters?: number;
+}
+
+/**
+ * The start, duration and distance of an entry, each once it reads as one
+ * (start read in `timeZone`, duration of 1 second to 24 hours, distance
+ * over 0): nothing is computed from them.
+ */
+export function activityDraft(input: ActivityCreateInput, timeZone: string): ActivityDraft {
+  const start = startOf(input.start_date, input.start_time, timeZone);
+  const duration = durationSeconds(input.hours, input.minutes, input.seconds);
+  const meters = distanceMeters(input.distance_km);
+  return {
+    ...(start && { start }),
+    ...(duration !== undefined &&
+      duration >= 1 &&
+      duration <= MAX_DURATION_SECONDS && { durationSeconds: duration }),
+    ...(meters !== undefined &&
+      meters >= 1 &&
+      meters <= MAX_DISTANCE_METERS && { distanceMeters: meters }),
+  };
+}
+
 /** A recorded activity, as far as its entry goes. */
 export interface RecordedActivity {
   sport_code: string;
@@ -148,7 +210,7 @@ export interface RecordedActivity {
 
 /**
  * What the form holds to change a recorded activity: its start read in
- * `timeZone` (to the minute, as entered), its duration in parts, its distance
+ * `timeZone` (day and time to the minute, as entered), its duration in parts, its distance
  * in km written in the user's language.
  */
 export function activityFormValues(
@@ -158,10 +220,15 @@ export function activityFormValues(
 ): ActivityCreateInput {
   const { duration_seconds: duration, distance_meters: meters } = activity;
   const part = (value: number) => (value === 0 ? '' : String(value));
+  const [startDate = '', startTime = ''] = toZonedDateTime(
+    new Date(activity.started_at),
+    timeZone,
+  ).split('T');
   return {
     sport_code: activity.sport_code,
     sport_label: activity.sport_label ?? '',
-    started_at: toZonedDateTime(new Date(activity.started_at), timeZone),
+    start_date: startDate,
+    start_time: startTime,
     hours: part(Math.floor(duration / 3600)),
     minutes: part(Math.floor(duration / 60) % 60),
     seconds: part(duration % 60),
@@ -174,12 +241,13 @@ export function activityFormValues(
   };
 }
 
-// Form field of each request field: the duration is three fields, whose
-// error goes on the first one; the distance is typed in km.
+// Form field of each request field: the start is two fields and the
+// duration three, whose error goes on the first one; the distance is typed
+// in km.
 const FORM_FIELDS = {
   sport_code: 'sport_code',
   sport_label: 'sport_label',
-  started_at: 'started_at',
+  started_at: 'start_date',
   duration_seconds: 'hours',
   distance_meters: 'distance_km',
 } as const;

@@ -142,6 +142,8 @@
     "duration": "Durée",
     "distance": "Distance",
     "speed": "Vitesse",
+    "pace": "Allure",
+    "paceValue": "{{pace}} /km",
     "locked": "La semaine de cette activité est terminée dans un de tes défis : elle ne peut plus être modifiée ni supprimée.",
     "lockedRefused": "La semaine de cette activité vient de se terminer dans un de tes défis : elle ne peut plus être modifiée ni supprimée.",
     "edit": "Modifier",
@@ -168,8 +170,6 @@
     "fields": {
       "sport": {
         "label": "Sport",
-        "placeholder": "Choisis un sport",
-        "other": "Autre (préciser)",
         "required": "Choisis un sport."
       },
       "sportLabel": {
@@ -180,24 +180,34 @@
       },
       "startedAt": {
         "label": "Début",
-        "hint": "Date et heure de début, {{zone}}.",
+        "date": "Date",
+        "time": "Heure",
+        "timePlaceholder": "07:30",
+        "hint": "Date et heure de début, {{zone}}. Ni le début ni la fin ne peuvent être dans le futur.",
         "required": "Indique la date et l'heure de début.",
-        "range": "Le début ne peut pas être dans le futur, ni avant l'an 2000."
+        "range": "Le début ne peut pas être dans le futur, ni avant l'an 2000.",
+        "timeFormat": "Indique l'heure sur 24 h, par exemple 07:30 ou 18:45."
       },
       "duration": {
         "label": "Durée",
         "hours": "Heures",
         "minutes": "Minutes",
         "seconds": "Secondes",
-        "hint": "Obligatoire, 24 h au plus. La vitesse est calculée à partir de la durée et de la distance.",
+        "hint": "Obligatoire, 24 h au plus.",
         "invalid": "Indique des nombres entiers : 24 heures au plus, minutes et secondes de 0 à 59.",
         "range": "Indique une durée entre 1 seconde et 24 heures.",
-        "future": "L'activité doit être terminée : son début plus sa durée dépasse l'heure actuelle."
+        "future": "L'activité doit être terminée : son début plus sa durée dépasse l'heure actuelle.",
+        "unitHours": "h",
+        "unitMinutes": "min",
+        "unitSeconds": "s"
       },
       "distance": {
-        "label": "Distance (km)",
-        "hintRequired": "Obligatoire pour ce sport.",
-        "hintOptional": "Facultative : si tu l'indiques, l'activité compte aussi pour la distance.",
+        "label": "Distance",
+        "unitLong": "en kilomètres",
+        "unit": "km",
+        "tagRequired": "obligatoire pour ce sport",
+        "tagOptional": "facultative",
+        "hintOptional": "Si tu l'indiques, l'activité compte aussi pour la distance.",
         "required": "Indique la distance.",
         "range": "Indique une distance en km, de 0,001 à 1000, avec 3 décimales au plus."
       },
@@ -206,6 +216,22 @@
     "submit": {
       "label": "Enregistrer l'activité",
       "busy": "Enregistrement…"
+    },
+    "cancel": "Annuler",
+    "summary": {
+      "title": "Résumé",
+      "sport": "Sport",
+      "start": "Début",
+      "duration": "Durée",
+      "distance": "Distance",
+      "empty": "Il se remplit au fil de ta saisie.",
+      "note": "L'allure et la vitesse sont calculées à partir de la durée et de la distance. Après l'enregistrement, tu verras ce que l'activité apporte à chacun de tes défis."
+    },
+    "leave": {
+      "title": "Quitter la saisie ?",
+      "message": "Ta saisie n'est pas enregistrée : elle sera perdue.",
+      "confirm": "Quitter",
+      "cancel": "Continuer la saisie"
     },
     "saved": {
       "title": "Activité enregistrée.",
