@@ -25,12 +25,12 @@ test('a new user signs in, fills in the profile and reaches the challenges', asy
 
   await signInAt(page, '/');
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Bienvenue' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Bienvenue !' })).toBeVisible();
   await expect(page).toHaveURL('/onboarding');
   await page.getByLabel('Pseudo (facultatif)').fill('marie_92');
   await page.getByLabel('Prénom').fill('Marie');
   await page.getByLabel('Nom', { exact: true }).fill('Tremblay');
-  await page.getByRole('button', { name: 'Continuer' }).click();
+  await page.getByRole('button', { name: "C'est parti" }).click();
 
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();

@@ -65,11 +65,19 @@
     }
   },
   "onboarding": {
-    "title": "Welcome",
-    "intro": "Introduce yourself. Other participants will see your nickname if you choose one, otherwise your first and last name. Your email stays private.",
+    "title": "Welcome!",
+    "subtitle": "Introduce yourself in a few seconds. Your email stays private.",
+    "preview": {
+      "label": "Others will see you like this",
+      "empty": "Your name will appear here"
+    },
     "pseudo": {
       "label": "Nickname (optional)",
-      "hint": "3 to 20 characters: letters, digits, _, . or -."
+      "hint": "3 to 20 characters: letters, digits, _, . or -.",
+      "name": "Nickname",
+      "optional": "(optional)",
+      "placeholder": "e.g. sunday_runner",
+      "help": "If set, it replaces your name in challenges. 3 to 20 characters: letters, digits, _, . or -"
     },
     "firstName": "First name",
     "lastName": "Last name",
@@ -78,8 +86,9 @@
       "fr": "Français",
       "en": "English"
     },
-    "submit": "Continue",
-    "saving": "Saving…"
+    "submit": "Let's go",
+    "saving": "Saving…",
+    "later": "You can change all of this later in your profile."
   },
   "profile": {
     "loading": "Loading your profile…",

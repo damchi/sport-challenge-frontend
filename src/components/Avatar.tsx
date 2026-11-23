@@ -11,10 +11,12 @@ const COLORS: Record<number, string> = {
   6: 'bg-avatar-6-bg text-avatar-6-fg',
 };
 
-// 32 px in rows (design.md); larger at the head of the profile.
+// 32 px in rows (design.md), 52 px in the onboarding preview, 72 px at the
+// head of the profile.
 const SIZES = {
   md: 'size-8 text-xs',
-  lg: 'size-18 text-2xl',
+  lg: 'size-13 text-lg',
+  xl: 'size-18 text-2xl',
 };
 
 interface AvatarProps {

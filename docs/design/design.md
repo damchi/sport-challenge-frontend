@@ -564,6 +564,26 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      compte » (icône `trash-2`, texte `--color-danger`), séparées par une
      bordure.
 
+8. **Bienvenue** (onboarding, maquettes `WebBienvenue.png` et
+   `Bienvenue.png`, SC-WEB-077, décisions du 2026-11-23)
+   - Hors de la navigation : logo et « Sport Challenge » en tête (centrés en
+     web). Mobile : pleine largeur sur `--color-surface` ; à partir de `md` :
+     carte centrée de 560 px (`--color-surface`, rayon 20 px, bordure) sur
+     `--color-bg`.
+   - « Bienvenue ! », puis « Présente-toi en quelques secondes. Ton courriel
+     reste privé. ».
+   - Encart « Les autres te verront ainsi » (fond `--color-bg`) : avatar à
+     initiales de 52 px et nom affiché (pseudo, sinon prénom et nom), mis à
+     jour pendant la saisie ; tant que rien n'est saisi, avatar neutre sans
+     initiales (`--color-segment`) et « Ton nom apparaîtra ici » en
+     `--color-muted`. La couleur de l'avatar reste celle de l'utilisateur.
+   - Prénom et Nom côte à côte à partir de `md` ; Pseudo (facultatif) précédé
+     de `@`, exemple en placeholder et aide « S'il est rempli, il remplace ton
+     nom dans les défis… » ; Langue en sélecteur à onglets, appliquée tout de
+     suite.
+   - Bouton pleine largeur « C'est parti », puis « Tout se change plus tard
+     dans ton profil. ».
+
 À dessiner plus tard dans le même style, en mobile et en web : lien
 d'invitation à partager, et en V1.1 les badges (obtenus en
 couleur, à obtenir en silhouette avec leur condition).

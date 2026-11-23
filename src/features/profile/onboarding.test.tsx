@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { mockMe } from '../../mocks/handlers';
@@ -59,11 +60,71 @@ describe('profile onboarding', () => {
     server.use(http.get('*/api/v1/me', () => HttpResponse.json(newProfile)));
   });
 
+  afterEach(async () => {
+    // Unmounted first: the profile gate would bring back the language saved.
+    cleanup();
+    await i18n.changeLanguage('fr');
+  });
+
   it('sends an incomplete profile to /onboarding', async () => {
     const router = renderApp('/');
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Bienvenue' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Bienvenue !' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/onboarding');
+  });
+
+  it('previews the name others will see as it is typed', async () => {
+    renderApp('/');
+
+    const preview = (await screen.findByText('Les autres te verront ainsi')).parentElement;
+    if (!preview) throw new Error('no preview');
+    expect(within(preview).getByText('Ton nom apparaîtra ici')).toBeInTheDocument();
+
+    await type('Prénom', ' Marie ');
+    await type('Nom', 'Tremblay');
+    expect(within(preview).getByText('Marie Tremblay')).toBeInTheDocument();
+
+    await typePseudo('marie_92');
+    expect(within(preview).getByText('marie_92')).toBeInTheDocument();
+    expect(within(preview).queryByText('Marie Tremblay')).not.toBeInTheDocument();
+  });
+
+  it('switches the interface to the language chosen, then sends it', async () => {
+    let sent: unknown;
+    let saved: typeof mockMe | undefined;
+    server.use(
+      http.patch('*/api/v1/me', async ({ request }) => {
+        sent = await request.json();
+        saved = { ...mockMe, language: 'en' };
+        return HttpResponse.json(saved);
+      }),
+      http.get('*/api/v1/me', () => HttpResponse.json(saved ?? newProfile)),
+    );
+    renderApp('/');
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'English' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Welcome!' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'English' })).toBeChecked();
+
+    await type('First name', 'Marie');
+    await type('Last name', 'Tremblay');
+    fireEvent.click(screen.getByRole('button', { name: "Let's go" }));
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'asked page' }),
+    ).toBeInTheDocument();
+    expect(sent).toEqual({ first_name: 'Marie', last_name: 'Tremblay', language: 'en' });
+  });
+
+  it('shows the button busy while the profile is sent', async () => {
+    server.use(http.patch('*/api/v1/me', () => new Promise<never>(() => undefined)));
+    renderApp('/');
+
+    await fillProfile();
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
+
+    expect(await screen.findByRole('button', { name: 'Enregistrement…' })).toBeDisabled();
   });
 
   it('explains an invalid pseudo once the field is left, then as it is typed', async () => {
@@ -93,7 +154,7 @@ describe('profile onboarding', () => {
     renderApp('/');
 
     await fillProfile();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ce pseudo est déjà pris.');
   });
@@ -110,7 +171,7 @@ describe('profile onboarding', () => {
     renderApp('/');
 
     await fillProfile();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Ce pseudo n'est pas accepté.");
   });
@@ -120,7 +181,7 @@ describe('profile onboarding', () => {
     renderApp('/');
 
     await fillProfile();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Le service est momentanément indisponible.',
@@ -146,7 +207,7 @@ describe('profile onboarding', () => {
     await typePseudo('  jean.luc ');
     await type('Prénom', ' Marie-Ève ');
     await type('Nom', 'N’Diaye');
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'asked page' }),
@@ -176,7 +237,7 @@ describe('profile onboarding', () => {
     await type('Prénom', 'Marie');
     await type('Nom', 'Tremblay');
     await typePseudo('   ');
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'asked page' }),
@@ -195,7 +256,7 @@ describe('profile onboarding', () => {
     renderApp('/');
 
     await typePseudo('marie_92');
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     const alerts = await screen.findAllByRole('alert');
     expect(alerts.map((alert) => alert.textContent)).toEqual([
@@ -229,7 +290,7 @@ describe('profile onboarding', () => {
     renderApp('/');
 
     await fillProfile();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Ce nom n'est pas accepté.");
     expect(screen.getByLabelText('Nom')).toHaveAttribute('aria-invalid', 'true');
@@ -254,7 +315,7 @@ describe('profile onboarding', () => {
     renderApp('/');
 
     await fillProfile();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
 
     expect(await screen.findAllByRole('alert')).toHaveLength(2);
     expect(screen.getByLabelText('Nom')).toHaveAttribute('aria-invalid', 'true');

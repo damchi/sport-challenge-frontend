@@ -16,7 +16,7 @@ export function ProfileHeader({ me }: { me: Me }) {
   const name = fullName(me) ?? displayName(me);
   return (
     <div className={`${PROFILE_CARD} flex flex-col items-center text-center`}>
-      <Avatar userId={me.id} user={me} size="lg" />
+      <Avatar userId={me.id} user={me} size="xl" />
       {name && <p className="mt-4 max-w-full font-display text-xl font-bold break-words">{name}</p>}
       {/* Without names, the pseudo is already the name above. */}
       {me.pseudo && name !== me.pseudo && (
