@@ -5,20 +5,23 @@ import { Link, useParams } from 'react-router';
 import { ApiError } from '../../api/errors';
 import { useParticipantActivities } from '../../api/hooks/useActivities';
 import { useChallenge, useLeaderboard } from '../../api/hooks/useChallenges';
+import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
 import { useMe } from '../../api/hooks/useMe';
 import { LoadMore } from '../../components/LoadMore';
+import { PageSizeChoice } from '../../components/PageSizeChoice';
 import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { canSeeParticipantActivities, isUserId } from '../../domain/challenge';
 import { displayName } from '../../domain/displayName';
 import { otherTimeZoneName } from '../../domain/format/challengeDates';
+import { usePageSize } from '../../lib/pageSize';
 import { ActivityCard } from './ActivityCard';
 
 /**
  * Activities of a participant in a challenge, read only, most recent first,
- * page by page, their starts in the challenge's time zone (named when it is
- * not the device's). Neither an id that cannot be one nor a user whose role
+ * 10, 50 or all of them (kept on the device), page by page, their starts in
+ * the challenge's time zone (named when it is not the device's). Neither an id that cannot be one nor a user whose role
  * keeps them out (the API would answer 404) is sent to the API. Titled with
  * the participant's name, read from the leaderboard (every participant is in
  * it; the activities route gives no name), with a way back to the
@@ -84,35 +87,19 @@ function ParticipantActivitiesContent({
   timeZone: string;
 }) {
   const { t, i18n } = useTranslation();
-  const activities = useParticipantActivities(challengeId, userId);
+  const [size, setSize] = usePageSize('participantActivities');
+  const activities = useParticipantActivities(challengeId, userId, size);
+  useFetchAllPages(activities, size === 'all');
 
   // Not found: the page says so with its own way back, untitled.
   const heading = <ParticipantHeading challengeId={challengeId} userId={userId} />;
-  if (activities.isPending) {
-    return (
-      <>
-        {heading}
-        <LoadingState />
-      </>
-    );
-  }
   // Not a participant, or not one the user may see: the API answers the same
   // 404, and so does the page, even when a refresh finds it so after a first load.
   if (activities.error instanceof ApiError && activities.error.status === 404) {
     return <ParticipantActivitiesNotFound challengeId={challengeId} />;
   }
-  // Nothing loaded: the whole list failed (a failed "load more" keeps it).
-  if (!activities.data) {
-    return (
-      <>
-        {heading}
-        <ErrorState error={activities.error} onRetry={() => void activities.refetch()} />
-      </>
-    );
-  }
-
-  const items = activities.data.pages.flatMap((page) => page.items);
-  if (items.length === 0) {
+  const items = activities.data?.pages.flatMap((page) => page.items);
+  if (items?.length === 0) {
     return (
       <>
         {heading}
@@ -129,20 +116,38 @@ function ParticipantActivitiesContent({
   return (
     <section aria-label={t('participantActivities.label')}>
       {heading}
-      {zone && <p className="mb-3 text-sm text-muted">{t('activities.timeZone', { zone })}</p>}
-      <ul className="grid grid-cols-1 gap-3">
-        {items.map((activity) => (
-          <li key={activity.id}>
-            <ActivityCard activity={activity} timeZone={timeZone} />
-          </li>
-        ))}
-      </ul>
-      <LoadMore
-        hasMore={activities.hasNextPage}
-        loading={activities.isFetchingNextPage}
-        failed={activities.isFetchNextPageError}
-        onLoadMore={() => void activities.fetchNextPage()}
-      />
+      {/* Kept while the list reloads in its new size (the focus stays on it);
+          hidden when the list failed. */}
+      {(items || activities.isPending) && (
+        <div className="mb-4">
+          <PageSizeChoice size={size} onChange={setSize} />
+        </div>
+      )}
+      {activities.isPending ? (
+        <LoadingState />
+      ) : !items ? (
+        // Nothing loaded: the whole list failed (a failed "load more" keeps it).
+        <ErrorState error={activities.error} onRetry={() => void activities.refetch()} />
+      ) : (
+        <>
+          {zone && <p className="mb-3 text-sm text-muted">{t('activities.timeZone', { zone })}</p>}
+          <ul className="grid grid-cols-1 gap-3">
+            {items.map((activity) => (
+              <li key={activity.id}>
+                <ActivityCard activity={activity} timeZone={timeZone} />
+              </li>
+            ))}
+          </ul>
+          <LoadMore
+            hasMore={activities.hasNextPage}
+            loading={activities.isFetchingNextPage}
+            // While every page is read, a failed reload also stops the reading.
+            failed={activities.isFetchNextPageError || (size === 'all' && activities.isError)}
+            auto={size === 'all'}
+            onLoadMore={() => void activities.fetchNextPage()}
+          />
+        </>
+      )}
     </section>
   );
 }

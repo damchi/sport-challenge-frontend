@@ -404,9 +404,11 @@ export const handlers = [
         const body: ApiErrorBody = { error: { code: 'not_found', message: 'Not found' } };
         return HttpResponse.json(body, { status: 404 });
       }
-      const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
-      const items = mockActivities.slice(from, from + PAGE_SIZE);
-      const next = from + PAGE_SIZE < mockActivities.length ? String(from + PAGE_SIZE) : null;
+      const query = new URL(request.url).searchParams;
+      const from = Number(query.get('cursor') ?? 0);
+      const size = Number(query.get('limit') ?? PAGE_SIZE);
+      const items = mockActivities.slice(from, from + size);
+      const next = from + size < mockActivities.length ? String(from + size) : null;
       return HttpResponse.json<ActivityPage>({ items, next_cursor: next });
     },
   ),
@@ -419,14 +421,16 @@ export const handlers = [
       };
       return HttpResponse.json(body, { status: 404 });
     }
-    const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
-    const items = mockActivities.slice(from, from + PAGE_SIZE).map((activity, index) => {
+    const query = new URL(request.url).searchParams;
+    const from = Number(query.get('cursor') ?? 0);
+    const size = Number(query.get('limit') ?? PAGE_SIZE);
+    const items = mockActivities.slice(from, from + size).map((activity, index) => {
       const author = mockParticipants[(from + index) % mockParticipants.length];
       if (!author) throw new Error('No mock participant');
       const { user_id: id, pseudo, first_name, last_name } = author;
       return { ...activity, user: { id, pseudo, first_name, last_name, avatar: null } };
     });
-    const next = from + PAGE_SIZE < mockActivities.length ? String(from + PAGE_SIZE) : null;
+    const next = from + size < mockActivities.length ? String(from + size) : null;
     return HttpResponse.json<ChallengeActivityPage>({ items, next_cursor: next });
   }),
   // The challenge with its new title and description; an empty description
@@ -631,8 +635,9 @@ export const handlers = [
     const query = new URL(request.url).searchParams;
     const from = Number(query.get('cursor') ?? 0);
     const kept = ofSport(query.get('sport'));
-    const items = kept.slice(from, from + PAGE_SIZE);
-    const next = from + PAGE_SIZE < kept.length ? String(from + PAGE_SIZE) : null;
+    const size = Number(query.get('limit') ?? PAGE_SIZE);
+    const items = kept.slice(from, from + size);
+    const next = from + size < kept.length ? String(from + size) : null;
     return HttpResponse.json<ActivityPage>({ items, next_cursor: next });
   }),
   // The current week of the real clock (the mock activities may be older).

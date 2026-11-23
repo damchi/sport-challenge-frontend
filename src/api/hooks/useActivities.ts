@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { pageLimit, type PageSize } from '../../domain/pageSize';
 import { useApiClient } from '../ApiClientContext';
 import type { components } from '../generated/schema';
 import { queryKeys } from '../queryKeys';
@@ -12,17 +13,17 @@ export type ChallengeActivity = components['schemas']['ChallengeActivity'];
 
 /**
  * The user's activities, of `sport` only when given, most recent first, page
- * by page (cursor). Each one says whether it is `locked`: its week has ended
- * in a challenge where it counts.
+ * by page (cursor) of `size` (each size cached on its own). Each one says
+ * whether it is `locked`: its week has ended in a challenge where it counts.
  */
-export function useMyActivities(sport?: string) {
+export function useMyActivities(sport: string | undefined, size: PageSize) {
   const client = useApiClient();
   return useInfiniteQuery({
-    queryKey: queryKeys.activities.mine(sport),
+    queryKey: queryKeys.activities.mine(sport, size),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await client.GET('/api/v1/me/activities', {
-        params: { query: { cursor: pageParam, sport } },
+        params: { query: { cursor: pageParam, sport, limit: pageLimit(size) } },
         signal,
       });
       if (!data) throw new Error('Empty activity page');
@@ -78,19 +79,25 @@ export function useMyActivityWeeks(timeZone: string | undefined, sport?: string)
 
 /**
  * The activities of a participant started in the window of the challenge,
- * most recent first, page by page (cursor). Only the participants and the
- * creators of the challenge may see them: anyone else, or a user who never
- * joined it, gets a 404.
+ * most recent first, page by page (cursor) of `size` (each size cached on its
+ * own). Only the participants and the creators of the challenge may see
+ * them: anyone else, or a user who never joined it, gets a 404.
  */
-export function useParticipantActivities(challengeId: string, userId: string) {
+export function useParticipantActivities(challengeId: string, userId: string, size: PageSize) {
   const client = useApiClient();
   return useInfiniteQuery({
-    queryKey: queryKeys.challenges.participantActivities(challengeId, userId),
+    queryKey: queryKeys.challenges.participantActivities(challengeId, userId, size),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await client.GET(
         '/api/v1/challenges/{challengeId}/participants/{userId}/activities',
-        { params: { path: { challengeId, userId }, query: { cursor: pageParam } }, signal },
+        {
+          params: {
+            path: { challengeId, userId },
+            query: { cursor: pageParam, limit: pageLimit(size) },
+          },
+          signal,
+        },
       );
       if (!data) throw new Error('Empty activity page');
       return data;
@@ -102,17 +109,17 @@ export function useParticipantActivities(challengeId: string, userId: string) {
 /**
  * The activities of every participant of a challenge (abandoned ones
  * included), each with its author, started in its window, most recent first,
- * page by page (cursor). Only the participants and the creators may read
- * them; anyone else gets a 404.
+ * page by page (cursor) of `size` (each size cached on its own). Only the
+ * participants and the creators may read them; anyone else gets a 404.
  */
-export function useChallengeActivities(challengeId: string) {
+export function useChallengeActivities(challengeId: string, size: PageSize) {
   const client = useApiClient();
   return useInfiniteQuery({
-    queryKey: queryKeys.challenges.activities(challengeId),
+    queryKey: queryKeys.challenges.activities(challengeId, size),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await client.GET('/api/v1/challenges/{challengeId}/activities', {
-        params: { path: { challengeId }, query: { cursor: pageParam } },
+        params: { path: { challengeId }, query: { cursor: pageParam, limit: pageLimit(size) } },
         signal,
       });
       if (!data) throw new Error('Empty activity page');

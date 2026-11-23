@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
@@ -128,7 +128,12 @@ const statOf = (activity: HTMLElement, term: string) =>
     ?.parentElement?.querySelector('dd')
     ?.textContent?.replace(/\s+/g, ' ');
 
-const list = () => screen.findByRole('region', { name: 'Activités du défi' });
+// The region, once its list is loaded (the size choice shows before it).
+const list = async () => {
+  const region = await screen.findByRole('region', { name: 'Activités du défi' });
+  await within(region).findByRole('list');
+  return region;
+};
 
 describe('ChallengeActivities', () => {
   afterEach(async () => {
@@ -181,8 +186,8 @@ describe('ChallengeActivities', () => {
     listing([{ ...run, elevation_gain_meters: 1250 }]);
     renderAt(path);
 
-    const activity = within(await screen.findByRole('region', { name: 'Challenge activities' }))
-      .getByRole('article');
+    const region = await screen.findByRole('region', { name: 'Challenge activities' });
+    const activity = await within(region).findByRole('article');
     expect(statOf(activity, 'Elevation')).toBe('↗ 1,250 m');
   });
 
@@ -203,6 +208,34 @@ describe('ChallengeActivities', () => {
     expect(within(await list()).getAllByRole('article')).toHaveLength(1);
     const nav = screen.getByRole('navigation', { name: 'Sections du défi' });
     expect(within(nav).getByRole('link', { name: 'Activités' })).toBeInTheDocument();
+  });
+
+  it('asks for 10 by default, then 50 once chosen, and keeps it', async () => {
+    answer({ my_role: 'creator' });
+    const requests = listing([run]);
+    renderAt(path);
+
+    const region = await list();
+    expect(requests.at(-1)?.searchParams.get('limit')).toBe('10');
+    fireEvent.click(within(region).getByRole('radio', { name: '50' }));
+
+    await waitFor(() => expect(requests.at(-1)?.searchParams.get('limit')).toBe('50'));
+    expect(requests.at(-1)?.searchParams.has('cursor')).toBe(false);
+    expect(await within(region).findByRole('article')).toBeInTheDocument();
+    expect(localStorage.getItem('sport-challenge:page-size:challengeActivities')).toBe('50');
+  });
+
+  it('reads every page in turn, by 100, when « Tout » is chosen', async () => {
+    answer({ my_role: 'creator' });
+    const requests = listing([run], [padel]);
+    renderAt(path);
+
+    fireEvent.click(within(await list()).getByRole('radio', { name: 'Tout' }));
+
+    expect(await screen.findByRole('heading', { name: 'Padel' })).toBeInTheDocument();
+    expect(requests.at(-1)?.searchParams.get('limit')).toBe('100');
+    expect(requests.at(-1)?.searchParams.get('cursor')).toBe('2');
+    expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
   });
 
   it('loads the next page of activities', async () => {

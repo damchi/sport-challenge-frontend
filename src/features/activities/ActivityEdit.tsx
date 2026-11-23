@@ -44,7 +44,9 @@ function ActivityEditContent({
   deviceTimeZone?: string;
 }) {
   const { t, i18n } = useTranslation();
-  const activities = useMyActivities();
+  // Every page in turn until the activity is found: by 100, whatever size
+  // the list of activities shows.
+  const activities = useMyActivities(undefined, 'all');
   const updateActivity = useUpdateActivity();
   const [saved, setSaved] = useState<Activity>();
   const loaded = useActivityFormData(deviceTimeZone, saved !== undefined);

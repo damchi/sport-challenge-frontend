@@ -2,7 +2,12 @@ import { useState } from 'react';
 import { DEFAULT_PAGE_SIZE, isPageSize, type PageSize } from '../domain/pageSize';
 
 /** The lists whose size is kept, each on its own. */
-export type SizedList = 'challenges' | 'participants';
+export type SizedList =
+  | 'challenges'
+  | 'participants'
+  | 'activities'
+  | 'challengeActivities'
+  | 'participantActivities';
 
 const key = (list: SizedList) => `sport-challenge:page-size:${list}`;
 

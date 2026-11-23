@@ -386,6 +386,73 @@ describe('ActivityList', () => {
     expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
   });
 
+  describe('size of the list', () => {
+    /** Answers these pages (one per cursor) and records the query of each request. */
+    function recording(...pages: Activity[][]) {
+      const queries: URLSearchParams[] = [];
+      server.use(
+        http.get('*/api/v1/me/activities', ({ request }) => {
+          const query = new URL(request.url).searchParams;
+          queries.push(query);
+          const cursor = query.get('cursor');
+          const index = cursor === null ? 0 : Number(cursor) - 1;
+          return HttpResponse.json<ActivityPage>({
+            items: pages[index] ?? [],
+            next_cursor: index + 1 < pages.length ? String(index + 2) : null,
+          });
+        }),
+      );
+      return queries;
+    }
+
+    it('asks for 10 by default, then 50 once chosen, the sport filter kept', async () => {
+      summarizing(summary({ sports: [{ sport_code: 'run', count: 1 }] }));
+      const queries = recording([run]);
+      renderList({ path: '/activities?sport=run' });
+
+      await item('Course');
+      expect(queries.at(-1)?.get('limit')).toBe('10');
+      expect(queries.at(-1)?.get('sport')).toBe('run');
+      fireEvent.click(screen.getByRole('radio', { name: '50' }));
+
+      await waitFor(() => expect(queries.at(-1)?.get('limit')).toBe('50'));
+      expect(queries.at(-1)?.get('sport')).toBe('run');
+      expect(queries.at(-1)?.has('cursor')).toBe(false);
+      expect(await item('Course')).toBeInTheDocument();
+      expect(localStorage.getItem('sport-challenge:page-size:activities')).toBe('50');
+    });
+
+    it('reads every page in turn, by 100, when « Tout » is chosen', async () => {
+      const queries = recording([run], [padel]);
+      renderList();
+      await item('Course');
+
+      fireEvent.click(screen.getByRole('radio', { name: 'Tout' }));
+
+      expect(await item('Padel')).toBeInTheDocument();
+      expect(queries.at(-1)?.get('limit')).toBe('100');
+      expect(queries.at(-1)?.get('cursor')).toBe('2');
+      expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
+    });
+
+    it("keeps the server's week totals whatever the size shows", async () => {
+      weeksTotals(weekOf('2026-11-16', 4, 9360, 26_000), weekOf('2026-11-02', 1, 2730, 0));
+      const totalsOf = (region: HTMLElement) => within(region).getByText(/^\d+ séances?/);
+      recording([run], [padel]);
+      renderList();
+      await item('Course');
+
+      fireEvent.click(screen.getByRole('radio', { name: 'Tout' }));
+
+      expect(await item('Padel')).toBeInTheDocument();
+      // Not the sum of the activities shown (one each): the server's totals.
+      await waitFor(() =>
+        expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(/^4 séances/),
+      );
+      expect(totalsOf(week(/^Semaine du 2 nov/))).toHaveTextContent(/^1 séance · 0:45/);
+    });
+  });
+
   it('says what to do without any activity, with neither summary nor filter', async () => {
     summarizing(summary());
     listing([]);
@@ -830,10 +897,10 @@ describe('ActivityList', () => {
     });
   });
 
-  it('lists the mock activities, a page at a time', async () => {
+  it('lists the mock activities, 10 at a time by default', async () => {
     renderList();
 
-    expect(await screen.findAllByRole('article')).toHaveLength(20);
-    expect(mockActivities.length).toBeGreaterThan(20);
+    expect(await screen.findAllByRole('article')).toHaveLength(10);
+    expect(mockActivities.length).toBeGreaterThan(10);
   });
 });

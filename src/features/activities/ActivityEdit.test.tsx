@@ -100,6 +100,25 @@ describe('ActivityEdit', () => {
     expect(screen.getByRole('textbox', { name: 'Distance en kilomètres' })).toHaveValue('8,2');
   });
 
+  it('finds an activity beyond the first page, by 100, whatever size the list shows', async () => {
+    localStorage.setItem('sport-challenge:page-size:activities', '10');
+    const limits: (string | null)[] = [];
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname.endsWith('/me/activities')) limits.push(url.searchParams.get('limit'));
+    });
+    const cursors = listing([{ ...run, id: '00000000-0000-4000-8000-0000000001b2' }], [run]);
+    renderEdit();
+
+    try {
+      expect(await screen.findByRole('radio', { name: 'Course' })).toBeChecked();
+      expect(cursors).toEqual([null, '2']);
+      expect(limits).toEqual(['100', '100']);
+    } finally {
+      server.events.removeAllListeners();
+    }
+  });
+
   it('replaces the activity and shows where it now counts', async () => {
     listing([run]);
     const sent = replaceWith((body) =>
