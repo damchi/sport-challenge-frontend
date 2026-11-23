@@ -64,10 +64,13 @@ export function ChallengeParticipants() {
   return (
     <section aria-label={t('challengeDetail.participants.label')}>
       <CreatorActionOutcome actions={actions} />
-      {/* Kept while the list reloads in its new size: the focus stays on it. */}
-      <div className="mb-4">
-        <PageSizeChoice size={size} onChange={setSize} />
-      </div>
+      {/* Kept while the list reloads in its new size (the focus stays on it);
+          hidden when the list failed, as on the Défis page. */}
+      {(items || participants.isPending) && (
+        <div className="mb-4">
+          <PageSizeChoice size={size} onChange={setSize} />
+        </div>
+      )}
       {participants.isPending ? (
         <LoadingState />
       ) : !items ? (
@@ -102,7 +105,8 @@ export function ChallengeParticipants() {
           <LoadMore
             hasMore={participants.hasNextPage}
             loading={participants.isFetchingNextPage}
-            failed={participants.isFetchNextPageError}
+            // While every page is read, a failed reload also stops the reading.
+            failed={participants.isFetchNextPageError || (size === 'all' && participants.isError)}
             auto={size === 'all'}
             onLoadMore={() => void participants.fetchNextPage()}
           />

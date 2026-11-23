@@ -206,7 +206,8 @@ function ChallengeSection({
         <LoadMore
           hasMore={challenges.hasNextPage}
           loading={challenges.isFetchingNextPage}
-          failed={challenges.isFetchNextPageError}
+          // While every page is read, a failed reload also stops the reading.
+          failed={challenges.isFetchNextPageError || (size === 'all' && challenges.isError)}
           auto={size === 'all'}
           onLoadMore={() => void challenges.fetchNextPage()}
         />

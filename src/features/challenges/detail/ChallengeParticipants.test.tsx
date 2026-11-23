@@ -288,8 +288,11 @@ describe('ChallengeParticipants', () => {
     renderAt(path);
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+    // Nothing to size while the list failed.
+    expect(screen.queryByRole('group', { name: 'Afficher' })).not.toBeInTheDocument();
     listing([participant({})]);
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(within(await list()).getByText('sam')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Afficher' })).toBeInTheDocument();
   });
 });
