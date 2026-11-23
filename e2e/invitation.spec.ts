@@ -48,3 +48,20 @@ test('an invalid invitation link says so', async ({ page }) => {
     "Ce lien d'invitation n'est pas valide ou a expiré. Demande un nouveau lien à la personne qui te l'a envoyé.",
   );
 });
+
+test('back from the challenge opened by the invitation returns to the invitation', async ({
+  page,
+}) => {
+  const invited = mockChallenges.find((challenge) => challenge.id === mockInvitedChallengeId);
+  if (!invited) throw new Error('No invited challenge in the mocks');
+  await signInAt(page, `/invite#${mockInvitationToken}`);
+
+  await expect(page.getByRole('heading', { name: invited.title })).toBeVisible();
+  await page.getByRole('link', { name: 'Voir le défi' }).click();
+  await expect(page).toHaveURL(`/challenges/${mockInvitedChallengeId}`);
+
+  // Back: the invitation again, not the sign-in pages before it.
+  await page.goBack();
+  await expect(page).toHaveURL(`/invite#${mockInvitationToken}`);
+  await expect(page.getByRole('button', { name: "Accepter l'invitation" })).toBeVisible();
+});
