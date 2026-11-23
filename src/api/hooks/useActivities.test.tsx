@@ -67,7 +67,7 @@ const ACTIVITY_ID = '00000000-0000-4000-8000-0000000001a1';
 function setup() {
   const queryClient = createTestQueryClient();
   const keys = {
-    mine: queryKeys.activities.mine(),
+    mine: queryKeys.activities.mine(undefined, '10'),
     leaderboard: queryKeys.challenges.leaderboard('c1'),
     sports: queryKeys.sports,
   };

@@ -9,7 +9,9 @@ export const queryKeys = {
     // Reloaded once an activity is recorded, changed or deleted.
     all: ['activities'] as const,
     // Of one sport, or of every sport (`undefined`).
-    mine: (sport?: string) => ['activities', 'mine', sport ?? 'all'] as const,
+    // One cache per page size (10, 50, all).
+    mine: (sport: string | undefined, size: string) =>
+      ['activities', 'mine', sport ?? 'all', size] as const,
     // Every zone's summary: it also counts the challenges joined, so joining,
     // accepting an invitation or deleting a challenge reloads it.
     summaries: ['activities', 'summary'] as const,
@@ -33,9 +35,10 @@ export const queryKeys = {
       ['challenges', challengeId, 'participants', { size }] as const,
     leaderboard: (challengeId: string) => ['challenges', challengeId, 'leaderboard'] as const,
     // Under the challenge: it reloads with the challenges once an activity changes.
-    participantActivities: (challengeId: string, userId: string) =>
-      ['challenges', challengeId, 'participants', userId, 'activities'] as const,
+    participantActivities: (challengeId: string, userId: string, size: string) =>
+      ['challenges', challengeId, 'participants', userId, 'activities', size] as const,
     // Every participant's: under the challenge as well.
-    activities: (challengeId: string) => ['challenges', challengeId, 'activities'] as const,
+    activities: (challengeId: string, size: string) =>
+      ['challenges', challengeId, 'activities', size] as const,
   },
 };

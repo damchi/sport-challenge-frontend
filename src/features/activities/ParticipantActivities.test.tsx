@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Activity } from '../../api/hooks/useActivities';
@@ -107,7 +107,12 @@ function renderAt(initialPath: string) {
   return router;
 }
 
-const list = () => screen.findByRole('region', { name: 'Activités du participant' });
+// The region, once its list is loaded (the size choice shows before it).
+const list = async () => {
+  const region = await screen.findByRole('region', { name: 'Activités du participant' });
+  await within(region).findByRole('list');
+  return region;
+};
 
 describe('ParticipantActivities', () => {
   afterEach(() => {
@@ -209,6 +214,34 @@ describe('ParticipantActivities', () => {
     renderAt(path);
 
     expect(within(await list()).getAllByRole('article')).toHaveLength(1);
+  });
+
+  it('asks for 10 by default, then 50 once chosen, and keeps it', async () => {
+    answer();
+    const requests = listing([run]);
+    renderAt(path);
+
+    const region = await list();
+    expect(requests.at(-1)?.searchParams.get('limit')).toBe('10');
+    fireEvent.click(within(region).getByRole('radio', { name: '50' }));
+
+    await waitFor(() => expect(requests.at(-1)?.searchParams.get('limit')).toBe('50'));
+    expect(requests.at(-1)?.searchParams.has('cursor')).toBe(false);
+    expect(await within(region).findByRole('article')).toBeInTheDocument();
+    expect(localStorage.getItem('sport-challenge:page-size:participantActivities')).toBe('50');
+  });
+
+  it('reads every page in turn, by 100, when « Tout » is chosen', async () => {
+    answer();
+    const requests = listing([run], [padel]);
+    renderAt(path);
+
+    fireEvent.click(within(await list()).getByRole('radio', { name: 'Tout' }));
+
+    expect(await screen.findByRole('heading', { name: 'Padel' })).toBeInTheDocument();
+    expect(requests.at(-1)?.searchParams.get('limit')).toBe('100');
+    expect(requests.at(-1)?.searchParams.get('cursor')).toBe('2');
+    expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
   });
 
   it('loads the next page of activities', async () => {
