@@ -41,10 +41,12 @@ export { expect };
 
 /**
  * Opens `path` signed out: the app sends the user to the sign-in page, then
- * back to `path` once signed in.
+ * back to `path` once signed in. `/` shows the landing page to a visitor:
+ * its « Se connecter » starts the sign-in.
  */
 export async function signInAt(page: Page, path: string): Promise<void> {
   await page.goto(path);
+  if (path === '/') await page.getByRole('button', { name: 'Se connecter' }).click();
   await page.getByRole('link', { name: FAKE_SIGN_IN }).click();
   await page.waitForURL((url) => url.host !== AUTH0_DOMAIN && url.pathname !== '/callback');
 }

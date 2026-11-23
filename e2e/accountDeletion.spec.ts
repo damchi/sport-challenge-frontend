@@ -1,4 +1,3 @@
-import { FAKE_SIGN_IN } from './fakeAuth0';
 import { expect, signInAt, test } from './fixtures';
 
 test('a user deletes the account and ends signed out', async ({ page }) => {
@@ -12,6 +11,9 @@ test('a user deletes the account and ends signed out', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Compte supprimé' })).toBeVisible();
   await page.getByRole('button', { name: 'Terminer' }).click();
 
-  // Signed out at Auth0 too: the app asks for a new sign-in.
-  await expect(page.getByRole('link', { name: FAKE_SIGN_IN })).toBeVisible();
+  // Signed out at Auth0 too, and forgotten on this device: back to the
+  // public landing page, not to a new sign-in.
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Défie tes amis, semaine après semaine.' }),
+  ).toBeVisible();
 });

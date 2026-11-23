@@ -78,13 +78,41 @@ describe('routes', () => {
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
   });
 
-  it('shows no challenge to a signed-out visitor of the home page', () => {
+  it('shows the landing page to a visitor of /, without signing in nor calling the API', async () => {
     const auth = createFakeAuth();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    renderAt('/', auth);
+
+    expect(
+      await screen.findByRole('heading', {
+        level: 1,
+        name: 'Défie tes amis, semaine après semaine.',
+      }),
+    ).toBeInTheDocument();
+    expect(auth.signIn).not.toHaveBeenCalled();
+    expect(auth.getAccessToken).not.toHaveBeenCalled();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Publics' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(document.title).toBe('Sport Challenge · Des défis sportifs entre amis'),
+    );
+    fetchSpy.mockRestore();
+  });
+
+  it('signs a returning user in again on /, rather than show the landing page', () => {
+    const auth = createFakeAuth({ isReturning: true });
     renderAt('/', auth);
 
     expect(auth.signIn).toHaveBeenCalledWith('/');
     expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Publics' })).not.toBeInTheDocument();
+  });
+
+  it('still signs a visitor in on a deep link, back to it', async () => {
+    const auth = createFakeAuth();
+    renderAt('/challenges/42', auth);
+
+    // Once the code of the page has loaded.
+    await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('/challenges/42'));
   });
 
   it('keeps /callback public', async () => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation, useMatches } from 'react-router';
+import { DocumentTitle } from '../components/DocumentTitle';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { GlobalErrorBanner } from '../components/GlobalErrorBanner';
 import { OfflineBanner } from '../components/OfflineBanner';
@@ -26,10 +27,8 @@ export function RootLayout() {
     .map((match) => match.handle)
     .filter(isRouteHandle)
     .at(-1)?.titleKey;
-  useEffect(() => {
-    const appName = t('home.title');
-    document.title = titleKey ? `${t(titleKey)} · ${appName}` : appName;
-  }, [titleKey, t]);
+  const appName = t('home.title');
+  const title = titleKey ? `${t(titleKey)} · ${appName}` : appName;
 
   // After a navigation (not the first page), focus moves to the new page's
   // title, so a screen reader starts reading there. Comparing the path (not a
@@ -48,6 +47,8 @@ export function RootLayout() {
 
   return (
     <>
+      {/* Before the outlet: a page's own title wins. */}
+      <DocumentTitle title={title} />
       <OfflineBanner />
       {error !== undefined && (
         <div className="px-5 lg:px-8">

@@ -4,6 +4,7 @@ import { LoadingState } from '../components/states/LoadingState';
 import { CallbackPage } from '../pages/CallbackPage';
 import { HomePage } from '../pages/HomePage';
 import { AppShell } from './AppShell';
+import { LandingGate } from './LandingGate';
 import { pages } from './pages';
 import { ProfileGate } from './ProfileGate';
 import { RequireAuth } from './RequireAuth';
@@ -29,64 +30,70 @@ export const routes: RouteObject[] = [
       // Public: it finishes the sign-in.
       { path: '/callback', element: <CallbackPage />, handle: title('auth.callback.title') },
       {
-        element: <RequireAuth />,
+        // `/`: the public landing page for a visitor, the challenges otherwise.
+        element: <LandingGate />,
         children: [
           {
-            element: <ProfileGate />,
+            element: <RequireAuth />,
             children: [
               {
-                path: '/onboarding',
-                lazy: pages.onboarding,
-                handle: title('onboarding.title'),
-              },
-              {
-                element: <AppShell />,
+                element: <ProfileGate />,
                 children: [
                   {
-                    // Inside the shell: the navigation stays above the error page.
-                    errorElement: <RouteError />,
+                    path: '/onboarding',
+                    lazy: pages.onboarding,
+                    handle: title('onboarding.title'),
+                  },
+                  {
+                    element: <AppShell />,
                     children: [
-                      { path: '/', element: <HomePage />, handle: title('nav.challenges') },
                       {
-                        path: '/challenges/new',
-                        lazy: pages.challengeCreate,
-                        handle: title('challengeCreate.title'),
-                      },
-                      {
-                        // Sections of the challenge: the leaderboard is its first page.
-                        path: '/challenges/:challengeId',
-                        lazy: pages.challenge,
-                        handle: title('challengeDetail.title'),
+                        // Inside the shell: the navigation stays above the error page.
+                        errorElement: <RouteError />,
                         children: [
-                          { index: true, lazy: pages.leaderboard },
-                          { path: 'participants', lazy: pages.participants },
-                          { path: 'participants/:userId', lazy: pages.participantActivities },
-                          { path: 'activities', lazy: pages.challengeActivities },
+                          { path: '/', element: <HomePage />, handle: title('nav.challenges') },
+                          {
+                            path: '/challenges/new',
+                            lazy: pages.challengeCreate,
+                            handle: title('challengeCreate.title'),
+                          },
+                          {
+                            // Sections of the challenge: the leaderboard is its first page.
+                            path: '/challenges/:challengeId',
+                            lazy: pages.challenge,
+                            handle: title('challengeDetail.title'),
+                            children: [
+                              { index: true, lazy: pages.leaderboard },
+                              { path: 'participants', lazy: pages.participants },
+                              { path: 'participants/:userId', lazy: pages.participantActivities },
+                              { path: 'activities', lazy: pages.challengeActivities },
+                            ],
+                          },
+                          {
+                            path: '/activities',
+                            lazy: pages.activities,
+                            handle: title('activities.title'),
+                          },
+                          {
+                            path: '/activities/new',
+                            lazy: pages.activityCreate,
+                            handle: title('activityForm.title'),
+                          },
+                          {
+                            path: '/activities/:activityId/edit',
+                            lazy: pages.activityEdit,
+                            handle: title('activityEdit.title'),
+                          },
+                          {
+                            // The token is in the fragment: never sent to the host.
+                            path: '/invite',
+                            lazy: pages.invite,
+                            handle: title('invitationPage.title'),
+                          },
+                          { path: '/me', lazy: pages.profile, handle: title('nav.profile') },
+                          { path: '*', lazy: pages.notFound, handle: title('notFound.title') },
                         ],
                       },
-                      {
-                        path: '/activities',
-                        lazy: pages.activities,
-                        handle: title('activities.title'),
-                      },
-                      {
-                        path: '/activities/new',
-                        lazy: pages.activityCreate,
-                        handle: title('activityForm.title'),
-                      },
-                      {
-                        path: '/activities/:activityId/edit',
-                        lazy: pages.activityEdit,
-                        handle: title('activityEdit.title'),
-                      },
-                      {
-                        // The token is in the fragment: never sent to the host.
-                        path: '/invite',
-                        lazy: pages.invite,
-                        handle: title('invitationPage.title'),
-                      },
-                      { path: '/me', lazy: pages.profile, handle: title('nav.profile') },
-                      { path: '*', lazy: pages.notFound, handle: title('notFound.title') },
                     ],
                   },
                 ],

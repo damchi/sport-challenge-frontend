@@ -1,5 +1,7 @@
 import en from './en.json';
 import fr from './fr.json';
+import landingEn from './landing/en.json';
+import landingFr from './landing/fr.json';
 import { missingKeys, missingPluralForms } from './parity';
 
 describe('missingKeys', () => {
@@ -42,5 +44,12 @@ describe('missingKeys', () => {
     expect(missingPluralForms(en, 'en')).toEqual([]);
     expect(missingKeys(fr, en)).toEqual([]);
     expect(missingKeys(en, fr)).toEqual([]);
+  });
+
+  it('finds the same keys and every plural form in the landing page files', () => {
+    expect(missingPluralForms(landingFr, 'fr')).toEqual([]);
+    expect(missingPluralForms(landingEn, 'en')).toEqual([]);
+    expect(missingKeys(landingFr, landingEn)).toEqual([]);
+    expect(missingKeys(landingEn, landingFr)).toEqual([]);
   });
 });
