@@ -817,6 +817,10 @@ describe('ChallengeCreateWizard', () => {
   });
 
   describe('preview in the list, beside the steps', () => {
+    // The device's time zone is mocked by one test: never left to the next.
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
     const aside = () => within(screen.getByRole('complementary'));
     const card = () =>
       within(aside().getByRole('region', { name: 'Aperçu dans la liste des défis' }));
@@ -862,7 +866,6 @@ describe('ChallengeCreateWizard', () => {
       type(startDate(), '2026-10-05');
 
       expect(await card().findByText(timeZoneName('America/Toronto', 'fr'))).toBeInTheDocument();
-      vi.restoreAllMocks();
     });
 
     it('is ongoing when it starts today', async () => {

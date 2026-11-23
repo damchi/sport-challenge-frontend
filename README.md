@@ -24,6 +24,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ La durée se choisit en **nombre entier de semaines, de 2 à 52**. ✅ Catégories à la carte (décision du 2026-11-20, README backend §2.1) : un challenge a **toujours** le temps cumulé ; la distance cumulée, l'élimination et le Grand prix sont **au choix** (un challenge peut n'avoir que le temps cumulé). Le créateur choisit un **sport de référence** parmi les sports à distance obligatoire (**course par défaut**), règle l'incrément X (en km) de l'élimination et peut changer les coefficients de distance, utilisés par la distance cumulée et par le critère de distance du Grand prix (voir Activités). La catégorie Points (au choix, README backend §2.3), nommée « Grand prix » dans l'interface, s'affiche avec SC-WEB-059 (classement, détail, « Mes défis ») et se crée avec SC-WEB-058.
 - ✅ Début et fin selon le **fuseau du lieu de lancement** (ex. Montréal) : l'interface affiche les dates dans ce fuseau.
 - ✅ Catégories, sport de référence, incrément X, réglages du Grand prix (critères, barème, durée minimale) et coefficients **figés à la création** (README backend §2.3, §2.4) ; ✅ à tout moment (avant comme après le début), seuls le titre et la description sont modifiables : dates, fuseau, visibilité, « les participants peuvent inviter » et catégories sont figés à la création (décision du 2026-11-20, alignée sur le contrat `PATCH /challenges/{id}`).
+- ✅ Création (décisions du 2026-11-22, SC-WEB-073) : « les participants peuvent inviter » est activé par défaut ; l'aperçu de l'assistant (web) montre « En cours » si le premier jour choisi est aujourd'hui, sinon « À venir ». C'est un aperçu avant la création, pas le statut du serveur : il ne sert pour aucun défi existant.
 
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
@@ -159,7 +160,7 @@ frontend/
 |---|---|
 | Entrée | Connexion / inscription, prénom et nom, pseudo facultatif, avatar, langue |
 | Accueil | Challenges publics ouverts, mes challenges (en cours, à venir, terminés) |
-| Création | Assistant en étapes : infos (titre, description, visibilité, les participants peuvent inviter) → durée et fuseau → sport de référence et catégories (temps cumulé toujours ; distance cumulée et élimination au choix ; incrément X, coefficients) → récapitulatif et envoi |
+| Création | Assistant en 4 étapes (SC-WEB-073) : Infos (titre, description, visibilité, les participants peuvent inviter) → Dates (durée, premier jour, fuseau, calendrier des semaines) → Catégories (sport de référence ; temps cumulé toujours ; distance cumulée, élimination avec sa hausse minimale X et Grand prix au choix ; coefficients) → Vérifier (récapitulatif avec « Modifier » par partie) et envoi ; en web, aperçu du défi dans la liste à côté des étapes |
 | Challenge | Classement par catégorie (onglets), statut live (« objectif atteint », « à risque »), participants, activités, badges du challenge, infos, invitations |
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
 | Profil | Prénom et nom modifiables, e-mail (lecture seule), pseudo modifiable, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
