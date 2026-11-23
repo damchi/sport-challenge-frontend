@@ -116,10 +116,17 @@ describe('LandingPage', () => {
   it('links a signed-in user to the challenges', () => {
     renderLanding(createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } }));
 
-    expect(screen.getByRole('link', { name: 'Mes défis' })).toHaveAttribute('href', '/challenges');
+    expect(screen.getByRole('link', { name: 'Mon compte' })).toHaveAttribute('href', '/challenges');
     for (const start of screen.getAllByRole('link', { name: 'Commencer' })) {
       expect(start).toHaveAttribute('href', '/challenges');
     }
+  });
+
+  it('offers « Mon compte » to a user who signed in on this device before', () => {
+    renderLanding(createFakeAuth({ isReturning: true }));
+
+    expect(screen.getByRole('link', { name: 'Mon compte' })).toHaveAttribute('href', '/challenges');
+    expect(screen.queryByRole('button', { name: 'Se connecter' })).not.toBeInTheDocument();
   });
 
   it('offers a retry when the sign-in cannot start', async () => {

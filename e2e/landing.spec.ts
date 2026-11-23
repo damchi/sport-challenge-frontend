@@ -42,7 +42,24 @@ test('a signed-in user still reads the landing page, and goes on to their challe
     window.dispatchEvent(new PopStateEvent('popstate'));
   });
   await expect(page.getByRole('heading', { level: 1, name: TITLE })).toBeVisible();
-  await page.getByRole('link', { name: 'Mes défis' }).click();
+  await page.getByRole('link', { name: 'Mon compte' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
+  await expect(page).toHaveURL('/challenges');
+});
+
+test('a user who signed in before gets « Mon compte », even when the session is gone', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await page.getByRole('link', { name: FAKE_SIGN_IN }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
+
+  // A full load drops the session in memory (no silent sign-in in the tests).
+  await page.goto('/');
+  await page.getByRole('link', { name: 'Mon compte' }).click();
+  // /challenges signs in again, then shows the challenges.
+  await page.getByRole('link', { name: FAKE_SIGN_IN }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Défis' })).toBeVisible();
   await expect(page).toHaveURL('/challenges');
 });

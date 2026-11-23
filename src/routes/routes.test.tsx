@@ -102,7 +102,7 @@ describe('routes', () => {
   it('shows the landing page to a signed-in user too, with a link to the challenges', async () => {
     renderAt('/');
 
-    expect(await screen.findByRole('link', { name: 'Mes défis' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Mon compte' })).toHaveAttribute(
       'href',
       '/challenges',
     );

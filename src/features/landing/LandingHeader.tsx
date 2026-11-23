@@ -8,7 +8,7 @@ import type { LandingSignIn } from './useLandingSignIn';
 
 const SECTIONS = ['how', 'categories', 'sports', 'faq'] as const;
 
-/** The app's name, the sections (web), the language and « Se connecter » (« Mes défis » signed in). */
+/** The app's name, the sections (web), the language and « Se connecter » (« Mon compte », to the challenges, for a known user). */
 export function LandingHeader({ signIn }: { signIn: LandingSignIn }) {
   const { t } = useTranslation();
   return (
@@ -36,9 +36,9 @@ export function LandingHeader({ signIn }: { signIn: LandingSignIn }) {
         </nav>
         <div className="ml-auto flex items-center gap-3 lg:ml-0">
           <LanguageSwitch />
-          {signIn.signedIn ? (
+          {signIn.known ? (
             <Link to={HOME_PATH} className={SECONDARY_BUTTON}>
-              {t('landing.myChallenges')}
+              {t('landing.myAccount')}
             </Link>
           ) : (
             <button

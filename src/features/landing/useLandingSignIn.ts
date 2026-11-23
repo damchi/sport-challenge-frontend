@@ -49,6 +49,8 @@ export function useLandingSignIn() {
   const pending = asked && online;
   return {
     signedIn: auth.isAuthenticated,
+    /** Signed in now, or before on this device: « Mon compte » in the header. */
+    known: auth.isAuthenticated || auth.isReturning,
     signIn: (source: SignInSource) => {
       // One redirect at a time: a double click must not start two sign-ins.
       if (!pending) setRequest({ source, failed: false });

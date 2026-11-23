@@ -18,6 +18,12 @@ export interface Auth {
   /** The last sign-in attempt failed (cancelled, expired code...). */
   hasError: boolean;
   /**
+   * Someone signed in on this device and has not signed out since, even if
+   * the session did not survive a reload: the landing page offers « Mon
+   * compte » rather than « Se connecter ». Read when the session changes.
+   */
+  isReturning: boolean;
+  /**
    * Redirects to the sign-in page, then back to `returnTo` (a path of the
    * app). `chooseAccount` shows the sign-in form even when Auth0 still has a
    * session, so another account can be used (after a refused or failed

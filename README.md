@@ -160,7 +160,7 @@ frontend/
 
 | Zone | Écrans |
 |---|---|
-| Présentation | ✅ Landing page publique à `/` (SC-WEB-083), pour tout le monde, connecté ou non : fonctionnement de l'app et des défis, contenu statique sans appel d'API (README backend §2.11). « Commencer » lance la connexion, ou mène aux défis pour une personne connectée (décisions du 2026-11-23) |
+| Présentation | ✅ Landing page publique à `/` (SC-WEB-083), pour tout le monde, connecté ou non : fonctionnement de l'app et des défis, contenu statique sans appel d'API (README backend §2.11). « Commencer » lance la connexion, ou mène aux défis pour une personne connectée ; « Se connecter » devient « Mon compte » (vers `/challenges`) pour qui s'est déjà connecté sur l'appareil sans se déconnecter, même si la session n'a pas survécu à un rechargement (marque sur l'appareil, sans jeton ni identité) (décisions du 2026-11-23) |
 | Entrée | Connexion / inscription, prénom et nom, pseudo facultatif, avatar, langue |
 | Accueil | ✅ À `/challenges` (décision du 2026-11-23) : challenges publics ouverts, mes challenges (en cours, à venir, terminés) |
 | Création | Assistant en 4 étapes (SC-WEB-073) : Infos (titre, description, visibilité, les participants peuvent inviter) → Dates (durée, premier jour, fuseau, calendrier des semaines) → Catégories (sport de référence ; temps cumulé toujours ; distance cumulée, élimination avec sa hausse minimale X, Grand prix et D+ cumulé au choix ; coefficients) → Vérifier (récapitulatif avec « Modifier » par partie) et envoi ; en web, aperçu du défi dans la liste à côté des étapes |
