@@ -97,16 +97,21 @@
     },
     "identity": {
       "title": "Identity",
-      "email": "Email",
+      "subtitle": "What other participants see of you.",
+      "email": "Email address",
+      "emailHint": "The one you sign in with: it can't be changed here.",
       "missing": "Not provided"
     },
-    "pseudoForm": {
-      "saved": "Nickname saved.",
-      "removed": "Nickname removed: others see your first and last name."
-    },
     "save": "Save",
-    "namesForm": {
-      "saved": "First and last name saved."
+    "saved": "Profile saved.",
+    "handle": "@{{pseudo}}",
+    "at": "@",
+    "preferences": {
+      "title": "Preferences",
+      "subtitle": "Applied right away."
+    },
+    "account": {
+      "title": "Account"
     },
     "deleteAccount": {
       "button": "Delete my account",
@@ -115,7 +120,7 @@
       "message": "Here's what will happen:",
       "consequences": {
         "challenges": "You leave all your challenges, and your activities are erased.",
-        "profile": "Your profile is anonymized: first name, last name, pseudo and e-mail are erased.",
+        "profile": "Your profile is anonymized: first name, last name, nickname and email are erased.",
         "signIn": "Your sign-in account is deleted: you won't be able to sign in with it again.",
         "final": "It's final: nothing can be recovered."
       },
@@ -292,7 +297,7 @@
   "settings": {
     "theme": {
       "label": "Theme",
-      "system": "Like the device",
+      "system": "System",
       "light": "Light",
       "dark": "Dark"
     },

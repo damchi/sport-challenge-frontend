@@ -12,3 +12,9 @@ export function displayName({ pseudo, first_name, last_name }: NamedUser): strin
   const shown = pseudo?.trim() || [first_name, last_name].filter(Boolean).join(' ').trim();
   return shown === '' ? null : shown;
 }
+
+/** "Marie Tremblay", whatever the pseudo; null when the user has no names. */
+export function fullName({ first_name, last_name }: NamedUser): string | null {
+  const shown = [first_name, last_name].filter(Boolean).join(' ').trim();
+  return shown === '' ? null : shown;
+}

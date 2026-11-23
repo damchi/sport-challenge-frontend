@@ -345,7 +345,7 @@ texte 14 px ; actif en `--color-accent` sur fond `--color-accent-soft`,
 inactif en `--color-muted`. La barre passe à la ligne plutôt que de déborder.
 
 Les réglages (langue, thème, déconnexion) sont dans l'onglet Profil ; le thème
-(comme l'appareil, clair ou sombre) est mémorisé sur l'appareil.
+(système, clair ou sombre) est mémorisé sur l'appareil.
 
 ## Écrans de référence
 
@@ -537,8 +537,31 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
    - Totaux de chaque semaine (« 4 séances · 2:36 · 26 km », distance omise
      à 0) : sous le titre en mobile, à droite à partir de `lg`.
 
+7. **Profil** (maquettes `WebProfil.png` et `Profil.png`, décisions du
+   2026-11-23, SC-WEB-078)
+   - Web (à partir de `lg`) : deux colonnes, 1/3 à gauche pour la carte
+     d'identité, 2/3 à droite pour les cartes Identité, Préférences et Compte ;
+     mobile : les mêmes cartes l'une sous l'autre. Cartes `--color-surface`,
+     rayon 20 px, bordure `--color-border`.
+   - Carte d'identité : avatar à initiales de 72 px, prénom et nom complets
+     (même avec un pseudo), `@pseudo` dessous s'il existe, puis la ligne
+     « Mes activités » (icône `activity` en accent, chevron) vers
+     `/activities`, fond `--color-bg`.
+   - Identité (« Ce que les autres participants voient de toi. ») : Prénom et
+     Nom côte à côte à partir de `md`, Pseudo (facultatif) précédé de `@`,
+     encart en lecture seule « Adresse courriel » (fond `--color-bg`) avec
+     « Celle de ta connexion : elle ne se change pas ici. ». Un seul bouton
+     « Enregistrer » (à droite en web, pleine largeur en mobile) pour prénom,
+     nom et pseudo, inactif tant que rien ne change ; message « Profil
+     enregistré. ». On écrit « courriel » en français.
+   - Préférences (« Appliquées tout de suite. ») : Langue (Français / English)
+     et Thème (Système / Clair / Sombre) en sélecteurs à onglets.
+   - Compte : lignes « Se déconnecter » (icône `log-out`) et « Supprimer mon
+     compte » (icône `trash-2`, texte `--color-danger`), séparées par une
+     bordure.
+
 À dessiner plus tard dans le même style, en mobile et en web : lien
-d'invitation à partager, profil, et en V1.1 les badges (obtenus en
+d'invitation à partager, et en V1.1 les badges (obtenus en
 couleur, à obtenir en silhouette avec leur condition).
 
 ## États des écrans

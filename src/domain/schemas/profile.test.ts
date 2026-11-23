@@ -1,4 +1,4 @@
-import { profileSchema, profileUpdate, pseudoUpdate, sameNames } from './profile';
+import { identityUpdate, profileSchema, profileUpdate, pseudoUpdate } from './profile';
 
 const valid = {
   pseudo: 'marie_92',
@@ -109,13 +109,41 @@ describe('profileSchema', () => {
     expect(profileUpdate(valid, null)).toEqual(valid);
   });
 
-  it('compares the names typed as they would be sent', () => {
-    const saved = { first_name: 'Jean-Paul', last_name: 'Tremblay' };
-    expect(sameNames({ first_name: ' Jean - Paul ', last_name: 'Tremblay ' }, saved)).toBe(true);
-    expect(sameNames({ first_name: 'Jean Paul', last_name: 'Tremblay' }, saved)).toBe(false);
-    expect(
-      sameNames({ first_name: '', last_name: '' }, { first_name: null, last_name: null }),
-    ).toBe(true);
+  describe('identityUpdate', () => {
+    const saved = { first_name: 'Jean-Paul', last_name: 'Tremblay', pseudo: 'jp' };
+
+    it('sends nothing when the names typed, once tidied, and the pseudo are the saved ones', () => {
+      expect(
+        identityUpdate(
+          { first_name: ' Jean - Paul ', last_name: 'Tremblay ', pseudo: ' jp ' },
+          saved,
+        ),
+      ).toEqual({});
+    });
+
+    it('sends only what changed', () => {
+      expect(
+        identityUpdate({ first_name: 'Jean Paul', last_name: 'Tremblay', pseudo: 'jp' }, saved),
+      ).toEqual({ first_name: 'Jean Paul' });
+      expect(
+        identityUpdate({ first_name: 'Jean-Paul', last_name: 'Gagnon', pseudo: 'jean.p' }, saved),
+      ).toEqual({ last_name: 'Gagnon', pseudo: 'jean.p' });
+    });
+
+    it('removes an emptied pseudo', () => {
+      expect(
+        identityUpdate({ first_name: 'Jean-Paul', last_name: 'Tremblay', pseudo: '' }, saved),
+      ).toEqual({ pseudo: null });
+    });
+
+    it('sends nothing for an empty pseudo the profile does not have', () => {
+      expect(
+        identityUpdate(
+          { first_name: 'Jean-Paul', last_name: 'Tremblay', pseudo: '' },
+          { ...saved, pseudo: null },
+        ),
+      ).toEqual({});
+    });
   });
 
   it('only knows French and English', () => {

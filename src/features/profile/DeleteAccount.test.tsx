@@ -54,7 +54,7 @@ describe('DeleteAccount', () => {
     const consequences = within(document.getElementById(description) ?? document.body);
     expect(consequences.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       'Tu abandonnes tous tes défis, et tes activités sont effacées.',
-      'Ton profil est anonymisé : prénom, nom, pseudo et e-mail sont effacés.',
+      'Ton profil est anonymisé : prénom, nom, pseudo et courriel sont effacés.',
       'Ton compte de connexion est supprimé : tu ne pourras plus te connecter avec.',
       "C'est définitif : rien ne pourra être récupéré.",
     ]);
