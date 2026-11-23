@@ -10,7 +10,7 @@ import { LoadMore } from '../../components/LoadMore';
 import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
-import { isSportCode } from '../../domain/activity';
+import { keptSport } from '../../domain/activity';
 import { groupByWeek, weekKind, type ActivityWeek } from '../../domain/activityWeeks';
 import { localDate } from '../../domain/challengeWindow';
 import { weekDays, weekMonday } from '../../domain/format/activityDates';
@@ -57,13 +57,7 @@ export function ActivityList({
   const zone = useActivityTimeZone(deviceTimeZone);
   const { timeZone } = zone;
   const summary = useMyActivitySummary(timeZone);
-  // A sport the user no longer has an activity of (the last one deleted) is
-  // let go: the filter shows every sport again.
-  const asked = isSportCode(sportParam) ? sportParam : undefined;
-  const sport =
-    asked && summary.data?.sports.every(({ sport_code }) => sport_code !== asked)
-      ? undefined
-      : asked;
+  const sport = keptSport(sportParam, summary.data?.sports);
   const activities = useMyActivities(sport);
   const { weeks, totals } = useWeekTotals(
     timeZone,

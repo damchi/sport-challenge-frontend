@@ -1,4 +1,10 @@
-import { activityTimeZone, isActivityId, isSportCode, sortSportsForEntry } from './activity';
+import {
+  activityTimeZone,
+  isActivityId,
+  isSportCode,
+  keptSport,
+  sortSportsForEntry,
+} from './activity';
 
 describe('activityTimeZone', () => {
   it("takes the device's time zone without an ongoing challenge", () => {
@@ -46,6 +52,21 @@ describe('isSportCode', () => {
     expect(isSportCode('run&x=1')).toBe(false);
     expect(isSportCode('a'.repeat(33))).toBe(false);
     expect(isSportCode(null)).toBe(false);
+  });
+});
+
+describe('keptSport', () => {
+  const sports = [{ sport_code: 'run' }, { sport_code: 'yoga' }];
+
+  it('keeps a sport the user has activities of, or not yet known', () => {
+    expect(keptSport('run', sports)).toBe('run');
+    expect(keptSport('ride', undefined)).toBe('ride');
+  });
+
+  it('lets go of a sport without activity, or not a sport code', () => {
+    expect(keptSport('ride', sports)).toBeUndefined();
+    expect(keptSport('Run', sports)).toBeUndefined();
+    expect(keptSport(null, sports)).toBeUndefined();
   });
 });
 
