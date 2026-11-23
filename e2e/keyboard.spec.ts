@@ -18,10 +18,10 @@ async function tabTo(page: Page, name: string): Promise<string[]> {
         element.closest('label');
       return {
         name: (label ?? element).textContent?.trim() ?? '',
-        // Not :focus while on a date or time field's own picker button, which
-        // the browser rings itself.
+        // Not :focus while on a date field's own picker button, which the
+        // browser rings itself.
         ring:
-          !element.matches(':focus') && element.matches('input[type="date"], input[type="time"]')
+          !element.matches(':focus') && element.matches('input[type="date"]')
             ? 'solid 2px'
             : `${getComputedStyle(element).outlineStyle} ${getComputedStyle(element).outlineWidth}`,
       };
@@ -58,13 +58,14 @@ test('a user records an activity with the keyboard only', async ({ page, isMobil
   await page.keyboard.press('Space');
   await expect(page.getByRole('radio', { name: 'Course' })).toBeChecked();
   expect(await tabTo(page, 'Date')).toEqual(['Date']);
-  // The order of the date's and time's parts (day, month, year, AM/PM)
-  // depends on the system: the values are set directly, the fields are
-  // still left with Tab.
+  // The order of the date's parts (day, month, year) depends on the system:
+  // the value is set directly, the field is still left with Tab.
   await page.getByLabel('Date', { exact: true }).fill('2026-11-19');
   expect(await tabTo(page, 'Heure')).toEqual(['Date', 'Heure']);
-  await page.getByLabel('Heure', { exact: true }).fill('07:30');
-  expect(await tabTo(page, 'Minutes')).toEqual(['Heure', 'Heures', 'Minutes']);
+  // The time is typed on 24 hours.
+  await page.keyboard.type('7h30');
+  expect(await tabTo(page, 'Minutes')).toEqual(['Heures', 'Minutes']);
+  await expect(page.getByLabel('Heure', { exact: true })).toHaveValue('07:30');
   await page.keyboard.type('45');
   expect(await tabTo(page, 'Distance en kilomètres')).toEqual([
     'Secondes',

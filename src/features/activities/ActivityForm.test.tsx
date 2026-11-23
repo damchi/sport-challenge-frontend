@@ -167,7 +167,10 @@ describe('ActivityForm', () => {
     expect(screen.queryByRole('textbox', { name: /vitesse|allure/i })).not.toBeInTheDocument();
     expect(startDate()).toHaveAttribute('type', 'date');
     expect(startDate()).toHaveAttribute('max', '2026-11-20');
-    expect(startTime()).toHaveAttribute('type', 'time');
+    // On 24 hours whatever the browser's language: not a native time field.
+    expect(startTime()).not.toHaveAttribute('type', 'time');
+    type(startTime(), '7h30');
+    expect(startTime()).toHaveValue('07:30');
   });
 
   it('sums up the entry as it goes, without pace nor speed', async () => {

@@ -52,10 +52,30 @@ function distanceMeters(value: string): number | undefined {
   return Math.round(Number(text.replace(',', '.')) * 1000);
 }
 
-// The start, typed as a native date field and a native time field give
-// them, read in `timeZone`.
+// A time of day as typed, on 24 hours: "07:30", "7:30", "7h30", "7.30",
+// "0730" or "7h".
+const CLOCK = /^(\d{1,2})(?:\s*[:hH.]?\s*(\d{2})|\s*[hH])$/;
+
+/**
+ * A time of day typed on 24 hours, written HH:MM ("7h30" → "07:30"), or
+ * undefined when it is not one. A native time field is not used: it follows
+ * the browser's language, AM/PM in English whatever the app's language.
+ */
+export function clockTime(text: string): string | undefined {
+  const match = CLOCK.exec(text.trim());
+  if (!match) return undefined;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] ?? '0');
+  if (hours > 23 || minutes > 59) return undefined;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}`;
+}
+
+// The start, a day as a native date field gives it and a time as typed,
+// read in `timeZone`.
 function startOf(date: string, time: string, timeZone: string): Date | undefined {
-  return zonedDateTime(`${date}T${time}`, timeZone);
+  const clock = clockTime(time);
+  return clock === undefined ? undefined : zonedDateTime(`${date}T${clock}`, timeZone);
 }
 
 /**
@@ -63,8 +83,8 @@ function startOf(date: string, time: string, timeZone: string): Date | undefined
  * activity is entered once done, so neither its start nor its end is in the
  * future. `sports` is the catalogue, whose distance mode tells whether the
  * distance is required, optional (the "other" sport) or absent. The start,
- * a day and a time as native fields give them, is read in `timeZone`; its
- * one error goes on the day.
+ * a day as a native field gives it and a time typed on 24 hours, is read in
+ * `timeZone`; its one error goes on the day.
  */
 export function activityCreateSchema(
   now: () => Date,
@@ -102,8 +122,15 @@ export function activityCreateSchema(
 
       const start = startOf(input.start_date, input.start_time, timeZone);
       const current = now().getTime();
-      if (!start) issue('start_date', 'activityForm.fields.startedAt.required');
-      else if (start.getTime() < EARLIEST_START || start.getTime() > current) {
+      if (!start) {
+        const unreadTime = input.start_time.trim() !== '' && !clockTime(input.start_time);
+        issue(
+          'start_date',
+          unreadTime
+            ? 'activityForm.fields.startedAt.timeFormat'
+            : 'activityForm.fields.startedAt.required',
+        );
+      } else if (start.getTime() < EARLIEST_START || start.getTime() > current) {
         issue('start_date', 'activityForm.fields.startedAt.range');
       }
 

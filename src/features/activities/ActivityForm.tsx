@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
+import { useRef, useState, type FocusEvent } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -13,6 +13,7 @@ import { timeZoneName } from '../../domain/format/challengeDates';
 import {
   activityCreateSchema,
   activityFormFieldOf,
+  clockTime,
   type ActivityCreateInput,
   type ActivityCreateValues,
 } from '../../domain/schemas/activity';
@@ -298,13 +299,26 @@ export function ActivityFormFields({
                 <label htmlFor="start_time" className="block font-semibold">
                   {t('activityForm.fields.startedAt.time')}
                 </label>
+                {/* Typed on 24 hours: a native time field follows the
+                    browser's language (AM/PM in English). */}
                 <input
                   id="start_time"
-                  type="time"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder={t('activityForm.fields.startedAt.timePlaceholder')}
                   aria-invalid={startError ? true : undefined}
                   aria-describedby={describedBy('start', startError)}
                   className={`${inputClass} h-13 w-full`}
-                  {...register('start_time', { deps: ['start_date'] })}
+                  {...register('start_time', {
+                    deps: ['start_date'],
+                    // Written HH:MM once left: "7h30" becomes "07:30".
+                    onBlur: (event: FocusEvent<HTMLInputElement>) => {
+                      const clock = clockTime(event.target.value);
+                      if (clock && clock !== event.target.value) {
+                        form.setValue('start_time', clock, { shouldValidate: true });
+                      }
+                    },
+                  })}
                 />
               </div>
             </div>

@@ -182,9 +182,11 @@
         "label": "Début",
         "date": "Date",
         "time": "Heure",
+        "timePlaceholder": "07:30",
         "hint": "Date et heure de début, {{zone}}. Ni le début ni la fin ne peuvent être dans le futur.",
         "required": "Indique la date et l'heure de début.",
-        "range": "Le début ne peut pas être dans le futur, ni avant l'an 2000."
+        "range": "Le début ne peut pas être dans le futur, ni avant l'an 2000.",
+        "timeFormat": "Indique l'heure sur 24 h, par exemple 07:30 ou 18:45."
       },
       "duration": {
         "label": "Durée",

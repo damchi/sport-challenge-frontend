@@ -4,6 +4,7 @@ import {
   activityFormFieldOf,
   activityFormValues,
   cleanSportLabel,
+  clockTime,
   type ActivityCreateInput,
   type ActivitySport,
 } from './activity';
@@ -108,12 +109,21 @@ describe('activityCreateSchema', () => {
       ['', '07:30'],
       ['2026-11-20', ''],
       ['yesterday', '07:30'],
-      ['2026-11-20', '7h30'],
     ])('wants a date and a time, not %j at %j', (date, time) => {
       // The one error goes on the day.
       expect(errorsOf({ start_date: date, start_time: time })).toEqual({
         start_date: 'activityForm.fields.startedAt.required',
       });
+    });
+
+    it.each(['25:00', '7:60', 'noon', '7 30 am'])('wants a time on 24 hours, not %j', (time) => {
+      expect(errorsOf({ start_time: time })).toEqual({
+        start_date: 'activityForm.fields.startedAt.timeFormat',
+      });
+    });
+
+    it('takes the time as typed on 24 hours', () => {
+      expect(schema.parse({ ...valid, start_time: '7h30' }).started_at).toBe(STARTED_AT);
     });
 
     it('is never in the future nor before 2000', () => {
@@ -189,6 +199,30 @@ describe('activityCreateSchema', () => {
       );
     });
   });
+});
+
+describe('clockTime', () => {
+  it.each([
+    ['07:30', '07:30'],
+    ['7:30', '07:30'],
+    ['7h30', '07:30'],
+    ['7 h 30', '07:30'],
+    ['7.30', '07:30'],
+    ['0730', '07:30'],
+    ['730', '07:30'],
+    ['18h', '18:00'],
+    [' 23:59 ', '23:59'],
+    ['0:00', '00:00'],
+  ])('writes %j as %j', (typed, written) => {
+    expect(clockTime(typed)).toBe(written);
+  });
+
+  it.each(['', '24:00', '7:60', '7:3', '7:30 PM', 'noon', '12345'])(
+    'reads no time in %j',
+    (typed) => {
+      expect(clockTime(typed)).toBeUndefined();
+    },
+  );
 });
 
 describe('cleanSportLabel', () => {

@@ -492,7 +492,9 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      ensuite, « Autre » en dernier (libellé libre dessous). La puce choisie a
      la bordure, le fond et le texte accent.
    - Début : « Date » et « Heure » côte à côte, fuseau de saisie nommé
-     dessous. Durée : h / min / s, unité dans le champ. Distance : mention
+     dessous. L'heure se tape sur 24 h (« 07:30 », « 7h30 » accepté) dans un
+     champ texte : un champ heure natif suit la langue du navigateur (AM/PM
+     en anglais). Durée : h / min / s, unité dans le champ. Distance : mention
      « obligatoire pour ce sport » ou « facultative » à côté du titre, « km »
      dans le champ ; absente pour un sport sans distance.
    - Carte « Résumé » (sport, début avec le jour, durée, distance), remplie

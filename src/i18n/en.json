@@ -182,9 +182,11 @@
         "label": "Start",
         "date": "Date",
         "time": "Time",
+        "timePlaceholder": "07:30",
         "hint": "Start date and time, {{zone}}. Neither the start nor the end can be in the future.",
         "required": "Enter the start date and time.",
-        "range": "The start cannot be in the future, nor before 2000."
+        "range": "The start cannot be in the future, nor before 2000.",
+        "timeFormat": "Enter the time on 24 hours, for example 07:30 or 18:45."
       },
       "duration": {
         "label": "Duration",
