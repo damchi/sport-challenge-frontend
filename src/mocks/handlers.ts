@@ -25,6 +25,7 @@ type ApiErrorBody = components['schemas']['Error'];
 type Activity = components['schemas']['Activity'];
 type ActivityCreate = components['schemas']['ActivityCreate'];
 type ActivityPage = components['schemas']['ActivityPage'];
+type ChallengeActivityPage = components['schemas']['ChallengeActivityPage'];
 type InvitationCreated = components['schemas']['InvitationCreated'];
 type InvitationPreview = components['schemas']['InvitationPreview'];
 type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
@@ -401,6 +402,25 @@ export const handlers = [
       return HttpResponse.json<ActivityPage>({ items, next_cursor: next });
     },
   ),
+  // Every challenge shows the mock activities, each from a participant in
+  // turn; the cursor is the index of the next one.
+  http.get('*/api/v1/challenges/:challengeId/activities', ({ params, request }) => {
+    if (!mockChallenges.some((challenge) => challenge.id === params.challengeId)) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
+    const items = mockActivities.slice(from, from + PAGE_SIZE).map((activity, index) => {
+      const author = mockParticipants[(from + index) % mockParticipants.length];
+      if (!author) throw new Error('No mock participant');
+      const { user_id: id, pseudo, first_name, last_name } = author;
+      return { ...activity, user: { id, pseudo, first_name, last_name, avatar: null } };
+    });
+    const next = from + PAGE_SIZE < mockActivities.length ? String(from + PAGE_SIZE) : null;
+    return HttpResponse.json<ChallengeActivityPage>({ items, next_cursor: next });
+  }),
   // The challenge with its new title and description; an empty description
   // removes it.
   http.patch('*/api/v1/challenges/:challengeId', async ({ params, request }) => {

@@ -12,14 +12,25 @@ const TAB =
 const TAB_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
 const TAB_OFF = 'text-muted';
 
-/** Sections of a challenge, one address each (the current one is marked aria-current). */
-export function ChallengeTabs({ challengeId }: { challengeId: string }) {
+/**
+ * Sections of a challenge, one address each (the current one is marked
+ * aria-current). Without `activities` (a visitor, who may not read them),
+ * no Activities tab.
+ */
+export function ChallengeTabs({
+  challengeId,
+  activities,
+}: {
+  challengeId: string;
+  activities: boolean;
+}) {
   const { t } = useTranslation();
+  const tabs = activities ? TABS : TABS.filter(({ key }) => key !== 'activities');
   return (
     <nav aria-label={t('challengeDetail.tabs.label')}>
       {/* The tabs share a line, and wrap when the text is enlarged. */}
       <ul className="flex flex-wrap rounded-row bg-segment p-1">
-        {TABS.map(({ key, path }) => (
+        {tabs.map(({ key, path }) => (
           <li key={key} className="flex min-w-fit flex-1">
             <NavLink
               to={`/challenges/${challengeId}${path}`}

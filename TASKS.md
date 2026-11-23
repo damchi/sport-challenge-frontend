@@ -111,6 +111,7 @@ Total : **166 points** (57 tickets), dont **152 pour la V1** ; 14 points sont re
 | F8 | Profil et compte | 040, 053, 041 |
 | F9 | Qualité et livraison | 043, 044, 045, 046, 015, 064, 047, 048 |
 | F10 | Reportés en V1.1 (avatar, badges) | 049, 050, 051 |
+| F11 | Administration (section `/admin`, rôle Auth0 « admin ») | 084, 085, 086, 087, 088, 089, 090, 091, 092, 093, 094, 095, 096 |
 
 ---
 
