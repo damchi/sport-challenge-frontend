@@ -7,7 +7,8 @@ import {
   challengePeriod,
   challengeStartDay,
   challengeWeekEnd,
-  challengeWindowBounds,
+  challengeFullDays,
+  challengeWeekday,
   daysUntil,
   otherTimeZoneName,
   timeZoneName,
@@ -78,42 +79,36 @@ describe('otherTimeZoneName', () => {
   });
 });
 
-describe('challengeWindowBounds', () => {
+describe('challengeFullDays', () => {
   // Six weeks from Monday 5 October 2026 in Montréal, across the change to
   // winter time on 1 November: both bounds stay at local midnight.
   const start = new Date('2026-10-05T04:00:00Z');
   const end = new Date('2026-11-16T05:00:00Z');
 
-  it('writes both bounds to the hour in the chosen time zone', () => {
-    expect(challengeWindowBounds(start, end, 'America/Toronto', 'fr')).toEqual({
-      start: 'lundi 5 octobre à 00 h',
-      end: 'lundi 16 novembre à 00 h',
+  it('writes the first and last day in full, in the chosen time zone', () => {
+    expect(challengeFullDays(start, end, 'America/Toronto', 'fr')).toEqual({
+      start: 'lundi 5 octobre 2026',
+      end: 'dimanche 15 novembre 2026',
     });
-    expect(challengeWindowBounds(start, end, 'America/Toronto', 'en')).toEqual({
-      start: 'Monday, October 5 at 12 AM',
-      end: 'Monday, November 16 at 12 AM',
-    });
-  });
-
-  it('writes the same instants in another time zone', () => {
-    expect(challengeWindowBounds(start, end, 'Europe/Paris', 'fr')).toEqual({
-      start: 'lundi 5 octobre à 06 h',
-      end: 'lundi 16 novembre à 06 h',
+    expect(challengeFullDays(start, end, 'America/Toronto', 'en')).toEqual({
+      start: 'Monday, October 5, 2026',
+      end: 'Sunday, November 15, 2026',
     });
   });
 
-  it('shows the years when they differ', () => {
-    expect(
-      challengeWindowBounds(
-        new Date('2026-12-07T05:00:00Z'),
-        new Date('2027-01-04T05:00:00Z'),
-        'America/Toronto',
-        'fr',
-      ),
-    ).toEqual({ start: 'lundi 7 décembre 2026 à 00 h', end: 'lundi 4 janvier 2027 à 00 h' });
+  it('does not take the day of the device time zone', () => {
+    // In Tokyo the same instants are already the afternoon of these days.
+    expect(challengeFullDays(start, end, 'Asia/Tokyo', 'fr').end).toBe('lundi 16 novembre 2026');
   });
 });
 
+describe('challengeWeekday', () => {
+  it('names the day in the chosen time zone', () => {
+    const instant = new Date('2026-10-05T04:00:00Z');
+    expect(challengeWeekday(instant, 'America/Toronto', 'fr')).toBe('lundi');
+    expect(challengeWeekday(instant, 'Europe/Paris', 'en')).toBe('Monday');
+  });
+});
 describe('timeZoneName', () => {
   it('names the time zone without its summer or winter time', () => {
     expect(timeZoneName('America/Toronto', 'fr')).toBe('heure de l’Est nord-américain');

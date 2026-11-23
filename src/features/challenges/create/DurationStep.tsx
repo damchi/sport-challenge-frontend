@@ -1,6 +1,7 @@
+import { Minus, Plus } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { addToDate, isTimeZone, localDate } from '../../../domain/challengeWindow';
 import { timeZoneName } from '../../../domain/format/challengeDates';
 import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
@@ -9,10 +10,14 @@ import { FieldError } from './FieldError';
 import { describedBy, inputClass } from './fields';
 import { windowPreview } from './windowPreview';
 
+// Bounds of the contract, which the buttons keep to.
+const MIN_WEEKS = 2;
+const MAX_WEEKS = 52;
+
 /**
- * Step 2 of the creation: duration in weeks, the time zone of the place it is
- * run from, then the start date (its bounds depend on the time zone), with a
- * preview of the window in that time zone.
+ * Step 2 of the creation: duration in weeks, the first day, then the time
+ * zone of the place it is run from (the first day's bounds depend on it),
+ * with the challenge's calendar in that time zone: its days and its weeks.
  * `now` dates "today"; `timeZones` are the ones the picker offers.
  */
 export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonly string[] }) {
@@ -22,6 +27,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
     register,
     control,
     getValues,
+    setValue,
     trigger,
     formState: { errors },
   } = useFormContext<ChallengeCreateInput>();
@@ -50,40 +56,108 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
   const weeksError = errors.weeks?.message;
   const startDateError = errors.start_date?.message;
   const timeZoneError = errors.timezone?.message;
+  // A duration being typed may be no number yet: the buttons start at the
+  // bound.
+  const typedWeeks = Number.isInteger(weeks) ? weeks : undefined;
+  const changeWeeks = (by: number) => {
+    const next = Math.min(MAX_WEEKS, Math.max(MIN_WEEKS, (typedWeeks ?? MIN_WEEKS - by) + by));
+    setValue('weeks', next, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+  };
+  const atMin = typedWeeks !== undefined && typedWeeks <= MIN_WEEKS;
+  const atMax = typedWeeks !== undefined && typedWeeks >= MAX_WEEKS;
+  const stepButton =
+    'flex w-13 flex-none items-center justify-center text-ink aria-disabled:text-muted aria-disabled:opacity-60';
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <label htmlFor="weeks" className="block text-sm font-semibold">
-          {t('challengeCreate.fields.weeks.label')}
-        </label>
-        <input
-          id="weeks"
-          type="number"
-          inputMode="numeric"
-          min={2}
-          max={52}
-          step={1}
-          aria-invalid={weeksError ? true : undefined}
-          aria-describedby={describedBy('weeks', weeksError)}
-          className={`${inputClass} block h-11 w-32`}
-          {...register('weeks', { valueAsNumber: true })}
-        />
-        <p id="weeks-hint" className="mt-1 text-sm text-muted">
-          {t('challengeCreate.fields.weeks.hint')}
-        </p>
-        <FieldError id="weeks-error" message={weeksError} />
+    <div className="flex flex-col gap-8">
+      <div className="grid gap-8 md:grid-cols-2 md:gap-6">
+        <div>
+          <label htmlFor="weeks" className="block font-semibold">
+            {t('challengeCreate.fields.weeks.label')}
+          </label>
+          <div
+            className={`mt-2 flex h-13 overflow-hidden rounded-row border bg-surface ${weeksError ? 'border-2 border-risk-fg' : 'border-border'}`}
+          >
+            <button
+              type="button"
+              aria-label={t('challengeCreate.fields.weeks.less')}
+              aria-controls="weeks"
+              // aria-disabled, not disabled: the focus stays on the button at the bound.
+              aria-disabled={atMin}
+              onClick={() => {
+                if (!atMin) changeWeeks(-1);
+              }}
+              className={`${stepButton} border-r border-border`}
+            >
+              <Minus aria-hidden="true" size={20} />
+            </button>
+            <span className="flex min-w-0 flex-1 items-center justify-center gap-1.5 font-bold">
+              <input
+                id="weeks"
+                type="number"
+                inputMode="numeric"
+                min={MIN_WEEKS}
+                max={MAX_WEEKS}
+                step={1}
+                aria-invalid={weeksError ? true : undefined}
+                aria-describedby={describedBy('weeks', weeksError)}
+                className="w-10 [appearance:textfield] bg-transparent text-right text-ink [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                {...register('weeks', { valueAsNumber: true })}
+              />
+              <span aria-hidden="true">
+                {t('challengeCreate.fields.weeks.unit', { count: typedWeeks ?? 0 })}
+              </span>
+            </span>
+            <button
+              type="button"
+              aria-label={t('challengeCreate.fields.weeks.more')}
+              aria-controls="weeks"
+              aria-disabled={atMax}
+              onClick={() => {
+                if (!atMax) changeWeeks(1);
+              }}
+              className={`${stepButton} border-l border-border`}
+            >
+              <Plus aria-hidden="true" size={20} />
+            </button>
+          </div>
+          <p id="weeks-hint" className="mt-2 text-sm text-muted">
+            {t('challengeCreate.fields.weeks.hint')}
+          </p>
+          <FieldError id="weeks-error" message={weeksError} />
+        </div>
+
+        <div>
+          <label htmlFor="start_date" className="block font-semibold">
+            {t('challengeCreate.fields.startDate.label')}
+          </label>
+          <input
+            id="start_date"
+            type="date"
+            // Bounds of the contract, in the chosen time zone.
+            min={today}
+            max={today && addToDate(today, { years: 1 })}
+            aria-invalid={startDateError ? true : undefined}
+            aria-describedby={describedBy('start_date', startDateError)}
+            className={`${inputClass} h-13 w-full`}
+            {...register('start_date')}
+          />
+          <p id="start_date-hint" className="mt-2 text-sm text-muted">
+            {t('challengeCreate.fields.startDate.hint')}
+          </p>
+          <FieldError id="start_date-error" message={startDateError} />
+        </div>
       </div>
 
       <div>
-        <label htmlFor="timezone" className="block text-sm font-semibold">
+        <label htmlFor="timezone" className="block font-semibold">
           {t('challengeCreate.fields.timezone.label')}
         </label>
         <select
           id="timezone"
           aria-invalid={timeZoneError ? true : undefined}
           aria-describedby={describedBy('timezone', timeZoneError)}
-          className={`${inputClass} h-11 w-full`}
+          className={`${inputClass} h-13 w-full`}
           {...register('timezone', {
             // "Today" moves with the time zone: a date already entered is
             // checked again against it.
@@ -103,59 +177,55 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
             </optgroup>
           ))}
         </select>
-        <p id="timezone-hint" className="mt-1 text-sm text-muted">
+        <p id="timezone-hint" className="mt-2 text-sm text-muted">
           {t('challengeCreate.fields.timezone.hint')}
         </p>
         <FieldError id="timezone-error" message={timeZoneError} />
       </div>
 
-      <div>
-        <label htmlFor="start_date" className="block text-sm font-semibold">
-          {t('challengeCreate.fields.startDate.label')}
-        </label>
-        <input
-          id="start_date"
-          type="date"
-          // Bounds of the contract, in the chosen time zone.
-          min={today}
-          max={today && addToDate(today, { years: 1 })}
-          aria-invalid={startDateError ? true : undefined}
-          aria-describedby={describedBy('start_date', startDateError)}
-          className={`${inputClass} h-11 w-full`}
-          {...register('start_date')}
-        />
-        <p id="start_date-hint" className="mt-1 text-sm text-muted">
-          {t('challengeCreate.fields.startDate.hint')}
-        </p>
-        <FieldError id="start_date-error" message={startDateError} />
-      </div>
-
-      <section
-        aria-labelledby="preview-title"
-        className="rounded-row border border-border bg-surface p-4"
-      >
-        <h3 id="preview-title" className="text-sm font-semibold">
-          {t('challengeCreate.preview.title')}
+      <section aria-labelledby="calendar-title" className="rounded-card bg-bg p-4 md:p-6">
+        <h3 id="calendar-title" className="font-display text-lg font-bold">
+          {t('challengeCreate.calendar.title')}
         </h3>
         {/* Read out as a whole when it changes, without the title. */}
         <div aria-live="polite" aria-atomic="true">
           {preview ? (
             <>
-              <p className="mt-1">
-                {t('challengeCreate.preview.period', {
-                  start: preview.start,
-                  end: preview.end,
+              <p className="mt-2">
+                <Trans
+                  i18nKey="challengeCreate.calendar.period"
+                  values={{ start: preview.full.start, end: preview.full.end }}
+                  components={{ b: <strong /> }}
+                />
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {t('challengeCreate.calendar.weekStart', {
+                  day: preview.weekday,
                   zone: preview.zone,
                 })}
               </p>
-              <p className="mt-1 text-sm text-muted">
-                {t('challengeCreate.preview.weeks', { count: weeks })}
-              </p>
             </>
           ) : (
-            <p className="mt-1 text-sm text-muted">{t('challengeCreate.preview.empty')}</p>
+            <p className="mt-2 text-sm text-muted">{t('challengeCreate.calendar.empty')}</p>
           )}
         </div>
+        {preview && (
+          <ol
+            aria-label={t('challengeCreate.calendar.weeks')}
+            className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4"
+          >
+            {preview.weeks.map(({ start, end }, week) => (
+              <li key={start} className="rounded-row border border-border bg-surface px-3 py-2">
+                <span className="block font-bold">
+                  {t('challengeCreate.calendar.week', { week: week + 1 })}
+                </span>
+                <span className="block text-sm text-muted">
+                  {t('challengeCreate.calendar.weekDates', { start, end })}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
     </div>
   );

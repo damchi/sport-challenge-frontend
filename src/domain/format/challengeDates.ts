@@ -46,27 +46,32 @@ export function challengeLastDay(endsAt: string, timeZone: string, locale: strin
 }
 
 /**
- * Bounds of a challenge window as written in its time zone, to the hour
- * ("lundi 5 octobre à 00 h"): the end is the excluded instant, the start of
- * the day after the last one. The year shows when the two differ.
+ * First and last day of a challenge window in full, with the year, in its
+ * time zone ("dimanche 22 novembre 2026"): the end is excluded, so the last
+ * day is the one before it.
  */
-export function challengeWindowBounds(
+export function challengeFullDays(
   startsAt: Date,
   endsAt: Date,
   timeZone: string,
   locale: string,
 ): { start: string; end: string } {
-  const year = (date: Date) =>
-    new Intl.DateTimeFormat('en', { timeZone, year: 'numeric' }).format(date);
   const format = new Intl.DateTimeFormat(locale, {
     timeZone,
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    ...(year(startsAt) !== year(endsAt) && { year: 'numeric' }),
-    hour: 'numeric',
+    year: 'numeric',
   });
-  return { start: format.format(startsAt), end: format.format(endsAt) };
+  return {
+    start: format.format(startsAt),
+    end: format.format(lastInstant(endsAt.toISOString())),
+  };
+}
+
+/** Day of the week of an instant, in the challenge's time zone ("dimanche"). */
+export function challengeWeekday(instant: Date, timeZone: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { timeZone, weekday: 'long' }).format(instant);
 }
 
 /**

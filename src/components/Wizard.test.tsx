@@ -19,6 +19,7 @@ function ThreeSteps({
   return (
     <Wizard
       steps={names.map((name) => ({
+        name: `Name ${name}`,
         title: `Step ${name}`,
         content: <input aria-label={`Field ${name}`} {...register(name)} />,
       }))}
@@ -34,7 +35,7 @@ describe('Wizard', () => {
   it('shows the progress and the first step, without a way back', () => {
     renderWithProviders(<ThreeSteps />);
 
-    expect(screen.getByText('Étape 1 sur 3')).toBeInTheDocument();
+    expect(screen.getByText(/^Étape 1 sur 3/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Step a' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retour' })).not.toBeInTheDocument();
   });
@@ -52,7 +53,7 @@ describe('Wizard', () => {
     next();
     await waitFor(() => expect(validate).toHaveBeenCalledWith(0));
     await act(async () => answer(false));
-    expect(screen.getByText('Étape 1 sur 3')).toBeInTheDocument();
+    expect(screen.getByText(/^Étape 1 sur 3/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Step a' })).toBeInTheDocument();
 
     next();
@@ -60,7 +61,7 @@ describe('Wizard', () => {
     await act(async () => answer(true));
 
     const heading = await screen.findByRole('heading', { name: 'Step b' });
-    expect(screen.getByText('Étape 2 sur 3')).toBeInTheDocument();
+    expect(screen.getByText(/^Étape 2 sur 3/)).toBeInTheDocument();
     expect(heading).toHaveFocus();
   });
 
@@ -87,7 +88,7 @@ describe('Wizard', () => {
     await screen.findByRole('heading', { name: 'Step b' });
     next();
     await screen.findByRole('heading', { name: 'Step c' });
-    expect(screen.getByText('Étape 3 sur 3')).toBeInTheDocument();
+    expect(screen.getByText(/^Étape 3 sur 3/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Suivant' })).not.toBeInTheDocument();
     expect(onFinish).not.toHaveBeenCalled();
 
@@ -139,5 +140,47 @@ describe('Wizard', () => {
     fireEvent.submit(field);
 
     expect(await screen.findByRole('heading', { name: 'Step b' })).toBeInTheDocument();
+  });
+
+  it('names the steps and marks the current one', async () => {
+    renderWithProviders(<ThreeSteps validate={() => Promise.resolve(true)} />);
+
+    expect(screen.getByText(/^Étape 1 sur 3/)).toHaveTextContent('Étape 1 sur 3 · Name a');
+    const current = () => screen.getAllByRole('listitem').find((item) => item.ariaCurrent);
+    expect(current()).toHaveTextContent('Name a');
+
+    next();
+    await screen.findByRole('heading', { name: 'Step b' });
+    expect(current()).toHaveTextContent('Name b');
+    expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Name a(faite)');
+  });
+
+  it('lets a step send back to an earlier one', async () => {
+    function Linked() {
+      return (
+        <Wizard
+          steps={[
+            { name: 'A', title: 'Step a', content: <p>First</p> },
+            {
+              name: 'B',
+              title: 'Step b',
+              content: (goTo) => (
+                <button type="button" onClick={() => goTo(0)}>
+                  Edit a
+                </button>
+              ),
+            },
+          ]}
+          validateStep={() => Promise.resolve(true)}
+          finish={{ label: 'Send', busyLabel: 'Sending…', busy: false, onFinish: () => undefined }}
+        />
+      );
+    }
+    renderWithProviders(<Linked />);
+    next();
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit a' }));
+
+    expect(await screen.findByRole('heading', { name: 'Step a' })).toHaveFocus();
+    expect(screen.getByText('First')).toBeInTheDocument();
   });
 });

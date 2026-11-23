@@ -273,7 +273,8 @@
       "creator": "Creator"
     },
     "challengeStatus": {
-      "upcoming": "Upcoming"
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing"
     },
     "rank": "{{rank}} of {{count}}",
     "greeting": "Hi {{name}}",
@@ -296,22 +297,24 @@
   "wizard": {
     "progress": "Step {{current}} of {{total}}",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "done": "(done)"
   },
   "challengeCreate": {
     "title": "Create a challenge",
     "steps": {
       "info": "Details",
-      "duration": "Duration and time zone",
+      "duration": "Dates",
       "categories": "Categories",
-      "recap": "Summary"
+      "recap": "Review"
     },
     "fields": {
       "title": {
         "label": "Title",
         "hint": "3 to 80 characters.",
         "length": "The title must be 3 to 80 characters long.",
-        "characters": "The title contains a character that is not allowed (line break, tab or invisible character)."
+        "characters": "The title contains a character that is not allowed (line break, tab or invisible character).",
+        "count": "{{count}} / {{max}}"
       },
       "description": {
         "label": "Description (optional)",
@@ -320,31 +323,35 @@
         "characters": "The description contains an invisible character that is not allowed."
       },
       "visibility": {
-        "label": "Visibility",
+        "label": "Who can see the challenge?",
         "private": "Private",
-        "privateHint": "By invitation only.",
+        "privateHint": "Only the people invited see it and can join.",
         "public": "Public",
-        "publicHint": "Listed on the home screen: everyone can see it.",
+        "publicHint": "Listed in the Public tab: everyone can see it and join until the end of the first week.",
         "required": "Choose who can see the challenge."
       },
       "membersCanInvite": {
         "label": "Participants can invite",
-        "hint": "Otherwise, only the challenge creators invite."
+        "hint": "Every participant can send the link to their friends."
       },
       "weeks": {
-        "label": "Duration (in weeks)",
+        "label": "Duration",
         "hint": "2 to 52 weeks.",
-        "range": "The duration must be a whole number of weeks, from 2 to 52."
+        "range": "The duration must be a whole number of weeks, from 2 to 52.",
+        "unit_one": "week",
+        "unit_other": "weeks",
+        "less": "One week less",
+        "more": "One week more"
       },
       "startDate": {
-        "label": "Start date",
-        "hint": "Today or later, one year ahead at most. The challenge starts at midnight, in the time zone chosen above.",
+        "label": "First day",
+        "hint": "Today at the earliest, one year ahead at the latest.",
         "required": "Choose the start date.",
         "range": "The start date must be between today and the same date next year."
       },
       "timezone": {
         "label": "Time zone",
-        "hint": "The one of the place you run the challenge from. Weeks start and end there, for every participant.",
+        "hint": "The one you run the challenge from: weeks start and end there for everyone.",
         "placeholder": "Choose a time zone",
         "option": "{{city}} — {{name}}",
         "required": "Choose a time zone from the list.",
@@ -368,24 +375,32 @@
         "required": "Choose the reference sport."
       },
       "eliminationStep": {
-        "label": "Increment X (in km)",
+        "label": "Minimum increase from one week to the next",
         "hint": "More than 0 km, 100 km at most, one decimal at most.",
-        "range": "The increment must be from 0.1 to 100 km, with one decimal at most."
+        "range": "The increase must be from 0.1 to 100 km, with one decimal at most.",
+        "unit": "km",
+        "unitLong": "(in km)"
       },
       "factors": {
         "label": "Distance factors",
-        "hint": "Used for the total distance and the longest session by distance. The app suggests them from the reference sport; you can change them, from 0.1 to 2.",
+        "hint": "From 0.1 to 2, two decimals at most.",
         "suggested": "Suggested: {{factor}}",
-        "range": "The factor must be from 0.1 to 2, with two decimals at most."
+        "range": "The factor must be from 0.1 to 2, with two decimals at most.",
+        "intro": "They bring the km of the other sports back to the reference sport: at ×0.5, 1 km counts for 0.5 km. They are used for the total distance and the longest session by distance.",
+        "customize": "Customize"
       },
       "serverInvalid": "Value refused. Check it, then send the challenge again.",
       "pointsCriteria": {
-        "label": "Criteria",
+        "label": "Criteria of the week",
         "required": "Tick at least one criterion."
       },
       "pointsPodium": {
-        "label": "Scale",
-        "required": "Choose a scale."
+        "label": "Scale, per week and criterion",
+        "required": "Choose a scale.",
+        "points_5": "10 · 8 · 6 · 4 · 2 points",
+        "points_10": "25 · 18 · 15 · 12 · 10 · 8 · 6 · 4 · 2 · 1 point",
+        "name_5": "Top 5",
+        "name_10": "Top 10"
       },
       "minSession": {
         "label": "Minimum session length (in min)",
@@ -394,14 +409,14 @@
       }
     },
     "preview": {
-      "title": "Preview",
-      "empty": "The preview shows once the duration, date and time zone are chosen.",
-      "period": "From {{start}} to {{end}}, {{zone}}.",
+      "title": "Preview in the challenge list",
+      "period": "{{start}} → {{end}} · {{weeks}}",
       "weeks_one": "{{count}} week",
-      "weeks_other": "{{count}} weeks"
+      "weeks_other": "{{count}} weeks",
+      "reference": "Reference sport: {{sport}}"
     },
     "categories": {
-      "intro": "The total time is always part of the challenge. Add the total distance, the elimination and the Grand Prix if you like: each category has its podium.",
+      "intro": "Each category has its own ranking and podium.",
       "waiting": "The sports must show before you go on: wait or try again.",
       "time": {
         "name": "Total time",
@@ -410,18 +425,17 @@
       },
       "distance": {
         "name": "Total distance",
-        "explanation": "The km of distance activities, brought back to the reference sport: a km at ×0.5 counts for 0.5 km.",
-        "add": "Add the total distance"
+        "explanation": "The km of all distance activities, brought back to the reference sport with the factors below."
       },
       "elimination": {
-        "explanation": "{{sport}} only, in real distance. Each week, you must do at least the previous week's distance plus X km, or you are eliminated from this category. No elimination in week 1.",
-        "example": "Example with X = {{step}}: {{week1}} in week 1, at least {{week2}} needed in week 2; {{ran2}} in week 2, at least {{week3}} in week 3.",
-        "add": "Add the elimination"
+        "explanation": "{{sport}} only, in real distance. Each week, you must at least match the previous week plus an increase, or you are eliminated from this category. No elimination in week 1.",
+        "example": "{{done}} in week {{week}} → at least <b>{{needed}}</b> in week {{next}}",
+        "exampleTitle": "Example"
       },
       "points": {
-        "explanation": "Each week, each criterion chosen gives a ranking of the week: the first ones score points by the scale. The total of the secured points makes the ranking.",
-        "add": "Add the Grand Prix"
-      }
+        "explanation": "Each week, one ranking per criterion: the first ones score points. The total of the secured points makes the ranking."
+      },
+      "title": "Categories"
     },
     "recap": {
       "description": "Description",
@@ -429,10 +443,37 @@
       "membersCanInvite": "Participants can invite",
       "creatorsInvite": "Only creators invite",
       "period": "Period",
-      "categories": "Categories",
       "step": "Increment X: {{step}}",
-      "final": "The categories, the reference sport and their settings cannot be changed once the challenge is created.",
-      "referenceFactor": "{{sport}} {{factor}} (reference)"
+      "final": "Once the challenge is created, only the title and description can be changed: categories, reference sport, settings, dates and visibility are fixed.",
+      "referenceFactor": "{{sport}} {{factor}} (reference)",
+      "sections": {
+        "info": "Details",
+        "dates": "Dates",
+        "categories": "Categories"
+      },
+      "edit": "Edit",
+      "editSection": "Edit: {{section}}",
+      "visibility": "Visibility",
+      "privateDetail": "By invitation only",
+      "publicDetail": "Listed in the Public tab",
+      "periodDetail": "From {{start}} to {{end}}",
+      "timezone": "Time zone",
+      "included": "Included",
+      "includedFeminine": "Included",
+      "excluded": "Not included",
+      "excludedFeminine": "Not included",
+      "timeDetail": "Every sport included",
+      "distanceDetail": "Brought back to {{sport}} km",
+      "eliminationDetail": "{{sport}} only, no elimination in week 1",
+      "podium_5": "Top 5 · 10 to 2 points",
+      "podium_10": "Top 10 · 25 to 1 point",
+      "criteria": "Criteria: {{criteria}}",
+      "factors": "Factors",
+      "factorsSuggested": "Suggested values",
+      "factorsCustom": "Custom values",
+      "stepPerWeek": "+{{step}} per week",
+      "allInvite": "All participants",
+      "creatorsOnly": "Creators only"
     },
     "submit": {
       "label": "Create the challenge",
@@ -445,6 +486,31 @@
       "message": "What you entered is not saved: it will be lost.",
       "confirm": "Leave",
       "cancel": "Keep editing"
+    },
+    "headings": {
+      "info": "The challenge",
+      "duration": "When it happens",
+      "categories": "How to win",
+      "recap": "Review everything"
+    },
+    "back": "Challenges",
+    "close": "Leave the creation",
+    "cancel": "Cancel",
+    "calendar": {
+      "title": "Challenge calendar",
+      "period": "From <b>{{start}}</b> to <b>{{end}}</b> inclusive.",
+      "weekStart": "Each week starts on {{day}} at midnight, {{zone}}.",
+      "weeks": "Weeks of the challenge",
+      "week": "Week {{week}}",
+      "weekDates": "{{start}} – {{end}}",
+      "empty": "The calendar shows once the duration, first day and time zone are chosen."
+    },
+    "tips": {
+      "title": "Good to know",
+      "info": "A private challenge only shows to the people invited. You can invite as soon as it is created.",
+      "duration": "Each week is judged the day after it ends, at 7 a.m. Until then, everyone can still add or fix their activities.",
+      "categories": "Think of adding a category besides the time: the distance rewards volume, the elimination progress, the Grand Prix the best weeks.",
+      "recap": "Everything is fixed at creation except the title and description, which can be changed from the challenge's page."
     }
   },
   "challengeDetail": {
