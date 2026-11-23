@@ -771,6 +771,59 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 **Commit** : `feat(ui): add a danger variant to the confirmation dialog`
 **Statut** : À valider
 
+### SC-WEB-080 · Saisie du dénivelé positif dans le formulaire d'activité
+`F6` · Story · Phase 9 · Estimation 2 · Dépend de : 074 · Backend : SC-API-149 (damchi/sport-challenge-api#286)
+
+**Contexte** : on veut saisir le dénivelé positif d'une activité dans le formulaire d'ajout et de modification.
+
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+
+**Contrat** (SC-API-149) : `Sport.elevation_allowed` ; `ActivityCreate.elevation_gain_meters` (entier de 0 à 20 000, facultatif, non nullable : en modification, l'omettre le retire) ; erreur `elevation_not_allowed` (422).
+
+**Critères d'acceptation**
+- [ ] Champ « Dénivelé positif (m) » facultatif, affiché seulement si le sport l'autorise **et** qu'une distance est saisie ; masqué et vidé sinon (changement de sport, distance effacée).
+- [ ] Pré-rempli en modification ; vider le champ omet `elevation_gain_meters`, ce qui retire le D+ (le contrat n'accepte pas `null`).
+- [ ] Validation côté client (entier ≥ 0, borne du contrat) ; erreurs du serveur traduites d'après le code.
+- [ ] Respect des maquettes du formulaire (SC-WEB-074) et du verrouillage des semaines existant.
+
+**Tests** : affichage selon le sport et la distance, envoi avec/sans D+, modification, erreur `elevation_not_allowed` (MSW), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`, `spec-guardian`.
+**Commit** : `feat(activities): enter the elevation gain`
+
+### SC-WEB-081 · Dénivelé positif dans la liste et le détail des activités
+`F6` · Story · Phase 9 · Estimation 1 · Dépend de : 080 · Backend : SC-API-149 (damchi/sport-challenge-api#286)
+
+**Contexte** : le D+ saisi doit apparaître dans la liste et le détail des activités.
+
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+
+**Contrat** (SC-API-149) : `Activity.elevation_gain_meters` (null = non saisi).
+
+**Critères d'acceptation**
+- [ ] « Mes activités » (SC-WEB-075) et onglet Activités d'un défi (SC-WEB-071) : D+ affiché à côté de la distance (ex. « ↗ 450 m »), nombres formatés selon la langue.
+- [ ] Rien d'affiché quand `elevation_gain_meters` est null (pas de « 0 m » inventé) ; 0 saisi s'affiche « 0 m ».
+
+**Tests** : rendu avec MSW (null, 0, valeur), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(activities): show the elevation gain`
+
+### SC-WEB-082 · Dénivelé positif cumulé dans les totaux de la semaine
+`F6` · Story · Phase 9 · Estimation 1 · Dépend de : 076 · Backend : SC-API-150 (damchi/sport-challenge-api#287)
+
+**Contexte** : les totaux de la semaine de « Mes activités » affichent séances, durée et distance ; on y ajoute le **D+ cumulé**.
+
+**Décisions du propriétaire du produit du 2026-11-23** : le dénivelé positif (D+) est **facultatif**, saisi en mètres, seulement pour les sports où le catalogue l'autorise (`Sport.elevation_allowed` : course, marche, randonnée, vélo, roller, ski de fond, « autre » avec distance) et seulement si l'activité a une distance. **Affichage seul** : il ne compte dans aucun classement.
+
+**Contrat** (SC-API-150) : `ActivityWeek.elevation_gain_meters` et `CurrentActivityWeek.elevation_gain_meters` (entiers requis, 0 sans D+).
+
+**Critères d'acceptation**
+- [ ] D+ cumulé dans le résumé de la semaine en cours et dans les totaux par semaine, nombres formatés selon la langue.
+- [ ] Valeur fournie par le serveur (aucune somme côté client).
+
+**Tests** : rendu avec MSW (0, valeur), FR/EN.
+**Revue** : `ts-reviewer`, `ux-reviewer`.
+**Commit** : `feat(activities): show the weekly elevation gain`
+
 ---
 
 # F7 — Invitations
