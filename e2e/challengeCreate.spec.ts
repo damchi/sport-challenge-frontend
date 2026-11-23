@@ -1,8 +1,8 @@
 import { expect, signInAt, test } from './fixtures';
 
-// Two days ahead: today or later in Montréal whatever the runner's time zone,
-// and never a date in the past as the calendar moves on.
-const FIRST_DAY = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// The fixtures fix the browser's clock (NOW, 19 November 2026): a first day
+// after it, constant.
+const FIRST_DAY = '2026-11-23';
 
 test('a user creates a challenge and lands on its page', async ({ page }) => {
   await signInAt(page, '/challenges/new');
