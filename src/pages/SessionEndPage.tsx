@@ -50,7 +50,7 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
         type="button"
         onClick={act}
         disabled={pending}
-        className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
+        className="mt-6 h-13 rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
       >
         {texts.action}
       </button>

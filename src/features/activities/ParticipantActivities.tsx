@@ -64,7 +64,7 @@ function ParticipantHeading({ challengeId, userId }: { challengeId: string; user
     <div className="mb-4">
       <Link
         to={`/challenges/${challengeId}/participants`}
-        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-full px-2 text-sm font-semibold text-muted"
+        className="-ml-2 inline-flex h-11 items-center gap-1 rounded-full px-2 text-sm font-semibold text-muted hover-fill"
       >
         <ChevronLeft aria-hidden="true" size={18} strokeWidth={2} />
         {t('participantActivities.toParticipants')}

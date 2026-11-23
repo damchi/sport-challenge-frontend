@@ -82,7 +82,9 @@ export function ConfirmDialog({
             if (!confirmDisabled) onConfirm();
           }}
           className={`h-13 rounded-full px-6 text-button font-bold aria-disabled:opacity-60 ${
-            variant === 'danger' ? 'bg-danger text-on-danger' : 'bg-accent text-on-accent'
+            variant === 'danger'
+              ? 'bg-danger text-on-danger hover-danger'
+              : 'bg-accent text-on-accent hover-accent'
           }`}
         >
           {confirmLabel}
@@ -91,7 +93,7 @@ export function ConfirmDialog({
           ref={cancel}
           type="button"
           onClick={onCancel}
-          className="h-13 rounded-full border border-border bg-surface px-5 font-bold"
+          className="h-13 rounded-full border border-border bg-surface hover-fill px-5 font-bold"
         >
           {cancelLabel}
         </button>

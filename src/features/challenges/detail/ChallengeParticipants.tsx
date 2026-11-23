@@ -21,6 +21,7 @@ import { useCreatorActions } from './useCreatorActions';
 const ROW = 'rounded-row border';
 // Rounded too: the focus ring follows the row.
 const ROW_CONTENT = 'flex min-h-14 items-center gap-3 rounded-row px-3 py-2';
+const ROW_LINK = `${ROW_CONTENT} hover-fill`;
 const ROW_ACTIVE = 'border-border bg-surface';
 // Out of the challenge: dashed and muted, like an eliminated participant (design.md).
 const ROW_ABANDONED = 'border-dashed border-border-dashed text-muted';
@@ -71,7 +72,7 @@ export function ChallengeParticipants() {
               {linked ? (
                 <Link
                   to={`/challenges/${challengeId}/participants/${participant.user_id}`}
-                  className={ROW_CONTENT}
+                  className={ROW_LINK}
                 >
                   {content}
                   <ChevronRight aria-hidden="true" size={20} className="shrink-0 text-muted" />

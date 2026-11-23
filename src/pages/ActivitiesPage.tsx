@@ -14,7 +14,7 @@ export function ActivitiesPage() {
         <Link
           to="/activities/new"
           aria-label={t('activityForm.title')}
-          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-accent px-5 py-2 text-button font-bold text-on-accent lg:px-6"
+          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-accent hover-accent px-5 py-2 text-button font-bold text-on-accent lg:px-6"
         >
           <Plus aria-hidden="true" size={20} strokeWidth={2.5} className="flex-none" />
           <span className="lg:hidden">{t('activities.add')}</span>

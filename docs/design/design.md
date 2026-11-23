@@ -60,10 +60,11 @@ Règles communes :
   page, jamais flottant.
 - **Retour** : flèche seule (44 × 44, `aria-label`) en mobile ; à partir de
   `md`, lien « ‹ Nom de la page parente » au-dessus du titre.
-- **Survol** 🟡 : seulement sous `@media (hover: hover)` ; une carte
-  cliquable prend la bordure `--color-muted` (sauf la carte à risque, qui
-  garde la sienne) ; les liens d'action se soulignent. Jamais d'information
-  disponible uniquement au survol.
+- **Survol** ✅ (décision du 2026-11-23, SC-WEB-065) : seulement sous
+  `@media (hover: hover)` ; une carte cliquable prend la bordure
+  `--color-muted` (sauf la carte à risque, qui garde la sienne) ; les liens
+  d'action se soulignent ; les boutons suivent la section « Boutons ».
+  Jamais d'information disponible uniquement au survol.
 - **Propre au mobile** : bouton flottant, barre en bas, tirer pour
   rafraîchir. **Propre au web** : colonne latérale, tableau du classement,
   classement complet intégré à la page d'un défi.
@@ -92,8 +93,10 @@ jamais en dur dans les composants.
 | `--color-segment` | `#EAE8E2` | `#22262D` | fond du sélecteur à onglets |
 | `--color-segment-active` | `#FFFFFF` | `#343943` | onglet actif du sélecteur (ombre légère en clair, aucune en sombre) |
 | `--color-accent` | `#C2410C` | `#FB923C` | couleur d'accent : bouton principal, onglet actif, ma ligne, liens d'action ; l'orange foncé manque de contraste sur fond sombre |
+| `--color-accent-hover` | `#9A3412` | `#FDBA74` | survol du bouton principal (SC-WEB-065) |
 | `--color-on-accent` | `#FFFFFF` | `#16181D` | texte du bouton principal : foncé en sombre |
 | `--color-danger` | `#B91C1C` | `#F87171` | bouton de confirmation d'une action définitive (supprimer, abandonner, exclure), distinct de l'accent (décision du 2026-11-21) |
+| `--color-danger-hover` | `#991B1B` | `#FCA5A5` | survol du bouton danger (SC-WEB-065) |
 | `--color-on-danger` | `#FFFFFF` | `#16181D` | texte du bouton danger : foncé en sombre (6,4:1 dans les deux thèmes) |
 | `--color-accent-soft` | `#FFF4EB` | `#2A1D14` | fond de « ma ligne » dans un classement, onglet actif de la barre de navigation web |
 | `--color-risk-bg` | `#FFEDD5` | `#3B2414` | fond du badge « À risque » |
@@ -307,6 +310,33 @@ venir » en pointillés).
   40–44 px (« Inviter » en mobile, « Inviter des amis » en web).
 - **Icône seule** : 44 × 44, rond.
 - Toujours de vrais `<button>` ou `<a href>`, jamais un `div` cliquable.
+- **Survol** ✅ (décision du 2026-11-23, SC-WEB-065) : seulement sous
+  `@media (hover: hover)` (rien ne reste allumé après un toucher), jamais sur
+  un bouton désactivé (`disabled`, `aria-disabled`) ou en cours d'envoi
+  (`aria-busy`). Le fond change en 150 ms, sans transition sous
+  `prefers-reduced-motion: reduce`. Le focus clavier (`:focus-visible`) ne
+  change pas. Un bouton actif a le curseur main, un bouton désactivé le
+  curseur normal.
+
+  | Bouton | Clair | Sombre | Utilitaire |
+  |---|---|---|---|
+  | Principal | `--color-accent-hover` (#9a3412) | `--color-accent-hover` (#fdba74) | `hover-accent` |
+  | Danger | `--color-danger-hover` (#991b1b) | `--color-danger-hover` (#fca5a5) | `hover-danger` |
+  | Secondaire, icône seule, élément de menu | fond `--color-segment` | fond `--color-segment` | `hover-fill` |
+  | Icône seule sur fond `--color-surface-raised` (bandeau d'erreur) | fond `--color-track-raised` | fond `--color-track-raised` | `hover-fill-raised` |
+  | Carte ou tuile cliquable | bordure `--color-muted` | bordure `--color-muted` | `hover-border` |
+
+  Le texte garde sa couleur (`--color-on-accent`, `--color-on-danger`,
+  `--color-ink`, `--color-on-raised`) ; chaque paire reste au-dessus de 4,5:1
+  (`tokens.test.ts`). Les utilitaires sont définis dans `src/styles/index.css`.
+  Sont couverts : boutons principal, danger, secondaire (dont les lignes
+  « Se déconnecter » et « Supprimer le compte » et les boutons − et + de la
+  durée), à icône seule et éléments de menu ; cartes et lignes cliquables
+  (cartes de défi, cartes « Ma position », lignes du classement et des
+  participants qui mènent à une page, défis d'une activité enregistrée).
+  Une carte ou une ligne « moi » ou à risque garde sa bordure. Restent sans
+  survol en V1 : puces de filtre, sélecteurs à onglets, onglets d'un défi et
+  barre de navigation, dont l'état actif ne doit pas être masqué.
 
 ### Sélecteur à onglets (« Semaine 3 » / « Général »)
 

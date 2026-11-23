@@ -58,7 +58,7 @@ export function RequireAuth() {
             type="button"
             onClick={retry}
             disabled={pending}
-            className="mt-6 h-13 rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
+            className="mt-6 h-13 rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
           >
             {t('auth.signIn')}
           </button>

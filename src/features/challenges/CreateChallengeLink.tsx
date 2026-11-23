@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 // No display here: each place says how it shows (or hides) the button.
 const BUTTON =
-  'min-h-12 items-center gap-2 rounded-full bg-accent px-6 py-2 text-button font-bold text-on-accent';
+  'min-h-12 items-center gap-2 rounded-full bg-accent hover-accent px-6 py-2 text-button font-bold text-on-accent';
 
 /**
  * The main action of the home page, as a button: `display` places it

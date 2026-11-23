@@ -24,7 +24,7 @@ export function GlobalErrorBanner({ error, onDismiss }: GlobalErrorBannerProps) 
         type="button"
         onClick={onDismiss}
         aria-label={t('globalError.dismiss')}
-        className="flex size-11 shrink-0 items-center justify-center rounded-full text-xl"
+        className="flex size-11 shrink-0 items-center justify-center rounded-full text-xl hover-fill-raised"
       >
         <span aria-hidden="true">×</span>
       </button>

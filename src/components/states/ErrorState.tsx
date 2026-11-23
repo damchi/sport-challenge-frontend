@@ -16,7 +16,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => 
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 h-11 rounded-full border border-border bg-surface px-5 font-bold"
+        className="mt-4 h-11 rounded-full border border-border bg-surface hover-fill px-5 font-bold"
       >
         {t('errorPage.retry')}
       </button>

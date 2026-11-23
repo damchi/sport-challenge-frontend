@@ -27,7 +27,7 @@ export function ProfileHeader({ me }: { me: Me }) {
       <ProfileStats />
       <Link
         to="/activities"
-        className="mt-5 flex min-h-12 w-full items-center gap-3 rounded-row bg-bg px-4 py-3 text-left font-semibold"
+        className="mt-5 flex min-h-12 w-full items-center gap-3 rounded-row bg-bg px-4 py-3 text-left font-semibold hover-fill"
       >
         <Activity aria-hidden="true" size={20} className="text-accent" />
         <span className="flex-1">{t('activities.title')}</span>

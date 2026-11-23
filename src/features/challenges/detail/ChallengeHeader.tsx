@@ -46,7 +46,7 @@ export function ChallengeHeader({
       <div className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 gap-y-2 md:gap-x-3">
         <Link
           to="/"
-          className="col-start-1 row-start-1 -ml-3 inline-flex h-11 min-w-11 items-center justify-center gap-1 justify-self-start rounded-full font-semibold text-muted md:col-span-3 md:justify-start md:px-2"
+          className="col-start-1 row-start-1 -ml-3 inline-flex h-11 min-w-11 items-center justify-center gap-1 justify-self-start rounded-full font-semibold text-muted hover-fill md:col-span-3 md:justify-start md:px-2"
         >
           <ChevronLeft aria-hidden="true" size={22} strokeWidth={2} />
           <span className="sr-only md:not-sr-only">{t('challengeDetail.back')}</span>

@@ -37,7 +37,7 @@ export default defineConfig(({ command }) => ({
       VITE_AUTH0_CLIENT_ID: 'test-client-id',
       VITE_AUTH0_AUDIENCE: 'https://api.test',
     },
-    // Without it, Vitest loads CSS as empty: tokens.test.ts reads the tokens.
-    css: { include: [/tokens\.css/] },
+    // Without it, Vitest loads CSS as empty: tokens.test.ts and hover.test.ts read them.
+    css: { include: [/styles\/(tokens|index)\.css/] },
   },
 }));

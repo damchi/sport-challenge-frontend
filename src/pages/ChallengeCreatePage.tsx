@@ -13,7 +13,7 @@ export function ChallengeCreatePage() {
         <Link
           to="/"
           aria-label={t('challengeCreate.close')}
-          className="-ml-3 inline-flex size-11 flex-none items-center justify-center rounded-full md:hidden"
+          className="-ml-3 inline-flex size-11 flex-none items-center justify-center rounded-full hover-fill md:hidden"
         >
           <X aria-hidden="true" size={24} strokeWidth={2} />
         </Link>

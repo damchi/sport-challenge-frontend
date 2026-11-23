@@ -70,7 +70,7 @@ export function ChallengeList() {
               <button
                 type="button"
                 onClick={() => choose('status', undefined)}
-                className="h-11 rounded-full border border-border bg-surface px-5 font-bold"
+                className="h-11 rounded-full border border-border bg-surface hover-fill px-5 font-bold"
               >
                 {t('challenges.showAll')}
               </button>

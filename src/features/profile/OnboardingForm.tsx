@@ -160,7 +160,7 @@ export function OnboardingForm({ me }: { me: Me }) {
           type="submit"
           disabled={isSubmitting}
           aria-busy={isSubmitting}
-          className="h-13 w-full rounded-full bg-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
+          className="h-13 w-full rounded-full bg-accent hover-accent px-6 text-button font-bold text-on-accent disabled:opacity-60"
         >
           {isSubmitting ? t('onboarding.saving') : t('onboarding.submit')}
         </button>

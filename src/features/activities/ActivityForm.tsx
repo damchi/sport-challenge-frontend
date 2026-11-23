@@ -431,7 +431,7 @@ export function ActivityFormFields({
               disabled={busy}
               aria-busy={busy ? true : undefined}
               // Whole line on a phone; its own width from md.
-              className="h-13 flex-1 rounded-full bg-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
+              className="h-13 flex-1 rounded-full bg-accent hover-accent px-8 text-button font-bold text-on-accent disabled:opacity-60 md:flex-none"
             >
               {busy ? t(`${submitKey}.busy`) : t(`${submitKey}.label`)}
             </button>

@@ -66,7 +66,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
   const atMin = typedWeeks !== undefined && typedWeeks <= MIN_WEEKS;
   const atMax = typedWeeks !== undefined && typedWeeks >= MAX_WEEKS;
   const stepButton =
-    'flex w-13 flex-none items-center justify-center text-ink aria-disabled:text-muted aria-disabled:opacity-60';
+    'flex w-13 flex-none items-center justify-center text-ink hover-fill aria-disabled:text-muted aria-disabled:opacity-60';
 
   return (
     <div className="flex flex-col gap-8">

@@ -21,7 +21,7 @@ type CategoryRanking = Leaderboard['categories'][number];
 const CARD = 'flex h-full min-h-40 flex-col gap-1 rounded-card p-4';
 const CARD_ON = 'border-2 border-accent bg-accent-soft';
 const CARD_RISK = 'border-2 border-risk-border bg-surface';
-const CARD_OFF = 'border border-border bg-surface';
+const CARD_OFF = 'border border-border bg-surface hover-border';
 
 /**
  * « Où tu en es »: the user's line in each category of a challenge, in their
