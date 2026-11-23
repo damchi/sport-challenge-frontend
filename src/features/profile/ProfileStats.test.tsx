@@ -13,6 +13,7 @@ const EMPTY_WEEK: ActivitySummary['current_week'] = {
   sessions: 0,
   duration_seconds: 0,
   distance_meters: 0,
+  elevation_gain_meters: 0,
   days: [],
 };
 

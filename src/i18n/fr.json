@@ -16,6 +16,7 @@
     "challenge_not_found": "Ce défi n'existe pas ou tu n'y as pas accès.",
     "distance_not_allowed": "Ce sport ne prend pas de distance.",
     "distance_required": "Ce sport demande une distance.",
+    "elevation_not_allowed": "Le dénivelé n'est possible qu'avec un sport qui le permet et une distance.",
     "field_not_editable": "Seuls le titre et la description d'un défi peuvent être modifiés.",
     "forbidden": "Tu n'as pas accès à cette page.",
     "internal_error": "Le service est momentanément indisponible. Réessaie dans un instant.",
@@ -287,6 +288,14 @@
         "hintOptional": "Si tu l'indiques, l'activité compte aussi pour la distance.",
         "required": "Indique la distance.",
         "range": "Indique une distance en km, de 0,001 à 1000, avec 3 décimales au plus."
+      },
+      "elevation": {
+        "label": "Dénivelé positif",
+        "unitLong": "en mètres",
+        "unit": "m",
+        "tagOptional": "facultatif",
+        "hint": "Il ne compte dans aucun classement.",
+        "range": "Indique un dénivelé en mètres, nombre entier de 0 à 20 000."
       },
       "serverInvalid": "Valeur refusée. Vérifie-la."
     },

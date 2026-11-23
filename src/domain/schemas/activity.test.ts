@@ -5,14 +5,16 @@ import {
   activityFormValues,
   cleanSportLabel,
   clockTime,
+  takesElevation,
   type ActivityCreateInput,
   type ActivitySport,
 } from './activity';
 
 const sports: ActivitySport[] = [
-  { code: 'run', distance_mode: 'required' },
-  { code: 'yoga', distance_mode: 'none' },
-  { code: 'other', distance_mode: 'optional' },
+  { code: 'run', distance_mode: 'required', elevation_allowed: true },
+  { code: 'swim', distance_mode: 'required', elevation_allowed: false },
+  { code: 'yoga', distance_mode: 'none', elevation_allowed: false },
+  { code: 'other', distance_mode: 'optional', elevation_allowed: true },
 ];
 
 // Friday 20 November 2026, noon in Montréal.
@@ -30,6 +32,7 @@ const valid: ActivityCreateInput = {
   minutes: '02',
   seconds: '3',
   distance_km: '12,5',
+  elevation_m: '',
 };
 
 function errorsOf(input: Partial<ActivityCreateInput>): Record<string, string> {
@@ -201,6 +204,56 @@ describe('activityCreateSchema', () => {
   });
 });
 
+describe('elevation gain', () => {
+  it('is sent in meters when typed, and left out when empty', () => {
+    expect(schema.parse({ ...valid, elevation_m: ' 85 ' }).elevation_gain_meters).toBe(85);
+    expect(schema.parse({ ...valid, elevation_m: '0' }).elevation_gain_meters).toBe(0);
+    expect(schema.parse({ ...valid, elevation_m: '20000' }).elevation_gain_meters).toBe(20_000);
+    expect(schema.parse(valid)).not.toHaveProperty('elevation_gain_meters');
+  });
+
+  it.each(['-1', '12.5', '12,5', 'abc', '20001'])('refuses %j m', (elevation) => {
+    expect(errorsOf({ elevation_m: elevation })).toEqual({
+      elevation_m: 'activityForm.fields.elevation.range',
+    });
+  });
+
+  it.each([
+    ['a sport that takes none', { sport_code: 'swim' }],
+    [
+      'an activity without distance',
+      { sport_code: 'other', sport_label: 'Kayak', distance_km: '' },
+    ],
+  ])('is neither checked nor sent for %s', (_, input) => {
+    expect(errorsOf({ ...input, elevation_m: 'abc' })).toEqual({});
+    expect(schema.parse({ ...valid, ...input, elevation_m: '85' })).not.toHaveProperty(
+      'elevation_gain_meters',
+    );
+  });
+
+  it('goes with the distance of the "other" sport', () => {
+    const kayak = {
+      sport_code: 'other',
+      sport_label: 'Kayak',
+      distance_km: '3',
+      elevation_m: '12',
+    };
+    expect(schema.parse({ ...valid, ...kayak }).elevation_gain_meters).toBe(12);
+  });
+});
+
+describe('takesElevation', () => {
+  const run = { code: 'run', distance_mode: 'required', elevation_allowed: true } as const;
+
+  it('wants a sport that allows it and a distance typed', () => {
+    expect(takesElevation(run, '5')).toBe(true);
+    expect(takesElevation(run, ' ')).toBe(false);
+    expect(takesElevation({ ...run, elevation_allowed: false }, '5')).toBe(false);
+    expect(takesElevation(undefined, '5')).toBe(false);
+    expect(takesElevation({ ...run, distance_mode: 'none' }, '5')).toBe(false);
+  });
+});
+
 describe('clockTime', () => {
   it.each([
     ['07:30', '07:30'],
@@ -236,6 +289,7 @@ describe('activityFormFieldOf', () => {
     expect(activityFormFieldOf('duration_seconds')).toBe('hours');
     expect(activityFormFieldOf('distance_meters')).toBe('distance_km');
     expect(activityFormFieldOf('started_at')).toBe('start_date');
+    expect(activityFormFieldOf('elevation_gain_meters')).toBe('elevation_m');
     expect(activityFormFieldOf('constructor')).toBeUndefined();
   });
 });
@@ -249,18 +303,20 @@ describe('activityFormValues', () => {
         started_at: STARTED_AT,
         duration_seconds: 3723,
         distance_meters: 12_500,
+        elevation_gain_meters: 85,
       },
       'America/Toronto',
       'fr',
     );
 
-    expect(values).toEqual({ ...valid, minutes: '2' });
+    expect(values).toEqual({ ...valid, minutes: '2', elevation_m: '85' });
     // Sent again, it gives the same activity.
     expect(schema.parse(values)).toEqual({
       sport_code: 'run',
       started_at: STARTED_AT,
       duration_seconds: 3723,
       distance_meters: 12_500,
+      elevation_gain_meters: 85,
     });
   });
 
@@ -273,6 +329,7 @@ describe('activityFormValues', () => {
           started_at: STARTED_AT,
           duration_seconds: 3600,
           distance_meters: null,
+          elevation_gain_meters: null,
         },
         'America/Toronto',
         'en',
@@ -286,6 +343,7 @@ describe('activityFormValues', () => {
       minutes: '',
       seconds: '',
       distance_km: '',
+      elevation_m: '',
     });
   });
 
@@ -296,6 +354,7 @@ describe('activityFormValues', () => {
       started_at: STARTED_AT,
       duration_seconds: 60,
       distance_meters: 1_234_567,
+      elevation_gain_meters: null,
     };
     expect(activityFormValues(run, 'America/Toronto', 'en').distance_km).toBe('1234.567');
     expect(activityFormValues(run, 'America/Toronto', 'fr').distance_km).toBe('1234,567');
