@@ -103,8 +103,9 @@ export function useLeaderboard(challengeId: string) {
 }
 
 /**
- * Creates a challenge; the lists then reload to show it. Its errors are shown
- * by the creation form (by field), not the global banner.
+ * Creates a challenge; the lists then reload to show it, and the profile's
+ * challenge count, as its creator is its first participant. Its errors are
+ * shown by the creation form (by field), not the global banner.
  */
 export function useCreateChallenge() {
   const client = useApiClient();
@@ -116,7 +117,11 @@ export function useCreateChallenge() {
       if (!data) throw new Error('Empty challenge response');
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]),
   });
 }
 

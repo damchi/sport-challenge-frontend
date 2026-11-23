@@ -8,7 +8,7 @@ import { createTestQueryClient } from '../../test/render';
 import { ApiClientContext } from '../ApiClientContext';
 import { createApiClient } from '../client';
 import { queryKeys } from '../queryKeys';
-import { useDeleteChallenge, useJoinChallenge } from './useChallenges';
+import { useCreateChallenge, useDeleteChallenge, useJoinChallenge } from './useChallenges';
 import { useAcceptInvitation } from './useInvitations';
 
 // The activity summary counts the challenges joined (profile): the actions
@@ -43,6 +43,22 @@ if (!challenge) throw new Error('No mock challenge');
 const detail = mockChallengeDetail(challenge);
 
 describe('the challenge count of the profile', () => {
+  it('reloads once a challenge is created, its creator being its first participant', async () => {
+    server.use(http.post('*/api/v1/challenges', () => HttpResponse.json(detail, { status: 201 })));
+    const { wrapper, reloaded } = setup();
+    const { result } = renderHook(() => useCreateChallenge(), { wrapper });
+
+    await result.current.mutateAsync({
+      title: 'Spring run',
+      visibility: 'private',
+      timezone: 'America/Montreal',
+      start_date: '2026-12-07',
+      weeks: 4,
+    });
+
+    expect(reloaded()).toBe(true);
+  });
+
   it('reloads once a challenge is joined', async () => {
     server.use(http.post('*/api/v1/challenges/:id/join', () => HttpResponse.json(detail)));
     const { wrapper, reloaded } = setup();
