@@ -136,7 +136,8 @@ export interface paths {
          * Summarize my activities
          * @description Totals of the activities of the authenticated user, deleted ones left
          *     out, whether they count in a challenge or not: those of the current
-         *     week, day by day, and the number of activities of each sport. A week
+         *     week, day by day, the number of activities of each sport, their total
+         *     duration, and the number of challenges joined. A week
          *     runs from Monday 00:00 to the next Monday 00:00 in `tz` (the first
          *     instant of the day where a time change skips midnight), so it can last
          *     167 or 169 hours; it is not the week of a challenge.
@@ -1494,10 +1495,19 @@ export interface components {
         };
         ActivitySummary: {
             current_week: components["schemas"]["CurrentActivityWeek"];
+            /**
+             * @description Number of challenges I joined, whatever their status (upcoming,
+             *     ongoing, finished), those I abandoned or was excluded from
+             *     included; not those I only created without taking part, nor the
+             *     deleted ones.
+             */
+            challenge_count: number;
             /** @description The sports of my activities, most frequent first (then by code). */
             sports: components["schemas"]["SportCount"][];
             /** @description Number of my activities, the sum of the counts of `sports`. */
             total: number;
+            /** @description Sum of the durations of the activities counted in `total`; 0 without any. */
+            total_duration_seconds: number;
         };
         /**
          * @description An activity in the list of a challenge: the fields of `Activity`,

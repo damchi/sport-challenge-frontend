@@ -105,6 +105,19 @@
     "save": "Save",
     "saved": "Profile saved.",
     "handle": "@{{pseudo}}",
+    "stats": {
+      "label": "Your numbers",
+      "challenges_one": "challenge",
+      "challenges_other": "challenges",
+      "activities_one": "activity",
+      "activities_other": "activities",
+      "time": "of sport",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "hours": "{{hours}} h",
+      "minutes": "{{minutes}} min",
+      "spokenTime": "{{duration}} of sport",
+      "error": "Your numbers couldn't be loaded."
+    },
     "at": "@",
     "preferences": {
       "title": "Preferences",

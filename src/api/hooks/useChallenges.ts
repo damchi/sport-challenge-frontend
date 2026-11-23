@@ -103,8 +103,9 @@ export function useLeaderboard(challengeId: string) {
 }
 
 /**
- * Creates a challenge; the lists then reload to show it. Its errors are shown
- * by the creation form (by field), not the global banner.
+ * Creates a challenge; the lists then reload to show it, and the profile's
+ * challenge count, as its creator is its first participant. Its errors are
+ * shown by the creation form (by field), not the global banner.
  */
 export function useCreateChallenge() {
   const client = useApiClient();
@@ -116,7 +117,11 @@ export function useCreateChallenge() {
       if (!data) throw new Error('Empty challenge response');
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]),
   });
 }
 
@@ -166,7 +171,11 @@ export function useJoinChallenge(challengeId: string) {
     },
     onSuccess: (challenge) => {
       queryClient.setQueryData(queryKeys.challenges.detail(challengeId), challenge);
-      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+      // The summary counts the challenges joined (profile).
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]);
     },
     onError: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.challenges.detail(challengeId) }),
@@ -224,7 +233,11 @@ export function useDeleteChallenge(challengeId: string) {
       }
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all, refetchType: 'none' }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all, refetchType: 'none' }),
+        // The summary counts the challenges joined (profile).
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]),
   });
 }
 

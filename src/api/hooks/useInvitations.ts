@@ -74,7 +74,11 @@ export function useAcceptInvitation(challengeId: string) {
     },
     onSuccess: (challenge) => {
       queryClient.setQueryData(queryKeys.challenges.detail(challenge.id), challenge);
-      return queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+      // The summary counts the challenges joined (profile).
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.activities.summaries }),
+      ]);
     },
     onError: (error) => {
       const code = error instanceof ApiError ? error.code : undefined;

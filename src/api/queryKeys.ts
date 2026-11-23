@@ -10,6 +10,9 @@ export const queryKeys = {
     all: ['activities'] as const,
     // Of one sport, or of every sport (`undefined`).
     mine: (sport?: string) => ['activities', 'mine', sport ?? 'all'] as const,
+    // Every zone's summary: it also counts the challenges joined, so joining,
+    // accepting an invitation or deleting a challenge reloads it.
+    summaries: ['activities', 'summary'] as const,
     // Weeks and days cut in `timeZone`.
     summary: (timeZone: string) => ['activities', 'summary', timeZone] as const,
     weeks: (timeZone: string, sport?: string) =>

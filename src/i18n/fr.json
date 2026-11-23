@@ -105,6 +105,21 @@
     "save": "Enregistrer",
     "saved": "Profil enregistré.",
     "handle": "@{{pseudo}}",
+    "stats": {
+      "label": "Tes chiffres",
+      "challenges_one": "défi",
+      "challenges_many": "défis",
+      "challenges_other": "défis",
+      "activities_one": "activité",
+      "activities_many": "activités",
+      "activities_other": "activités",
+      "time": "de sport",
+      "hoursMinutes": "{{hours}} h {{paddedMinutes}}",
+      "hours": "{{hours}} h",
+      "minutes": "{{minutes}} min",
+      "spokenTime": "{{duration}} de sport",
+      "error": "Tes chiffres n'ont pas pu être chargés."
+    },
     "at": "@",
     "preferences": {
       "title": "Préférences",

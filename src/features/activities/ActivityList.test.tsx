@@ -89,6 +89,8 @@ function summary({
     },
     sports,
     total: sports.reduce((sum, { count }) => sum + count, 0),
+    total_duration_seconds: duration,
+    challenge_count: 0,
   };
 }
 
