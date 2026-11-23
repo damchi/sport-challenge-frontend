@@ -1,5 +1,9 @@
 import { expect, signInAt, test } from './fixtures';
 
+// Two days ahead: today or later in Montréal whatever the runner's time zone,
+// and never a date in the past as the calendar moves on.
+const FIRST_DAY = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
 test('a user creates a challenge and lands on its page', async ({ page }) => {
   await signInAt(page, '/challenges/new');
 
@@ -9,7 +13,7 @@ test('a user creates a challenge and lands on its page', async ({ page }) => {
 
   await expect(page.getByRole('heading', { level: 2, name: 'Quand ça se passe' })).toBeVisible();
   await page.getByRole('spinbutton', { name: 'Durée' }).fill('4');
-  await page.getByLabel('Premier jour').fill('2026-11-23');
+  await page.getByLabel('Premier jour').fill(FIRST_DAY);
   await expect(page.getByRole('combobox', { name: 'Fuseau horaire' })).toHaveValue(
     'America/Toronto',
   );
@@ -36,7 +40,7 @@ test('a user creates a challenge and lands on its page', async ({ page }) => {
     title: 'Défi de décembre',
     visibility: 'private',
     weeks: 4,
-    start_date: '2026-11-23',
+    start_date: FIRST_DAY,
     timezone: 'America/Toronto',
     reference_sport: 'ride',
     categories: { cumulative_distance: {}, elimination: { step_meters: 2000 } },

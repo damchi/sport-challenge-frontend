@@ -21,7 +21,8 @@ function hasDecimals(value: number, decimals: number): boolean {
 /** The weekly rankings of the points category (API contract, PointsCreate). */
 export const POINTS_CRITERIA = ['longest_duration', 'longest_distance', 'session_count'] as const;
 
-const TITLE_MAX_LENGTH = 80;
+/** Longest title the contract takes, in characters (code points). */
+export const TITLE_MAX_LENGTH = 80;
 const DESCRIPTION_MAX_LENGTH = 2000;
 
 // Title and description: the same rules at creation and when edited.

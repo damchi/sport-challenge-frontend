@@ -1,12 +1,10 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
+import { TITLE_MAX_LENGTH, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
+import { characterCount } from '../../../domain/schemas/text';
 import { FieldError } from './FieldError';
 import { choiceCardClass, describedBy, inputClass } from './fields';
 import { Switch } from './Switch';
-
-// Longest title the contract takes, shown by the counter.
-const TITLE_MAX = 80;
 
 /** Step 1 of the creation: title, description, visibility, who may invite. */
 export function InfoStep() {
@@ -39,7 +37,11 @@ export function InfoStep() {
           <p id="title-hint">{t('challengeCreate.fields.title.hint')}</p>
           {/* The hint gives the bound: the count is for the eye only. */}
           <p aria-hidden="true" className="tabular-nums">
-            {t('challengeCreate.fields.title.count', { count: title.length, max: TITLE_MAX })}
+            {t('challengeCreate.fields.title.count', {
+              // Counted as the rule counts: trimmed, by code point.
+              count: characterCount(title.trim()),
+              max: TITLE_MAX_LENGTH,
+            })}
           </p>
         </div>
         <FieldError id="title-error" message={titleError} />
