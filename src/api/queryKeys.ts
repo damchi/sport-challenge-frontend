@@ -24,10 +24,13 @@ export const queryKeys = {
   },
   challenges: {
     all: ['challenges'] as const,
-    list: (scope: string, status: string | undefined) =>
-      ['challenges', 'list', scope, status ?? 'all'] as const,
+    // One cache per page size (10, 50, all).
+    list: (scope: string, status: string | undefined, size: string) =>
+      ['challenges', 'list', scope, status ?? 'all', size] as const,
     detail: (challengeId: string) => ['challenges', challengeId] as const,
-    participants: (challengeId: string) => ['challenges', challengeId, 'participants'] as const,
+    // One cache per page size; an object, so that it never reads as a user id.
+    participants: (challengeId: string, size: string) =>
+      ['challenges', challengeId, 'participants', { size }] as const,
     leaderboard: (challengeId: string) => ['challenges', challengeId, 'leaderboard'] as const,
     // Under the challenge: it reloads with the challenges once an activity changes.
     participantActivities: (challengeId: string, userId: string) =>

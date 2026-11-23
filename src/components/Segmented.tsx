@@ -5,7 +5,10 @@ const SEGMENT =
 const SEGMENT_ON = 'bg-segment-active text-ink shadow-[0_1px_3px_rgba(22,24,29,.12)]';
 const SEGMENT_OFF = 'text-muted hover-ink';
 
-/** A choice among a few options, as a segmented control of radio buttons (design.md). */
+/**
+ * A choice among a few options, as a segmented control of radio buttons
+ * (design.md): its legend above it, or beside it when `inline`.
+ */
 export function Segmented<T extends string>({
   legend,
   options,
@@ -13,6 +16,7 @@ export function Segmented<T extends string>({
   onSelect,
   label,
   lang,
+  inline = false,
 }: {
   legend: string;
   options: readonly T[];
@@ -20,12 +24,18 @@ export function Segmented<T extends string>({
   onSelect: (value: T) => void;
   label: (value: T) => string;
   lang?: (value: T) => string;
+  inline?: boolean;
 }) {
   const name = useId();
   return (
-    <fieldset>
-      <legend className="text-sm font-semibold">{legend}</legend>
-      <div className="relative mt-2 flex rounded-row bg-segment p-1">
+    // A floated legend is laid out as a flex item, beside the options.
+    <fieldset className={inline ? 'flex items-center gap-3' : undefined}>
+      <legend className={`text-sm font-semibold ${inline ? 'float-left shrink-0' : ''}`}>
+        {legend}
+      </legend>
+      <div
+        className={`relative flex rounded-row bg-segment p-1 ${inline ? 'min-w-0 flex-1' : 'mt-2'}`}
+      >
         {options.map((value) => {
           const on = value === selected;
           return (

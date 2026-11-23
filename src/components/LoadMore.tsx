@@ -5,12 +5,31 @@ interface LoadMoreProps {
   loading: boolean;
   /** The last "load more" failed: the loaded items stay, with a retry. */
   failed?: boolean;
+  /** Every page is read one after the other ("all"): no button but a retry. */
+  auto?: boolean;
   onLoadMore: () => void;
 }
 
-/** End of a paginated list: "Load more" while the server has a next page. */
-export function LoadMore({ hasMore, loading, failed = false, onLoadMore }: LoadMoreProps) {
+/**
+ * End of a paginated list: "Load more" while the server has a next page, or,
+ * while every page is read on its own, a loading line.
+ */
+export function LoadMore({
+  hasMore,
+  loading,
+  failed = false,
+  auto = false,
+  onLoadMore,
+}: LoadMoreProps) {
   const { t } = useTranslation();
+  // While every page is read, the live region stays in place (a region
+  // inserted with its text is not always read): only its text changes.
+  const reading = (
+    <p role="status" className="mt-4 text-center text-sm text-muted empty:hidden">
+      {auto && hasMore && !failed ? t('states.loading') : ''}
+    </p>
+  );
+  if (auto && (!hasMore || !failed)) return reading;
   if (!hasMore) return null;
   return (
     <div className="mt-4 flex flex-col items-center gap-2">

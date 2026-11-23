@@ -10,7 +10,7 @@ import { activityTimeZone } from '../../domain/activity';
  * needed.
  */
 export function useActivityTimeZone(deviceTimeZone: string | undefined, paused = false) {
-  const ongoing = useChallenges('mine', 'ongoing');
+  const ongoing = useChallenges('mine', 'ongoing', 'all');
   const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = ongoing;
   useEffect(() => {
     if (!paused && hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();

@@ -180,6 +180,100 @@ describe('ChallengeList', () => {
     expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
   });
 
+  it('asks for 10 by default, then 50 once chosen, for every section, from the start', async () => {
+    const queries = answerWith({
+      ongoing: onePage('ongoing', 'Défi d’automne'),
+      upcoming: onePage('upcoming', 'Défi d’hiver'),
+      finished: onePage('finished', 'Défi d’été'),
+    });
+    renderList();
+
+    expect(await screen.findByRole('heading', { name: 'Défi d’été' })).toBeInTheDocument();
+    expect(queries.every((query) => query.get('limit') === '10')).toBe(true);
+    const sent = queries.length;
+    fireEvent.click(screen.getByRole('radio', { name: '50' }));
+
+    // The counts first, then each section (the first one's shared with them).
+    await waitFor(() =>
+      expect(queries.slice(sent).map((query) => query.get('status'))).toEqual(
+        expect.arrayContaining(['ongoing', 'upcoming', 'finished']),
+      ),
+    );
+    expect(queries.slice(sent).every((query) => query.get('limit') === '50')).toBe(true);
+    expect(queries.slice(sent).some((query) => query.has('cursor'))).toBe(false);
+    expect(await screen.findByRole('heading', { name: 'Défi d’été' })).toBeInTheDocument();
+    expect(localStorage.getItem('sport-challenge:page-size:challenges')).toBe('50');
+  });
+
+  it('keeps one size for every scope and filter', async () => {
+    localStorage.setItem('sport-challenge:page-size:challenges', '50');
+    const queries = answerWith({ ongoing: onePage('ongoing', 'Défi d’automne') });
+    renderList('/?scope=public&status=ongoing');
+
+    expect(await screen.findByRole('heading', { name: 'Défi d’automne' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: '50' })).toBeChecked();
+    expect(queries.at(-1)?.get('limit')).toBe('50');
+  });
+
+  it('reads every page of a section in turn, by 100, when « Tout » is chosen', async () => {
+    const queries = answerWith({
+      ongoing: { items: [challenge(0, { title: 'Page 1', status: 'ongoing' })], next_cursor: 'c2' },
+      'ongoing:c2': {
+        items: [challenge(1, { title: 'Page 2', status: 'ongoing' })],
+        next_cursor: 'c3',
+      },
+      'ongoing:c3': {
+        items: [challenge(2, { title: 'Page 3', status: 'ongoing' })],
+        next_cursor: null,
+      },
+    });
+    renderList('/?status=ongoing');
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'Tout' }));
+
+    expect(await screen.findByRole('heading', { name: 'Page 3' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Page 2' })).toBeInTheDocument();
+    expect(queries.at(-1)?.get('limit')).toBe('100');
+    expect(queries.at(-1)?.get('cursor')).toBe('c3');
+    expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the pages read when one fails in the middle of « Tout », and retries', async () => {
+    let failures = 0;
+    server.use(
+      http.get('*/api/v1/challenges', ({ request }) => {
+        const cursor = new URL(request.url).searchParams.get('cursor');
+        const counts: Counts = { ongoing: 2, upcoming: 0, finished: 0 };
+        if (cursor === 'c2' && failures++ === 0) return new HttpResponse(null, { status: 503 });
+        return HttpResponse.json<ChallengePage>({
+          items: [
+            challenge(cursor ? 1 : 0, { title: cursor ? 'Page 2' : 'Page 1', status: 'ongoing' }),
+          ],
+          next_cursor: cursor ? null : 'c2',
+          counts,
+        });
+      }),
+    );
+    renderList('/?status=ongoing');
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'Tout' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("La suite n'a pas pu être chargée.");
+    expect(screen.getByRole('heading', { name: 'Page 1' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByRole('heading', { name: 'Page 2' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('offers no size when there is no challenge', async () => {
+    answerWith({}, { ongoing: 0, upcoming: 0, finished: 0 });
+    renderList();
+
+    expect(await screen.findByText(/Tu ne participes encore à aucun défi/)).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Afficher' })).not.toBeInTheDocument();
+  });
+
   it('keeps the loaded challenges when "Load more" fails, and retries', async () => {
     let more = 0;
     server.use(

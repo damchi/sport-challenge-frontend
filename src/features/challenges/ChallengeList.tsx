@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import { useChallenges } from '../../api/hooks/useChallenges';
+import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
 import { LoadMore } from '../../components/LoadMore';
+import { PageSizeChoice } from '../../components/PageSizeChoice';
 import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
@@ -13,6 +15,8 @@ import {
   type ChallengeScope,
   type ChallengeStatus,
 } from '../../domain/challenge';
+import type { PageSize } from '../../domain/pageSize';
+import { usePageSize } from '../../lib/pageSize';
 import { ChallengeCard } from './ChallengeCard';
 
 const SEGMENT = 'h-11 flex-1 rounded-tab text-sm font-semibold';
@@ -35,7 +39,8 @@ const SECTIONS: readonly ChallengeStatus[] = ['ongoing', 'upcoming', 'finished']
  * filtered by the status the server computes, each status with its count
  * (the server's, whatever the filter). Without a filter, one section per
  * status, each read page by page on its own. The choices live in the
- * address (?scope=&status=), so going back keeps them.
+ * address (?scope=&status=), so going back keeps them; how many to show (10,
+ * 50 or all, one choice for every section) is kept on the device.
  */
 export function ChallengeList() {
   const { t } = useTranslation();
@@ -44,9 +49,10 @@ export function ChallengeList() {
   const statusParam = params.get('status');
   const scope = isChallengeScope(scopeParam) ? scopeParam : 'mine';
   const status = isChallengeStatus(statusParam) ? statusParam : undefined;
+  const [size, setSize] = usePageSize('challenges');
   // Every page gives the counts of the scope: the first section's (or the
   // filter's) query, shared with that section.
-  const counted = useChallenges(scope, status ?? SECTIONS[0]);
+  const counted = useChallenges(scope, status ?? SECTIONS[0], size);
   const counts = counted.data?.pages[0]?.counts;
   const total = counts ? counts.upcoming + counts.ongoing + counts.finished : undefined;
 
@@ -63,6 +69,7 @@ export function ChallengeList() {
       <ChallengeSection
         scope={scope}
         status={status}
+        size={size}
         empty={
           <EmptyState
             message={t('challenges.empty.filtered')}
@@ -88,7 +95,7 @@ export function ChallengeList() {
     body = <EmptyState message={t(`challenges.empty.${scope}`)} />;
   } else {
     body = SECTIONS.filter((section) => counts[section] > 0).map((section) => (
-      <ChallengeSection key={section} scope={scope} status={section} />
+      <ChallengeSection key={section} scope={scope} status={section} size={size} />
     ));
   }
 
@@ -142,6 +149,14 @@ export function ChallengeList() {
         </div>
       </div>
 
+      {/* Kept while the list reloads in its new size (the focus stays on it);
+          hidden once there is nothing to show. */}
+      {total !== 0 && (
+        <div className="mt-4">
+          <PageSizeChoice size={size} onChange={setSize} />
+        </div>
+      )}
+
       {/* Room for the floating button of a phone below the last card. */}
       <div className="pb-20 md:pb-0">{body}</div>
     </section>
@@ -150,19 +165,22 @@ export function ChallengeList() {
 
 /**
  * The challenges of one status, under its heading, page by page: its own
- * loading, error (with a retry) and "load more".
+ * loading, error (with a retry) and "load more", or every page in turn.
  */
 function ChallengeSection({
   scope,
   status,
+  size,
   empty,
 }: {
   scope: ChallengeScope;
   status: ChallengeStatus;
+  size: PageSize;
   empty?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const challenges = useChallenges(scope, status);
+  const challenges = useChallenges(scope, status, size);
+  useFetchAllPages(challenges, size === 'all');
   const items = challenges.data?.pages.flatMap((page) => page.items) ?? [];
   const id = `challenges-${status}`;
 
@@ -189,6 +207,7 @@ function ChallengeSection({
           hasMore={challenges.hasNextPage}
           loading={challenges.isFetchingNextPage}
           failed={challenges.isFetchNextPageError}
+          auto={size === 'all'}
           onLoadMore={() => void challenges.fetchNextPage()}
         />
       </>

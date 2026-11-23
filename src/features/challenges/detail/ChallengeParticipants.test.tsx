@@ -60,7 +60,12 @@ function renderAt(initialPath: string) {
   return router;
 }
 
-const list = () => screen.findByRole('region', { name: 'Participants du défi' });
+// The region, once its list is loaded (the size choice shows before it).
+const list = async () => {
+  const region = await screen.findByRole('region', { name: 'Participants du défi' });
+  await within(region).findByRole('list');
+  return region;
+};
 
 describe('ChallengeParticipants', () => {
   it('shows each participant with their status and day of registration', async () => {
@@ -110,12 +115,132 @@ describe('ChallengeParticipants', () => {
     answer();
     renderAt(path);
 
+    // 10 by default, then 10 more, then the last 5.
     const region = await list();
-    expect(within(region).getAllByRole('listitem')).toHaveLength(20);
+    expect(within(region).getAllByRole('listitem')).toHaveLength(10);
+    fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
+    expect(await within(region).findByText(mockParticipants[19]?.pseudo ?? '')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Charger plus' }));
     expect(await within(region).findByText(mockParticipants[24]?.pseudo ?? '')).toBeInTheDocument();
     expect(within(region).getAllByRole('listitem')).toHaveLength(mockParticipants.length);
     expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
+  });
+
+  describe('size of the list', () => {
+    // Records the limit and the cursor of each request, the participants
+    // being served from the mock list.
+    function recordQueries() {
+      const queries: URLSearchParams[] = [];
+      server.events.on('request:start', ({ request }) => {
+        const url = new URL(request.url);
+        if (url.pathname.endsWith('/participants')) queries.push(url.searchParams);
+      });
+      return queries;
+    }
+    afterEach(() => server.events.removeAllListeners());
+
+    it('asks for 10 by default, then 50 once chosen, from the start, and keeps it', async () => {
+      answer();
+      const queries = recordQueries();
+      renderAt(path);
+
+      const region = await list();
+      expect(queries.at(-1)?.get('limit')).toBe('10');
+      fireEvent.click(within(region).getByRole('radio', { name: '50' }));
+
+      await waitFor(() => expect(within(region).getAllByRole('listitem')).toHaveLength(25));
+      expect(queries.at(-1)?.get('limit')).toBe('50');
+      expect(queries.at(-1)?.has('cursor')).toBe(false);
+      expect(within(region).getByRole('radio', { name: '50' })).toBeChecked();
+      expect(localStorage.getItem('sport-challenge:page-size:participants')).toBe('50');
+    });
+
+    it('reads the size kept on the device', async () => {
+      localStorage.setItem('sport-challenge:page-size:participants', '50');
+      answer();
+      renderAt(path);
+
+      const region = await list();
+      expect(within(region).getAllByRole('listitem')).toHaveLength(25);
+      expect(within(region).getByRole('radio', { name: '50' })).toBeChecked();
+    });
+
+    it('still lets the size be chosen when the storage is unavailable', async () => {
+      const broken = () => {
+        throw new Error('Storage disabled');
+      };
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(broken);
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(broken);
+      answer();
+      renderAt(path);
+
+      try {
+        const region = await list();
+        expect(within(region).getByRole('radio', { name: '10' })).toBeChecked();
+        fireEvent.click(within(region).getByRole('radio', { name: '50' }));
+        await waitFor(() => expect(within(region).getAllByRole('listitem')).toHaveLength(25));
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
+
+    it('reads every page in turn, by 100, when « Tout » is chosen', async () => {
+      answer();
+      const queries: URLSearchParams[] = [];
+      server.use(
+        http.get('*/api/v1/challenges/:challengeId/participants', ({ request }) => {
+          const query = new URL(request.url).searchParams;
+          queries.push(query);
+          const cursor = query.get('cursor');
+          return HttpResponse.json({
+            items: [
+              participant({ user_id: `id-${cursor ?? 'first'}`, pseudo: `p-${cursor ?? '0'}` }),
+            ],
+            next_cursor: cursor === null ? 'c1' : cursor === 'c1' ? 'c2' : null,
+          });
+        }),
+      );
+      renderAt(path);
+
+      const region = await list();
+      fireEvent.click(within(region).getByRole('radio', { name: 'Tout' }));
+
+      expect(await within(region).findByText('p-c2')).toBeInTheDocument();
+      expect(within(region).getAllByRole('listitem')).toHaveLength(3);
+      expect(queries.at(-1)?.get('limit')).toBe('100');
+      expect(queries.map((query) => query.get('cursor'))).toEqual([null, null, 'c1', 'c2']);
+      expect(screen.queryByRole('button', { name: 'Charger plus' })).not.toBeInTheDocument();
+    });
+
+    it('keeps the pages read when one fails in the middle of « Tout », and retries', async () => {
+      answer();
+      let failures = 0;
+      server.use(
+        http.get('*/api/v1/challenges/:challengeId/participants', ({ request }) => {
+          const cursor = new URL(request.url).searchParams.get('cursor');
+          if (cursor === 'c1' && failures++ === 0) return new HttpResponse(null, { status: 503 });
+          return HttpResponse.json({
+            items: [
+              participant({ user_id: `id-${cursor ?? 'first'}`, pseudo: `p-${cursor ?? '0'}` }),
+            ],
+            next_cursor: cursor === null ? 'c1' : null,
+          });
+        }),
+      );
+      renderAt(path);
+
+      const region = await list();
+      fireEvent.click(within(region).getByRole('radio', { name: 'Tout' }));
+
+      expect(await within(region).findByRole('alert')).toHaveTextContent(
+        "La suite n'a pas pu être chargée.",
+      );
+      expect(within(region).getByText('p-0')).toBeInTheDocument();
+      fireEvent.click(within(region).getByRole('button', { name: 'Réessayer' }));
+
+      expect(await within(region).findByText('p-c1')).toBeInTheDocument();
+      expect(within(region).queryByRole('alert')).not.toBeInTheDocument();
+    });
   });
 
   it('opens the activities of a participant for a participant of the challenge', async () => {

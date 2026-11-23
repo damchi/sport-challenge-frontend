@@ -7,7 +7,11 @@ initI18n('fr');
 
 // Every request of a test must have a handler: an unknown one fails the test.
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+  server.resetHandlers();
+  // Choices kept on the device (list sizes) do not leak into the next test.
+  localStorage.clear();
+});
 afterAll(() => server.close());
 
 // jsdom has no modal dialog: open and close it, as a browser would.
