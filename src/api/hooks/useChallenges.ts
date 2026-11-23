@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
+import { pageLimit, type PageSize } from '../../domain/pageSize';
 import { useApiClient } from '../ApiClientContext';
 import { ApiError } from '../errors';
 import type { components } from '../generated/schema';
@@ -15,17 +16,22 @@ export type Leaderboard = components['schemas']['Leaderboard'];
 export type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
 
 /**
- * Challenges of a list, page by page (cursor): `fetchNextPage` loads the
- * next one while `hasNextPage` says there is one.
+ * Challenges of a list, page by page (cursor) of `size` (each size cached on
+ * its own): `fetchNextPage` loads the next one while `hasNextPage` says there
+ * is one.
  */
-export function useChallenges(scope: ChallengeScope, status: ChallengeStatus | undefined) {
+export function useChallenges(
+  scope: ChallengeScope,
+  status: ChallengeStatus | undefined,
+  size: PageSize,
+) {
   const client = useApiClient();
   return useInfiniteQuery({
-    queryKey: queryKeys.challenges.list(scope, status),
+    queryKey: queryKeys.challenges.list(scope, status, size),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await client.GET('/api/v1/challenges', {
-        params: { query: { scope, status, cursor: pageParam } },
+        params: { query: { scope, status, limit: pageLimit(size), cursor: pageParam } },
         signal,
       });
       if (!data) throw new Error('Empty challenge page');
@@ -57,18 +63,18 @@ export function useChallenge(challengeId: string) {
 
 /**
  * Participants of a challenge, in order of registration, page by page
- * (cursor). Those who abandoned or were excluded are listed as abandoned; a
- * deleted account is not listed. Joining or abandoning reloads it (its key
+ * (cursor) of `size` (each size cached on its own). Those who abandoned or
+ * were excluded are listed as abandoned; a deleted account is not listed. Joining or abandoning reloads it (its key
  * starts with the challenge's).
  */
-export function useParticipants(challengeId: string) {
+export function useParticipants(challengeId: string, size: PageSize) {
   const client = useApiClient();
   return useInfiniteQuery({
-    queryKey: queryKeys.challenges.participants(challengeId),
+    queryKey: queryKeys.challenges.participants(challengeId, size),
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await client.GET('/api/v1/challenges/{challengeId}/participants', {
-        params: { path: { challengeId }, query: { cursor: pageParam } },
+        params: { path: { challengeId }, query: { limit: pageLimit(size), cursor: pageParam } },
         signal,
       });
       if (!data) throw new Error('Empty participant page');

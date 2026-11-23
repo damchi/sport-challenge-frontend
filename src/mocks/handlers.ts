@@ -342,8 +342,9 @@ export const handlers = [
     const status = query.get('status');
     const filtered = status ? all.filter((challenge) => challenge.status === status) : all;
     const from = Number(query.get('cursor') ?? 0);
-    const items = filtered.slice(from, from + PAGE_SIZE);
-    const next = from + PAGE_SIZE < filtered.length ? String(from + PAGE_SIZE) : null;
+    const size = Number(query.get('limit') ?? PAGE_SIZE);
+    const items = filtered.slice(from, from + size);
+    const next = from + size < filtered.length ? String(from + size) : null;
     const counts = { upcoming: 0, ongoing: 0, finished: 0 };
     for (const challenge of all) counts[challenge.status] += 1;
     return HttpResponse.json<ChallengePage>({ items, next_cursor: next, counts });
@@ -367,9 +368,11 @@ export const handlers = [
       };
       return HttpResponse.json(body, { status: 404 });
     }
-    const from = Number(new URL(request.url).searchParams.get('cursor') ?? 0);
-    const items = mockParticipants.slice(from, from + PAGE_SIZE);
-    const next = from + PAGE_SIZE < mockParticipants.length ? String(from + PAGE_SIZE) : null;
+    const query = new URL(request.url).searchParams;
+    const from = Number(query.get('cursor') ?? 0);
+    const size = Number(query.get('limit') ?? PAGE_SIZE);
+    const items = mockParticipants.slice(from, from + size);
+    const next = from + size < mockParticipants.length ? String(from + size) : null;
     return HttpResponse.json<ParticipantPage>({ items, next_cursor: next });
   }),
   http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ params }) => {

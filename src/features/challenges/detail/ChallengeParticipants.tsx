@@ -2,8 +2,10 @@ import { ChevronRight, Crown, Flag, UserCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { useChallenge, useParticipants, type Participant } from '../../../api/hooks/useChallenges';
+import { useFetchAllPages } from '../../../api/hooks/useFetchAllPages';
 import { Avatar } from '../../../components/Avatar';
 import { LoadMore } from '../../../components/LoadMore';
+import { PageSizeChoice } from '../../../components/PageSizeChoice';
 import { StatusPill } from '../../../components/StatusPill';
 import { EmptyState } from '../../../components/states/EmptyState';
 import { ErrorState } from '../../../components/states/ErrorState';
@@ -11,6 +13,7 @@ import { LoadingState } from '../../../components/states/LoadingState';
 import { canSeeParticipantActivities } from '../../../domain/challenge';
 import { displayName } from '../../../domain/displayName';
 import { challengeDay } from '../../../domain/format/challengeDates';
+import { usePageSize } from '../../../lib/pageSize';
 import {
   CreatorActionDialog,
   CreatorActionOutcome,
@@ -28,7 +31,7 @@ const ROW_ABANDONED = 'border-dashed border-border-dashed text-muted';
 
 /**
  * Participants of a challenge (its tab, or the card of an upcoming one), in
- * order of registration, page by page:
+ * order of registration, 10, 50 or all of them (kept on the device), page by page:
  * avatar, name, creator role, status and day of registration (in the
  * challenge's time zone). Those who may see the activities of the others
  * (creators and participants) open them from a row, once it has started. The creators of a
@@ -41,59 +44,75 @@ export function ChallengeParticipants() {
   const { challengeId = '' } = useParams();
   const { t } = useTranslation();
   const challenge = useChallenge(challengeId);
-  const participants = useParticipants(challengeId);
+  const [size, setSize] = usePageSize('participants');
+  const participants = useParticipants(challengeId, size);
+  useFetchAllPages(participants, size === 'all');
   const actions = useCreatorActions(challengeId);
 
   if (!challenge.data) return null;
-  if (participants.isPending) return <LoadingState />;
-  // Nothing loaded: the whole list failed (a failed "load more" keeps it).
-  if (!participants.data) {
-    return <ErrorState error={participants.error} onRetry={() => void participants.refetch()} />;
+  const items = participants.data?.pages.flatMap((page) => page.items);
+  if (items?.length === 0) {
+    return <EmptyState message={t('challengeDetail.participants.empty')} />;
   }
-  const items = participants.data.pages.flatMap((page) => page.items);
-  if (items.length === 0) return <EmptyState message={t('challengeDetail.participants.empty')} />;
 
   // Before the start, no one has activities to open yet.
   const linked =
     canSeeParticipantActivities(challenge.data.my_role) && challenge.data.status !== 'upcoming';
   // The server refuses both on a finished challenge (challenge_ended).
   const manages = challenge.data.my_role === 'creator' && challenge.data.status !== 'finished';
+  const timeZone = challenge.data.timezone;
   return (
     <section aria-label={t('challengeDetail.participants.label')}>
       <CreatorActionOutcome actions={actions} />
-      <ul className="grid grid-cols-1 gap-2">
-        {items.map((participant) => {
-          const row = `${ROW} ${participant.status === 'abandoned' ? ROW_ABANDONED : ROW_ACTIVE}`;
-          const content = (
-            <ParticipantRow participant={participant} timeZone={challenge.data.timezone} />
-          );
-          return (
-            <li key={participant.user_id} className={row}>
-              {linked ? (
-                <Link
-                  to={`/challenges/${challengeId}/participants/${participant.user_id}`}
-                  className={ROW_LINK}
-                >
-                  {content}
-                  <ChevronRight aria-hidden="true" size={20} className="shrink-0 text-muted" />
-                </Link>
-              ) : (
-                <div className={ROW_CONTENT}>{content}</div>
-              )}
-              {manages && participant.status === 'active' && !participant.is_creator && (
-                <ParticipantActions participant={participant} actions={actions} />
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {/* Kept while the list reloads in its new size (the focus stays on it);
+          hidden when the list failed, as on the Défis page. */}
+      {(items || participants.isPending) && (
+        <div className="mb-4">
+          <PageSizeChoice size={size} onChange={setSize} />
+        </div>
+      )}
+      {participants.isPending ? (
+        <LoadingState />
+      ) : !items ? (
+        // Nothing loaded: the whole list failed (a failed "load more" keeps it).
+        <ErrorState error={participants.error} onRetry={() => void participants.refetch()} />
+      ) : (
+        <>
+          <ul className="grid grid-cols-1 gap-2">
+            {items.map((participant) => {
+              const row = `${ROW} ${participant.status === 'abandoned' ? ROW_ABANDONED : ROW_ACTIVE}`;
+              const content = <ParticipantRow participant={participant} timeZone={timeZone} />;
+              return (
+                <li key={participant.user_id} className={row}>
+                  {linked ? (
+                    <Link
+                      to={`/challenges/${challengeId}/participants/${participant.user_id}`}
+                      className={ROW_LINK}
+                    >
+                      {content}
+                      <ChevronRight aria-hidden="true" size={20} className="shrink-0 text-muted" />
+                    </Link>
+                  ) : (
+                    <div className={ROW_CONTENT}>{content}</div>
+                  )}
+                  {manages && participant.status === 'active' && !participant.is_creator && (
+                    <ParticipantActions participant={participant} actions={actions} />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <LoadMore
+            hasMore={participants.hasNextPage}
+            loading={participants.isFetchingNextPage}
+            // While every page is read, a failed reload also stops the reading.
+            failed={participants.isFetchNextPageError || (size === 'all' && participants.isError)}
+            auto={size === 'all'}
+            onLoadMore={() => void participants.fetchNextPage()}
+          />
+        </>
+      )}
       <CreatorActionDialog actions={actions} />
-      <LoadMore
-        hasMore={participants.hasNextPage}
-        loading={participants.isFetchingNextPage}
-        failed={participants.isFetchNextPageError}
-        onLoadMore={() => void participants.fetchNextPage()}
-      />
     </section>
   );
 }

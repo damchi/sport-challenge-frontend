@@ -341,6 +341,12 @@
     },
     "signOut": "Sign out"
   },
+  "lists": {
+    "pageSize": {
+      "legend": "Show",
+      "all": "All"
+    }
+  },
   "states": {
     "loading": "Loading…",
     "loadMore": "Load more",

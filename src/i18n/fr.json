@@ -349,6 +349,12 @@
     },
     "signOut": "Se déconnecter"
   },
+  "lists": {
+    "pageSize": {
+      "legend": "Afficher",
+      "all": "Tout"
+    }
+  },
   "states": {
     "loading": "Chargement…",
     "loadMore": "Charger plus",

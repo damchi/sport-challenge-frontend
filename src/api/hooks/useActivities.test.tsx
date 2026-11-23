@@ -20,7 +20,7 @@ describe('useCreateActivity', () => {
     const queryClient = createTestQueryClient();
     const keys = {
       activities: queryKeys.activities.all,
-      list: queryKeys.challenges.list('mine', 'ongoing'),
+      list: queryKeys.challenges.list('mine', 'ongoing', '10'),
       detail: queryKeys.challenges.detail('c1'),
       leaderboard: queryKeys.challenges.leaderboard('c1'),
       sports: queryKeys.sports,

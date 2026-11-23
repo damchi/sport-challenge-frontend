@@ -71,7 +71,12 @@ function renderAt() {
   );
 }
 
-const list = () => screen.findByRole('region', { name: 'Participants du défi' });
+// The region, once its list is loaded (the size choice shows before it).
+const list = async () => {
+  const region = await screen.findByRole('region', { name: 'Participants du défi' });
+  await within(region).findByRole('list');
+  return region;
+};
 const rowOf = async (name: string) => {
   const rows = within(await list()).getAllByRole('listitem');
   const row = rows.find((item) => within(item).queryByText(name));
