@@ -37,3 +37,12 @@ export function formatSpeed(metersPerSecond: number, locale: string): string {
     maximumFractionDigits: 1,
   }).format(metersPerSecond * 3.6);
 }
+
+/** An elevation in whole meters, written in the language: "1 250 m" / "1,250 m". */
+export function formatMeters(meters: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: 'meter',
+    maximumFractionDigits: 0,
+  }).format(meters);
+}

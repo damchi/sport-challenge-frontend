@@ -11,6 +11,7 @@ import { formatKm, formatSpeed } from '../../domain/format/distance';
 import { formatActivityDuration, formatPace } from '../../domain/format/duration';
 import { useSportName } from '../challenges/create/useSportName';
 import { ActivityMenu } from './ActivityMenu';
+import { ElevationGain } from './ElevationGain';
 import { SportIcon } from './SportIcon';
 
 /**
@@ -93,7 +94,12 @@ export function ActivityItem({
             <span className="sr-only">{t('activities.noDistance')}</span>
           </>
         ) : (
-          formatKm(activity.distance_meters / 1000, locale)
+          <>
+            {formatKm(activity.distance_meters / 1000, locale)}
+            {activity.elevation_gain_meters !== null && (
+              <ElevationGain meters={activity.elevation_gain_meters} />
+            )}
+          </>
         ),
     },
     ...(activity.pace_seconds_per_km !== null

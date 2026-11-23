@@ -182,6 +182,7 @@
     "otherSport": "Other sport",
     "duration": "Duration",
     "distance": "Distance",
+    "elevationGain": "elevation gain",
     "speed": "Speed",
     "pace": "Pace",
     "paceValue": "{{pace}} /km",

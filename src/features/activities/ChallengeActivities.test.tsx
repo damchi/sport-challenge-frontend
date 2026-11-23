@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeActivity } from '../../api/hooks/useActivities';
 import type { ChallengeDetail } from '../../api/hooks/useChallenges';
 import type { components } from '../../api/generated/schema';
-import { mockChallengeDetail, mockChallenges } from '../../mocks/handlers';
+import { mockChallengeDetail, mockChallenges, mockMe } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { routes } from '../../routes/routes';
 import { AppProviders } from '../../test/AppProviders';
@@ -120,11 +121,19 @@ function renderAt(initialPath: string) {
   return router;
 }
 
+/** The distance of an activity as read, spaces made plain. */
+const distanceOf = (activity: HTMLElement) =>
+  within(activity)
+    .getByText('Distance')
+    .parentElement?.querySelector('dd')
+    ?.textContent?.replace(/\s+/g, ' ');
+
 const list = () => screen.findByRole('region', { name: 'Activités du défi' });
 
 describe('ChallengeActivities', () => {
-  afterEach(() => {
+  afterEach(async () => {
     vi.restoreAllMocks();
+    await i18n.changeLanguage('fr');
   });
 
   it('lists every participant activity with its author, in the server order', async () => {
@@ -149,6 +158,36 @@ describe('ChallengeActivities', () => {
       'aria-current',
       'page',
     );
+  });
+
+  it('shows the elevation gain beside the distance, 0 included, nothing when not entered', async () => {
+    answer();
+    listing([
+      { ...run, elevation_gain_meters: 450 },
+      { ...run, id: '00000000-0000-4000-8000-0000000003a1', elevation_gain_meters: 0 },
+      { ...run, id: '00000000-0000-4000-8000-0000000004a1' },
+    ]);
+    renderAt(path);
+
+    const distances = within(await list())
+      .getAllByRole('article')
+      .map((activity) => distanceOf(activity));
+    expect(distances).toEqual([
+      '8,2 km, dénivelé positif ↗ 450 m',
+      '8,2 km, dénivelé positif ↗ 0 m',
+      '8,2 km',
+    ]);
+  });
+
+  it('writes the elevation gain in English', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    answer();
+    listing([{ ...run, elevation_gain_meters: 1250 }]);
+    renderAt(path);
+
+    const activity = within(await screen.findByRole('region', { name: 'Challenge activities' }))
+      .getByRole('article');
+    expect(distanceOf(activity)).toBe('8.2 km, elevation gain ↗ 1,250 m');
   });
 
   it('links nothing in the feed: neither an activity nor its author', async () => {

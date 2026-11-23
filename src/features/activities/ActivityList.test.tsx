@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { Activity } from '../../api/hooks/useActivities';
@@ -153,6 +154,13 @@ const item = async (name: string) => screen.findByRole('article', { name });
 const week = (name: RegExp) => screen.getByRole('region', { name });
 const MENU = "Actions de l'activité";
 
+/** The distance of an activity as read, spaces made plain. */
+const distanceOf = (activity: HTMLElement) =>
+  within(activity)
+    .getByText('Distance')
+    .parentElement?.querySelector('dd')
+    ?.textContent?.replace(/\s+/g, ' ');
+
 /** Opens the "…" menu of an activity. */
 async function openMenu(name: string) {
   fireEvent.click(within(await item(name)).getByRole('button', { name: MENU }));
@@ -193,6 +201,44 @@ describe('ActivityList', () => {
     expect(within(activity).getByText('Manuelle')).toBeInTheDocument();
     // Same time zone as the device: no mention.
     expect(screen.queryByText(/Heures affichées/)).not.toBeInTheDocument();
+  });
+
+  describe('elevation gain', () => {
+    afterEach(async () => {
+      await i18n.changeLanguage('fr');
+    });
+
+    const ride: Activity = {
+      ...run,
+      id: '00000000-0000-4000-8000-0000000003a1',
+      sport_code: 'ride',
+      distance_meters: 31_500,
+      elevation_gain_meters: 1250,
+    };
+    const walk: Activity = {
+      ...run,
+      id: '00000000-0000-4000-8000-0000000004a1',
+      sport_code: 'walk',
+      elevation_gain_meters: 0,
+    };
+
+    it('shows it beside the distance, 0 included, and nothing when not entered', async () => {
+      listing([run, ride, walk]);
+      renderList();
+
+      expect(distanceOf(await item('Vélo'))).toBe('31,5 km, dénivelé positif ↗ 1 250 m');
+      expect(within(await item('Vélo')).getByText('↗')).toHaveAttribute('aria-hidden', 'true');
+      expect(distanceOf(await item('Marche'))).toBe('8,2 km, dénivelé positif ↗ 0 m');
+      expect(distanceOf(await item('Course'))).toBe('8,2 km');
+    });
+
+    it('writes it in English', async () => {
+      await i18n.changeLanguage('en');
+      listing([ride]);
+      renderList();
+
+      expect(distanceOf(await item('Cycling'))).toBe('31.5 km, elevation gain ↗ 1,250 m');
+    });
   });
 
   it('shows the label of the sport "other", no distance, and neither pace nor speed without one', async () => {

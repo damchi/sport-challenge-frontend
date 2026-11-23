@@ -9,6 +9,7 @@ import { activityTime } from '../../domain/format/challengeDates';
 import { formatKm, formatSpeed } from '../../domain/format/distance';
 import { formatActivityDuration, formatPace } from '../../domain/format/duration';
 import { useSportName } from '../challenges/create/useSportName';
+import { ElevationGain } from './ElevationGain';
 
 /**
  * An activity, read only: sport (marked "manual" when entered by hand),
@@ -78,6 +79,9 @@ export function ActivityCard({
             <dt className="text-muted">{t('activities.distance')}</dt>
             <dd className="font-semibold tabular-nums">
               {formatKm(activity.distance_meters / 1000, locale)}
+              {activity.elevation_gain_meters !== null && (
+                <ElevationGain meters={activity.elevation_gain_meters} />
+              )}
             </dd>
           </div>
         )}
