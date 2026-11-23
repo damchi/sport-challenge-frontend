@@ -782,7 +782,8 @@
           "cumulative_time": "The most total time, all sports together, wins",
           "cumulative_distance": "The most equivalent km wins",
           "elimination": "The most km among those still in wins",
-          "points": "The most points wins"
+          "points": "The most points wins",
+          "cumulative_elevation": "The most meters of elevation gain wins"
         }
       },
       "details": {

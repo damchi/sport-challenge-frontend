@@ -250,6 +250,24 @@ describe('UpcomingChallenge', () => {
     }
   });
 
+  it('says how the total elevation gain is won, without settings', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'cumulative_elevation', position: 5, params: {} },
+      ],
+    });
+    renderAt(`/challenges/${id}`);
+
+    const howToWin = (await screen.findByRole('heading', { name: 'Comment on gagne' }))
+      .parentElement as HTMLElement;
+    const card = within(howToWin).getByRole('heading', { level: 3, name: 'D+ cumulé' })
+      .parentElement as HTMLElement;
+    expect(card).toHaveTextContent(
+      'D+ cumuléLe dénivelé positif de toutes les activités qui en ont un, tous sports confondus, en mètres réels, sans coefficient.Le plus de mètres de dénivelé positif gagne',
+    );
+  });
+
   it('gives the frozen settings of the categories, the factors only in the details', async () => {
     answer();
     renderAt(`/challenges/${id}`);

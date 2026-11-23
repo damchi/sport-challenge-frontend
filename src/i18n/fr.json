@@ -802,7 +802,8 @@
           "cumulative_time": "Le plus de temps cumulé, tous sports confondus, gagne",
           "cumulative_distance": "Le plus de km équivalents gagne",
           "elimination": "Le plus de km cumulés, parmi ceux encore en lice, gagne",
-          "points": "Le plus de points gagne"
+          "points": "Le plus de points gagne",
+          "cumulative_elevation": "Le plus de mètres de dénivelé positif gagne"
         }
       },
       "details": {
