@@ -347,9 +347,12 @@ describe('ChallengeList', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Le service est momentanément indisponible.',
     );
+    // Nothing to size while the list failed.
+    expect(screen.queryByRole('group', { name: 'Afficher' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
 
     expect(await screen.findByRole('heading', { name: 'Revenu' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Afficher' })).toBeInTheDocument();
   });
 
   it('shows the error of one section, with a retry, and the others', async () => {

@@ -150,8 +150,8 @@ export function ChallengeList() {
       </div>
 
       {/* Kept while the list reloads in its new size (the focus stays on it);
-          hidden once there is nothing to show. */}
-      {total !== 0 && (
+          hidden once there is nothing to show, or when the list failed. */}
+      {total !== 0 && (counts || counted.isPending) && (
         <div className="mt-4">
           <PageSizeChoice size={size} onChange={setSize} />
         </div>
