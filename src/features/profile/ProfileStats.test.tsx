@@ -96,6 +96,15 @@ describe('ProfileStats', () => {
     ).toEqual(['2challenges', '1activity', '45 minof sport45 minutes of sport']);
   });
 
+  it('holds their place while they load', async () => {
+    answering({ challenges: 3, activities: 18, seconds: 3600 });
+    renderStats();
+
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+    expect(await items()).toHaveLength(3);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('says when the numbers could not load, and retries them alone', async () => {
     let calls = 0;
     server.use(
