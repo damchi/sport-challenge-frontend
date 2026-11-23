@@ -674,7 +674,8 @@
         "podium_5": "Top 5 de chaque semaine et critère : 10, 8, 6, 4 et 2 points",
         "podium_10": "Top 10 de chaque semaine et critère : 25, 18, 15, 12, 10, 8, 6, 4, 2 et 1 point",
         "minSession": "Une séance compte à partir de {{minutes}} min"
-      }
+      },
+      "elevationInSentence": "D+ cumulé"
     },
     "tabs": {
       "label": "Sections du défi",
@@ -864,7 +865,8 @@
       "progress": "{{done}} sur {{minimum}} cette semaine",
       "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
       "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu fais plus que le minimum, ta distance devient la nouvelle base."
-    }
+    },
+    "elevation": "{{elevation}} D+"
   },
   "standings": {
     "title": "Où tu en es",
@@ -872,7 +874,8 @@
     "distance": "en équivalent {{sport}}",
     "elimination": "en {{sport}}",
     "eliminationWeek": "en {{sport}}, cette semaine",
-    "eliminationValue": "{{done}} / {{minimum}}"
+    "eliminationValue": "{{done}} / {{minimum}}",
+    "elevation": "de dénivelé positif, tous sports"
   },
   "invitations": {
     "button": "Inviter des amis",

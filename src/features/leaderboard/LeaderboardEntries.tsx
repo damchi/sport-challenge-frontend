@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import type { Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { Avatar } from '../../components/Avatar';
 import { displayName } from '../../domain/displayName';
-import { formatKm } from '../../domain/format/distance';
+import { formatKm, formatMeters } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
 import { useSportName } from '../challenges/create/useSportName';
 import { EliminationProgress } from './EliminationProgress';
@@ -63,7 +63,8 @@ function useEntryName(entry: LeaderboardEntry, me: boolean): string {
 
 /**
  * The value of a category: h:mm, km equivalent to the reference sport, km
- * done in the reference sport (elimination), or points acquired.
+ * done in the reference sport (elimination), points acquired, or real meters
+ * climbed ("1 250 m D+").
  */
 function useEntryValue(type: CategoryType, value: number | null, referenceSport: string): string {
   const { t, i18n } = useTranslation();
@@ -72,6 +73,9 @@ function useEntryValue(type: CategoryType, value: number | null, referenceSport:
   if (type === 'cumulative_time') return formatDuration(value);
   if (type === 'points') return t('leaderboard.points', { count: value });
   const locale = i18n.resolvedLanguage ?? 'fr';
+  if (type === 'cumulative_elevation') {
+    return t('leaderboard.elevation', { elevation: formatMeters(value, locale) });
+  }
   const distance = formatKm(value / 1000, locale);
   if (type !== 'cumulative_distance') return distance;
   // Inside a sentence: "12,5 km éq. vélo".

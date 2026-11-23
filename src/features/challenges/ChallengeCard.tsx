@@ -173,11 +173,14 @@ function FinishedBody({ challenge }: { challenge: ChallengeSummary }) {
         <Highlight Icon={Award} iconClass="text-ok-fg">
           {t('challenges.card.bestResult', {
             rank: t('leaderboard.rank', { count: best.rank, ordinal: true }),
-            // Inside a sentence: "2e en distance cumulée", but "1er en Grand prix".
+            // Inside a sentence: "2e en distance cumulée", but "1er en Grand prix"
+            // and "1er en D+ cumulé" (an abbreviation keeps its capitals).
             category:
               best.type === 'points'
                 ? categoryName(best.type)
-                : categoryName(best.type).toLocaleLowerCase(locale),
+                : best.type === 'cumulative_elevation'
+                  ? t('challengeDetail.categories.elevationInSentence')
+                  : categoryName(best.type).toLocaleLowerCase(locale),
           })}
           <span className="hidden md:inline"> · {t('challenges.card.bestResultNote')}</span>
         </Highlight>

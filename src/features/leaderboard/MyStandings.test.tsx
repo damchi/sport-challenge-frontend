@@ -155,6 +155,50 @@ describe('MyStandings', () => {
     expect(points).toHaveTextContent('2e sur 8');
   });
 
+  it('shows the meters climbed and the rank of the total elevation gain', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'cumulative_elevation', position: 5, params: {} },
+      ],
+    });
+    leaderboard([
+      { type: 'cumulative_time', ranked_count: 8, entries: [line(4, 15_120, true)] },
+      {
+        type: 'cumulative_elevation',
+        ranked_count: 8,
+        entries: [line(1, 1_250), line(1, 1_250, true)],
+      },
+    ]);
+    renderAt(`/challenges/${id}`);
+
+    const [, elevation] = (await cards()) as [HTMLElement, HTMLElement];
+    expect(elevation).toHaveTextContent('D+ cumulé');
+    expect(elevation).toHaveTextContent('1 250 m');
+    expect(elevation).toHaveTextContent('de dénivelé positif, tous sports');
+    // Tied with the first: the same rank.
+    expect(elevation).toHaveTextContent('1er sur 8');
+    expect(elevation).toHaveAttribute('href', `/challenges/${id}?category=cumulative_elevation`);
+  });
+
+  it('shows 0 m to a user without any elevation gain', async () => {
+    answer({
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        { type: 'cumulative_elevation', position: 5, params: {} },
+      ],
+    });
+    leaderboard([
+      { type: 'cumulative_time', ranked_count: 2, entries: [line(1, 15_120, true)] },
+      { type: 'cumulative_elevation', ranked_count: 2, entries: [line(1, 300), line(2, 0, true)] },
+    ]);
+    renderAt(`/challenges/${id}`);
+
+    const [, elevation] = (await cards()) as [HTMLElement, HTMLElement];
+    expect(elevation).toHaveTextContent('0 m');
+    expect(elevation).toHaveTextContent('2e sur 2');
+  });
+
   it('marks the category shown by the leaderboard, and a card chooses it', async () => {
     answer();
     leaderboard(fourRankings);
