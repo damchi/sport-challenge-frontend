@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { ChallengeScope, ChallengeStatus } from '../../domain/challenge';
 import { pageLimit, type PageSize } from '../../domain/pageSize';
 import { useApiClient } from '../ApiClientContext';
@@ -145,17 +145,41 @@ export function useCategoryLeaderboard(
     },
     getNextPageParam: (page) => page.next_cursor ?? undefined,
   });
+  const reset = useCallback(
+    () =>
+      queryClient.resetQueries({
+        queryKey: queryKeys.challenges.leaderboardCategory(challengeId, category, size),
+        exact: true,
+      }),
+    [queryClient, challengeId, category, size],
+  );
+  // Restarts in a row, without a next page read in between: a ranking that
+  // keeps moving (or a server that keeps refusing) stops them, the list then
+  // offering its retry, which starts again too.
+  const restarts = useRef(0);
+  const pages = query.data?.pages.length ?? 0;
+  useEffect(() => {
+    if (pages > 1) restarts.current = 0;
+  }, [pages]);
   // A next page, or a refetch of the pages read, met a stale cursor.
   const restart = isInvalidCursor(query.error) && !query.isFetching;
   useEffect(() => {
-    if (!restart) return;
-    void queryClient.resetQueries({
-      queryKey: queryKeys.challenges.leaderboardCategory(challengeId, category, size),
-      exact: true,
-    });
-  }, [restart, queryClient, challengeId, category, size]);
-  return query;
+    if (!restart || restarts.current >= MAX_RESTARTS) return;
+    restarts.current += 1;
+    void reset();
+  }, [restart, reset]);
+  const { fetchNextPage } = query;
+  const stale = isInvalidCursor(query.error);
+  const next = useCallback((): Promise<unknown> => {
+    if (!stale) return fetchNextPage();
+    restarts.current = 0;
+    return reset();
+  }, [stale, fetchNextPage, reset]);
+  return { ...query, fetchNextPage: next };
 }
+
+/** Restarts from the first page in a row on a stale cursor, before giving up. */
+const MAX_RESTARTS = 2;
 
 /**
  * Creates a challenge; the lists then reload to show it, and the profile's

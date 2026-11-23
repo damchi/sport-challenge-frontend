@@ -1269,6 +1269,43 @@ describe('ChallengeLeaderboard, podium then pages', () => {
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
   });
 
+  it('stops starting again when every cursor is refused, then retries from the first page', async () => {
+    answer({ my_role: 'outsider', my_status: null });
+    const categories = [longRanking('cumulative_time', null)];
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get('*/api/v1/challenges/:challengeId/leaderboard', ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        if (query.has('limit')) requests.push(query);
+        if (query.has('cursor')) {
+          return HttpResponse.json(
+            { error: { code: 'cursor_invalid', message: 'Cursor invalid' } },
+            { status: 400 },
+          );
+        }
+        return HttpResponse.json<Leaderboard>(served(request, categories));
+      }),
+    );
+    renderAt(`/challenges/${id}`);
+
+    await section('Suite du classement');
+    const firstPages = () => requests.filter((query) => !query.has('cursor')).length;
+    // Each refused cursor starts again from the first page, twice in a row at most.
+    for (const restarted of [2, 3]) {
+      fireEvent.click(await screen.findByRole('button', { name: 'Charger plus' }));
+      await waitFor(() => expect(firstPages()).toBe(restarted));
+    }
+    fireEvent.click(await screen.findByRole('button', { name: 'Charger plus' }));
+    const retry = await screen.findByRole('button', { name: 'Réessayer' });
+    expect(screen.getByText("La suite n'a pas pu être chargée.")).toBeInTheDocument();
+    expect(firstPages()).toBe(3);
+    expect(await ranks()).toHaveLength(10);
+
+    // The retry starts again too.
+    fireEvent.click(retry);
+    await waitFor(() => expect(firstPages()).toBe(4));
+  });
+
   it('shows the frozen ranking of a finished challenge the same way', async () => {
     answer({ status: 'finished', current_week: null, week_ends_at: null });
     recorded([longRanking('cumulative_time', 20)]);
