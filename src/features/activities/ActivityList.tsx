@@ -134,7 +134,8 @@ function WeekList({
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
 
-  if (activities.isPending || weeks.isPending) return <LoadingState />;
+  // The totals of the weeks are extra: the list shows without them meanwhile.
+  if (activities.isPending) return <LoadingState />;
   // Nothing loaded: the whole list failed (a failed "load more" keeps it).
   if (!activities.data) {
     return <ErrorState error={activities.error} onRetry={() => void activities.refetch()} />;

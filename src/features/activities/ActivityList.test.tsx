@@ -595,15 +595,17 @@ describe('ActivityList', () => {
       renderList();
       await item('Course');
 
-      fireEvent.click(screen.getByRole('radio', { name: /^Vélo/ }));
+      fireEvent.click(await screen.findByRole('radio', { name: /^Vélo/ }));
 
       expect(await screen.findByText('Aucune activité de ce sport.')).toBeInTheDocument();
       expect(screen.getByRole('radio', { name: /^Vélo/ })).toBeChecked();
       expect(listed).toEqual([null, 'ride']);
-      expect(asked.map((query) => [query.get('tz'), query.get('sport')])).toEqual([
-        ['America/Montreal', null],
-        ['America/Montreal', 'ride'],
-      ]);
+      await waitFor(() =>
+        expect(asked.map((query) => [query.get('tz'), query.get('sport')])).toEqual([
+          ['America/Montreal', null],
+          ['America/Montreal', 'ride'],
+        ]),
+      );
     });
   });
 
@@ -635,8 +637,11 @@ describe('ActivityList', () => {
       renderList();
       await item('Course');
 
-      expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(
-        '4 séances · 2:362 heures 36 minutes · 26 km',
+      // The totals come after the list.
+      await waitFor(() =>
+        expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(
+          '4 séances · 2:362 heures 36 minutes · 26 km',
+        ),
       );
       expect(totalsOf(week(/^Semaine du 2 nov/))).toHaveTextContent(/^1 séance · 0:4545 minutes$/);
     });
