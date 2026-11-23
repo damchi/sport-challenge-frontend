@@ -185,6 +185,7 @@
     "duration": "Durée",
     "distance": "Distance",
     "elevation": "Dénivelé",
+    "climbed": "{{elevation}} de dénivelé",
     "speed": "Vitesse",
     "pace": "Allure",
     "paceValue": "{{pace}} /km",
@@ -210,6 +211,7 @@
       "sessions_other": "séances",
       "moving": "de mouvement",
       "covered": "parcourus",
+      "climbed": "de dénivelé",
       "days": "Durée de chaque jour",
       "day": "{{day}} : {{duration}}",
       "dayEmpty": "{{day}} : aucune activité"

@@ -77,6 +77,7 @@ function summary({
   sessions = 0,
   duration = 0,
   distance = 0,
+  elevation = 0,
   durations = [] as number[],
   sports = [] as ActivitySummary['sports'],
 } = {}): ActivitySummary {
@@ -87,7 +88,7 @@ function summary({
       sessions,
       duration_seconds: duration,
       distance_meters: distance,
-      elevation_gain_meters: 0,
+      elevation_gain_meters: elevation,
       days: days(...durations),
     },
     sports,
@@ -122,13 +123,19 @@ function weeksTotals(...items: ActivityWeekPage['items']) {
 }
 
 /** The totals of the week of `monday` (Montréal, standard time). */
-const weekOf = (monday: string, sessions: number, duration: number, distance: number) => ({
+const weekOf = (
+  monday: string,
+  sessions: number,
+  duration: number,
+  distance: number,
+  elevation = 0,
+) => ({
   starts_at: `${monday}T05:00:00Z`,
   ends_at: new Date(Date.parse(`${monday}T05:00:00Z`) + 7 * 86_400_000).toISOString(),
   sessions,
   duration_seconds: duration,
   distance_meters: distance,
-  elevation_gain_meters: 0,
+  elevation_gain_meters: elevation,
 });
 
 // The device in the time zone of the mock challenges, unless said otherwise.
@@ -525,6 +532,7 @@ describe('ActivityList', () => {
   });
 
   describe('summary of the week', () => {
+    const RIDE_COUNT = [{ sport_code: 'ride', count: 1 }];
     const card = async () => screen.findByRole('region', { name: 'Résumé de cette semaine' });
 
     it('shows the totals and a bar a day from the server, asked in the time zone of entry', async () => {
@@ -579,6 +587,39 @@ describe('ActivityList', () => {
       expect(within(summaryCard).getByText('0:00')).toBeInTheDocument();
       expect(within(summaryCard).getByText('0 km')).toBeInTheDocument();
       expect(within(summaryCard).getAllByText(/aucune activité/)).toHaveLength(7);
+      // No elevation gain this week: no figure for it.
+      expect(within(summaryCard).queryByText('de dénivelé')).not.toBeInTheDocument();
+    });
+
+    describe('elevation gain', () => {
+      afterEach(async () => {
+        await i18n.changeLanguage('fr');
+      });
+
+      it("shows the server's elevation gain of the week", async () => {
+        summarizing(
+          summary({ sessions: 1, distance: 31_500, elevation: 1250, sports: RIDE_COUNT }),
+        );
+        listing([run]);
+        renderList();
+        const summaryCard = await card();
+
+        expect(within(summaryCard).getByText('1 250 m')).toBeInTheDocument();
+        expect(within(summaryCard).getByText('de dénivelé')).toBeInTheDocument();
+      });
+
+      it('writes it in English', async () => {
+        await i18n.changeLanguage('en');
+        summarizing(
+          summary({ sessions: 1, distance: 31_500, elevation: 1250, sports: RIDE_COUNT }),
+        );
+        listing([run]);
+        renderList();
+        const summaryCard = await screen.findByRole('region', { name: 'Summary of this week' });
+
+        expect(within(summaryCard).getByText('1,250 m')).toBeInTheDocument();
+        expect(within(summaryCard).getByText('climbed')).toBeInTheDocument();
+      });
     });
 
     it('offers a retry when it fails, the list still shown', async () => {
@@ -697,6 +738,49 @@ describe('ActivityList', () => {
         ),
       );
       expect(totalsOf(week(/^Semaine du 2 nov/))).toHaveTextContent(/^1 séance · 0:4545 minutes$/);
+    });
+
+    describe('elevation gain', () => {
+      afterEach(async () => {
+        await i18n.changeLanguage('fr');
+      });
+
+      it("shows the server's elevation gain of a week, left out at 0", async () => {
+        weeksTotals(
+          weekOf('2026-11-16', 4, 9360, 26_000, 1250),
+          weekOf('2026-11-02', 1, 2730, 8200, 0),
+        );
+        listing([run, padel]);
+        renderList();
+        await item('Course');
+
+        await waitFor(() =>
+          expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(
+            '4 séances · 2:362 heures 36 minutes · 26 km · ↗ 1 250 m1 250 m de dénivelé',
+          ),
+        );
+        expect(within(week(/^Semaine dernière/)).getByText('↗')).toHaveAttribute(
+          'aria-hidden',
+          'true',
+        );
+        expect(totalsOf(week(/^Semaine du 2 nov/))).toHaveTextContent(
+          /^1 séance · 0:4545 minutes · 8,2 km$/,
+        );
+      });
+
+      it('writes it in English', async () => {
+        await i18n.changeLanguage('en');
+        weeksTotals(weekOf('2026-11-16', 4, 9360, 26_000, 1250));
+        listing([run]);
+        renderList();
+
+        const lastWeek = await screen.findByRole('region', { name: /^Last week/ });
+        await waitFor(() =>
+          expect(within(lastWeek).getByText(/^\d+ sessions?/)).toHaveTextContent(
+            '4 sessions · 2:362 hours 36 minutes · 26 km · ↗ 1,250 m1,250 m climbed',
+          ),
+        );
+      });
     });
 
     it('loads more weeks while a week shown has no totals yet', async () => {

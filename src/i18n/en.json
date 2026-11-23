@@ -183,6 +183,7 @@
     "duration": "Duration",
     "distance": "Distance",
     "elevation": "Elevation",
+    "climbed": "{{elevation}} climbed",
     "speed": "Speed",
     "pace": "Pace",
     "paceValue": "{{pace}} /km",
@@ -206,6 +207,7 @@
       "sessions_other": "sessions",
       "moving": "active",
       "covered": "covered",
+      "climbed": "climbed",
       "days": "Time of each day",
       "day": "{{day}}: {{duration}}",
       "dayEmpty": "{{day}}: no activity"

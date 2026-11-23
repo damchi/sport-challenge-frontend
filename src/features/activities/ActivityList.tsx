@@ -15,10 +15,11 @@ import { groupByWeek, weekKind, type ActivityWeek } from '../../domain/activityW
 import { localDate } from '../../domain/challengeWindow';
 import { weekDays, weekMonday } from '../../domain/format/activityDates';
 import { otherTimeZoneName } from '../../domain/format/challengeDates';
-import { formatKm } from '../../domain/format/distance';
+import { formatKm, formatMeters } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
 import type { Activity } from '../../api/hooks/useActivities';
 import { ActivityItem } from './ActivityItem';
+import { ElevationGain } from './ElevationGain';
 import { SportFilter } from './SportFilter';
 import { useActivityTimeZone } from './useActivityTimeZone';
 import { useSpokenDuration } from './useSpokenDuration';
@@ -195,8 +196,8 @@ function WeekList({
 
 /**
  * A week of activities: "This week", "Last week" or "Week of 9 Nov", its
- * days, the server's totals once loaded ("4 sessions · 2:36 · 26 km", the
- * distance left out at 0), then its activities in one card. The year shows
+ * days, the server's totals once loaded ("4 sessions · 2:36 · 26 km · ↗ 450 m",
+ * distance and elevation gain left out at 0), then its activities in one card. The year shows
  * when it is not the current one.
  */
 function WeekGroup({
@@ -240,6 +241,19 @@ function WeekGroup({
             <span aria-hidden="true">{formatDuration(totals.duration_seconds)}</span>
             <span className="sr-only">{spoken(totals.duration_seconds)}</span>
             {totals.distance_meters > 0 && ` · ${formatKm(totals.distance_meters / 1000, locale)}`}
+            {totals.elevation_gain_meters > 0 && (
+              <>
+                {' · '}
+                <span aria-hidden="true">
+                  <ElevationGain meters={totals.elevation_gain_meters} />
+                </span>
+                <span className="sr-only">
+                  {t('activities.climbed', {
+                    elevation: formatMeters(totals.elevation_gain_meters, locale),
+                  })}
+                </span>
+              </>
+            )}
           </p>
         )}
       </div>

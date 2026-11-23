@@ -3,14 +3,14 @@ import { useMyActivitySummary } from '../../api/hooks/useActivities';
 import { ErrorState } from '../../components/states/ErrorState';
 import { addToDate, localDate } from '../../domain/challengeWindow';
 import { weekDays, weekdayLetter, weekdayName } from '../../domain/format/activityDates';
-import { formatKm } from '../../domain/format/distance';
+import { formatKm, formatMeters } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
 import { useSpokenDuration } from './useSpokenDuration';
 
 /**
- * "This week · 23–29 Nov": the sessions, time and distance of the user's
- * current week, then a bar a day, Monday to Sunday, as high as its time
- * against the longest day (today in bold). All from the server, cut in
+ * "This week · 23–29 Nov": the sessions, time, distance and, when there is
+ * one, elevation gain of the user's current week, then a bar a day, Monday
+ * to Sunday, as high as its time against the longest day (today in bold). All from the server, cut in
  * `timeZone`. Nothing before the first activity.
  */
 export function WeekSummaryCard({ timeZone, now }: { timeZone: string; now: Date }) {
@@ -56,6 +56,16 @@ export function WeekSummaryCard({ timeZone, now }: { timeZone: string; now: Date
       spoken: undefined,
       label: t('activities.summary.covered'),
     },
+    // Left out for a week without elevation gain.
+    ...(week.elevation_gain_meters > 0
+      ? [
+          {
+            value: formatMeters(week.elevation_gain_meters, locale),
+            spoken: undefined,
+            label: t('activities.summary.climbed'),
+          },
+        ]
+      : []),
   ];
 
   return (
