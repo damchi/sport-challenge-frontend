@@ -38,6 +38,8 @@ type AdminUserPage = components['schemas']['AdminUserPage'];
 type AdminUserSearch = components['schemas']['AdminUserSearch'];
 type AdminUserChallengePage = components['schemas']['AdminUserChallengePage'];
 type AdminActivityPage = components['schemas']['AdminActivityPage'];
+type AdminAction = components['schemas']['AdminAction'];
+type AdminActionPage = components['schemas']['AdminActionPage'];
 type InvitationPreview = components['schemas']['InvitationPreview'];
 type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
 
@@ -492,6 +494,62 @@ export const mockAdminUsers: AdminUser[] = Array.from({ length: 24 }, (_, index)
   };
 });
 
+/**
+ * The journal, most recent first, enough for two pages: settings changed on
+ * the first challenge, then one change of each kind of target (one an hour
+ * before the other), the activity counting in two challenges.
+ */
+export const mockAdminActions: AdminAction[] = Array.from({ length: 24 }, (_, index) => {
+  const challenge = mockAdminChallenges[index % mockAdminChallenges.length]?.id ?? '';
+  const base = {
+    id: `50000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    admin: mockAdminUser(9),
+    created_at: new Date(Date.UTC(2026, 10, 20, 16 - index)).toISOString(),
+    challenge_ids: [challenge],
+    reason: `Correction ${index + 1}`,
+  };
+  switch (index % 4) {
+    case 1:
+      return {
+        ...base,
+        action: 'participant.exclude',
+        target_type: 'participant',
+        target_id: mockAdminUsers[1]?.id ?? '',
+        old_value: { status: 'active' },
+        new_value: { status: 'excluded' },
+      };
+    case 2:
+      return {
+        ...base,
+        action: 'activity.delete',
+        target_type: 'activity',
+        target_id: mockActivities[0]?.id ?? '',
+        challenge_ids: [challenge, mockAdminChallenges[1]?.id ?? ''],
+        old_value: { duration_seconds: 3600, sport_code: 'run' },
+        new_value: null,
+      };
+    case 3:
+      return {
+        ...base,
+        action: 'user.update',
+        target_type: 'user',
+        target_id: mockAdminUsers[4]?.id ?? '',
+        challenge_ids: [],
+        old_value: { pseudo: 'ami_4' },
+        new_value: { pseudo: 'ami_quatre' },
+      };
+    default:
+      return {
+        ...base,
+        action: 'challenge.update',
+        target_type: 'challenge',
+        target_id: challenge,
+        old_value: { title: 'Avant', registration_deadline: null },
+        new_value: { title: 'Après', registration_deadline: '2026-11-30T05:00:00Z' },
+      };
+  }
+});
+
 /** The answer of a 404 for an account. */
 const userNotFound = () => {
   const body: ApiErrorBody = { error: { code: 'user_not_found', message: 'User not found' } };
@@ -607,6 +665,22 @@ export const handlers = [
     }));
     return HttpResponse.json<AdminActivityPage>(
       mockPage(items, query.get('cursor'), Number(query.get('limit')) || null),
+    );
+  }),
+  // Most recent first, as the mocks are; the filters add up.
+  http.get('*/api/v1/admin/actions', ({ request }) => {
+    const query = new URL(request.url).searchParams;
+    const type = query.get('target_type');
+    const target = query.get('target_id');
+    const challenge = query.get('challenge_id');
+    const found = mockAdminActions.filter(
+      (action) =>
+        (!type || action.target_type === type) &&
+        (!target || action.target_id === target) &&
+        (!challenge || action.challenge_ids.includes(challenge)),
+    );
+    return HttpResponse.json<AdminActionPage>(
+      mockPage(found, query.get('cursor'), Number(query.get('limit')) || null),
     );
   }),
   // The cursor is the index of the next item; `mine` keeps the challenges

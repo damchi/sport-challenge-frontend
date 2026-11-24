@@ -1069,12 +1069,15 @@
         "title": "Dernières actions admin",
         "empty": "Aucune action admin sur ce défi.",
         "by": "{{date}} · {{name}}",
-        "reason": "Motif : {{reason}}"
+        "reason": "Motif : {{reason}}",
+        "journal": "Tout le journal du défi"
       }
     },
     "actions": {
       "challenge": {
-        "update": "Réglages modifiés"
+        "update": "Réglages modifiés",
+        "delete": "Défi supprimé",
+        "restore": "Défi restauré"
       },
       "creator": {
         "add": "Créateur ajouté",
@@ -1158,6 +1161,58 @@
         "elevation": "D+",
         "none": "—"
       }
+    },
+    "reason": {
+      "label": "Motif",
+      "hint": "De {{min}} à {{max}} caractères. Il est gardé dans le journal.",
+      "count": "{{count}} / {{max}}",
+      "cancel": "Annuler",
+      "short": "Le motif doit faire au moins {{min}} caractères.",
+      "long": "Le motif ne peut pas dépasser {{max}} caractères.",
+      "characters": "Le motif contient un caractère invisible. Retire-le.",
+      "serverInvalid": "Motif refusé : écris de {{min}} à {{max}} caractères, sans caractère invisible."
+    },
+    "journal": {
+      "listLabel": "Journal des actions admin",
+      "columns": {
+        "date": "Date",
+        "admin": "Admin",
+        "action": "Action",
+        "target": "Cible",
+        "reason": "Motif"
+      },
+      "targetType": {
+        "label": "Type de cible",
+        "all": "Toutes",
+        "challenge": "Défi",
+        "participant": "Participant",
+        "activity": "Activité",
+        "user": "Compte"
+      },
+      "target": {
+        "sheet": {
+          "challenge": "Fiche du défi",
+          "participant": "Fiche du compte",
+          "user": "Fiche du compte"
+        },
+        "journal": "Actions sur cette cible"
+      },
+      "oneTarget": {
+        "target": "Seules les actions sur une cible sont affichées.",
+        "challenge": "Seules les actions qui touchent un défi sont affichées.",
+        "clear": "Afficher toutes les cibles"
+      },
+      "values": {
+        "show": "Voir les valeurs",
+        "before": "Avant :",
+        "after": "Après :",
+        "none": "aucune"
+      },
+      "empty": {
+        "none": "Aucune action admin pour l'instant.",
+        "filtered": "Aucune action ne correspond à ces filtres."
+      },
+      "clearFilters": "Effacer les filtres"
     }
   }
 }

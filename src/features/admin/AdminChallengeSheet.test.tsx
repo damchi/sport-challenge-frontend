@@ -75,6 +75,10 @@ describe('AdminChallengeSheet', () => {
     const actions = part('Dernières actions admin');
     expect(actions.getByText('Participant réintégré')).toBeInTheDocument();
     expect(actions.getByText('Motif : Séance oubliée, vue ensemble')).toBeInTheDocument();
+    expect(actions.getByRole('link', { name: 'Tout le journal du défi' })).toHaveAttribute(
+      'href',
+      `/admin/journal?challenge_id=${first.id}`,
+    );
   });
 
   it('says a link was revoked, and when, and leaves deleted accounts unnamed', async () => {
@@ -126,6 +130,7 @@ describe('AdminChallengeSheet', () => {
     expect(await screen.findByText("Personne n'a été éliminé.")).toBeInTheDocument();
     expect(screen.getByText("Aucun lien d'invitation.")).toBeInTheDocument();
     expect(screen.getByText('Aucune action admin sur ce défi.')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Tout le journal du défi' })).not.toBeInTheDocument();
   });
 
   it('opens a deleted challenge, without the way to its closed page', async () => {

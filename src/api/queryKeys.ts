@@ -1,3 +1,4 @@
+import type { AdminActionFilters } from '../domain/adminActions';
 import type { AdminChallengeFilters } from '../domain/adminChallenges';
 
 // Query keys of the whole app, in one place. They are hierarchical: invalidating
@@ -72,5 +73,8 @@ export const queryKeys = {
       activities: (userId: string, size: string) =>
         ['admin', 'users', userId, 'activities', size] as const,
     },
+    // One cache per filters and page size; objects, never read as an id.
+    actions: (filters: AdminActionFilters, size: string) =>
+      ['admin', 'actions', filters, { size }] as const,
   },
 };

@@ -16,6 +16,9 @@ const PARTS = {
   ),
   users: lazy(() => import('../pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage }))),
   user: lazy(() => import('../pages/AdminUserPage').then((m) => ({ default: m.AdminUserPage }))),
+  journal: lazy(() =>
+    import('../pages/AdminJournalPage').then((m) => ({ default: m.AdminJournalPage })),
+  ),
 };
 
 /** A part of the admin section, under its navigation. */

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import type { AdminChallengeDetail } from '../../api/hooks/admin/useAdminChallenges';
 import { EmptyState } from '../../components/states/EmptyState';
 import { displayName } from '../../domain/displayName';
@@ -170,11 +171,16 @@ export function AdminChallengeInvitations({
   );
 }
 
-/** The last admin changes of the challenge, most recent first, with their reason. */
+/**
+ * The last admin changes of the challenge, most recent first, with their
+ * reason; the journal keeps them all.
+ */
 export function AdminChallengeActions({
+  challengeId,
   actions,
   at,
 }: {
+  challengeId: string;
   actions: AdminChallengeDetail['recent_actions'];
   at: At;
 }) {
@@ -204,6 +210,14 @@ export function AdminChallengeActions({
             </li>
           ))}
         </ul>
+      )}
+      {actions.length > 0 && (
+        <Link
+          to={`/admin/journal?challenge_id=${challengeId}`}
+          className="mt-3 inline-flex min-h-11 items-center text-accent underline underline-offset-4 hover-link"
+        >
+          {t('admin.challenges.actions.journal')}
+        </Link>
       )}
     </SheetPart>
   );
