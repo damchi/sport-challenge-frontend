@@ -93,7 +93,8 @@ describe('ActivityEdit', () => {
 
     expect(await screen.findByRole('radio', { name: 'Course' })).toBeChecked();
     expect(screen.getByLabelText('Date')).toHaveValue('2026-11-19');
-    expect(screen.getByLabelText('Heure')).toHaveValue('07:30');
+    expect(screen.getByRole('textbox', { name: 'Heure de début' })).toHaveValue('07');
+    expect(screen.getByRole('textbox', { name: 'Minutes de début' })).toHaveValue('30');
     expect(screen.getByRole('textbox', { name: 'Heures' })).toHaveValue('');
     expect(screen.getByRole('textbox', { name: 'Minutes' })).toHaveValue('45');
     expect(screen.getByRole('textbox', { name: 'Secondes' })).toHaveValue('30');

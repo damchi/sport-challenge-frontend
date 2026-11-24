@@ -62,11 +62,12 @@ test('a user records an activity with the keyboard only', async ({ page, isMobil
   // The order of the date's parts (day, month, year) depends on the system:
   // the value is set directly, the field is still left with Tab.
   await page.getByLabel('Date', { exact: true }).fill('2026-11-19');
-  expect(await tabTo(page, 'Heure')).toEqual(['Date', 'Heure']);
-  // The time is typed on 24 hours.
-  await page.keyboard.type('7h30');
+  expect(await tabTo(page, 'Heure de début')).toEqual(['Date', 'Heure de début']);
+  // The time is typed on 24 hours: an hour, then its minutes.
+  await page.keyboard.type('7');
+  expect(await tabTo(page, 'Minutes de début')).toEqual(['Minutes de début']);
+  await page.keyboard.type('30');
   expect(await tabTo(page, 'Minutes')).toEqual(['Heures', 'Minutes']);
-  await expect(page.getByLabel('Heure', { exact: true })).toHaveValue('07:30');
   await page.keyboard.type('45');
   expect(await tabTo(page, 'Distance en kilomètres')).toEqual([
     'Secondes',

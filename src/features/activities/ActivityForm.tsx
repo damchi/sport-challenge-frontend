@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState, type FocusEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -13,7 +13,6 @@ import { timeZoneName } from '../../domain/format/challengeDates';
 import {
   activityCreateSchema,
   activityFormFieldOf,
-  clockTime,
   takesElevation,
   type ActivityCreateInput,
   type ActivityCreateValues,
@@ -27,6 +26,16 @@ import { ActivitySummary } from './ActivitySummary';
 import { useActivityFormData } from './useActivityFormData';
 
 const DURATION_PARTS = ['hours', 'minutes', 'seconds'] as const;
+// The start's time of day: an hour and minutes, on 24 hours.
+const CLOCK_PARTS = ['start_hour', 'start_minute'] as const;
+const CLOCK_LABELS = {
+  start_hour: 'activityForm.fields.startedAt.hour',
+  start_minute: 'activityForm.fields.startedAt.minute',
+} as const;
+const CLOCK_UNITS = {
+  start_hour: 'activityForm.fields.duration.unitHours',
+  start_minute: 'activityForm.fields.duration.unitMinutes',
+} as const;
 const DURATION_UNITS = {
   hours: 'activityForm.fields.duration.unitHours',
   minutes: 'activityForm.fields.duration.unitMinutes',
@@ -49,7 +58,8 @@ const EMPTY: ActivityCreateInput = {
   sport_code: '',
   sport_label: '',
   start_date: '',
-  start_time: '',
+  start_hour: '',
+  start_minute: '',
   hours: '',
   minutes: '',
   seconds: '',
@@ -309,34 +319,48 @@ export function ActivityFormFields({
                   aria-invalid={startError ? true : undefined}
                   aria-describedby={describedBy('start', startError)}
                   className={`${inputClass} h-13 w-full`}
-                  {...register('start_date', { deps: ['start_time'] })}
+                  {...register('start_date', { deps: [...CLOCK_PARTS] })}
                 />
               </div>
-              <div className="min-w-36 flex-1">
-                <label htmlFor="start_time" className="block font-semibold">
+              {/* Wider than the date: on a phone it goes under it, and it
+                  shrinks to the screen when the text is enlarged. */}
+              <div
+                role="group"
+                aria-labelledby="start_clock-label"
+                className="min-w-0 grow basis-52"
+              >
+                <span id="start_clock-label" className="block font-semibold">
                   {t('activityForm.fields.startedAt.time')}
-                </label>
-                {/* Typed on 24 hours: a native time field follows the
-                    browser's language (AM/PM in English). */}
-                <input
-                  id="start_time"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder={t('activityForm.fields.startedAt.timePlaceholder')}
-                  aria-invalid={startError ? true : undefined}
-                  aria-describedby={describedBy('start', startError)}
-                  className={`${inputClass} h-13 w-full`}
-                  {...register('start_time', {
-                    deps: ['start_date'],
-                    // Written HH:MM once left: "7h30" becomes "07:30".
-                    onBlur: (event: FocusEvent<HTMLInputElement>) => {
-                      const clock = clockTime(event.target.value);
-                      if (clock && clock !== event.target.value) {
-                        form.setValue('start_time', clock, { shouldValidate: true });
-                      }
-                    },
-                  })}
-                />
+                </span>
+                {/* An hour and minutes, on 24 hours: "8" is enough. A native
+                    time field follows the browser's language (AM/PM in
+                    English) and wants the minutes typed. Side by side, one
+                    under the other when the text is enlarged. */}
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {CLOCK_PARTS.map((part) => (
+                    <div key={part} className="relative min-w-24 flex-1">
+                      <label htmlFor={part} className="sr-only">
+                        {t(CLOCK_LABELS[part])}
+                      </label>
+                      <input
+                        id={part}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        maxLength={2}
+                        aria-invalid={startError ? true : undefined}
+                        aria-describedby={describedBy('start', startError)}
+                        className={`${inputClass} mt-0! h-13 w-full pr-14`}
+                        {...register(part, {
+                          // One error for the day and the time: each change checks it again.
+                          deps: ['start_date', ...CLOCK_PARTS.filter((other) => other !== part)],
+                        })}
+                      />
+                      <span aria-hidden="true" className={unitClass}>
+                        {t(CLOCK_UNITS[part])}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             <p id="start-hint" className="mt-2 text-sm text-muted">

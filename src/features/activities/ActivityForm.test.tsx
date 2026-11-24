@@ -115,7 +115,8 @@ function type(field: HTMLElement, value: string) {
 }
 
 const startDate = () => screen.getByLabelText('Date');
-const startTime = () => screen.getByLabelText('Heure');
+const startHour = () => screen.getByRole('textbox', { name: 'Heure de début' });
+const startMinute = () => screen.getByRole('textbox', { name: 'Minutes de début' });
 const hours = () => screen.getByRole('textbox', { name: 'Heures' });
 const minutes = () => screen.getByRole('textbox', { name: 'Minutes' });
 const distance = () => screen.queryByRole('textbox', { name: 'Distance en kilomètres' });
@@ -132,10 +133,12 @@ async function pick(name: string) {
   fireEvent.click(await screen.findByRole('radio', { name }));
 }
 
-/** Types the start's day and time. */
+/** Types the start's day and its time, given as HH:MM. */
 function typeStart(date: string, time: string) {
+  const [hour = '', minute = ''] = time.split(':');
   type(startDate(), date);
-  type(startTime(), time);
+  type(startHour(), hour);
+  type(startMinute(), minute);
 }
 
 /** A run of 45 min and 8,2 km this morning, unless said otherwise. */
@@ -178,10 +181,11 @@ describe('ActivityForm', () => {
     expect(screen.queryByRole('textbox', { name: /vitesse|allure/i })).not.toBeInTheDocument();
     expect(startDate()).toHaveAttribute('type', 'date');
     expect(startDate()).toHaveAttribute('max', '2026-11-20');
-    // On 24 hours whatever the browser's language: not a native time field.
-    expect(startTime()).not.toHaveAttribute('type', 'time');
-    type(startTime(), '7h30');
-    expect(startTime()).toHaveValue('07:30');
+    // On 24 hours whatever the browser's language: an hour and minutes, not
+    // a native time field.
+    expect(screen.getByRole('group', { name: 'Heure' })).toContainElement(startHour());
+    expect(startHour()).toHaveAttribute('inputmode', 'numeric');
+    expect(startMinute()).toHaveAttribute('inputmode', 'numeric');
   });
 
   it('sums up the entry as it goes, without pace nor speed', async () => {
@@ -450,6 +454,35 @@ describe('ActivityForm', () => {
       started_at: STARTED_AT,
       duration_seconds: 3600,
     });
+  });
+
+  it('takes the hour alone, its minutes left empty', async () => {
+    const sent = recordWith(() => recorded());
+    renderForm();
+    await pick('Yoga');
+    type(startDate(), '2026-11-20');
+    type(startHour(), '8');
+    type(hours(), '1');
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    // 8:00 in Montréal.
+    expect(sent[0]?.body).toMatchObject({ started_at: '2026-11-20T13:00:00.000Z' });
+  });
+
+  it('says how to type an hour it cannot read', async () => {
+    renderForm();
+    await pick('Yoga');
+    type(startDate(), '2026-11-20');
+    type(startHour(), '25');
+    fireEvent.click(save());
+
+    expect(
+      await screen.findByText(
+        "Indique l'heure sur 24 h (de 0 à 23) et les minutes de 0 à 59, par exemple 8 h ou 18 h 45.",
+      ),
+    ).toBeInTheDocument();
+    expect(startHour()).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('sends a CrossFit session without distance', async () => {
@@ -723,7 +756,8 @@ describe('ActivityForm', () => {
 
     expect(await screen.findByText(/Certaines informations sont invalides/)).toBeInTheDocument();
     expect(startDate()).toHaveAttribute('aria-invalid', 'true');
-    expect(startTime()).toHaveAttribute('aria-invalid', 'true');
+    expect(startHour()).toHaveAttribute('aria-invalid', 'true');
+    expect(startMinute()).toHaveAttribute('aria-invalid', 'true');
     expect(hours()).toHaveAttribute('aria-invalid', 'true');
     // The first refused field takes the focus.
     await waitFor(() => expect(startDate()).toHaveFocus());

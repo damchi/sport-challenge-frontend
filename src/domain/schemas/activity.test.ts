@@ -27,7 +27,8 @@ const valid: ActivityCreateInput = {
   sport_code: 'run',
   sport_label: '',
   start_date: '2026-11-20',
-  start_time: '07:30',
+  start_hour: '07',
+  start_minute: '30',
   hours: '1',
   minutes: '02',
   seconds: '3',
@@ -109,34 +110,47 @@ describe('activityCreateSchema', () => {
     });
 
     it.each([
-      ['', '07:30'],
-      ['2026-11-20', ''],
-      ['yesterday', '07:30'],
-    ])('wants a date and a time, not %j at %j', (date, time) => {
+      ['', '7', '30'],
+      ['2026-11-20', '', ''],
+      ['2026-11-20', ' ', '30'],
+      ['yesterday', '7', '30'],
+    ])('wants a date and an hour, not %j at %j h %j', (date, hour, minute) => {
       // The one error goes on the day.
-      expect(errorsOf({ start_date: date, start_time: time })).toEqual({
+      expect(errorsOf({ start_date: date, start_hour: hour, start_minute: minute })).toEqual({
         start_date: 'activityForm.fields.startedAt.required',
       });
     });
 
-    it.each(['25:00', '7:60', 'noon', '7 30 am'])('wants a time on 24 hours, not %j', (time) => {
-      expect(errorsOf({ start_time: time })).toEqual({
+    it.each([
+      ['24', ''],
+      ['7', '60'],
+      ['7h', ''],
+      ['', 'ab'],
+      ['123', ''],
+      ['7', '300'],
+    ])('wants an hour and minutes on 24 hours, not %j h %j', (hour, minute) => {
+      expect(errorsOf({ start_hour: hour, start_minute: minute })).toEqual({
         start_date: 'activityForm.fields.startedAt.timeFormat',
       });
     });
 
-    it('takes the time as typed on 24 hours', () => {
-      expect(schema.parse({ ...valid, start_time: '7h30' }).started_at).toBe(STARTED_AT);
+    it('takes the hour alone, with or without its zero', () => {
+      const at8 = '2026-11-20T13:00:00.000Z';
+      expect(schema.parse({ ...valid, start_hour: '8', start_minute: '' }).started_at).toBe(at8);
+      expect(schema.parse({ ...valid, start_hour: '08', start_minute: '' }).started_at).toBe(at8);
+      expect(schema.parse({ ...valid, start_hour: ' 7 ', start_minute: '30' }).started_at).toBe(
+        STARTED_AT,
+      );
     });
 
     it('is never in the future nor before 2000', () => {
-      expect(errorsOf({ start_time: '12:01' }).start_date).toBe(
+      expect(errorsOf({ start_hour: '12', start_minute: '01' }).start_date).toBe(
         'activityForm.fields.startedAt.range',
       );
       // 2000-01-01 is in UTC: a day earlier is before it in any time zone.
-      expect(errorsOf({ start_date: '1999-12-30', start_time: '23:59' }).start_date).toBe(
-        'activityForm.fields.startedAt.range',
-      );
+      expect(
+        errorsOf({ start_date: '1999-12-30', start_hour: '23', start_minute: '59' }).start_date,
+      ).toBe('activityForm.fields.startedAt.range');
     });
 
     it('reads the current instant at each check', () => {
@@ -171,10 +185,13 @@ describe('activityCreateSchema', () => {
 
     it('ends by now, give or take 5 minutes', () => {
       // 11:00 plus 1 h 5 min ends at 12:05: still accepted.
-      expect(errorsOf({ start_time: '11:00', hours: '1', minutes: '5', seconds: '' })).toEqual({});
-      expect(errorsOf({ start_time: '11:00', hours: '1', minutes: '5', seconds: '1' }).hours).toBe(
-        'activityForm.fields.duration.future',
-      );
+      expect(
+        errorsOf({ start_hour: '11', start_minute: '', hours: '1', minutes: '5', seconds: '' }),
+      ).toEqual({});
+      expect(
+        errorsOf({ start_hour: '11', start_minute: '', hours: '1', minutes: '5', seconds: '1' })
+          .hours,
+      ).toBe('activityForm.fields.duration.future');
     });
   });
 
@@ -256,26 +273,28 @@ describe('takesElevation', () => {
 
 describe('clockTime', () => {
   it.each([
-    ['07:30', '07:30'],
-    ['7:30', '07:30'],
-    ['7h30', '07:30'],
-    ['7 h 30', '07:30'],
-    ['7.30', '07:30'],
-    ['0730', '07:30'],
-    ['730', '07:30'],
-    ['18h', '18:00'],
-    [' 23:59 ', '23:59'],
-    ['0:00', '00:00'],
-  ])('writes %j as %j', (typed, written) => {
-    expect(clockTime(typed)).toBe(written);
+    ['8', '', '08:00'],
+    ['08', '', '08:00'],
+    ['7', '30', '07:30'],
+    ['7', '3', '07:03'],
+    [' 23 ', ' 59 ', '23:59'],
+    ['0', '0', '00:00'],
+  ])('writes %j h %j as %j', (hour, minute, written) => {
+    expect(clockTime(hour, minute)).toBe(written);
   });
 
-  it.each(['', '24:00', '7:60', '7:3', '7:30 PM', 'noon', '12345'])(
-    'reads no time in %j',
-    (typed) => {
-      expect(clockTime(typed)).toBeUndefined();
-    },
-  );
+  it.each([
+    ['', ''],
+    ['', '30'],
+    ['24', ''],
+    ['7', '60'],
+    ['7h', ''],
+    ['-1', ''],
+    ['123', ''],
+    ['7', '1.5'],
+  ])('reads no time in %j h %j', (hour, minute) => {
+    expect(clockTime(hour, minute)).toBeUndefined();
+  });
 });
 
 describe('cleanSportLabel', () => {
@@ -338,7 +357,8 @@ describe('activityFormValues', () => {
       sport_code: 'other',
       sport_label: 'Padel',
       start_date: '2026-11-20',
-      start_time: '07:30',
+      start_hour: '07',
+      start_minute: '30',
       hours: '1',
       minutes: '',
       seconds: '',
@@ -375,7 +395,8 @@ describe('activityDraft', () => {
       activityDraft(
         {
           ...valid,
-          start_time: '',
+          start_hour: '',
+          start_minute: '',
           hours: '',
           minutes: '0',
           seconds: '',
