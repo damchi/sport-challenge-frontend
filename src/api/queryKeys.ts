@@ -39,6 +39,11 @@ export const queryKeys = {
     // not a whole Leaderboard: never read them by the leaderboard's prefix.
     leaderboardCategory: (challengeId: string, category: string, size: string) =>
       ['challenges', challengeId, 'leaderboard', category, { size }] as const,
+    // Where the grand prix points of a participant come from, under the
+    // leaderboard: it reloads with it, so that both always add up. Not a
+    // category either: never read it by the leaderboard's prefix.
+    participantPoints: (challengeId: string, userId: string) =>
+      ['challenges', challengeId, 'leaderboard', 'breakdown', userId] as const,
     // Under the challenge: it reloads with the challenges once an activity changes.
     participantActivities: (challengeId: string, userId: string, size: string) =>
       ['challenges', challengeId, 'participants', userId, 'activities', size] as const,

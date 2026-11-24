@@ -877,6 +877,31 @@
     },
     "elevation": "{{elevation}} D+"
   },
+  "sheet": {
+    "close": "Fermer"
+  },
+  "pointsBreakdown": {
+    "title": "Points de {{name}}",
+    "titleMine": "Tes points",
+    "acquired_one": "{{count}} pt acquis",
+    "acquired_many": "{{count}} pts acquis",
+    "acquired_other": "{{count}} pts acquis",
+    "rule": "Chaque semaine, un classement par critère : les premiers marquent des points. Les points d'une semaine sont provisoires jusqu'à 7 h, heure du défi, le premier jour de la semaine suivante.",
+    "frozen": "Résultats définitifs : ces points ne bougeront plus.",
+    "abandoned": "Abandon : seuls comptent les points acquis avant l'abandon.",
+    "zone": "Semaines à l'heure du défi : {{zone}}.",
+    "provisionalWeeks": "Semaines provisoires",
+    "acquiredWeeks": "Semaines acquises",
+    "week": "Semaine {{week}}",
+    "weekDates": "{{start}} – {{end}}",
+    "provisionalPoints_one": "{{count}} pt provisoire",
+    "provisionalPoints_many": "{{count}} pts provisoires",
+    "provisionalPoints_other": "{{count}} pts provisoires",
+    "rank": "{{rank}} de la semaine",
+    "unranked": "Non classé",
+    "empty": "Aucune semaine à détailler pour l'instant.",
+    "activities": "Voir les activités"
+  },
   "standings": {
     "title": "Où tu en es",
     "time": "tous sports confondus",

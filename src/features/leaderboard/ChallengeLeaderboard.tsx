@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router';
 import {
@@ -24,6 +25,7 @@ import { useSportName } from '../challenges/create/useSportName';
 import { CATEGORY_EXPLANATIONS, useCategoryName } from '../challenges/detail/categoryNames';
 import { EliminationContext } from './EliminationProgress';
 import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
+import { PointsBreakdownSheet, type PointsParticipant } from './PointsBreakdown';
 import { hasStandings, myLines, shownCategory } from './shownCategory';
 
 const SEGMENT =
@@ -119,6 +121,8 @@ export function ChallengeLeaderboard() {
       </p>
 
       <CategoryLeaderboard
+        // Its own state (the participant detailed) belongs to one category.
+        key={category.type}
         challenge={challenge.data}
         type={category.type}
         myId={me.data?.id}
@@ -179,11 +183,23 @@ function CategoryLeaderboard({
   // noted once its page is (the rank itself is always the server's).
   const ties = sharedRanks([...podium, ...rest].map((entry) => entry.rank));
   const linked = canSeeParticipantActivities(challenge.my_role);
-  const rowProps = (userId: string) => ({
-    type,
-    me: userId === myId,
-    href: linked ? `/challenges/${challenge.id}/participants/${userId}` : undefined,
-  });
+  // Grand prix: an entry opens where its points come from (the activities
+  // are reached from there); the other categories link to the activities.
+  const [detailed, setDetailed] = useState<PointsParticipant | null>(null);
+  const activitiesOf = (userId: string) =>
+    linked ? `/challenges/${challenge.id}/participants/${userId}` : undefined;
+  const rowProps = (entry: LeaderboardEntry) => {
+    const userId = entry.user.id;
+    const me = userId === myId;
+    const href = activitiesOf(userId);
+    if (type !== 'points') return { type, me, href };
+    return {
+      type,
+      me,
+      href: undefined,
+      onOpen: (name: string) => setDetailed({ userId, name, me, href }),
+    };
+  };
   const locale = i18n.resolvedLanguage ?? 'fr';
 
   return (
@@ -239,7 +255,7 @@ function CategoryLeaderboard({
                       entry={entry}
                       referenceSport={challenge.reference_sport}
                       tied={ties.has(entry.rank ?? 0)}
-                      {...rowProps(entry.user.id)}
+                      {...rowProps(entry)}
                     />
                   </li>
                 ))}
@@ -254,7 +270,7 @@ function CategoryLeaderboard({
               </h3>
               <ol className="mt-2 grid grid-cols-1 gap-2">
                 {rest.map((entry) => {
-                  const props = rowProps(entry.user.id);
+                  const props = rowProps(entry);
                   return (
                     <li
                       key={entry.user.id}
@@ -286,7 +302,7 @@ function CategoryLeaderboard({
               <ul className="mt-2 grid grid-cols-1 gap-2">
                 {out.map((entry) => (
                   <li key={entry.user.id} className={OFFSCREEN_ROW}>
-                    <OutRow entry={entry} {...rowProps(entry.user.id)} />
+                    <OutRow entry={entry} {...rowProps(entry)} />
                   </li>
                 ))}
               </ul>
@@ -301,6 +317,14 @@ function CategoryLeaderboard({
             auto={size === 'all'}
             onLoadMore={() => void ranking.fetchNextPage()}
           />
+
+          {type === 'points' && (
+            <PointsBreakdownSheet
+              challenge={challenge}
+              participant={detailed}
+              onClose={() => setDetailed(null)}
+            />
+          )}
         </>
       )}
     </>

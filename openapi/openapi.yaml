@@ -951,6 +951,67 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+  /api/v1/challenges/{challengeId}/participants/{userId}/points:
+    get:
+      operationId: getParticipantPoints
+      summary: Get where the points of a participant come from
+      description: |
+        The points of participant `userId` in the `points` category, week by
+        week and criterion by criterion (README §2.3), computed as the
+        leaderboard at `computed_at`: the points of the locked weeks sum to
+        the `value` of the leaderboard, those of the weeks started but not
+        locked yet to its `provisional_points`. Every week started, in
+        order; for a participant who abandoned (or was excluded), only the
+        weeks locked by the time they left, as in the leaderboard. Once the
+        results are frozen, the breakdown is the frozen one, every week
+        locked.
+
+        Visible to whoever sees the leaderboard of the challenge, for any of
+        its participants; the `value` of each criterion only to those who see
+        the activities of the participants (its participants, abandoned ones
+        included, its creators and the admins), null for the others (a
+        non-participant of a public challenge, an invited user). A challenge the user may not see answers 404
+        `challenge_not_found`; a challenge without a `points` category, a
+        `userId` who never joined it or whose account was deleted, 404
+        `not_found`.
+      tags: [challenges]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The points of the participant.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PointsBreakdown"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: |
+            No such challenge, or one the user may not see
+            (`challenge_not_found`); no `points` category, or no such
+            participant (`not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
   /api/v1/challenges/{challengeId}/activities:
     get:
       operationId: listChallengeActivities
@@ -1501,6 +1562,70 @@ paths:
           $ref: "#/components/responses/RateLimited"
         "500":
           $ref: "#/components/responses/InternalError"
+    patch:
+      operationId: updateAdminChallenge
+      summary: Change any setting of a challenge, for an admin
+      description: |
+        Admin only (404 `not_found` otherwise). Changes the settings of a
+        challenge, those frozen at creation included, in progress or finished
+        (README §2.12): every field of the creation, checked by the same
+        rules, but the first day, which may be in the past (at most a year
+        ahead, as at creation). A field left out keeps its value. The
+        cumulative time is always there: `categories` replaces the optional
+        categories, those it leaves out being removed. A new reference sport
+        starts again from the suggested factors brought back to it; otherwise
+        the factors of the challenge stay. `distance_factors` then replaces
+        those it names. A new first day or time zone moves the expiry of the
+        invitation links not revoked to the new end of week 1.
+        The challenge is then judged again as the worker would (its
+        eliminations and frozen results erased, its locked weeks judged again,
+        its results frozen again once its last week is locked), the change
+        recorded in the journal with its `reason` and the challenge marked as
+        corrected, all in one transaction. With `dry_run`, everything is
+        rolled back and the answer tells what the change would do. An unknown
+        or deleted challenge answers 404 `challenge_not_found`. The body is
+        optional in the contract only so that a non-admin always gets 404
+        first: without one, the missing `reason` answers 400
+        `validation_failed`.
+      tags: [admin]
+      parameters:
+        - name: challengeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminChallengeUpdate"
+      responses:
+        "200":
+          description: What the change did, or would do with `dry_run`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCorrection"
+        "400":
+          $ref: "#/components/responses/ValidationFailed"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: |
+            The account has no `admin` permission (`not_found`), or no such
+            challenge, or a deleted one (`challenge_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+        "503":
+          $ref: "#/components/responses/Busy"
   /api/v1/admin/users:
     get:
       operationId: listAdminUsers
@@ -1825,6 +1950,15 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    Busy:
+      description: |
+        The change waited too long for the activity writes and the runs of
+        the worker in progress (`busy`): nothing was written. Try again in a
+        moment.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     InternalError:
       description: |
         Technical failure (`internal_error`), logged with its `request_id`;
@@ -1912,6 +2046,7 @@ components:
         - rate_limited
         - not_found
         - validation_failed
+        - busy
         - internal_error
     AdminStats:
       type: object
@@ -2231,6 +2366,150 @@ components:
           type: integer
           minimum: 2
           description: The week the participant was eliminated at.
+        distance_meters:
+          type: integer
+          minimum: 0
+          description: The distance of the reference sport they did that week.
+        required_meters:
+          type: integer
+          minimum: 0
+          description: The minimum they had to reach.
+    AdminChallengeUpdate:
+      type: object
+      required: [reason]
+      additionalProperties: false
+      description: |
+        The fields to change, as at creation (`ChallengeCreate`); a field
+        left out keeps its value, `null` is refused.
+      properties:
+        reason:
+          type: string
+          description: |
+            Why the admin makes the change, kept in the journal: 3 to 500
+            characters once surrounding spaces are removed, 3 of them
+            visible; no control character but line breaks and tabs.
+        dry_run:
+          type: boolean
+          description: Preview the change, writing nothing. `false` when absent.
+        title:
+          type: string
+          description: As at creation.
+        description:
+          type: string
+          maxLength: 2000
+          description: As at creation; an empty string removes it.
+        visibility:
+          type: string
+          enum: [public, private]
+        members_can_invite:
+          type: boolean
+        timezone:
+          type: string
+          description: |
+            IANA time zone; the first local day stays the same day in it
+            unless `start_date` is given.
+          example: America/Toronto
+        start_date:
+          type: string
+          format: date
+          description: First local day, in the past or at most a year ahead in `timezone`.
+          example: "2026-12-07"
+        weeks:
+          type: integer
+          minimum: 2
+          maximum: 52
+          description: Duration in whole weeks.
+        categories:
+          description: |
+            Replaces the optional categories as a whole, with their settings:
+            a setting left out takes its default, as at creation (the
+            `min_session_minutes` of the points goes back to 20).
+          allOf:
+            - $ref: "#/components/schemas/CategoriesCreate"
+        reference_sport:
+          type: string
+          description: As at creation; a new one starts again from the suggested factors.
+          pattern: "^[a-z][a-z0-9_]{0,31}$"
+          example: run
+        distance_factors:
+          type: object
+          description: |
+            Factors that replace those of the challenge, by sport code, with
+            the rules of the creation: distance sports only, 0.1 to 2, two
+            decimals at most, the reference sport refused; only with the
+            cumulative distance or the `longest_distance` criterion.
+          additionalProperties:
+            type: number
+            format: double
+            minimum: 0.1
+            maximum: 2
+          example:
+            ride: 0.25
+    AdminCorrection:
+      type: object
+      required: [dry_run, challenges]
+      additionalProperties: false
+      properties:
+        dry_run:
+          type: boolean
+          description: Whether this was a preview, nothing written.
+        challenges:
+          type: array
+          description: Every challenge the change touches, judged again.
+          items:
+            $ref: "#/components/schemas/AdminChallengePreview"
+    AdminChallengePreview:
+      type: object
+      required: [challenge_id, before, after, eliminations]
+      additionalProperties: false
+      description: What a change does to a challenge.
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+        before:
+          description: The rankings before the change, whole (no `limit`).
+          allOf:
+            - $ref: "#/components/schemas/Leaderboard"
+        after:
+          description: The rankings after the change and the new judgement, whole.
+          allOf:
+            - $ref: "#/components/schemas/Leaderboard"
+        eliminations:
+          type: array
+          description: |
+            The participants whose elimination the change gives, removes or
+            moves to another week or distance.
+          items:
+            $ref: "#/components/schemas/AdminEliminationChange"
+    AdminEliminationChange:
+      type: object
+      required: [user, before, after]
+      additionalProperties: false
+      properties:
+        user:
+          $ref: "#/components/schemas/AdminUserRef"
+        before:
+          description: The elimination before the change; null when not eliminated.
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/AdminEliminationJudgement"
+        after:
+          description: The elimination after the change; null when not eliminated.
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/AdminEliminationJudgement"
+    AdminEliminationJudgement:
+      type: object
+      required: [week_number, distance_meters, required_meters]
+      additionalProperties: false
+      properties:
+        week_number:
+          type: integer
+          minimum: 2
+          description: The week the participant is eliminated at.
         distance_meters:
           type: integer
           minimum: 0
@@ -3078,6 +3357,103 @@ components:
           type: string
           nullable: true
           description: The cursor of the next page of the category; null at the end, and without `limit`.
+    PointsBreakdown:
+      type: object
+      required: [user_id, computed_at, abandoned, frozen, acquired_points, provisional_points, weeks]
+      additionalProperties: false
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        computed_at:
+          type: string
+          format: date-time
+          description: The instant the points were computed at (that of the frozen results once frozen).
+        abandoned:
+          type: boolean
+          description: |
+            The participant abandoned or was excluded; the leaderboard shows
+            them without rank nor value.
+        frozen:
+          type: boolean
+          description: The results of the challenge are frozen; the breakdown is theirs.
+        acquired_points:
+          type: integer
+          minimum: 0
+          description: The points of the locked weeks; the `value` of the leaderboard unless abandoned.
+        provisional_points:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: |
+            The points of the weeks started but not locked yet, the
+            `provisional_points` of the leaderboard; null once every started
+            week is locked, for a participant who abandoned, and when frozen.
+        weeks:
+          type: array
+          description: The weeks started, in order (see the operation).
+          items:
+            $ref: "#/components/schemas/PointsWeek"
+    PointsWeek:
+      type: object
+      required: [number, starts_at, ends_at, locked, points, criteria]
+      additionalProperties: false
+      properties:
+        number:
+          type: integer
+          minimum: 1
+        starts_at:
+          type: string
+          format: date-time
+          description: First instant of the week, in the time zone of the challenge (sent in UTC).
+        ends_at:
+          type: string
+          format: date-time
+          description: First instant after the week.
+        locked:
+          type: boolean
+          description: |
+            The week is locked (7 am, local time, on the first day of the next
+            week): its points are acquired.
+        points:
+          type: integer
+          minimum: 0
+          description: The points of the week, the sum of its criteria.
+        criteria:
+          type: array
+          description: Each criterion of the challenge, in its order.
+          items:
+            $ref: "#/components/schemas/PointsCriterion"
+    PointsCriterion:
+      type: object
+      required: [criterion, rank, value, points]
+      additionalProperties: false
+      properties:
+        criterion:
+          type: string
+          enum: [longest_duration, longest_distance, session_count, weekly_elevation]
+        rank:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: |
+            The rank in the weekly ranking of the criterion, equal values
+            sharing it (1, 1, 3); null for a value of 0, which does not score.
+        value:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: |
+            Seconds (`longest_duration`), equivalent meters
+            (`longest_distance`), sessions (`session_count`) or meters of
+            elevation gain (`weekly_elevation`). Null for a reader who may
+            not see the activities of the participants (not a participant,
+            abandoned ones included, a creator nor an admin: README §5.7);
+            the rank and the points stay.
+        points:
+          type: integer
+          minimum: 0
+          description: The points of the scale for the rank (top 5 or top 10); 0 out of it.
     LeaderboardEntry:
       type: object
       required: [rank, user, value, abandoned, elimination, provisional_points]

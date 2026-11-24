@@ -17,6 +17,9 @@ export type Leaderboard = components['schemas']['Leaderboard'];
 export type LeaderboardEntry = components['schemas']['LeaderboardEntry'];
 export type CategoryRanking = components['schemas']['CategoryRanking'];
 export type CategoryType = CategoryRanking['type'];
+export type PointsBreakdown = components['schemas']['PointsBreakdown'];
+export type PointsWeek = components['schemas']['PointsWeek'];
+export type PointsCriterion = components['schemas']['PointsCriterion'];
 
 /**
  * Challenges of a list, page by page (cursor) of `size` (each size cached on
@@ -106,6 +109,29 @@ export function useLeaderboard(challengeId: string) {
         signal,
       });
       if (!data) throw new Error('Empty leaderboard response');
+      return data;
+    },
+  });
+}
+
+/**
+ * Where the grand prix points of a participant come from, week by week and
+ * criterion by criterion, as the server computes them with the leaderboard
+ * (the frozen ones once the results are final). Nothing is read without a
+ * participant (`userId` null).
+ */
+export function useParticipantPoints(challengeId: string, userId: string | null) {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.challenges.participantPoints(challengeId, userId ?? ''),
+    enabled: userId !== null,
+    staleTime: staleTimes.leaderboard,
+    queryFn: async ({ signal }) => {
+      const { data } = await client.GET(
+        '/api/v1/challenges/{challengeId}/participants/{userId}/points',
+        { params: { path: { challengeId, userId: userId ?? '' } }, signal },
+      );
+      if (!data) throw new Error('Empty points breakdown');
       return data;
     },
   });

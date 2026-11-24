@@ -495,6 +495,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/challenges/{challengeId}/participants/{userId}/points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get where the points of a participant come from
+         * @description The points of participant `userId` in the `points` category, week by
+         *     week and criterion by criterion (README §2.3), computed as the
+         *     leaderboard at `computed_at`: the points of the locked weeks sum to
+         *     the `value` of the leaderboard, those of the weeks started but not
+         *     locked yet to its `provisional_points`. Every week started, in
+         *     order; for a participant who abandoned (or was excluded), only the
+         *     weeks locked by the time they left, as in the leaderboard. Once the
+         *     results are frozen, the breakdown is the frozen one, every week
+         *     locked.
+         *
+         *     Visible to whoever sees the leaderboard of the challenge, for any of
+         *     its participants; the `value` of each criterion only to those who see
+         *     the activities of the participants (its participants, abandoned ones
+         *     included, its creators and the admins), null for the others (a
+         *     non-participant of a public challenge, an invited user). A challenge the user may not see answers 404
+         *     `challenge_not_found`; a challenge without a `points` category, a
+         *     `userId` who never joined it or whose account was deleted, 404
+         *     `not_found`.
+         */
+        get: operations["getParticipantPoints"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/challenges/{challengeId}/activities": {
         parameters: {
             query?: never;
@@ -786,7 +823,31 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Change any setting of a challenge, for an admin
+         * @description Admin only (404 `not_found` otherwise). Changes the settings of a
+         *     challenge, those frozen at creation included, in progress or finished
+         *     (README §2.12): every field of the creation, checked by the same
+         *     rules, but the first day, which may be in the past (at most a year
+         *     ahead, as at creation). A field left out keeps its value. The
+         *     cumulative time is always there: `categories` replaces the optional
+         *     categories, those it leaves out being removed. A new reference sport
+         *     starts again from the suggested factors brought back to it; otherwise
+         *     the factors of the challenge stay. `distance_factors` then replaces
+         *     those it names. A new first day or time zone moves the expiry of the
+         *     invitation links not revoked to the new end of week 1.
+         *     The challenge is then judged again as the worker would (its
+         *     eliminations and frozen results erased, its locked weeks judged again,
+         *     its results frozen again once its last week is locked), the change
+         *     recorded in the journal with its `reason` and the challenge marked as
+         *     corrected, all in one transaction. With `dry_run`, everything is
+         *     rolled back and the answer tells what the change would do. An unknown
+         *     or deleted challenge answers 404 `challenge_not_found`. The body is
+         *     optional in the contract only so that a non-admin always gets 404
+         *     first: without one, the missing `reason` answers 400
+         *     `validation_failed`.
+         */
+        patch: operations["updateAdminChallenge"];
         trace?: never;
     };
     "/api/v1/admin/users": {
@@ -951,7 +1012,7 @@ export interface components {
          * @description Stable error codes. Each ticket adds the codes it returns.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "internal_error";
+        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
         AdminStats: {
             /**
              * Format: date-time
@@ -1150,6 +1211,99 @@ export interface components {
         AdminElimination: {
             user: components["schemas"]["AdminUserRef"];
             /** @description The week the participant was eliminated at. */
+            week_number: number;
+            /** @description The distance of the reference sport they did that week. */
+            distance_meters: number;
+            /** @description The minimum they had to reach. */
+            required_meters: number;
+        };
+        /**
+         * @description The fields to change, as at creation (`ChallengeCreate`); a field
+         *     left out keeps its value, `null` is refused.
+         */
+        AdminChallengeUpdate: {
+            /**
+             * @description Why the admin makes the change, kept in the journal: 3 to 500
+             *     characters once surrounding spaces are removed, 3 of them
+             *     visible; no control character but line breaks and tabs.
+             */
+            reason: string;
+            /** @description Preview the change, writing nothing. `false` when absent. */
+            dry_run?: boolean;
+            /** @description As at creation. */
+            title?: string;
+            /** @description As at creation; an empty string removes it. */
+            description?: string;
+            /** @enum {string} */
+            visibility?: "public" | "private";
+            members_can_invite?: boolean;
+            /**
+             * @description IANA time zone; the first local day stays the same day in it
+             *     unless `start_date` is given.
+             * @example America/Toronto
+             */
+            timezone?: string;
+            /**
+             * Format: date
+             * @description First local day, in the past or at most a year ahead in `timezone`.
+             * @example 2026-12-07
+             */
+            start_date?: string;
+            /** @description Duration in whole weeks. */
+            weeks?: number;
+            /**
+             * @description Replaces the optional categories as a whole, with their settings:
+             *     a setting left out takes its default, as at creation (the
+             *     `min_session_minutes` of the points goes back to 20).
+             */
+            categories?: components["schemas"]["CategoriesCreate"];
+            /**
+             * @description As at creation; a new one starts again from the suggested factors.
+             * @example run
+             */
+            reference_sport?: string;
+            /**
+             * @description Factors that replace those of the challenge, by sport code, with
+             *     the rules of the creation: distance sports only, 0.1 to 2, two
+             *     decimals at most, the reference sport refused; only with the
+             *     cumulative distance or the `longest_distance` criterion.
+             * @example {
+             *       "ride": 0.25
+             *     }
+             */
+            distance_factors?: {
+                [key: string]: number;
+            };
+        };
+        AdminCorrection: {
+            /** @description Whether this was a preview, nothing written. */
+            dry_run: boolean;
+            /** @description Every challenge the change touches, judged again. */
+            challenges: components["schemas"]["AdminChallengePreview"][];
+        };
+        /** @description What a change does to a challenge. */
+        AdminChallengePreview: {
+            /** Format: uuid */
+            challenge_id: string;
+            /** @description The rankings before the change, whole (no `limit`). */
+            before: components["schemas"]["Leaderboard"];
+            /** @description The rankings after the change and the new judgement, whole. */
+            after: components["schemas"]["Leaderboard"];
+            /**
+             * @description The participants whose elimination the change gives, removes or
+             *     moves to another week or distance.
+             */
+            eliminations: components["schemas"]["AdminEliminationChange"][];
+        };
+        AdminEliminationChange: {
+            user: components["schemas"]["AdminUserRef"];
+            /** @description The elimination before the change; null when not eliminated. */
+            before: components["schemas"]["AdminEliminationJudgement"] | null;
+            /** @description The elimination after the change; null when not eliminated. */
+            after: components["schemas"]["AdminEliminationJudgement"] | null;
+        };
+        AdminEliminationJudgement: {
+            /** @description The week the participant is eliminated at. */
             week_number: number;
             /** @description The distance of the reference sport they did that week. */
             distance_meters: number;
@@ -1707,6 +1861,74 @@ export interface components {
             me: components["schemas"]["LeaderboardEntry"] | null;
             /** @description The cursor of the next page of the category; null at the end, and without `limit`. */
             next_cursor: string | null;
+        };
+        PointsBreakdown: {
+            /** Format: uuid */
+            user_id: string;
+            /**
+             * Format: date-time
+             * @description The instant the points were computed at (that of the frozen results once frozen).
+             */
+            computed_at: string;
+            /**
+             * @description The participant abandoned or was excluded; the leaderboard shows
+             *     them without rank nor value.
+             */
+            abandoned: boolean;
+            /** @description The results of the challenge are frozen; the breakdown is theirs. */
+            frozen: boolean;
+            /** @description The points of the locked weeks; the `value` of the leaderboard unless abandoned. */
+            acquired_points: number;
+            /**
+             * @description The points of the weeks started but not locked yet, the
+             *     `provisional_points` of the leaderboard; null once every started
+             *     week is locked, for a participant who abandoned, and when frozen.
+             */
+            provisional_points: number | null;
+            /** @description The weeks started, in order (see the operation). */
+            weeks: components["schemas"]["PointsWeek"][];
+        };
+        PointsWeek: {
+            number: number;
+            /**
+             * Format: date-time
+             * @description First instant of the week, in the time zone of the challenge (sent in UTC).
+             */
+            starts_at: string;
+            /**
+             * Format: date-time
+             * @description First instant after the week.
+             */
+            ends_at: string;
+            /**
+             * @description The week is locked (7 am, local time, on the first day of the next
+             *     week): its points are acquired.
+             */
+            locked: boolean;
+            /** @description The points of the week, the sum of its criteria. */
+            points: number;
+            /** @description Each criterion of the challenge, in its order. */
+            criteria: components["schemas"]["PointsCriterion"][];
+        };
+        PointsCriterion: {
+            /** @enum {string} */
+            criterion: "longest_duration" | "longest_distance" | "session_count" | "weekly_elevation";
+            /**
+             * @description The rank in the weekly ranking of the criterion, equal values
+             *     sharing it (1, 1, 3); null for a value of 0, which does not score.
+             */
+            rank: number | null;
+            /**
+             * @description Seconds (`longest_duration`), equivalent meters
+             *     (`longest_distance`), sessions (`session_count`) or meters of
+             *     elevation gain (`weekly_elevation`). Null for a reader who may
+             *     not see the activities of the participants (not a participant,
+             *     abandoned ones included, a creator nor an admin: README §5.7);
+             *     the rank and the points stay.
+             */
+            value: number | null;
+            /** @description The points of the scale for the rank (top 5 or top 10); 0 out of it. */
+            points: number;
         };
         LeaderboardEntry: {
             /** @description Null for a participant who abandoned. */
@@ -2320,6 +2542,19 @@ export interface components {
          *     account (`user_not_found`).
          */
         AdminUserNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /**
+         * @description The change waited too long for the activity writes and the runs of
+         *     the worker in progress (`busy`): nothing was written. Try again in a
+         *     moment.
+         */
+        Busy: {
             headers: {
                 [name: string]: unknown;
             };
@@ -3107,6 +3342,46 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    getParticipantPoints: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The points of the participant. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PointsBreakdown"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            /**
+             * @description No such challenge, or one the user may not see
+             *     (`challenge_not_found`); no `points` category, or no such
+             *     participant (`not_found`).
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+        };
+    };
     listChallengeActivities: {
         parameters: {
             query?: {
@@ -3544,6 +3819,49 @@ export interface operations {
             };
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    updateAdminChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["AdminChallengeUpdate"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            /**
+             * @description The account has no `admin` permission (`not_found`), or no such
+             *     challenge, or a deleted one (`challenge_not_found`).
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
         };
     };
     listAdminUsers: {
