@@ -9,6 +9,9 @@ export const BUDGET = {
   lazyChunk: 50_000,
 };
 
+/** The chunk of the admin section (src/pages/AdminPage.tsx). */
+const ADMIN_CHUNK = /^\/assets\/AdminPage-[^/]+\.js$/;
+
 export interface Asset {
   /** Path from the root of the build, as index.html names it (/assets/x.js). */
   path: string;
@@ -43,6 +46,11 @@ export function overBudget(assets: Asset[], initial: Set<string>, budget = BUDGE
   const styles = total('.css');
   if (styles > budget.initialStyles) {
     report.push(`initial styles: ${kB(styles)} > ${kB(budget.initialStyles)}`);
+  }
+  // The admin section loads in a chunk of its own, never with the app.
+  const admin = assets.filter(({ path }) => ADMIN_CHUNK.test(path));
+  if (admin.length === 0 || admin.some(({ path }) => initial.has(path))) {
+    report.push('admin pages: not in a lazy chunk of their own');
   }
   for (const { path, gzipBytes } of assets) {
     if (!initial.has(path) && path.endsWith('.js') && gzipBytes > budget.lazyChunk) {

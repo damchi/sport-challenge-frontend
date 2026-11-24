@@ -933,5 +933,15 @@
   "invitationPage": {
     "title": "Invitation",
     "invalid": "Ce lien d'invitation n'est pas valide ou a expiré. Demande un nouveau lien à la personne qui te l'a envoyé."
+  },
+  "admin": {
+    "title": "Administration",
+    "nav": {
+      "label": "Sections de l'administration",
+      "dashboard": "Tableau de bord",
+      "challenges": "Défis",
+      "users": "Comptes",
+      "journal": "Journal"
+    }
   }
 }

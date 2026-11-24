@@ -910,5 +910,15 @@
   "invitationPage": {
     "title": "Invitation",
     "invalid": "This invitation link is not valid or has expired. Ask the person who sent it for a new one."
+  },
+  "admin": {
+    "title": "Administration",
+    "nav": {
+      "label": "Administration sections",
+      "dashboard": "Dashboard",
+      "challenges": "Challenges",
+      "users": "Accounts",
+      "journal": "Log"
+    }
   }
 }

@@ -94,6 +94,23 @@ describe('ProfilePage', () => {
     );
   });
 
+  it('links an admin to the admin section', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, is_admin: true })));
+    renderProfile();
+
+    expect(await screen.findByRole('link', { name: 'Administration' })).toHaveAttribute(
+      'href',
+      '/admin',
+    );
+  });
+
+  it('shows no admin link to anyone else', async () => {
+    renderProfile();
+
+    await screen.findByRole('link', { name: 'Mes activités' });
+    expect(screen.queryByRole('link', { name: 'Administration' })).not.toBeInTheDocument();
+  });
+
   it('shows the names to change and the e-mail address read-only', async () => {
     renderProfile();
     const section = await identity();
