@@ -256,11 +256,12 @@
         "label": "Start",
         "date": "Date",
         "time": "Time",
-        "timePlaceholder": "07:30",
+        "hour": "Start hour",
+        "minute": "Start minutes",
         "hint": "Start date and time, {{zone}}. Neither the start nor the end can be in the future.",
         "required": "Enter the start date and time.",
         "range": "The start cannot be in the future, nor before 2000.",
-        "timeFormat": "Enter the time on 24 hours, for example 07:30 or 18:45."
+        "timeFormat": "Enter the hour on 24 hours (0 to 23) and the minutes from 0 to 59, for example 8:00 or 18:45."
       },
       "duration": {
         "label": "Duration",

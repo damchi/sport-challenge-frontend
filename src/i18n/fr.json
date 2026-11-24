@@ -263,11 +263,12 @@
         "label": "Début",
         "date": "Date",
         "time": "Heure",
-        "timePlaceholder": "07:30",
+        "hour": "Heure de début",
+        "minute": "Minutes de début",
         "hint": "Date et heure de début, {{zone}}. Ni le début ni la fin ne peuvent être dans le futur.",
         "required": "Indique la date et l'heure de début.",
         "range": "Le début ne peut pas être dans le futur, ni avant l'an 2000.",
-        "timeFormat": "Indique l'heure sur 24 h, par exemple 07:30 ou 18:45."
+        "timeFormat": "Indique l'heure sur 24 h (de 0 à 23) et les minutes de 0 à 59, par exemple 8 h ou 18 h 45."
       },
       "duration": {
         "label": "Durée",

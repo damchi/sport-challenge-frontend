@@ -79,30 +79,41 @@ function elevationMeters(value: string): number | undefined {
   return number <= MAX_ELEVATION_METERS ? number : undefined;
 }
 
-// A time of day as typed, on 24 hours: "07:30", "7:30", "7h30", "7.30",
-// "0730" or "7h".
-const CLOCK = /^(\d{1,2})(?:\s*[:hH.]?\s*(\d{2})|\s*[hH])$/;
+// A part of the start's time of day, as typed: one or two digits.
+const CLOCK_PART = /^\d{1,2}$/;
+
+// A part of the start's time of day, `max` at most; an empty minute counts
+// as 0, an empty hour is no time yet.
+function clockPart(value: string, max: number, empty: number | undefined): number | undefined {
+  const text = value.trim();
+  if (text === '') return empty;
+  if (!CLOCK_PART.test(text)) return undefined;
+  const number = Number(text);
+  return number <= max ? number : undefined;
+}
 
 /**
- * A time of day typed on 24 hours, written HH:MM ("7h30" → "07:30"), or
- * undefined when it is not one. A native time field is not used: it follows
- * the browser's language, AM/PM in English whatever the app's language.
+ * The start's time of day, written HH:MM, from its hour (0 to 23, required)
+ * and its minutes (0 to 59, empty for 0), or undefined when they do not read
+ * as one. Two numeric fields, not a native time field: that one follows the
+ * browser's language (AM/PM in English) and wants the minutes typed.
  */
-export function clockTime(text: string): string | undefined {
-  const match = CLOCK.exec(text.trim());
-  if (!match) return undefined;
-  const hours = Number(match[1]);
-  const minutes = Number(match[2] ?? '0');
-  if (hours > 23 || minutes > 59) return undefined;
+export function clockTime(hour: string, minute: string): string | undefined {
+  const hours = clockPart(hour, 23, undefined);
+  const minutes = clockPart(minute, 59, 0);
+  if (hours === undefined || minutes === undefined) return undefined;
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${pad(hours)}:${pad(minutes)}`;
 }
 
-// The start, a day as a native date field gives it and a time as typed,
-// read in `timeZone`.
-function startOf(date: string, time: string, timeZone: string): Date | undefined {
-  const clock = clockTime(time);
-  return clock === undefined ? undefined : zonedDateTime(`${date}T${clock}`, timeZone);
+// The start, a day as a native date field gives it and a time of day as
+// typed, read in `timeZone`.
+function startOf(
+  input: { start_date: string; start_hour: string; start_minute: string },
+  timeZone: string,
+): Date | undefined {
+  const clock = clockTime(input.start_hour, input.start_minute);
+  return clock === undefined ? undefined : zonedDateTime(`${input.start_date}T${clock}`, timeZone);
 }
 
 /**
@@ -111,8 +122,8 @@ function startOf(date: string, time: string, timeZone: string): Date | undefined
  * future. `sports` is the catalogue, whose distance mode tells whether the
  * distance is required, optional (the "other" sport) or absent, and which
  * sports take an elevation gain (optional, with a distance). The start,
- * a day as a native field gives it and a time typed on 24 hours, is read in
- * `timeZone`; its one error goes on the day.
+ * a day as a native field gives it and a time of day typed as an hour and
+ * minutes, is read in `timeZone`; its one error goes on the day.
  */
 export function activityCreateSchema(
   now: () => Date,
@@ -132,7 +143,8 @@ export function activityCreateSchema(
       sport_code: z.string(),
       sport_label: z.string(),
       start_date: z.string(),
-      start_time: z.string(),
+      start_hour: z.string(),
+      start_minute: z.string(),
       hours: z.string(),
       minutes: z.string(),
       seconds: z.string(),
@@ -155,10 +167,13 @@ export function activityCreateSchema(
         }
       }
 
-      const start = startOf(input.start_date, input.start_time, timeZone);
+      const start = startOf(input, timeZone);
       const current = now().getTime();
       if (!start) {
-        const unreadTime = input.start_time.trim() !== '' && !clockTime(input.start_time);
+        // An hour over 23, minutes over 59, letters: typed but not a time.
+        const unreadTime =
+          (input.start_hour.trim() !== '' && clockPart(input.start_hour, 23, 0) === undefined) ||
+          clockPart(input.start_minute, 59, 0) === undefined;
         issue(
           'start_date',
           unreadTime
@@ -199,7 +214,7 @@ export function activityCreateSchema(
       const elevation = elevationOf(input);
       const climb = elevation === undefined ? undefined : elevationMeters(elevation);
       // Valid by now: the refinement above passed.
-      const start = startOf(input.start_date, input.start_time, timeZone) ?? new Date(Number.NaN);
+      const start = startOf(input, timeZone) ?? new Date(Number.NaN);
       return {
         sport_code: input.sport_code,
         ...(input.sport_code === 'other' && { sport_label: cleanSportLabel(input.sport_label) }),
@@ -229,7 +244,7 @@ interface ActivityDraft {
  * over 0): nothing is computed from them.
  */
 export function activityDraft(input: ActivityCreateInput, timeZone: string): ActivityDraft {
-  const start = startOf(input.start_date, input.start_time, timeZone);
+  const start = startOf(input, timeZone);
   const duration = durationSeconds(input.hours, input.minutes, input.seconds);
   const meters = distanceMeters(input.distance_km);
   return {
@@ -255,7 +270,7 @@ export interface RecordedActivity {
 
 /**
  * What the form holds to change a recorded activity: its start read in
- * `timeZone` (day and time to the minute, as entered), its duration in parts, its distance
+ * `timeZone` (day, hour and minutes, as entered), its duration in parts, its distance
  * in km written in the user's language, its elevation gain in meters.
  */
 export function activityFormValues(
@@ -273,11 +288,13 @@ export function activityFormValues(
     new Date(activity.started_at),
     timeZone,
   ).split('T');
+  const [startHour = '', startMinute = ''] = startTime.split(':');
   return {
     sport_code: activity.sport_code,
     sport_label: activity.sport_label ?? '',
     start_date: startDate,
-    start_time: startTime,
+    start_hour: startHour,
+    start_minute: startMinute,
     hours: part(Math.floor(duration / 3600)),
     minutes: part(Math.floor(duration / 60) % 60),
     seconds: part(duration % 60),
@@ -291,7 +308,7 @@ export function activityFormValues(
   };
 }
 
-// Form field of each request field: the start is two fields and the
+// Form field of each request field: the start is three fields and the
 // duration three, whose error goes on the first one; the distance is typed
 // in km, the elevation gain in meters.
 const FORM_FIELDS = {
