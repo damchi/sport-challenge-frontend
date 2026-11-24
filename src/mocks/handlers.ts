@@ -33,6 +33,11 @@ type AdminChallengeSummary = components['schemas']['AdminChallengeSummary'];
 type AdminChallengeDetail = components['schemas']['AdminChallengeDetail'];
 type AdminChallengePage = components['schemas']['AdminChallengePage'];
 type AdminUserRef = components['schemas']['AdminUserRef'];
+type AdminUser = components['schemas']['AdminUser'];
+type AdminUserPage = components['schemas']['AdminUserPage'];
+type AdminUserSearch = components['schemas']['AdminUserSearch'];
+type AdminUserChallengePage = components['schemas']['AdminUserChallengePage'];
+type AdminActivityPage = components['schemas']['AdminActivityPage'];
 type InvitationPreview = components['schemas']['InvitationPreview'];
 type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
 
@@ -439,6 +444,68 @@ function activityNotFound() {
   return HttpResponse.json(body, { status: 404 });
 }
 
+/**
+ * Every account as an admin lists it, enough for two pages: the first is the
+ * profile of the mocks; the second has no pseudo; the third is deleted, the
+ * fourth waits for its deletion at Auth0.
+ */
+export const mockAdminUsers: AdminUser[] = Array.from({ length: 24 }, (_, index) => {
+  const created_at = new Date(Date.UTC(2026, 10, 20 - index, 14)).toISOString();
+  const base = {
+    id: `40000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+    created_at,
+    deleted_at: null,
+    last_activity_at: index % 2 === 0 ? '2026-11-19T12:30:00Z' : null,
+    challenge_count: index % 4,
+  };
+  if (index === 0) {
+    return {
+      ...base,
+      pseudo: mockMe.pseudo,
+      first_name: mockMe.first_name,
+      last_name: mockMe.last_name,
+      email: mockMe.email,
+      state: 'active',
+      challenge_count: mockAdminChallenges.length,
+    };
+  }
+  if (index === 2 || index === 3) {
+    return {
+      ...base,
+      pseudo: null,
+      first_name: null,
+      last_name: null,
+      email: null,
+      state: index === 2 ? 'deleted' : 'auth0_deletion_pending',
+      deleted_at: '2026-11-21T10:00:00Z',
+      last_activity_at: null,
+      challenge_count: 0,
+    };
+  }
+  return {
+    ...base,
+    pseudo: index === 1 ? null : `ami_${index}`,
+    first_name: 'Ami',
+    last_name: String(index),
+    email: `ami${index}@example.com`,
+    state: 'active',
+  };
+});
+
+/** The answer of a 404 for an account. */
+const userNotFound = () => {
+  const body: ApiErrorBody = { error: { code: 'user_not_found', message: 'User not found' } };
+  return HttpResponse.json(body, { status: 404 });
+};
+
+/** A page of `items` from the cursor (the index of the next item) and limit of `query`. */
+function mockPage<T>(items: T[], cursor: string | null | undefined, limit: number | null) {
+  const from = Number(cursor ?? 0);
+  const size = limit ?? PAGE_SIZE;
+  const page = items.slice(from, from + size);
+  return { items: page, next_cursor: from + size < items.length ? String(from + size) : null };
+}
+
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   http.delete('*/api/v1/me', () => new HttpResponse(null, { status: 204 })),
@@ -471,6 +538,76 @@ export const handlers = [
       return HttpResponse.json(body, { status: 404 });
     }
     return HttpResponse.json<AdminChallengeDetail>(mockAdminChallengeDetail(summary));
+  }),
+  // Newest first in the API; the mocks keep their order. `q` is looked for
+  // in the pseudo, the names and the e-mail.
+  http.post('*/api/v1/admin/users/search', async ({ request }) => {
+    const text = await request.text();
+    const search = (text ? JSON.parse(text) : {}) as AdminUserSearch;
+    const q = search.q?.toLocaleLowerCase();
+    const found = mockAdminUsers.filter(
+      (user) =>
+        !q ||
+        [user.pseudo, user.first_name, user.last_name, user.email].some((field) =>
+          field?.toLocaleLowerCase().includes(q),
+        ),
+    );
+    return HttpResponse.json<AdminUserPage>(mockPage(found, search.cursor, search.limit ?? null));
+  }),
+  http.get('*/api/v1/admin/users/:userId', ({ params }) => {
+    const user = mockAdminUsers.find((account) => account.id === params.userId);
+    return user ? HttpResponse.json<AdminUser>(user) : userNotFound();
+  }),
+  // The first account is in every challenge: creator of one in three,
+  // abandoned one in four; the others in none.
+  http.get('*/api/v1/admin/users/:userId/challenges', ({ params, request }) => {
+    const index = mockAdminUsers.findIndex((account) => account.id === params.userId);
+    if (index < 0) return userNotFound();
+    const query = new URL(request.url).searchParams;
+    const challenges = index === 0 ? mockAdminChallenges : [];
+    const items = challenges.map((challenge, position) => {
+      const is_creator = position % 3 === 0;
+      const abandoned = position % 4 === 1;
+      const participant = !is_creator || position % 2 === 0;
+      return {
+        id: challenge.id,
+        title: challenge.title,
+        visibility: challenge.visibility,
+        status: challenge.status,
+        starts_at: challenge.starts_at,
+        ends_at: challenge.ends_at,
+        created_at: challenge.created_at,
+        deleted_at: challenge.deleted_at,
+        is_creator,
+        participant_status: participant ? (abandoned ? 'abandoned' : 'active') : null,
+        joined_at: participant ? '2026-10-22T14:00:00Z' : null,
+        abandoned_at: participant && abandoned ? '2026-11-10T14:00:00Z' : null,
+      } satisfies AdminUserChallengePage['items'][number];
+    });
+    return HttpResponse.json<AdminUserChallengePage>(
+      mockPage(items, query.get('cursor'), Number(query.get('limit')) || null),
+    );
+  }),
+  // The first account has the activities of the mocks; the others none.
+  http.get('*/api/v1/admin/users/:userId/activities', ({ params, request }) => {
+    const index = mockAdminUsers.findIndex((account) => account.id === params.userId);
+    if (index < 0) return userNotFound();
+    const query = new URL(request.url).searchParams;
+    const activities = index === 0 ? mockActivities : [];
+    const items = activities.map((activity) => ({
+      id: activity.id,
+      sport_code: activity.sport_code,
+      sport_label: activity.sport_label,
+      started_at: activity.started_at,
+      duration_seconds: activity.duration_seconds,
+      distance_meters: activity.distance_meters,
+      elevation_gain_meters: activity.elevation_gain_meters,
+      source: activity.source,
+      created_at: activity.started_at,
+    }));
+    return HttpResponse.json<AdminActivityPage>(
+      mockPage(items, query.get('cursor'), Number(query.get('limit')) || null),
+    );
   }),
   // The cursor is the index of the next item; `mine` keeps the challenges
   // the user created or joined, and `status` keeps those with that status.

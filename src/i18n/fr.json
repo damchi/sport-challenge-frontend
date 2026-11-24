@@ -1090,6 +1090,74 @@
         "update": "Activité corrigée",
         "delete": "Activité supprimée"
       }
+    },
+    "users": {
+      "listLabel": "Tous les comptes",
+      "search": {
+        "label": "Rechercher un compte par pseudo, nom ou e-mail",
+        "placeholder": "Pseudo, nom ou e-mail",
+        "submit": "Rechercher"
+      },
+      "columns": {
+        "account": "Compte",
+        "state": "État",
+        "createdAt": "Inscription",
+        "lastActivity": "Dernière activité",
+        "challenges": "Défis"
+      },
+      "states": {
+        "active": "Actif",
+        "deleted": "Supprimé",
+        "auth0_deletion_pending": "Suppression Auth0 en attente"
+      },
+      "never": "Aucune",
+      "noName": "Sans nom",
+      "unnamed": "Compte supprimé",
+      "empty": {
+        "none": "Aucun compte pour l'instant.",
+        "search": "Aucun compte ne correspond à cette recherche."
+      },
+      "clearSearch": "Effacer la recherche",
+      "back": "Tous les comptes",
+      "notFound": "Ce compte n'existe pas.",
+      "sheet": {
+        "state": "État",
+        "pseudo": "Pseudo",
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "email": "E-mail",
+        "missing": "Non renseigné",
+        "createdAt": "Inscrit le",
+        "deletedAt": "Supprimé le",
+        "lastActivity": "Dernière activité",
+        "challenges": "Défis"
+      },
+      "challenges": {
+        "title": "Défis du compte",
+        "empty": "Ce compte n'est dans aucun défi.",
+        "challenge": "Défi",
+        "role": "Rôle",
+        "status": "Statut",
+        "joinedAt": "Rejoint le",
+        "notJoined": "Ne participe pas",
+        "abandonedAt": "Depuis le {{date}}",
+        "roles": {
+          "creator": "Créateur",
+          "participant": "Participant",
+          "abandoned": "Abandonné ou exclu",
+          "creatorAbandoned": "Créateur, abandonné ou exclu"
+        }
+      },
+      "activities": {
+        "title": "Activités du compte",
+        "empty": "Ce compte n'a aucune activité.",
+        "sport": "Sport",
+        "startedAt": "Séance",
+        "duration": "Durée",
+        "distance": "Distance",
+        "elevation": "D+",
+        "none": "—"
+      }
     }
   }
 }
