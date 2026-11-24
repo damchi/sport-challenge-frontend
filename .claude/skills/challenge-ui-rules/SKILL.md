@@ -35,7 +35,7 @@ Source de vérité : le `README.md` du backend (§2) et le §2 du README du fron
 - « Rejoindre » n'apparaît que si l'API indique qu'on peut (jusqu'à la fin de la première semaine). Sinon, explique pourquoi.
 - Bouton « Abandonner » (et non « Quitter ») : confirmation qui précise que c'est **définitif**, que la personne sera éliminée de toutes les catégories et apparaîtra « a abandonné », hors podium. Un participant exclu par un créateur apparaît lui aussi « a abandonné » (aucune mention « exclu »).
 - Créateurs : « Supprimer le challenge », possible à tout moment, avec une confirmation très claire (tout disparaît pour tous les participants) ; « Ajouter un créateur » ; « Exclure » sur un participant.
-- Avant de rejoindre : message clair indiquant que les activités (date, sport, durée, distance) seront visibles par les autres participants ; l'inscription demande une confirmation.
+- Rejoindre un défi public : la confirmation indique que les activités (date, sport, durée, distance) seront visibles par les autres participants. Un lien d'invitation inscrit directement, sans confirmation ni message, puis ouvre le défi (décision du 2026-11-23, SC-WEB-107).
 - Écran d'un participant : liste de ses activités en lecture seule (mention « manuelle » comprise), accessible aux seuls participants du challenge.
 - Challenge privé : accès par invitation ; un lien invalide ou expiré affiche un message clair.
 

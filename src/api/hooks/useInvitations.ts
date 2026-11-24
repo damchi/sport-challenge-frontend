@@ -29,8 +29,8 @@ export function useCreateInvitation(challengeId: string) {
 }
 
 /**
- * Opens an invitation link: the challenge it leads to, which the user may
- * then read (`useChallenge`) and join. Opening again changes nothing, so it
+ * Opens an invitation link: the challenge it leads to, which the user then
+ * joins, or opens when already in it. Opening again changes nothing, so it
  * is not sent again while the page stays open. The token goes in the body,
  * never in a URL, and leaves the memory with the page (gcTime 0). Every
  * invalid link answers the same 404 `invitation_invalid`.
@@ -53,14 +53,13 @@ export function useOpenInvitation(token: string) {
 }
 
 /**
- * Accepts an invitation: joins its challenge, whose page then shows the
- * answer, and the lists and leaderboards reload with the new participant.
- * Its errors are shown by the page, not the global banner; the challenge
- * then reloads, so the page says why joining is no longer possible. A
- * profile the server finds incomplete reloads the profile: the profile gate
- * then leads to onboarding, and back to the invitation.
+ * Accepts an invitation: joins its challenge, as soon as the link opens, and
+ * the lists and leaderboards reload with the new participant. Its errors are
+ * shown by the page, not the global banner. A profile the server finds
+ * incomplete reloads the profile: the profile gate then leads to onboarding,
+ * and back to the invitation.
  */
-export function useAcceptInvitation(challengeId: string) {
+export function useAcceptInvitation() {
   const client = useApiClient();
   const queryClient = useQueryClient();
   return useMutation({
@@ -81,15 +80,10 @@ export function useAcceptInvitation(challengeId: string) {
       ]);
     },
     onError: (error) => {
-      const code = error instanceof ApiError ? error.code : undefined;
-      if (code === 'profile_incomplete') {
+      if (error instanceof ApiError && error.code === 'profile_incomplete') {
         return queryClient.invalidateQueries({ queryKey: queryKeys.me });
       }
-      // The challenge of a link no longer valid may be out of sight: no reload.
-      if (code === 'invitation_invalid') return undefined;
-      return queryClient.invalidateQueries({
-        queryKey: queryKeys.challenges.detail(challengeId),
-      });
+      return undefined;
     },
   });
 }

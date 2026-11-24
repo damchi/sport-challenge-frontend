@@ -909,9 +909,6 @@
   },
   "invitationPage": {
     "title": "Invitation",
-    "intro": "You're invited to join this challenge.",
-    "invalid": "This invitation link is not valid or has expired. Ask the person who sent it for a new one.",
-    "accept": "Accept the invitation",
-    "open": "See the challenge"
+    "invalid": "This invitation link is not valid or has expired. Ask the person who sent it for a new one."
   }
 }

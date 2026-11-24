@@ -1300,6 +1300,8 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 ### SC-WEB-039 · Page d'invitation et acceptation
 `F7` · Story · Phase 7 · Estimation 5 · Dépend de : 017, 025, 038, 056 · Backend : `POST /invitations/open` et `POST /invitations/accept`, jeton dans le corps (SC-API-066) ; `participant_count` de `ChallengeDetail` (SC-API-139), arrivé avec le contrat régénéré par SC-WEB-056
 
+> **Remplacé le 2026-11-23 par SC-WEB-107 (#190)** : le lien d'invitation inscrit directement au défi, sans aperçu ni bouton « Accepter » / « Voir le défi » ; plus d'avertissement de visibilité avant de rejoindre par une invitation.
+
 **Critères d'acceptation**
 - [ ] `/invite#<jeton>` (jeton dans le fragment, décision du 2026-11-20, README §4.4) : si l'utilisateur n'est pas connecté, connexion puis **retour automatique** sur l'invitation.
 - [ ] Aperçu : titre, dates dans le fuseau du challenge, nombre de participants, avertissement de visibilité des activités.
@@ -1313,6 +1315,8 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 
 ### SC-WEB-070 · Retour arrière après « Voir le défi » depuis une invitation : page d'erreur
 `F7` · Bug · Phase 7 · Estimation 2 · Dépend de : 039, 067 · Backend : aucun
+
+> **Remplacé le 2026-11-23 par SC-WEB-107 (#190)** : le lien d'invitation inscrit directement au défi, sans aperçu ni bouton « Accepter » / « Voir le défi » ; plus d'avertissement de visibilité avant de rejoindre par une invitation.
 
 **Constat** : un nouvel utilisateur ouvre un lien d'invitation (`/invite#<jeton>`), se connecte (ou crée son compte), fait son onboarding et revient sur l'invitation (« Rejoindre » / « Voir le défi »). S'il touche **« Voir le défi »** puis la **flèche retour du navigateur**, il arrive sur une page d'erreur au lieu de revenir à l'invitation.
 
@@ -1391,7 +1395,7 @@ Concerne le classement (`GET /challenges/{id}/leaderboard`) et « Mes défis » 
 ### SC-WEB-042 · Pages légales et consentement (abandonné)
 `F8` · Task · Phase 8 · Estimation 0 · Backend : —
 
-**Abandonné le 2026-11-20** : l'app est réservée à un cercle d'amis, sans politique de confidentialité, conditions d'utilisation, pied de page légal ni mécanisme de consentement. L'information utile reste dans l'app : les activités, le prénom et le nom sont visibles des autres participants, ce que l'écran du challenge indique avant de rejoindre. À rouvrir si l'app s'ouvre au-delà de ce cercle (et avant toute analytics produit).
+**Abandonné le 2026-11-20** : l'app est réservée à un cercle d'amis, sans politique de confidentialité, conditions d'utilisation, pied de page légal ni mécanisme de consentement. L'information utile reste dans l'app : les activités, le prénom et le nom sont visibles des autres participants, ce que l'écran du challenge indique avant de rejoindre un défi public (un lien d'invitation inscrit directement depuis SC-WEB-107). À rouvrir si l'app s'ouvre au-delà de ce cercle (et avant toute analytics produit).
 
 **Statut** : Abandonné
 

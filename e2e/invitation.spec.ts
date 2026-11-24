@@ -7,7 +7,7 @@ import {
 } from '../src/mocks/handlers';
 import { expect, signInAt, test } from './fixtures';
 
-test('a friend opens an invitation link, signs in and joins the challenge', async ({
+test('a friend opens an invitation link, signs in and lands in the challenge', async ({
   network,
   page,
 }) => {
@@ -31,11 +31,7 @@ test('a friend opens an invitation link, signs in and joins the challenge', asyn
   // The token stays in the fragment through the sign-in.
   await signInAt(page, `/invite#${mockInvitationToken}`);
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Invitation' })).toBeVisible();
-  await expect(page.getByText("On t'invite à rejoindre ce défi.")).toBeVisible();
-  await expect(page.getByRole('heading', { name: invited.title })).toBeVisible();
-  await page.getByRole('button', { name: "Accepter l'invitation" }).click();
-
+  // Joined at once, without a page to accept.
   await expect(page).toHaveURL(`/challenges/${mockInvitedChallengeId}`);
   await expect(page.getByText('Tu participes', { exact: true })).toBeVisible();
   expect(joined).toBe(true);
@@ -47,21 +43,4 @@ test('an invalid invitation link says so', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText(
     "Ce lien d'invitation n'est pas valide ou a expiré. Demande un nouveau lien à la personne qui te l'a envoyé.",
   );
-});
-
-test('back from the challenge opened by the invitation returns to the invitation', async ({
-  page,
-}) => {
-  const invited = mockChallenges.find((challenge) => challenge.id === mockInvitedChallengeId);
-  if (!invited) throw new Error('No invited challenge in the mocks');
-  await signInAt(page, `/invite#${mockInvitationToken}`);
-
-  await expect(page.getByRole('heading', { name: invited.title })).toBeVisible();
-  await page.getByRole('link', { name: 'Voir le défi' }).click();
-  await expect(page).toHaveURL(`/challenges/${mockInvitedChallengeId}`);
-
-  // Back: the invitation again, not the sign-in pages before it.
-  await page.goBack();
-  await expect(page).toHaveURL(`/invite#${mockInvitationToken}`);
-  await expect(page.getByRole('button', { name: "Accepter l'invitation" })).toBeVisible();
 });

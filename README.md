@@ -29,7 +29,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
 - ✅ Un participant est classé dans **toutes** les catégories.
-- ✅ Les activités détaillées (date, sport, durée, distance) de chaque participant sont visibles par les autres participants du challenge ; l'app l'indique clairement **avant** de rejoindre.
+- ✅ Les activités détaillées (date, sport, durée, distance) de chaque participant sont visibles par les autres participants du challenge. ✅ L'app n'a plus à le dire avant de rejoindre : un lien d'invitation inscrit directement (décision du 2026-11-23, SC-WEB-107).
 - ✅ « Quitter » = **abandon** : éliminé de toutes les catégories, définitivement (affiché « a abandonné »). Un compte supprimé est traité de la même façon. Les créateurs peuvent supprimer le challenge, ajouter un créateur et exclure un participant.
 
 **Catégories** (1 à 4, un podium chacune, affichées dans l'ordre du challenge : temps, distance, élimination, Grand prix)
@@ -116,7 +116,7 @@ frontend/
     │   ├── challenges/              liste, carte, formulaire en étapes, édition titre/description
     │   ├── leaderboard/             tableau par catégorie, podium, statut « à risque »
     │   ├── activities/              formulaire de saisie, liste des activités
-    │   ├── invitations/             partage de lien, acceptation
+    │   ├── invitations/             partage de lien, inscription par le lien
     │   ├── profile/                 prénom, nom, pseudo, e-mail, langue (avatar en V1.1)
     │   └── badges/                  V1.1
     ├── components/                  interface réutilisable (boutons, champs, mise en page, modales)
@@ -184,6 +184,7 @@ frontend/
 - ✅ `/` est la landing page publique ; l'accueil de l'app (les défis) est à `/challenges`, page de départ de l'app installée et retour par défaut après connexion. Toutes les autres pages exigent une connexion, puis ramènent à la page demandée (décision du 2026-11-23, SC-WEB-083).
 - **Liens profonds** (universal links et app links) pour les invitations : un lien d'invitation ouvre l'app au bon challenge, ou la page web si l'app n'est pas installée.
 - ✅ Lien d'invitation (SC-WEB-038) : `<origine de l'app>/invite#<jeton>`. Le jeton est dans le **fragment**, que le navigateur n'envoie jamais à l'hébergeur (journaux d'accès) ni dans l'en-tête Referer ; le lien ne porte rien d'autre (décision du 2026-11-20). ✅ Avant tout appel, la page vérifie la forme du jeton : base64url (`A-Z`, `a-z`, `0-9`, `_`, `-`), 1 à 256 caractères ; sinon elle dit que le lien n'est pas valide (décision du 2026-11-20 ; le serveur émet 43 caractères et ne vérifie aucune forme).
+- ✅ Ouvrir un lien d'invitation valide (après la connexion, et l'onboarding d'un nouveau compte) **inscrit au défi** et ouvre sa page, sans page intermédiaire « Accepter » ni « Voir le défi » ; une fois le défi ouvert, le lien quitte l'historique. Déjà participant : la page du défi s'ouvre. Refus (inscriptions closes, abandon, lien invalide ou expiré) : message traduit et retour à l'accueil (décision du 2026-11-23, SC-WEB-107).
 - ✅ « Inviter des amis » s'affiche pour les créateurs, et pour les participants actifs si `members_can_invite` est vrai, **jusqu'à `registration_deadline`** (fin de la semaine 1) ; au-delà, le bouton est masqué, et le refus du serveur (`registration_closed`) reste traduit si l'horloge de l'appareil est décalée (décision du 2026-11-20).
 
 ### 4.5 Authentification côté client
