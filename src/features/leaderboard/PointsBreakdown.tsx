@@ -183,7 +183,7 @@ function Week({ week, challenge }: { week: PointsWeek; challenge: ChallengeDetai
             : t('pointsBreakdown.provisionalPoints', { count: week.points })}
         </span>
       </div>
-      <ul className="mt-2 flex flex-col divide-y divide-border">
+      <ul className="mt-1 flex flex-col">
         {week.criteria.map((criterion) => (
           <li key={criterion.criterion} className="py-2">
             <Criterion criterion={criterion} referenceSport={challenge.reference_sport} />
