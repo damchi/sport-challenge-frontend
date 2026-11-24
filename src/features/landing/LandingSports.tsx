@@ -15,9 +15,12 @@ const SPORTS = [
   { code: 'rowing', factor: 0.5 },
   { code: 'roller', factor: 0.5 },
   { code: 'xc_ski', factor: 0.5 },
+  { code: 'hyrox', factor: 1 },
+  { code: 'paragliding', factor: 0.3 },
   { code: 'yoga', factor: null },
   { code: 'climbing', factor: null },
   { code: 'strength', factor: null },
+  { code: 'crossfit', factor: null },
 ] as const;
 
 const CHIP =

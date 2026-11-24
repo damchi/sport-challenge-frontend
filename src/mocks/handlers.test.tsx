@@ -51,8 +51,11 @@ describe('the sports mock', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([
       'climbing',
+      'crossfit',
       'hike',
+      'hyrox',
       'other',
+      'paragliding',
       'ride',
       'roller',
       'rowing',

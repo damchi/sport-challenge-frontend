@@ -169,6 +169,9 @@ describe('ActivityForm', () => {
       'Yoga',
       'Escalade',
       'Renforcement musculaire',
+      'CrossFit',
+      'Hyrox',
+      'Parapente',
       'Autre',
     ]);
     expect(screen.queryAllByRole('radio', { checked: true })).toHaveLength(0);
@@ -446,6 +449,64 @@ describe('ActivityForm', () => {
       sport_code: 'yoga',
       started_at: STARTED_AT,
       duration_seconds: 3600,
+    });
+  });
+
+  it('sends a CrossFit session without distance', async () => {
+    const sent = recordWith(() => recorded());
+    renderForm();
+    await pick('CrossFit');
+    typeStart('2026-11-20', '07:30');
+    type(hours(), '1');
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.body).toEqual({
+      sport_code: 'crossfit',
+      started_at: STARTED_AT,
+      duration_seconds: 3600,
+    });
+  });
+
+  it('follows the catalogue for CrossFit, Hyrox and paragliding', async () => {
+    renderForm();
+    await pick('CrossFit');
+    expect(distance()).not.toBeInTheDocument();
+
+    for (const sport of ['Hyrox', 'Parapente']) {
+      await pick(sport);
+      expect(screen.getByText('obligatoire pour ce sport')).toBeInTheDocument();
+      type(distanceField(), '10');
+      // No elevation gain, whatever the distance.
+      expect(elevation()).not.toBeInTheDocument();
+    }
+  });
+
+  it('names CrossFit, Hyrox and paragliding in English', async () => {
+    await i18n.changeLanguage('en');
+    try {
+      renderForm();
+      const sports = within(await screen.findByRole('group', { name: 'Sport' }));
+      for (const name of ['CrossFit', 'Hyrox', 'Paragliding']) {
+        expect(sports.getByRole('radio', { name })).toBeInTheDocument();
+      }
+    } finally {
+      await i18n.changeLanguage('fr');
+    }
+  });
+
+  it('records a session of Hyrox with its distance', async () => {
+    const sent = recordWith(() => recorded());
+    renderForm();
+    await fill({ sport: 'Hyrox', km: '8' });
+    fireEvent.click(save());
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.body).toEqual({
+      sport_code: 'hyrox',
+      started_at: STARTED_AT,
+      duration_seconds: 2700,
+      distance_meters: 8000,
     });
   });
 

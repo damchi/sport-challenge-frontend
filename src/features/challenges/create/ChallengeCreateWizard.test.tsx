@@ -484,8 +484,10 @@ describe('ChallengeCreateWizard', () => {
       expect([...reference().querySelectorAll('option')].map(({ value }) => value)).toEqual([
         'rowing',
         'run',
+        'hyrox',
         'walk',
         'swim',
+        'paragliding',
         'hike',
         'roller',
         'xc_ski',
@@ -570,8 +572,10 @@ describe('ChallengeCreateWizard', () => {
       expect(pills.map((pill) => pill.textContent)).toEqual([
         'Course ×1 (référence)',
         'Aviron ×0,5',
+        'Hyrox ×1',
         'Marche ×1',
         'Natation ×1',
+        'Parapente ×0,3',
         'Randonnée ×1',
         'Roller ×0,5',
         'Ski de fond ×0,5',
@@ -591,8 +595,10 @@ describe('ChallengeCreateWizard', () => {
       // By name, the free sport last.
       expect(screen.getAllByRole('spinbutton').map((field) => field.getAttribute('id'))).toEqual([
         'factor-rowing',
+        'factor-hyrox',
         'factor-walk',
         'factor-swim',
+        'factor-paragliding',
         'factor-hike',
         'factor-roller',
         'factor-xc_ski',
@@ -990,7 +996,7 @@ describe('ChallengeCreateWizard', () => {
       expect(row('Grand prix')).toHaveTextContent('Non inclus');
       expect(row('D+ cumulé')).toHaveTextContent('Non inclus');
       expect(row('Coefficients')).toHaveTextContent(
-        'Valeurs proposéesAviron ×0,5 · Marche ×1 · Natation ×1 · Randonnée ×1 · Roller ×0,5 · Ski de fond ×0,5 · Vélo ×0,3 · Autre ×1',
+        'Valeurs proposéesAviron ×0,5 · Hyrox ×1 · Marche ×1 · Natation ×1 · Parapente ×0,3 · Randonnée ×1 · Roller ×0,5 · Ski de fond ×0,5 · Vélo ×0,3 · Autre ×1',
       );
       expect(
         screen.getByText(
@@ -1239,6 +1245,25 @@ describe('ChallengeCreateWizard', () => {
       expect(bodies[0]?.reference_sport).toBe('ride');
       expect(bodies[0]?.categories).toEqual({ cumulative_distance: {} });
       expect(bodies[0]?.distance_factors).toEqual({ swim: 0.8 });
+    });
+
+    it('creates a challenge with Hyrox as its reference', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addDistance();
+      fireEvent.change(reference(), { target: { value: 'hyrox' } });
+      expect(await screen.findByText('Hyrox ×1 (référence)')).toBeInTheDocument();
+      expect(await findFactor('Parapente')).toHaveValue(0.3);
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+      expect(row('Sport de référence')).toHaveTextContent('Hyrox');
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.reference_sport).toBe('hyrox');
     });
 
     it('sends only the factors the creator changed', async () => {
