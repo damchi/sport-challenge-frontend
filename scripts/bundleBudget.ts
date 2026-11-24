@@ -9,8 +9,8 @@ export const BUDGET = {
   lazyChunk: 50_000,
 };
 
-/** The chunk of the admin section (src/pages/AdminPage.tsx). */
-const ADMIN_CHUNK = /^\/assets\/AdminPage-[^/]+\.js$/;
+/** The chunks of the admin section (src/pages/Admin*Page.tsx). */
+const ADMIN_CHUNK = /^\/assets\/Admin[A-Za-z]*Page-[^/]+\.js$/;
 
 export interface Asset {
   /** Path from the root of the build, as index.html names it (/assets/x.js). */

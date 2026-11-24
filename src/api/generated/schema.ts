@@ -843,11 +843,133 @@ export interface paths {
          *     corrected, all in one transaction. With `dry_run`, everything is
          *     rolled back and the answer tells what the change would do. An unknown
          *     or deleted challenge answers 404 `challenge_not_found`. The body is
-         *     optional in the contract only so that a non-admin always gets 404
-         *     first: without one, the missing `reason` answers 400
-         *     `validation_failed`.
+         *     optional in the contract: without one, the missing `reason` answers
+         *     400 `validation_failed` to an admin, 404 `not_found` to anyone else.
          */
         patch: operations["updateAdminChallenge"];
+        trace?: never;
+    };
+    "/api/v1/admin/challenges/{challengeId}/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add any account to a challenge, for an admin
+         * @description Admin only (404 `not_found` otherwise). Makes an account an active
+         *     participant of a challenge at any time, registration closed or
+         *     challenge finished (README §2.12): the account needs a complete
+         *     profile (422 `profile_incomplete`), as to join. An active participant,
+         *     a creator included, answers 409 `already_participant`; one who
+         *     abandoned or was excluded, a creator included, answers 422
+         *     `participation_abandoned` (reinstate them instead). An unknown or deleted account answers 404 `user_not_found`.
+         *     The challenge is then judged again as the worker would, the change
+         *     recorded in the journal with its `reason` and the challenge marked as
+         *     corrected, all in one transaction; with `dry_run`, everything is
+         *     rolled back and the answer tells what the change would do. An unknown
+         *     or deleted challenge answers 404 `challenge_not_found`.
+         */
+        post: operations["addAdminParticipant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/challenges/{challengeId}/participants/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Exclude any participant, a creator included, for an admin
+         * @description Admin only (404 `not_found` otherwise). Excludes a participant at any
+         *     time, a creator included (README §2.12): eliminated from every
+         *     category, shown as abandoned. A creator keeps the creator role, as
+         *     one who abandons does; the admin removes it apart
+         *     (`DELETE …/creators/{userId}`). A participant already out answers 200
+         *     and changes nothing but the journal and the judgement. Someone who
+         *     never joined, or a deleted account, answers 404 `not_found`. Judged
+         *     again, journal, mark and `dry_run` as for `POST …/participants`. The
+         *     body carries the reason: a client that cannot send one with
+         *     `DELETE` cannot call this route.
+         */
+        delete: operations["excludeAdminParticipant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/challenges/{challengeId}/participants/{userId}/reinstate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reinstate a participant who abandoned or was excluded, for an admin
+         * @description Admin only (404 `not_found` otherwise). Cancels an abandon or an
+         *     exclusion, at any time (README §2.12): the participant is active
+         *     again, ranked in every category, the weeks locked meanwhile judged
+         *     again. An active participant answers 200 and changes nothing but the
+         *     journal and the judgement. Someone who never joined, or a deleted
+         *     account, answers 404 `not_found`. Judged again, journal, mark and
+         *     `dry_run` as for `POST …/participants`.
+         */
+        post: operations["reinstateAdminParticipant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/challenges/{challengeId}/creators/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Make a participant a creator, for an admin
+         * @description Admin only (404 `not_found` otherwise). Makes a participant, active
+         *     or not, a creator at any time, the challenge finished included
+         *     (README §2.12). Someone who never joined, or a deleted account,
+         *     answers 422 `not_active_participant`: every creator is a participant,
+         *     the admin adds them first. A creator already answers 200 and changes
+         *     nothing but the journal and the judgement. Judged again, journal,
+         *     mark and `dry_run` as for `POST …/participants`.
+         */
+        put: operations["addAdminCreator"];
+        post?: never;
+        /**
+         * Remove the creator role of an account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Removes the creator role, at
+         *     any time (README §2.12); the participation stays as it is. A challenge
+         *     always keeps a creator: removing the last one answers 422
+         *     `last_creator` (`params.challenges`: the challenge). A participant who
+         *     is not a creator answers 200 and changes nothing but the journal and
+         *     the judgement. Someone who never joined, or a deleted account,
+         *     answers 404 `not_found`. Judged again, journal, mark and `dry_run` as
+         *     for `POST …/participants`.
+         */
+        delete: operations["removeAdminCreator"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/users": {
@@ -1275,6 +1397,28 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** @description An admin change that carries nothing but its reason. */
+        AdminCorrectionReason: {
+            reason: components["schemas"]["AdminReason"];
+            /** @description Preview the change, writing nothing. `false` when absent. */
+            dry_run?: boolean;
+        };
+        AdminParticipantAdd: {
+            reason: components["schemas"]["AdminReason"];
+            /** @description Preview the change, writing nothing. `false` when absent. */
+            dry_run?: boolean;
+            /**
+             * Format: uuid
+             * @description The account to add.
+             */
+            user_id: string;
+        };
+        /**
+         * @description Why the admin makes the change, kept in the journal: 3 to 500
+         *     characters once surrounding spaces are removed, 3 of them visible; no
+         *     control character but line breaks and tabs.
+         */
+        AdminReason: string;
         AdminCorrection: {
             /** @description Whether this was a preview, nothing written. */
             dry_run: boolean;
@@ -1472,7 +1616,7 @@ export interface components {
             admin: components["schemas"]["AdminUserRef"];
             /** Format: date-time */
             created_at: string;
-            /** @description Stable code of the change (`challenge.update`...), translated by the client. */
+            /** @description Stable code of the change (`challenge.update`, `participant.add`...), translated by the client. */
             action: string;
             target_type: components["schemas"]["AdminActionTargetType"];
             /**
@@ -2524,10 +2668,11 @@ export interface components {
         };
         /**
          * @description The account has no `admin` permission in its access token
-         *     (`not_found`): an `/admin` route answers as if it did not exist. The
-         *     contract validates the request first, so a malformed one (a
-         *     parameter out of its bounds, a path id that is not a UUID) answers
-         *     400 `validation_failed` whatever the permission.
+         *     (`not_found`): an `/admin` route answers as if it did not exist,
+         *     whatever the request, malformed included (a body that does not match,
+         *     a parameter out of its bounds, a path id that is not a UUID), and
+         *     without `params`. Only an admin gets the 400 `validation_failed` of a
+         *     malformed request, with its fields.
          */
         AdminNotFound: {
             headers: {
@@ -2539,9 +2684,41 @@ export interface components {
         };
         /**
          * @description The account has no `admin` permission (`not_found`), or no such
-         *     account (`user_not_found`).
+         *     account (`user_not_found`). `not_found` also answers a malformed
+         *     request (an id that is not a UUID, a parameter that does not match)
+         *     without the permission, without `params`.
          */
         AdminUserNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /**
+         * @description The account has no `admin` permission (`not_found`), or no such
+         *     challenge, or a deleted one (`challenge_not_found`). `not_found` also
+         *     answers a malformed request (an id that is not a UUID, a body or a
+         *     parameter that does not match) without the permission, without
+         *     `params`.
+         */
+        AdminChallengeNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /**
+         * @description The account has no `admin` permission, or the account never joined
+         *     the challenge, or was deleted (`not_found`), or no such challenge, or
+         *     a deleted one (`challenge_not_found`). `not_found` also answers a
+         *     malformed request (an id that is not a UUID, a body or a parameter
+         *     that does not match) without the permission, without `params`.
+         */
+        AdminParticipantNotFound: {
             headers: {
                 [name: string]: unknown;
             };
@@ -3807,7 +3984,9 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             /**
              * @description The account has no `admin` permission (`not_found`), or no such
-             *     challenge (`challenge_not_found`).
+             *     challenge (`challenge_not_found`). `not_found` also answers a malformed request (an id that is not a
+             *     UUID, a body or a parameter that does not match) without the
+             *     permission, without `params`.
              */
             404: {
                 headers: {
@@ -3849,9 +4028,229 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             /**
              * @description The account has no `admin` permission (`not_found`), or no such
-             *     challenge, or a deleted one (`challenge_not_found`).
+             *     challenge, or a deleted one (`challenge_not_found`). `not_found` also answers a malformed request (an id that is not a
+             *     UUID, a body or a parameter that does not match) without the
+             *     permission, without `params`.
              */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    addAdminParticipant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminParticipantAdd"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            /**
+             * @description The account has no `admin` permission (`not_found`), no such
+             *     challenge, or a deleted one (`challenge_not_found`), or no such
+             *     account, or a deleted one (`user_not_found`). `not_found` also
+             *     answers a malformed request (an id that is not a UUID, a body or
+             *     a parameter that does not match) without the permission, without
+             *     `params`.
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The account already takes part (`already_participant`). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /**
+             * @description The account abandoned or was excluded (`participation_abandoned`),
+             *     or its profile is incomplete (`profile_incomplete`).
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    excludeAdminParticipant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminParticipantNotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    reinstateAdminParticipant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminParticipantNotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    addAdminCreator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminChallengeNotFound"];
+            /** @description The account is not a participant (`not_active_participant`). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    removeAdminCreator: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminParticipantNotFound"];
+            /** @description The account is the last creator of the challenge (`last_creator`). */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

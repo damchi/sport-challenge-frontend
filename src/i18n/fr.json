@@ -942,6 +942,44 @@
       "challenges": "Défis",
       "users": "Comptes",
       "journal": "Journal"
+    },
+    "dashboard": {
+      "computedAt": "Chiffres au {{date}}",
+      "accounts": {
+        "title": "Comptes",
+        "total": "Total",
+        "new": "Nouveaux sur 7 jours",
+        "active": "Actifs sur 7 jours"
+      },
+      "challenges": {
+        "title": "Défis",
+        "upcoming": "À venir",
+        "ongoing": "En cours",
+        "finished": "Terminés",
+        "deleted": "Supprimés"
+      },
+      "activity": {
+        "title": "Activité",
+        "activities": "Activités sur 7 jours",
+        "pendingDeletions": "Suppressions Auth0 en attente"
+      },
+      "worker": {
+        "title": "Worker",
+        "task": "Tâche",
+        "lastRun": "Dernier passage",
+        "lastFailure": "Dernier échec",
+        "never": "Jamais",
+        "noFailure": "Aucun",
+        "succeeded": "Réussi",
+        "failed": "Échec",
+        "unfinished": "En cours ou interrompu",
+        "tasks": {
+          "close-weeks": "Clôture des semaines",
+          "finalize-challenges": "Fin des défis",
+          "retry-auth0-deletions": "Suppressions Auth0"
+        }
+      },
+      "version": "Version de l'API : {{version}} ({{commit}})"
     }
   }
 }
