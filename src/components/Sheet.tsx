@@ -22,6 +22,8 @@ export function Sheet({
   const dialog = useRef<HTMLDialogElement>(null);
   const close = useRef<HTMLButtonElement>(null);
   const titleId = useId();
+  // Where the press began: a drag from the panel that ends outside keeps it open.
+  const pressedOutside = useRef(false);
 
   useEffect(() => {
     const element = dialog.current;
@@ -42,9 +44,13 @@ export function Sheet({
         event.preventDefault();
         onClose();
       }}
+      // The backdrop belongs to the dialog itself, its content to the panel.
+      onPointerDown={(event) => {
+        pressedOutside.current = event.target === event.currentTarget;
+      }}
       onClick={(event) => {
-        // The backdrop belongs to the dialog itself, its content to the panel.
-        if (event.target === event.currentTarget) onClose();
+        if (pressedOutside.current && event.target === event.currentTarget) onClose();
+        pressedOutside.current = false;
       }}
       className="mx-0 mt-auto mb-0 max-h-[85dvh] w-full max-w-none overflow-y-auto overscroll-contain rounded-t-card bg-surface text-ink backdrop:bg-surface-raised/60 md:m-auto md:max-w-lg md:rounded-card"
     >
