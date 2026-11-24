@@ -97,7 +97,8 @@ export function AdminWorker({
             {tasks.map(({ task, last_run, last_failure }) => (
               <tr key={task}>
                 <th scope="row" className={`${CELL} font-semibold`}>
-                  {t(`admin.dashboard.worker.tasks.${task}`)}
+                  {/* A task the contract adds before its label: its identifier. */}
+                  {t(`admin.dashboard.worker.tasks.${task}`, { defaultValue: task })}
                 </th>
                 <td className={CELL}>
                   {last_run ? (

@@ -2,13 +2,19 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { mockAdminStats } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
-import { dateTime } from '../../domain/format/instant';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
 import { AdminDashboard } from './AdminDashboard';
 
-const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-const at = (instant: string) => dateTime(instant, zone, 'fr');
+// The device's time zone, fixed: the times below are Montreal's.
+beforeEach(() => {
+  const options = Intl.DateTimeFormat().resolvedOptions();
+  vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({
+    ...options,
+    timeZone: 'America/Montreal',
+  });
+});
+afterEach(() => vi.restoreAllMocks());
 
 function renderDashboard() {
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
@@ -36,7 +42,7 @@ describe('AdminDashboard', () => {
     renderDashboard();
 
     expect(await screen.findByRole('heading', { level: 2, name: 'Comptes' })).toBeInTheDocument();
-    expect(screen.getByText(`Chiffres au ${at(mockAdminStats.computed_at)}`)).toBeInTheDocument();
+    expect(screen.getByText('Chiffres au 24 nov. 2026, 09:00')).toBeInTheDocument();
     expect(figure('Total')).toBe('1 284');
     expect(figure('Nouveaux sur 7 jours')).toBe('37');
     expect(figure('Actifs sur 7 jours')).toBe('412');
@@ -62,7 +68,7 @@ describe('AdminDashboard', () => {
     const finalizing = workerRow('Fin des défis');
     expect(finalizing.getByText('Échec')).toBeInTheDocument();
     expect(finalizing.getByText('internal_error')).toBeInTheDocument();
-    expect(finalizing.getAllByText(at('2026-11-24T05:05:00Z'))).toHaveLength(2);
+    expect(finalizing.getAllByText('24 nov. 2026, 00:05')).toHaveLength(2);
 
     const deletions = workerRow('Suppressions Auth0');
     expect(deletions.getByText('Jamais')).toBeInTheDocument();
