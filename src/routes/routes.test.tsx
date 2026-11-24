@@ -1,5 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
+import { mockMe } from '../mocks/handlers';
+import { server } from '../mocks/server';
 import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
 import { AppProviders } from '../test/AppProviders';
@@ -140,5 +143,74 @@ describe('routes', () => {
       'href',
       '/challenges',
     );
+  });
+
+  describe('the admin section', () => {
+    const asAdmin = () =>
+      server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, is_admin: true })));
+
+    it.each([
+      ['/admin', 'Tableau de bord'],
+      ['/admin/challenges', 'Défis'],
+      ['/admin/challenges/c-1', 'Défis'],
+      ['/admin/users', 'Comptes'],
+      ['/admin/users/u-1', 'Comptes'],
+      ['/admin/journal', 'Journal'],
+    ])('opens %s to an admin, under its part', async (path, part) => {
+      asAdmin();
+      renderAt(path);
+
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Administration' }),
+      ).toBeInTheDocument();
+      const parts = screen.getByRole('navigation', { name: "Sections de l'administration" });
+      expect(within(parts).getByRole('link', { name: part })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await waitFor(() => expect(document.title).toBe(`${part} · Sport Challenge`));
+    });
+
+    it('goes from part to part', async () => {
+      asAdmin();
+      renderAt('/admin');
+      // The page is drawn again at each address: the parts are looked up anew.
+      const parts = () => screen.getByRole('navigation', { name: "Sections de l'administration" });
+      await screen.findByRole('heading', { level: 1, name: 'Administration' });
+      expect(
+        within(parts())
+          .getAllByRole('link')
+          .map((link) => link.textContent),
+      ).toEqual(['Tableau de bord', 'Défis', 'Comptes', 'Journal']);
+
+      fireEvent.click(within(parts()).getByRole('link', { name: 'Journal' }));
+      await waitFor(() =>
+        expect(within(parts()).getByRole('link', { name: 'Journal' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        ),
+      );
+      expect(within(parts()).getByRole('link', { name: 'Tableau de bord' })).not.toHaveAttribute(
+        'aria-current',
+      );
+    });
+
+    it('shows the not found page to anyone else', async () => {
+      renderAt('/admin/users');
+
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Page introuvable' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+      expect(document.title).toBe('Page introuvable · Sport Challenge');
+    });
+
+    it('sends a signed-out visitor to sign in first', async () => {
+      const auth = createFakeAuth();
+      renderAt('/admin', auth);
+
+      await waitFor(() => expect(auth.signIn).toHaveBeenCalledWith('/admin'));
+      expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+    });
   });
 });

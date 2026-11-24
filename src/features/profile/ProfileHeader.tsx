@@ -1,4 +1,4 @@
-import { Activity, ChevronRight } from 'lucide-react';
+import { Activity, ChevronRight, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { Me } from '../../api/hooks/useMe';
@@ -9,7 +9,8 @@ import { ProfileStats } from './ProfileStats';
 
 /**
  * Head of the profile: the initials avatar, the first and last name, the
- * pseudo under them, the user's numbers, then the way to their activities.
+ * pseudo under them, the user's numbers, then the way to their activities,
+ * and to the admin section for an admin.
  */
 export function ProfileHeader({ me }: { me: Me }) {
   const { t } = useTranslation();
@@ -33,6 +34,16 @@ export function ProfileHeader({ me }: { me: Me }) {
         <span className="flex-1">{t('activities.title')}</span>
         <ChevronRight aria-hidden="true" size={20} className="text-muted" />
       </Link>
+      {me.is_admin && (
+        <Link
+          to="/admin"
+          className="mt-3 flex min-h-12 w-full items-center gap-3 rounded-row bg-bg px-4 py-3 text-left font-semibold hover-fill"
+        >
+          <ShieldCheck aria-hidden="true" size={20} className="text-accent" />
+          <span className="flex-1">{t('admin.title')}</span>
+          <ChevronRight aria-hidden="true" size={20} className="text-muted" />
+        </Link>
+      )}
     </div>
   );
 }

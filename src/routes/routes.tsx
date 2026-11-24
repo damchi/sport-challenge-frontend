@@ -3,10 +3,12 @@ import { Page } from '../components/Page';
 import { LoadingState } from '../components/states/LoadingState';
 import { CallbackPage } from '../pages/CallbackPage';
 import { HomePage } from '../pages/HomePage';
+import { NotFoundPage } from '../pages/NotFoundPage';
 import { AppShell } from './AppShell';
 import { HOME_PATH } from '../lib/paths';
 import { pages } from './pages';
 import { ProfileGate } from './ProfileGate';
+import { RequireAdmin } from './RequireAdmin';
 import { RequireAuth } from './RequireAuth';
 import { RootLayout } from './RootLayout';
 import { RouteError } from './RouteError';
@@ -93,7 +95,25 @@ export const routes: RouteObject[] = [
                         handle: title('invitationPage.title'),
                       },
                       { path: '/me', lazy: pages.profile, handle: title('nav.profile') },
-                      { path: '*', lazy: pages.notFound, handle: title('notFound.title') },
+                      {
+                        // Admins only. Not in pages: never preloaded, its code
+                        // loads once the guard has let the admin in.
+                        path: '/admin',
+                        element: <RequireAdmin />,
+                        handle: title('admin.title'),
+                        children: [
+                          { index: true, handle: title('admin.nav.dashboard') },
+                          { path: 'challenges', handle: title('admin.nav.challenges') },
+                          {
+                            path: 'challenges/:challengeId',
+                            handle: title('admin.nav.challenges'),
+                          },
+                          { path: 'users', handle: title('admin.nav.users') },
+                          { path: 'users/:userId', handle: title('admin.nav.users') },
+                          { path: 'journal', handle: title('admin.nav.journal') },
+                        ],
+                      },
+                      { path: '*', element: <NotFoundPage />, handle: title('notFound.title') },
                     ],
                   },
                 ],
