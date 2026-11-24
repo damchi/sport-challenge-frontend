@@ -7,16 +7,20 @@ export type AdminCorrection = components['schemas']['AdminCorrection'];
 export type AdminChallengePreview = components['schemas']['AdminChallengePreview'];
 export type AdminEliminationChange = components['schemas']['AdminEliminationChange'];
 
-/** What every admin change that judges a challenge again sends, besides its own fields. */
+/**
+ * What every admin change that judges a challenge again sends, besides its
+ * own fields. No reason for a preview (asked from the API: SC-API-176,
+ * damchi/sport-challenge-api#337): it is given once the preview is seen.
+ */
 export interface CorrectionBody {
-  reason: string;
+  reason?: string;
   /** Preview the change: the server rolls everything back. */
   dry_run: boolean;
 }
 
 /**
  * Sends an admin change that judges challenges again: `send` makes its
- * request with the reason and `dry_run`, and gives the server's answer.
+ * request with `dry_run` and, for the change itself, the reason, and gives the server's answer.
  * Once a change is made (not a preview), every cached answer is read
  * again: it may move any ranking, challenge or account. Its errors are shown
  * by the reason dialog, not the global banner.

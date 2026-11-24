@@ -1,3 +1,5 @@
+import { ArrowDown, ArrowRight, ArrowUp, Flag } from 'lucide-react';
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdminChallenge } from '../../api/hooks/admin/useAdminChallenges';
 import type {
@@ -15,11 +17,9 @@ import {
   isOut,
   rankingChanges,
   type LineChange,
-  type Move,
 } from '../../domain/rankingChanges';
 import { useCategoryName } from '../challenges/detail/categoryNames';
 import { useEntryValue } from '../leaderboard/useEntryValue';
-import { AdminTable } from './AdminTable';
 import { CELL } from './adminCells';
 
 type CategoryRanking = Leaderboard['categories'][number];
@@ -32,89 +32,6 @@ function tiesOf(category: CategoryRanking | null): Set<number> {
   );
 }
 
-/**
- * A participant's place on one side of the change: their rank (noted when
- * shared) and value, or why they are out of the ranking, as the leaderboard
- * says it.
- */
-function Standing({
-  entry,
-  type,
-  ties,
-  referenceSport,
-}: {
-  entry: LeaderboardEntry | null;
-  type: CategoryType;
-  ties: Set<number>;
-  referenceSport: string | undefined;
-}) {
-  const { t } = useTranslation();
-  const value = useEntryValue(type, entry?.value ?? null, referenceSport);
-  if (!entry) return <span className="text-muted">{t('admin.recompute.absent')}</span>;
-  if (isOut(entry)) {
-    const week = entry.elimination?.eliminated_week;
-    return (
-      <span className="text-muted">
-        {entry.abandoned || !week
-          ? t('leaderboard.abandoned')
-          : t('leaderboard.eliminated', { week })}
-      </span>
-    );
-  }
-  const tied = entry.rank !== null && ties.has(entry.rank);
-  return (
-    <span className="flex flex-col">
-      <span className="font-bold tabular-nums">
-        {entry.rank}
-        {tied && <span className="font-normal text-muted"> {t('leaderboard.tied')}</span>}
-      </span>
-      <span className="text-muted tabular-nums">{value}</span>
-    </span>
-  );
-}
-
-/** The move, by an arrow and a text: the colour is never the only signal. */
-function MoveText({ move }: { move: Move }) {
-  const { t } = useTranslation();
-  switch (move.kind) {
-    case 'up':
-      return (
-        <span className="font-semibold text-ok-fg">
-          <span aria-hidden="true">↑ </span>
-          {t('admin.recompute.move.up', { count: move.places })}
-        </span>
-      );
-    case 'down':
-      return (
-        <span className="font-semibold text-risk-fg">
-          <span aria-hidden="true">↓ </span>
-          {t('admin.recompute.move.down', { count: move.places })}
-        </span>
-      );
-    case 'in':
-      return (
-        <span className="font-semibold text-ok-fg">
-          <span aria-hidden="true">↑ </span>
-          {t('admin.recompute.move.in')}
-        </span>
-      );
-    case 'out':
-      return (
-        <span className="font-semibold text-risk-fg">
-          <span aria-hidden="true">↓ </span>
-          {t('admin.recompute.move.out')}
-        </span>
-      );
-    case 'same':
-      return (
-        <span className="text-muted">
-          <span aria-hidden="true">= </span>
-          {t('admin.recompute.move.same')}
-        </span>
-      );
-  }
-}
-
 /** A name, or the words for an account that has none. */
 function useName() {
   const { t } = useTranslation();
@@ -123,9 +40,110 @@ function useName() {
 }
 
 /**
- * One category of a challenge, before and after the change: every
- * participant, in the order of the ranking after it. A side the change has
- * not (a deleted challenge has no ranking) gets no column.
+ * A place in the ranking as the leaderboard says it: the ordinal ("3e"),
+ * noted when shared, or why the participant is out of it.
+ */
+function usePlace() {
+  const { t } = useTranslation();
+  return (entry: LeaderboardEntry | null, ties: Set<number>): string => {
+    if (!entry) return t('admin.recompute.absent');
+    if (isOut(entry)) {
+      const week = entry.elimination?.eliminated_week;
+      return entry.abandoned || !week
+        ? t('leaderboard.abandoned')
+        : t('leaderboard.eliminated', { week });
+    }
+    const rank = entry.rank ?? 0;
+    const ordinal = t('leaderboard.rank', { count: rank, ordinal: true });
+    return ties.has(rank) ? `${ordinal} ${t('leaderboard.tied')}` : ordinal;
+  };
+}
+
+/**
+ * The rank column: the place alone when it stays, else "↑ 3e → 2e". The
+ * arrows are for the eye; words, read by screen readers, say the move.
+ */
+function RankCell({
+  change,
+  tiesBefore,
+  tiesAfter,
+}: {
+  change: LineChange<LeaderboardEntry>;
+  tiesBefore: Set<number>;
+  tiesAfter: Set<number>;
+}) {
+  const { t } = useTranslation();
+  const place = usePlace();
+  const before = place(change.before, tiesBefore);
+  const after = place(change.after, tiesAfter);
+  const move = change.move;
+  if (!move) return <>{change.after ? after : before}</>;
+  if (move.kind === 'same') return <>{after}</>;
+  const up = move.kind === 'up' || move.kind === 'in';
+  const Arrow = up ? ArrowUp : ArrowDown;
+  return (
+    <span
+      className={`inline-flex flex-wrap items-center gap-1 font-bold ${up ? 'text-ok-fg' : 'text-risk-fg'}`}
+    >
+      <Arrow aria-hidden="true" size={16} strokeWidth={2.5} />
+      {move.kind === 'in' || move.kind === 'out' ? (
+        // Entering or leaving the ranking: the words say it, then the place.
+        <>
+          <span className="sr-only">
+            {t(move.kind === 'in' ? 'admin.recompute.in' : 'admin.recompute.out')}{' '}
+          </span>
+          <span aria-hidden="true">{before}</span>
+          <ArrowRight aria-hidden="true" size={16} strokeWidth={2.5} />
+          {after}
+        </>
+      ) : (
+        <>
+          <span className="sr-only">{t(up ? 'admin.recompute.up' : 'admin.recompute.down')} </span>
+          {before}
+          <ArrowRight aria-hidden="true" size={16} strokeWidth={2.5} />
+          <span className="sr-only"> {t('admin.recompute.to')} </span>
+          {after}
+        </>
+      )}
+    </span>
+  );
+}
+
+/** The value shown for a line: none out of the ranking (no value is shown there). */
+function shownValue(entry: LeaderboardEntry | null): number | null {
+  return entry && !isOut(entry) ? entry.value : null;
+}
+
+/** Whether the value shown changes. */
+function valueChanges(change: LineChange<LeaderboardEntry>): boolean {
+  return change.move !== null && shownValue(change.before) !== shownValue(change.after);
+}
+
+/** A value of the ranking, or a dash for a participant without one. */
+function ValueCell({
+  entry,
+  type,
+  referenceSport,
+}: {
+  entry: LeaderboardEntry | null;
+  type: CategoryType;
+  referenceSport: string | undefined;
+}) {
+  const value = useEntryValue(type, shownValue(entry), referenceSport);
+  return <>{value || '—'}</>;
+}
+
+/** Whether a line is shown: its place or its value changes (all, without a comparison). */
+function isShown(change: LineChange<LeaderboardEntry>): boolean {
+  if (!change.move) return true;
+  return change.move.kind !== 'same' || valueChanges(change);
+}
+
+/**
+ * One category, before and after the change: the participants whose rank
+ * or value changes, those whose value changes highlighted. Without one of
+ * the two rankings (a deleted challenge has none), every participant of the
+ * other.
  */
 function CategoryPreview({
   type,
@@ -133,7 +151,6 @@ function CategoryPreview({
   after,
   showBefore,
   showAfter,
-  title,
   referenceSport,
 }: {
   type: CategoryType;
@@ -141,156 +158,168 @@ function CategoryPreview({
   after: CategoryRanking | null;
   showBefore: boolean;
   showAfter: boolean;
-  title: string;
   referenceSport: string | undefined;
 }) {
   const { t } = useTranslation();
+  const headingId = useId();
   const categoryName = useCategoryName(referenceSport)(type);
   const name = useName();
-  const changes: LineChange<LeaderboardEntry>[] = rankingChanges(
+  const all = rankingChanges(
     showBefore ? (before?.entries ?? []) : null,
     showAfter ? (after?.entries ?? []) : null,
   );
+  const shown = all.filter(isShown);
   const tiesBefore = tiesOf(before);
   const tiesAfter = tiesOf(after);
-  const compared = showBefore && showAfter;
   return (
-    <section className="flex flex-col gap-2">
-      <h4 className="font-semibold">{categoryName}</h4>
-      {changes.length === 0 ? (
-        <EmptyState message={t('admin.recompute.nobody')} />
+    // Not a named region: its table is one already, under the same name.
+    <div className="flex min-w-0 flex-col gap-2 rounded-card border border-border bg-surface pt-4 pb-4">
+      <h4 id={headingId} className="px-4 text-sm font-bold tracking-wide uppercase md:px-6">
+        {categoryName}
+      </h4>
+      {shown.length === 0 ? (
+        <p className="px-4 text-sm text-muted md:px-6">{t('admin.recompute.nothing')}</p>
       ) : (
-        <AdminTable
-          caption={t('admin.recompute.caption', { challenge: title, category: categoryName })}
-          columns={[
-            t('admin.recompute.participant'),
-            ...(showBefore ? [t('admin.recompute.before')] : []),
-            ...(showAfter ? [t('admin.recompute.after')] : []),
-            ...(compared ? [t('admin.recompute.change')] : []),
-          ]}
+        <div
+          role="region"
+          aria-labelledby={headingId}
+          tabIndex={0}
+          className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {changes.map((change) => {
-            const user = (change.after ?? change.before)?.user;
-            return (
-              <tr key={change.userId}>
-                <th scope="row" className={`${CELL} font-semibold`}>
-                  {user ? name(user) : t('admin.challenges.unnamed')}
+          <table className="w-full min-w-104 text-sm">
+            <thead>
+              <tr className="text-xs tracking-wide text-muted uppercase">
+                <th scope="col" className="py-3 pr-4 pl-4 text-left font-semibold md:pl-6">
+                  {t('admin.recompute.participant')}
+                </th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold">
+                  {t('admin.recompute.rank')}
                 </th>
                 {showBefore && (
-                  <td className={CELL}>
-                    <Standing
-                      entry={change.before}
-                      type={type}
-                      ties={tiesBefore}
-                      referenceSport={referenceSport}
-                    />
-                  </td>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold">
+                    {t('admin.recompute.before')}
+                  </th>
                 )}
                 {showAfter && (
-                  <td className={CELL}>
-                    <Standing
-                      entry={change.after}
-                      type={type}
-                      ties={tiesAfter}
-                      referenceSport={referenceSport}
-                    />
-                  </td>
-                )}
-                {compared && change.move && (
-                  <td className={CELL}>
-                    <MoveText move={change.move} />
-                  </td>
+                  <th scope="col" className="py-3 pr-4 pl-4 text-right font-semibold md:pr-6">
+                    {t('admin.recompute.after')}
+                  </th>
                 )}
               </tr>
-            );
-          })}
-        </AdminTable>
+            </thead>
+            <tbody>
+              {shown.map((change) => {
+                const user = (change.after ?? change.before)?.user;
+                const valueChanged = valueChanges(change);
+                return (
+                  <tr key={change.userId} className={valueChanged ? 'bg-accent-soft' : undefined}>
+                    <th scope="row" className={`${CELL} font-semibold md:pl-6`}>
+                      {user ? name(user) : t('admin.challenges.unnamed')}
+                    </th>
+                    <td className={`${CELL} whitespace-nowrap`}>
+                      <RankCell change={change} tiesBefore={tiesBefore} tiesAfter={tiesAfter} />
+                    </td>
+                    {showBefore && (
+                      <td className={`${CELL} text-right whitespace-nowrap tabular-nums`}>
+                        <ValueCell
+                          entry={change.before}
+                          type={type}
+                          referenceSport={referenceSport}
+                        />
+                      </td>
+                    )}
+                    {showAfter && (
+                      <td
+                        className={`${CELL} text-right whitespace-nowrap tabular-nums md:pr-6 ${valueChanged ? 'font-bold' : ''}`}
+                      >
+                        <ValueCell
+                          entry={change.after}
+                          type={type}
+                          referenceSport={referenceSport}
+                        />
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
-    </section>
-  );
-}
-
-/** An elimination on one side of the change: its week and distance, or none. */
-function EliminationText({
-  judgement,
-  locale,
-}: {
-  judgement: AdminEliminationChange['before'];
-  locale: string;
-}) {
-  const { t } = useTranslation();
-  if (!judgement) return <span className="text-muted">{t('admin.recompute.notEliminated')}</span>;
-  const km = (meters: number) => formatKm(meters / 1000, locale);
-  return (
-    <span className="flex flex-col">
-      <span className="font-semibold">
-        {t('admin.challenges.weeks.number', { number: judgement.week_number })}
-      </span>
-      <span className="text-muted tabular-nums">
-        {t('admin.challenges.eliminations.done', {
-          done: km(judgement.distance_meters),
-          required: km(judgement.required_meters),
-        })}
-      </span>
-    </span>
-  );
-}
-
-/** The eliminations the change gives, removes or moves. */
-function EliminationsPreview({
-  eliminations,
-  title,
-}: {
-  eliminations: AdminEliminationChange[];
-  title: string;
-}) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const name = useName();
-  return (
-    <section className="flex flex-col gap-2">
-      <h4 className="font-semibold">{t('admin.recompute.eliminations')}</h4>
-      {eliminations.length === 0 ? (
-        <EmptyState message={t('admin.recompute.noElimination')} />
-      ) : (
-        <AdminTable
-          caption={t('admin.recompute.caption', {
-            challenge: title,
-            category: t('admin.recompute.eliminations'),
-          })}
-          columns={[
-            t('admin.recompute.participant'),
-            t('admin.recompute.before'),
-            t('admin.recompute.after'),
-          ]}
-        >
-          {eliminations.map((change) => (
-            <tr key={change.user.id}>
-              <th scope="row" className={`${CELL} font-semibold`}>
-                {name(change.user)}
-              </th>
-              <td className={CELL}>
-                <EliminationText judgement={change.before} locale={locale} />
-              </td>
-              <td className={CELL}>
-                <EliminationText judgement={change.after} locale={locale} />
-              </td>
-            </tr>
-          ))}
-        </AdminTable>
+      {shown.length > 0 && shown.length < all.length && (
+        <p className="px-4 text-sm text-muted md:px-6">{t('admin.recompute.others')}</p>
       )}
-    </section>
+    </div>
   );
 }
 
 /**
- * One challenge the change touches. Its title and reference sport come from
- * its admin sheet; until then (or if it cannot be read), a neutral title.
+ * An elimination the change gives, removes or moves, in a sentence: green
+ * when it is removed, red when it is given, plain when it moves. The words
+ * say which; the colour only repeats it.
+ */
+function EliminationNote({ change }: { change: AdminEliminationChange }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const name = useName()(change.user);
+  const km = (meters: number) => formatKm(meters / 1000, locale);
+  const { before, after } = change;
+  const judged = after ?? before;
+  if (!judged) return null;
+  const figures = (judgement: typeof judged) => ({
+    done: km(judgement.distance_meters),
+    required: km(judgement.required_meters),
+  });
+  let sentence: string;
+  let detail: string;
+  if (after === null) {
+    sentence = t('admin.recompute.elimination.removed', { name, week: judged.week_number });
+    detail = t('admin.recompute.elimination.was', figures(judged));
+  } else if (before === null) {
+    sentence = t('admin.recompute.elimination.given', { name, week: after.week_number });
+    detail = t('admin.recompute.elimination.done', figures(after));
+  } else if (before.week_number !== after.week_number) {
+    sentence = t('admin.recompute.elimination.moved', {
+      name,
+      week: after.week_number,
+      was: before.week_number,
+    });
+    detail = t('admin.recompute.elimination.done', figures(after));
+  } else {
+    // Same week, other distance or minimum: both, before and after.
+    sentence = t('admin.recompute.elimination.kept', { name, week: after.week_number });
+    detail = t('admin.recompute.elimination.changed', {
+      before: t('admin.recompute.elimination.done', figures(before)),
+      after: t('admin.recompute.elimination.done', figures(after)),
+    });
+  }
+  const tone =
+    after === null
+      ? 'bg-ok-bg text-ok-fg'
+      : before === null
+        ? 'bg-risk-bg text-risk-fg'
+        : 'border border-border bg-surface text-ink';
+  return (
+    <li className={`flex gap-3 rounded-card p-4 md:px-6 ${tone}`}>
+      <Flag aria-hidden="true" size={20} className="mt-0.5 flex-none" />
+      <p>
+        <span className="font-bold">{sentence}</span> {detail}
+      </p>
+    </li>
+  );
+}
+
+/**
+ * One challenge the change touches, in a card: its title and status (from
+ * its admin sheet; until then, a neutral title), each category, and the
+ * eliminations that change.
  */
 function ChallengePreview({ preview }: { preview: AdminChallengePreview }) {
   const { t } = useTranslation();
+  const headingId = useId();
   const challenge = useAdminChallenge(preview.challenge_id);
   const title = challenge.data?.title ?? t('admin.recompute.challenge');
+  const status = challenge.data?.status;
   const referenceSport = challenge.data?.reference_sport;
   const showBefore = preview.before !== null;
   const showAfter = preview.after !== null;
@@ -298,26 +327,38 @@ function ChallengePreview({ preview }: { preview: AdminChallengePreview }) {
     preview.before?.categories ?? null,
     preview.after?.categories ?? null,
   );
-  const hasElimination = categories.some((category) => category.type === 'elimination');
   return (
-    <section className="flex flex-col gap-4">
-      <h3 className="font-display text-lg font-bold">{title}</h3>
+    <section
+      aria-labelledby={headingId}
+      className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4 md:p-6"
+    >
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h3 id={headingId} className="font-display text-xl font-bold">
+          {title}
+        </h3>
+        {status && <p className="text-sm text-muted">{t(`admin.challenges.status.${status}`)}</p>}
+      </div>
       {!showBefore && <p className="text-sm text-muted">{t('admin.recompute.noBefore')}</p>}
       {!showAfter && <p className="text-sm text-muted">{t('admin.recompute.noAfter')}</p>}
-      {categories.map((category) => (
-        <CategoryPreview
-          key={category.type}
-          type={category.type}
-          before={category.before}
-          after={category.after}
-          showBefore={showBefore}
-          showAfter={showAfter}
-          title={title}
-          referenceSport={referenceSport}
-        />
-      ))}
-      {(hasElimination || preview.eliminations.length > 0) && (
-        <EliminationsPreview eliminations={preview.eliminations} title={title} />
+      <div className="grid gap-4 lg:grid-cols-2">
+        {categories.map((category) => (
+          <CategoryPreview
+            key={category.type}
+            type={category.type}
+            before={category.before}
+            after={category.after}
+            showBefore={showBefore}
+            showAfter={showAfter}
+            referenceSport={referenceSport}
+          />
+        ))}
+      </div>
+      {preview.eliminations.length > 0 && (
+        <ul className="grid gap-4 lg:grid-cols-2">
+          {preview.eliminations.map((change) => (
+            <EliminationNote key={change.user.id} change={change} />
+          ))}
+        </ul>
       )}
     </section>
   );
@@ -325,9 +366,9 @@ function ChallengePreview({ preview }: { preview: AdminChallengePreview }) {
 
 /**
  * What an admin change would do (README §2.12, « Recalcul et aperçu »): for
- * each challenge it touches, every ranking before and after it, the moves
- * (by an arrow and a text), and the eliminations that change. Ranks, ties
- * and who is out are the server's, shown as on the leaderboard.
+ * each challenge it touches, the participants whose rank or value changes
+ * in each category (by arrows and words), and the eliminations that change.
+ * Ranks, ties and who is out are the server's, shown as on the leaderboard.
  */
 export function RecomputePreview({ correction }: { correction: AdminCorrection }) {
   const { t } = useTranslation();
@@ -335,7 +376,7 @@ export function RecomputePreview({ correction }: { correction: AdminCorrection }
     return <EmptyState message={t('admin.recompute.none')} />;
   }
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {correction.challenges.map((preview) => (
         <ChallengePreview key={preview.challenge_id} preview={preview} />
       ))}
