@@ -1190,6 +1190,33 @@
         "filtered": "No action matches these filters."
       },
       "clearFilters": "Clear the filters"
+    },
+    "recompute": {
+      "see": "See the preview",
+      "intro": "Here is what the change would do. Nothing is saved yet.",
+      "none": "This change touches no ranking.",
+      "challenge": "Challenge",
+      "noBefore": "No ranking before: the challenge is deleted.",
+      "noAfter": "No ranking after: the challenge will be deleted.",
+      "caption": "{{challenge}} · {{category}}",
+      "participant": "Participant",
+      "before": "Before",
+      "after": "After",
+      "change": "Change",
+      "absent": "Not in the ranking",
+      "nobody": "Nobody in this ranking.",
+      "move": {
+        "up_one": "Up 1 place",
+        "up_other": "Up {{count}} places",
+        "down_one": "Down 1 place",
+        "down_other": "Down {{count}} places",
+        "in": "Enters the ranking",
+        "out": "Leaves the ranking",
+        "same": "Unchanged"
+      },
+      "eliminations": "Eliminations that change",
+      "noElimination": "No elimination changes.",
+      "notEliminated": "Not eliminated"
     }
   }
 }

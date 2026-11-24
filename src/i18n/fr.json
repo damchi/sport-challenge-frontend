@@ -1213,6 +1213,35 @@
         "filtered": "Aucune action ne correspond à ces filtres."
       },
       "clearFilters": "Effacer les filtres"
+    },
+    "recompute": {
+      "see": "Voir l'aperçu",
+      "intro": "Voici ce que la modification changerait. Rien n'est encore enregistré.",
+      "none": "Cette modification ne touche aucun classement.",
+      "challenge": "Défi",
+      "noBefore": "Pas de classement avant : le défi est supprimé.",
+      "noAfter": "Pas de classement après : le défi sera supprimé.",
+      "caption": "{{challenge}} · {{category}}",
+      "participant": "Participant",
+      "before": "Avant",
+      "after": "Après",
+      "change": "Évolution",
+      "absent": "Pas dans le classement",
+      "nobody": "Personne dans ce classement.",
+      "move": {
+        "up_one": "Monte d'une place",
+        "up_many": "Monte de {{count}} places",
+        "up_other": "Monte de {{count}} places",
+        "down_one": "Descend d'une place",
+        "down_many": "Descend de {{count}} places",
+        "down_other": "Descend de {{count}} places",
+        "in": "Entre dans le classement",
+        "out": "Sort du classement",
+        "same": "Inchangé"
+      },
+      "eliminations": "Éliminations qui changent",
+      "noElimination": "Aucune élimination ne change.",
+      "notEliminated": "Pas éliminé"
     }
   }
 }

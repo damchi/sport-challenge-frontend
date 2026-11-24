@@ -8,6 +8,8 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
  * checkbox), with `confirmDisabled` until the user has gone through them.
  * `variant="danger"` marks a final action (deleting, abandoning) in red; its
  * label still says what happens, the colour is never the only signal.
+ * `wide` gives room to tables (an admin preview). `cancelDisabled` keeps it
+ * open while a change it confirmed is being sent (Escape included).
  */
 export function ConfirmDialog({
   open,
@@ -20,7 +22,9 @@ export function ConfirmDialog({
   details,
   children,
   confirmDisabled = false,
+  cancelDisabled = false,
   variant = 'default',
+  wide = false,
 }: {
   open: boolean;
   title: string;
@@ -28,7 +32,9 @@ export function ConfirmDialog({
   details?: ReactNode;
   children?: ReactNode;
   confirmDisabled?: boolean;
+  cancelDisabled?: boolean;
   variant?: 'default' | 'danger';
+  wide?: boolean;
   confirmLabel: string;
   cancelLabel: string;
   onConfirm: () => void;
@@ -61,9 +67,9 @@ export function ConfirmDialog({
       onCancel={(event) => {
         // The parent closes it through `open`.
         event.preventDefault();
-        onCancel();
+        if (!cancelDisabled) onCancel();
       }}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2.5rem)] max-w-sm overflow-y-auto rounded-card bg-surface p-6 text-ink backdrop:bg-surface-raised/60"
+      className={`m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2.5rem)] ${wide ? 'max-w-2xl' : 'max-w-sm'} overflow-y-auto rounded-card bg-surface p-6 text-ink backdrop:bg-surface-raised/60`}
     >
       <h2 id={titleId} className="font-display text-lg font-bold">
         {title}
@@ -92,8 +98,11 @@ export function ConfirmDialog({
         <button
           ref={cancel}
           type="button"
-          onClick={onCancel}
-          className="h-13 rounded-full border border-border bg-surface hover-fill px-5 font-bold"
+          aria-disabled={cancelDisabled || undefined}
+          onClick={() => {
+            if (!cancelDisabled) onCancel();
+          }}
+          className="h-13 rounded-full border border-border bg-surface hover-fill px-5 font-bold aria-disabled:opacity-60"
         >
           {cancelLabel}
         </button>

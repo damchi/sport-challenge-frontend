@@ -23,6 +23,7 @@ import type { PageSize } from '../../domain/pageSize';
 import { usePageSize } from '../../lib/pageSize';
 import { useSportName } from '../challenges/create/useSportName';
 import { CATEGORY_EXPLANATIONS, useCategoryName } from '../challenges/detail/categoryNames';
+import { isOut } from '../../domain/rankingChanges';
 import { EliminationContext } from './EliminationProgress';
 import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
 import { PointsBreakdownSheet, type PointsParticipant } from './PointsBreakdown';
@@ -162,8 +163,6 @@ function CategoryLeaderboard({
   const empty = first !== undefined && podiumLines.length === 0 && lines.length === 0;
 
   // Eliminated ones follow the survivors, abandoned ones come last (server's order).
-  const isOut = (entry: LeaderboardEntry) =>
-    entry.abandoned || (entry.elimination?.eliminated_week ?? null) !== null;
   const loaded = [...podiumLines, ...lines];
   const mine = first?.me ?? null;
   // Not loaded yet: shown after the loaded lines it comes after, until its page is.
