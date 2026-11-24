@@ -8,6 +8,8 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
  * checkbox), with `confirmDisabled` until the user has gone through them.
  * `variant="danger"` marks a final action (deleting, abandoning) in red; its
  * label still says what happens, the colour is never the only signal.
+ * `cancelDisabled` keeps it open while a change it confirmed is being sent
+ * (Escape included).
  */
 export function ConfirmDialog({
   open,
@@ -20,6 +22,7 @@ export function ConfirmDialog({
   details,
   children,
   confirmDisabled = false,
+  cancelDisabled = false,
   variant = 'default',
 }: {
   open: boolean;
@@ -28,6 +31,7 @@ export function ConfirmDialog({
   details?: ReactNode;
   children?: ReactNode;
   confirmDisabled?: boolean;
+  cancelDisabled?: boolean;
   variant?: 'default' | 'danger';
   confirmLabel: string;
   cancelLabel: string;
@@ -61,7 +65,7 @@ export function ConfirmDialog({
       onCancel={(event) => {
         // The parent closes it through `open`.
         event.preventDefault();
-        onCancel();
+        if (!cancelDisabled) onCancel();
       }}
       className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2.5rem)] max-w-sm overflow-y-auto rounded-card bg-surface p-6 text-ink backdrop:bg-surface-raised/60"
     >
@@ -92,8 +96,11 @@ export function ConfirmDialog({
         <button
           ref={cancel}
           type="button"
-          onClick={onCancel}
-          className="h-13 rounded-full border border-border bg-surface hover-fill px-5 font-bold"
+          aria-disabled={cancelDisabled || undefined}
+          onClick={() => {
+            if (!cancelDisabled) onCancel();
+          }}
+          className="h-13 rounded-full border border-border bg-surface hover-fill px-5 font-bold aria-disabled:opacity-60"
         >
           {cancelLabel}
         </button>

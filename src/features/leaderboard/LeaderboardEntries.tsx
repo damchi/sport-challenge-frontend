@@ -4,11 +4,9 @@ import { Link } from 'react-router';
 import type { Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { Avatar } from '../../components/Avatar';
 import { displayName } from '../../domain/displayName';
-import { formatKm, formatMeters } from '../../domain/format/distance';
-import { formatDuration } from '../../domain/format/duration';
-import { useSportName } from '../challenges/create/useSportName';
 import { EliminationProgress } from './EliminationProgress';
 import { ProvisionalPoints } from './ProvisionalPoints';
+import { useEntryValue } from './useEntryValue';
 
 type CategoryType = Leaderboard['categories'][number]['type'];
 
@@ -81,28 +79,6 @@ function useEntryName(entry: LeaderboardEntry, me: boolean): string {
   const { t } = useTranslation();
   if (me) return t('leaderboard.you');
   return displayName(entry.user) ?? t('challengeDetail.participants.unnamed');
-}
-
-/**
- * The value of a category: h:mm, km equivalent to the reference sport, km
- * done in the reference sport (elimination), points acquired, or real meters
- * climbed ("1 250 m D+").
- */
-function useEntryValue(type: CategoryType, value: number | null, referenceSport: string): string {
-  const { t, i18n } = useTranslation();
-  const sportName = useSportName();
-  if (value === null) return '';
-  if (type === 'cumulative_time') return formatDuration(value);
-  if (type === 'points') return t('leaderboard.points', { count: value });
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  if (type === 'cumulative_elevation') {
-    return t('leaderboard.elevation', { elevation: formatMeters(value, locale) });
-  }
-  const distance = formatKm(value / 1000, locale);
-  if (type !== 'cumulative_distance') return distance;
-  // Inside a sentence: "12,5 km éq. vélo".
-  const sport = sportName(referenceSport).toLocaleLowerCase(locale);
-  return t('leaderboard.equivalent', { distance, sport });
 }
 
 /** A card of the podium: the rank as an ordinal ("1er"), noted when shared. */

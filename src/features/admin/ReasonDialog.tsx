@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useId } from 'react';
+import { useEffect, useId, type ReactNode } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
@@ -29,7 +29,8 @@ function refusedReason(error: unknown): boolean {
  * The confirmation of every admin change: what it does, then the reason the
  * journal keeps (3 to 500 characters, counted). "Cancel" has the focus; the
  * confirmation stays unavailable until the reason is long enough.
- * `variant="danger"` for a deletion or a block. `error` is the server's
+ * `variant="danger"` for a deletion or a block; `details`, read with the
+ * summary, for what the change touches. `error` is the server's
  * answer to the last attempt: a refused reason is said under the field,
  * anything else above the buttons.
  */
@@ -37,6 +38,7 @@ export function ReasonDialog({
   open,
   title,
   summary,
+  details,
   confirmLabel,
   variant = 'default',
   pending = false,
@@ -48,9 +50,10 @@ export function ReasonDialog({
   title: string;
   /** What the change does, in a sentence. */
   summary: string;
+  details?: ReactNode;
   confirmLabel: string;
   variant?: 'default' | 'danger';
-  /** While the change is sent: the confirmation waits. */
+  /** While the change is sent: the confirmation waits, and so does cancelling (it may be made). */
   pending?: boolean;
   error?: unknown;
   onConfirm: (reason: string) => void;
@@ -94,10 +97,12 @@ export function ReasonDialog({
       open={open}
       title={title}
       message={summary}
+      details={details}
       confirmLabel={confirmLabel}
       cancelLabel={t('admin.reason.cancel')}
       variant={variant}
       confirmDisabled={!valid || pending}
+      cancelDisabled={pending}
       onConfirm={() => void form.handleSubmit(({ reason: kept }) => onConfirm(kept))()}
       onCancel={onCancel}
     >

@@ -1213,6 +1213,47 @@
         "filtered": "Aucune action ne correspond à ces filtres."
       },
       "clearFilters": "Effacer les filtres"
+    },
+    "recompute": {
+      "none": "Cette modification ne touche aucun classement.",
+      "challenge": "Défi",
+      "noBefore": "Pas de classement avant : le défi est supprimé.",
+      "noAfter": "Pas de classement après : le défi sera supprimé.",
+      "participant": "Participant",
+      "rank": "Rang",
+      "before": "Avant",
+      "after": "Après",
+      "absent": "Pas dans le classement",
+      "up": "Monte :",
+      "down": "Descend :",
+      "to": "à",
+      "nothing": "Aucun rang ni aucune valeur ne change.",
+      "others": "Les autres rangs ne bougent pas.",
+      "elimination": {
+        "removed": "Élimination : {{name}} n'est plus éliminé en semaine {{week}}.",
+        "given": "Élimination : {{name}} est éliminé en semaine {{week}}.",
+        "moved": "Élimination : {{name}} est éliminé en semaine {{week}} au lieu de la semaine {{was}}.",
+        "was": "Distance faite : {{done}} pour un minimum de {{required}}.",
+        "done": "{{done}} pour un minimum de {{required}}.",
+        "kept": "Élimination : {{name}} reste éliminé en semaine {{week}}.",
+        "changed": "Avant : {{before}} Après : {{after}}"
+      },
+      "title": "Aperçu des changements",
+      "edit": "Modifier la saisie",
+      "steps": {
+        "change": "Modification",
+        "preview": "Aperçu",
+        "reason": "Motif"
+      },
+      "nothingSaved": "Rien n'est enregistré avant ta confirmation.",
+      "back": "Retour",
+      "continue": "Continuer",
+      "summary": "{{title}} : {{details}}",
+      "touched_one": "{{count}} défi recalculé :",
+      "touched_many": "{{count}} défis recalculés :",
+      "touched_other": "{{count}} défis recalculés :",
+      "in": "Entre dans le classement :",
+      "out": "Sort du classement :"
     }
   }
 }
