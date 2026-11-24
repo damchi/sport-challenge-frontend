@@ -50,6 +50,7 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 beforeEach(() => localStorage.clear());
+afterEach(() => server.events.removeAllListeners());
 
 describe('AdminUserSheet', () => {
   it('shows the profile with the e-mail', async () => {
@@ -141,7 +142,6 @@ describe('AdminUserSheet', () => {
 
     expect(await screen.findByText("Ce compte n'existe pas.")).toBeInTheDocument();
     expect(asked).toEqual([]);
-    server.events.removeAllListeners();
   });
 
   it('shows the error of a part and reloads it on retry', async () => {
