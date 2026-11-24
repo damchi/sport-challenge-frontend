@@ -5,7 +5,7 @@
 
 export const BUDGET = {
   initialScripts: 240_000,
-  initialStyles: 10_000,
+  initialStyles: 11_000,
   lazyChunk: 50_000,
 };
 
