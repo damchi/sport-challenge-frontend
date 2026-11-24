@@ -1280,11 +1280,7 @@
       "to": "devient",
       "row": "{{label}} : {{before}} → {{after}}",
       "rowChanged": "{{label}} : modifié",
-      "lockedWeeks_one": "La semaine 1, déjà verrouillée, sera rejouée.",
-      "lockedWeeks_many": "Les semaines 1 à {{count}}, déjà verrouillées, seront rejouées.",
-      "lockedWeeks_other": "Les semaines 1 à {{count}}, déjà verrouillées, seront rejouées.",
-      "noLockedWeek": "Aucune semaine n'est encore verrouillée.",
-      "previewNote": "L'aperçu montre celles qui changent et les classements avant et après, avant toute validation.",
+      "previewNote": "L'aperçu montre les semaines rejugées et les classements avant et après, avant toute validation.",
       "cancel": "Annuler",
       "preview": "Voir l'aperçu",
       "previewBusy": "Préparation de l'aperçu…",
@@ -1301,7 +1297,7 @@
       "minSession": "Durée minimale d'une séance",
       "factor": "Coefficient : {{sport}}",
       "serverInvalid": "Valeur refusée. Vérifie-la, puis relance l'aperçu.",
-      "bounds": "Les bornes ne changent pas : 2 à 52 semaines, coefficients de 0,1 à 2.",
+      "bounds": "Les bornes ne changent pas : {{minWeeks}} à {{maxWeeks}} semaines, coefficients de {{minFactor}} à {{maxFactor}}.",
       "invalid": "Un champ est refusé : corrige-le, puis relance l'aperçu."
     }
   }

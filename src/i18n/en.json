@@ -1255,10 +1255,7 @@
       "to": "becomes",
       "row": "{{label}}: {{before}} → {{after}}",
       "rowChanged": "{{label}}: changed",
-      "lockedWeeks_one": "Week 1, already locked, will be replayed.",
-      "lockedWeeks_other": "Weeks 1 to {{count}}, already locked, will be replayed.",
-      "noLockedWeek": "No week is locked yet.",
-      "previewNote": "The preview shows which ones change and the rankings before and after, before anything is saved.",
+      "previewNote": "The preview shows the weeks judged again and the rankings before and after, before anything is saved.",
       "cancel": "Cancel",
       "preview": "See the preview",
       "previewBusy": "Preparing the preview…",
@@ -1274,7 +1271,7 @@
       "minSession": "Minimum session length",
       "factor": "Factor: {{sport}}",
       "serverInvalid": "Value refused. Check it, then see the preview again.",
-      "bounds": "The bounds stay the same: 2 to 52 weeks, factors from 0.1 to 2.",
+      "bounds": "The bounds stay the same: {{minWeeks}} to {{maxWeeks}} weeks, factors from {{minFactor}} to {{maxFactor}}.",
       "invalid": "A field is refused: fix it, then see the preview again."
     }
   }

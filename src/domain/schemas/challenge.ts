@@ -31,6 +31,14 @@ export const POINTS_CRITERIA = [
   'weekly_elevation',
 ] as const;
 
+/** Duration bounds of the contract, in weeks. */
+export const MIN_WEEKS = 2;
+export const MAX_WEEKS = 52;
+
+/** Distance factor bounds of the contract. */
+export const MIN_FACTOR = 0.1;
+export const MAX_FACTOR = 2;
+
 /** Longest title the contract takes, in characters (code points). */
 export const TITLE_MAX_LENGTH = 80;
 const DESCRIPTION_MAX_LENGTH = 2000;
@@ -77,8 +85,8 @@ export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
       weeks: z
         .number('challengeCreate.fields.weeks.range')
         .int('challengeCreate.fields.weeks.range')
-        .min(2, 'challengeCreate.fields.weeks.range')
-        .max(52, 'challengeCreate.fields.weeks.range'),
+        .min(MIN_WEEKS, 'challengeCreate.fields.weeks.range')
+        .max(MAX_WEEKS, 'challengeCreate.fields.weeks.range'),
       start_date: z.string().refine(isCalendarDate, 'challengeCreate.fields.startDate.required'),
       timezone: z.string().refine(isTimeZone, 'challengeCreate.fields.timezone.required'),
       // A sport of the catalogue whose distance is required: the server
@@ -148,7 +156,7 @@ export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
       for (const [code, factor] of Object.entries(values.factors)) {
         // The reference keeps no field: it always counts ×1.
         if (code === values.reference_sport) continue;
-        if (!(factor >= 0.1 && factor <= 2 && hasDecimals(factor, 2))) {
+        if (!(factor >= MIN_FACTOR && factor <= MAX_FACTOR && hasDecimals(factor, 2))) {
           context.addIssue({
             code: 'custom',
             path: ['factors', code],

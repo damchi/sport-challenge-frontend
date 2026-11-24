@@ -4,16 +4,12 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { Trans, useTranslation } from 'react-i18next';
 import { addToDate, isTimeZone, localDate } from '../../../domain/challengeWindow';
 import { timeZoneName } from '../../../domain/format/challengeDates';
-import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
+import { MAX_WEEKS, MIN_WEEKS, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { groupTimeZones } from '../../../domain/timeZones';
 import { ChangedPill } from './ChangedPill';
 import { FieldError } from './FieldError';
 import { describedBy, inputClass } from './fields';
 import { windowPreview } from './windowPreview';
-
-// Bounds of the contract, which the buttons keep to.
-const MIN_WEEKS = 2;
-const MAX_WEEKS = 52;
 
 /**
  * Step 2 of the creation: duration in weeks, the first day, then the time

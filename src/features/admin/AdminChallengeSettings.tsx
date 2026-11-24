@@ -25,6 +25,10 @@ import { isChallengeId } from '../../domain/challenge';
 import { formFieldOf, type CatalogueSport } from '../../domain/challengeCreate';
 import {
   challengeCreateSchema,
+  MAX_FACTOR,
+  MAX_WEEKS,
+  MIN_FACTOR,
+  MIN_WEEKS,
   type ChallengeCreateInput,
   type ChallengeCreateValues,
 } from '../../domain/schemas/challenge';
@@ -119,8 +123,9 @@ function SettingsForm({
   now?: Date;
   timeZones?: readonly string[];
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? 'fr');
   // "Today" is the page's opening day: the server checks the date again.
   const [now] = useState(() => givenNow ?? new Date());
   // Read once: the picker's labels cost one Intl format per zone.
@@ -224,7 +229,12 @@ function SettingsForm({
                     i18nKey={`admin.settings.warning.${challenge.status}`}
                     components={{ b: <strong /> }}
                   />{' '}
-                  {t('admin.settings.bounds')}
+                  {t('admin.settings.bounds', {
+                    minWeeks: MIN_WEEKS,
+                    maxWeeks: MAX_WEEKS,
+                    minFactor: number.format(MIN_FACTOR),
+                    maxFactor: number.format(MAX_FACTOR),
+                  })}
                 </span>
               </p>
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
@@ -240,10 +250,7 @@ function SettingsForm({
                   </Section>
                 </div>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-6">
-                  <Changes
-                    changes={changes}
-                    locked={challenge.weeks.filter((week) => week.locked).length}
-                  />
+                  <Changes changes={changes} />
                   <div className="flex flex-wrap gap-3">
                     <Link
                       to={sheetPath(challenge.id)}
@@ -293,16 +300,10 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 /**
- * The settings changed so far, before and after, then what the change
- * judges again: the weeks already locked (`locked`, the first ones).
+ * The settings changed so far, before and after. What the change judges
+ * again is the server's to say, in the preview.
  */
-function Changes({
-  changes,
-  locked,
-}: {
-  changes: ReturnType<typeof useSettingsChanges>['changes'];
-  locked: number;
-}) {
+function Changes({ changes }: { changes: ReturnType<typeof useSettingsChanges>['changes'] }) {
   const { t } = useTranslation();
   return (
     <section aria-labelledby="settings-changes" className={CARD}>
@@ -332,12 +333,7 @@ function Changes({
           ))}
         </dl>
       )}
-      <p className="mt-3 text-sm text-muted">
-        {locked === 0
-          ? t('admin.settings.noLockedWeek')
-          : t('admin.settings.lockedWeeks', { count: locked })}{' '}
-        {t('admin.settings.previewNote')}
-      </p>
+      <p className="mt-3 text-sm text-muted">{t('admin.settings.previewNote')}</p>
     </section>
   );
 }

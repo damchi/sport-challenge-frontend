@@ -85,9 +85,9 @@ describe('AdminChallengeSettings', () => {
       'Ce défi est à venir, et ces réglages sont figés pour ses participants.',
     );
     expect(screen.getByRole('heading', { level: 3, name: '0 changement' })).toBeInTheDocument();
-    expect(
-      screen.getByText(/Les semaines 1 à 2, déjà verrouillées, seront rejouées\./),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('note')).toHaveTextContent(
+      'Les bornes ne changent pas : 2 à 52 semaines, coefficients de 0,1 à 2.',
+    );
     expect(screen.queryByText(/^Modifié/)).not.toBeInTheDocument();
   });
 
