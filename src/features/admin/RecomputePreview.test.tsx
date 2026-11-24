@@ -1,10 +1,12 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import type {
   AdminChallengePreview,
   AdminCorrection,
 } from '../../api/hooks/admin/useAdminCorrection';
 import type { LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { mockAdminChallenges } from '../../mocks/handlers';
+import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
 import { RecomputePreview } from './RecomputePreview';
@@ -130,10 +132,9 @@ describe('RecomputePreview', () => {
       },
     ]);
 
-    const [first, second] = await screen.findAllByRole('heading', {
-      level: 4,
-      name: 'Temps cumulé',
-    });
+    await screen.findByRole('heading', { level: 3, name: 'Défi 2' });
+    await screen.findByRole('heading', { level: 3, name: 'Défi 1' });
+    const [first, second] = screen.getAllByRole('heading', { level: 4, name: 'Temps cumulé' });
     const card = first?.closest('section');
     if (!card || !second) throw new Error('No categories');
     expect(row(card, 'ami_1')).toEqual(['Sort du classement : 1erA abandonné', '2:00', '—']);
@@ -284,6 +285,50 @@ describe('RecomputePreview', () => {
         .map((header) => header.textContent),
     ).toEqual(['Participant', 'Rang', 'Avant']);
     expect(row(card, 'ami_1')).toEqual(['1er', '2:00']);
+  });
+
+  it('never makes up a rank the server does not give', async () => {
+    renderPreview([
+      {
+        challenge_id: challenge.id,
+        before: ranking([entry('ami_1', 1, 7200)]),
+        after: ranking([entry('ami_1', null, 7200, { abandoned: false })]),
+        eliminations: [],
+      },
+    ]);
+
+    const card = await category('Temps cumulé');
+    expect(row(card, 'ami_1')[0]).toBe('Sort du classement : 1erPas dans le classement');
+  });
+
+  it("waits for the challenge's sheet, then offers to read it again when it fails", async () => {
+    let fail = true;
+    server.use(
+      http.get('*/api/v1/admin/challenges/:challengeId', () =>
+        fail
+          ? HttpResponse.json(
+              { error: { code: 'internal_error', message: 'Boom' } },
+              { status: 500 },
+            )
+          : undefined,
+      ),
+    );
+    renderPreview([
+      {
+        challenge_id: challenge.id,
+        before: ranking([entry('ami_1', 1, 7200)]),
+        after: ranking([entry('ami_1', 1, 9000)]),
+        eliminations: [],
+      },
+    ]);
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    const retry = await screen.findByRole('button', { name: 'Réessayer' });
+    expect(screen.queryByRole('heading', { level: 4 })).not.toBeInTheDocument();
+    fail = false;
+    fireEvent.click(retry);
+
+    expect(await screen.findByRole('heading', { level: 3, name: 'Défi 1' })).toBeInTheDocument();
   });
 
   it('says when the change touches no ranking', () => {

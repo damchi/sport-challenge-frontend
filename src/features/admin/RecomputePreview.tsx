@@ -9,6 +9,8 @@ import type {
 } from '../../api/hooks/admin/useAdminCorrection';
 import type { Leaderboard, LeaderboardEntry } from '../../api/hooks/useChallenges';
 import { EmptyState } from '../../components/states/EmptyState';
+import { ErrorState } from '../../components/states/ErrorState';
+import { LoadingState } from '../../components/states/LoadingState';
 import { displayName } from '../../domain/displayName';
 import { formatKm } from '../../domain/format/distance';
 import { sharedRanks } from '../../domain/format/rank';
@@ -53,7 +55,9 @@ function usePlace() {
         ? t('leaderboard.abandoned')
         : t('leaderboard.eliminated', { week });
     }
-    const rank = entry.rank ?? 0;
+    // No rank from the server: shown as out of the ranking, never made up.
+    const rank = entry.rank;
+    if (rank === null) return t('admin.recompute.absent');
     const ordinal = t('leaderboard.rank', { count: rank, ordinal: true });
     return ties.has(rank) ? `${ordinal} ${t('leaderboard.tied')}` : ordinal;
   };
@@ -158,7 +162,7 @@ function CategoryPreview({
   after: CategoryRanking | null;
   showBefore: boolean;
   showAfter: boolean;
-  referenceSport: string | undefined;
+  referenceSport: string;
 }) {
   const { t } = useTranslation();
   const headingId = useId();
@@ -311,16 +315,19 @@ function EliminationNote({ change }: { change: AdminEliminationChange }) {
 
 /**
  * One challenge the change touches, in a card: its title and status (from
- * its admin sheet; until then, a neutral title), each category, and the
- * eliminations that change.
+ * its admin sheet, read first: loading, then an error with retry), each
+ * category, and the eliminations that change.
  */
 function ChallengePreview({ preview }: { preview: AdminChallengePreview }) {
   const { t } = useTranslation();
   const headingId = useId();
   const challenge = useAdminChallenge(preview.challenge_id);
-  const title = challenge.data?.title ?? t('admin.recompute.challenge');
-  const status = challenge.data?.status;
-  const referenceSport = challenge.data?.reference_sport;
+  // Its title and reference sport name the rankings: read before them.
+  if (challenge.isPending) return <LoadingState />;
+  if (challenge.isError) {
+    return <ErrorState error={challenge.error} onRetry={() => void challenge.refetch()} />;
+  }
+  const { title, status, reference_sport: referenceSport } = challenge.data;
   const showBefore = preview.before !== null;
   const showAfter = preview.after !== null;
   const categories = categoryChanges(
