@@ -3,9 +3,9 @@ import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
 import { challengeInstant, otherTimeZoneName } from '../../../domain/format/challengeDates';
 
 /**
- * Texts of joining a challenge, shared by its page and the invitation page:
- * the name of the challenge's time zone when the user's differs (`zone`),
- * the registration deadline in that zone, and why the user cannot join when the server says so
+ * Texts of joining a challenge, on its page: the registration deadline in
+ * the challenge's time zone (named when the user's differs), and why the
+ * user cannot join when the server says so
  * (can_join false), read from their participation: in, abandoned for good,
  * or registration closed (the only reason left to a user who sees it).
  */
@@ -28,5 +28,5 @@ export function useJoinCopy(challenge: ChallengeDetail) {
       : challenge.my_status === 'abandoned'
         ? t('challengeDetail.join.abandoned')
         : t('challengeDetail.join.closed', deadline);
-  return { zone, deadline, reason };
+  return { deadline, reason };
 }

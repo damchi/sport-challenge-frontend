@@ -932,9 +932,6 @@
   },
   "invitationPage": {
     "title": "Invitation",
-    "intro": "On t'invite à rejoindre ce défi.",
-    "invalid": "Ce lien d'invitation n'est pas valide ou a expiré. Demande un nouveau lien à la personne qui te l'a envoyé.",
-    "accept": "Accepter l'invitation",
-    "open": "Voir le défi"
+    "invalid": "Ce lien d'invitation n'est pas valide ou a expiré. Demande un nouveau lien à la personne qui te l'a envoyé."
   }
 }

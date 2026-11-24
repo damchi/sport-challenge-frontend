@@ -49,7 +49,8 @@ export function contentSecurityPolicy(env: HostingEnv, scriptHashes: string[]): 
     ['object-src', "'none'"],
     ['base-uri', "'none'"],
     ['form-action', "'self'"],
-    // Nobody frames the app (clickjacking of "Accept the invitation", PR #95).
+    // Nobody frames the app (clickjacking, PR #95): an invitation link opened in
+    // a frame would join its challenge without a click (SC-WEB-107).
     ['frame-ancestors', "'none'"],
   ];
   return directives.map((directive) => directive.join(' ')).join('; ');

@@ -72,7 +72,7 @@ describe('the challenge count of the profile', () => {
   it('reloads once an invitation is accepted', async () => {
     server.use(http.post('*/api/v1/invitations/accept', () => HttpResponse.json(detail)));
     const { wrapper, reloaded } = setup();
-    const { result } = renderHook(() => useAcceptInvitation(challenge.id), { wrapper });
+    const { result } = renderHook(() => useAcceptInvitation(), { wrapper });
 
     await result.current.mutateAsync('token-1');
 
