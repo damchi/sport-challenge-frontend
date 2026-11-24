@@ -84,6 +84,7 @@ function useErrorText(error: unknown): string | undefined {
  * changements » (`dry_run`, without a reason, nothing written), then the
  * reason in a dialog, which makes the change. "Modifier la saisie" and
  * "Retour" go back to the fields, kept by the caller, which also keeps its
+ * preview's refusal (`error`) in sight, beside its button, and its
  * "Voir l'aperçu" unavailable while `pending`. `send` makes the change's
  * request; `onDone` gets the server's answer once it is made, and leaves
  * the flow (the reason dialog stays unavailable until then).
@@ -104,7 +105,12 @@ export function RecomputeFlow({
   variant?: 'default' | 'danger';
   send: (client: ApiClient, body: CorrectionBody) => Promise<AdminCorrection | undefined>;
   onDone: (correction: AdminCorrection) => void;
-  children: (input: { showPreview: () => void; pending: boolean }) => ReactNode;
+  children: (input: {
+    showPreview: () => void;
+    pending: boolean;
+    /** Why the preview was refused, for the caller to show by its button. */
+    error: string | undefined;
+  }) => ReactNode;
 }) {
   const { t } = useTranslation();
   const correction = useAdminCorrection(send);
@@ -154,12 +160,7 @@ export function RecomputeFlow({
   if (step === 'input' || !preview) {
     return (
       <div ref={input} tabIndex={-1} className="outline-none">
-        {children({ showPreview, pending: correction.isPending })}
-        {previewError && (
-          <p role="alert" className="mt-4 text-sm text-risk-fg">
-            {previewError}
-          </p>
-        )}
+        {children({ showPreview, pending: correction.isPending, error: previewError })}
       </div>
     );
   }

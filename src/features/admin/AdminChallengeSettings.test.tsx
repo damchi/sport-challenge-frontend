@@ -160,6 +160,25 @@ describe('AdminChallengeSettings', () => {
     expect(screen.getByRole('heading', { level: 3, name: '1 changement' })).toBeInTheDocument();
   });
 
+  it('previews nothing while nothing changes', async () => {
+    const bodies = servePatch();
+    renderSettings(first.id);
+
+    await stepField();
+    const preview = screen.getByRole('button', { name: "Voir l'aperçu" });
+    expect(preview).toHaveAttribute('aria-disabled', 'true');
+    expect(preview).toHaveAccessibleDescription("Aucun changement pour l'instant.");
+    fireEvent.click(preview);
+
+    expect(
+      screen.queryByRole('heading', { name: 'Aperçu des changements' }),
+    ).not.toBeInTheDocument();
+    expect(bodies).toEqual([]);
+
+    fireEvent.change(await stepField(), { target: { value: '3' } });
+    expect(preview).not.toHaveAttribute('aria-disabled');
+  });
+
   it('sends nothing while a field is refused by the rules of the creation', async () => {
     const bodies = servePatch();
     renderSettings(first.id);
@@ -171,6 +190,9 @@ describe('AdminChallengeSettings', () => {
       await screen.findByText(
         'La hausse doit être entre 0,1 et 100 km, avec une décimale au plus.',
       ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Un champ est refusé : corrige-le, puis relance l'aperçu."),
     ).toBeInTheDocument();
     expect(bodies).toEqual([]);
   });

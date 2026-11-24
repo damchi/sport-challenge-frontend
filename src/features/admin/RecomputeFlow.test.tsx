@@ -96,10 +96,13 @@ function renderFlow() {
         }}
         onDone={onDone}
       >
-        {({ showPreview, pending }) => (
-          <button type="button" onClick={showPreview} disabled={pending}>
-            Voir l'aperçu
-          </button>
+        {({ showPreview, pending, error }) => (
+          <>
+            <button type="button" onClick={showPreview} disabled={pending}>
+              Voir l'aperçu
+            </button>
+            {error && <p role="alert">{error}</p>}
+          </>
         )}
       </RecomputeFlow>
     </AppProviders>,

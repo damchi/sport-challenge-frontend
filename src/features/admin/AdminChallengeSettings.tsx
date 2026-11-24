@@ -145,6 +145,8 @@ function SettingsForm({
   const { changes, previous } = useSettingsChanges(initial, values, changed, sports);
   // The request, set once the fields are valid, read when it is sent.
   const update = useRef<AdminChallengeSettingsUpdate>({});
+  // A field was refused on "See the preview", until the next try.
+  const [invalid, setInvalid] = useState(false);
 
   // validation_failed names the refused fields: each shows an error where it
   // is entered, back from the preview or the reason.
@@ -186,18 +188,27 @@ function SettingsForm({
       send={send}
       onDone={() => void navigate(sheetPath(challenge.id))}
     >
-      {({ showPreview, pending }) => (
+      {({ showPreview, pending, error }) => (
         <FormProvider {...form}>
           <PreviousValueProvider value={previous}>
             <form
               noValidate
               aria-labelledby="admin-settings-title"
-              onSubmit={(event) =>
-                void form.handleSubmit((valid) => {
-                  update.current = settingsUpdate(initial, valid, sports);
-                  showPreview();
-                })(event)
-              }
+              onSubmit={(event) => {
+                // Nothing to preview: the button says so, Enter in a field too.
+                if (changes.length === 0) {
+                  event.preventDefault();
+                  return;
+                }
+                void form.handleSubmit(
+                  (valid) => {
+                    setInvalid(false);
+                    update.current = settingsUpdate(initial, valid, sports);
+                    showPreview();
+                  },
+                  () => setInvalid(true),
+                )(event);
+              }}
               className="flex flex-col gap-6"
             >
               <h2 id="admin-settings-title" className="font-display text-2xl font-bold md:text-3xl">
@@ -243,12 +254,22 @@ function SettingsForm({
                     <button
                       type="submit"
                       disabled={pending}
-                      className="inline-flex h-13 flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 text-button font-bold text-on-accent hover-accent disabled:opacity-60"
+                      // aria-disabled, not disabled: the focus stays, and the
+                      // reason is read from the changes' card.
+                      aria-disabled={changes.length === 0 ? true : undefined}
+                      aria-describedby={changes.length === 0 ? 'settings-no-change' : undefined}
+                      className="inline-flex h-13 flex-1 items-center justify-center gap-2 rounded-full bg-accent px-6 text-button font-bold text-on-accent hover-accent disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60"
                     >
                       {pending ? t('admin.settings.previewBusy') : t('admin.settings.preview')}
                       {!pending && <ArrowRight aria-hidden="true" size={20} />}
                     </button>
                   </div>
+                  {/* Beside the button: the fields may be far up the page. */}
+                  {(invalid || error) && (
+                    <p role="alert" className="text-sm text-risk-fg">
+                      {invalid ? t('admin.settings.invalid') : error}
+                    </p>
+                  )}
                 </div>
               </div>
             </form>
@@ -289,7 +310,9 @@ function Changes({
         {t('admin.settings.changes', { count: changes.length })}
       </h3>
       {changes.length === 0 ? (
-        <p className="mt-3 text-muted">{t('admin.settings.noChange')}</p>
+        <p id="settings-no-change" className="mt-3 text-muted">
+          {t('admin.settings.noChange')}
+        </p>
       ) : (
         <dl className="mt-3 flex flex-col divide-y divide-border border-t border-border">
           {changes.map(({ field, label, before, after }) => (

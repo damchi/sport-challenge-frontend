@@ -1301,7 +1301,8 @@
       "minSession": "Durée minimale d'une séance",
       "factor": "Coefficient : {{sport}}",
       "serverInvalid": "Valeur refusée. Vérifie-la, puis relance l'aperçu.",
-      "bounds": "Les bornes ne changent pas : 2 à 52 semaines, coefficients de 0,1 à 2."
+      "bounds": "Les bornes ne changent pas : 2 à 52 semaines, coefficients de 0,1 à 2.",
+      "invalid": "Un champ est refusé : corrige-le, puis relance l'aperçu."
     }
   }
 }

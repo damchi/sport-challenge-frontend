@@ -1274,7 +1274,8 @@
       "minSession": "Minimum session length",
       "factor": "Factor: {{sport}}",
       "serverInvalid": "Value refused. Check it, then see the preview again.",
-      "bounds": "The bounds stay the same: 2 to 52 weeks, factors from 0.1 to 2."
+      "bounds": "The bounds stay the same: 2 to 52 weeks, factors from 0.1 to 2.",
+      "invalid": "A field is refused: fix it, then see the preview again."
     }
   }
 }
