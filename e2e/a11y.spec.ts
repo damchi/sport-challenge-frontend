@@ -1,7 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { http, HttpResponse } from 'msw';
 import type { Page } from '@playwright/test';
-import { mockInvitationToken } from '../src/mocks/handlers';
 import { expect, signInAt, test } from './fixtures';
 
 // An ongoing challenge the user takes part in (week 3 of 4 in the mocks).
@@ -16,7 +15,9 @@ const SCREENS = [
   { name: 'activities', path: '/activities' },
   { name: 'activity entry', path: '/activities/new' },
   { name: 'profile', path: '/profile' },
-  { name: 'invitation', path: `/invite#${mockInvitationToken}` },
+  // A valid link joins and opens the challenge (SC-WEB-107): the page that
+  // stays is the refused one.
+  { name: 'invitation', path: '/invite#not-a-valid-token' },
 ];
 
 /** The serious and critical WCAG 2.x A/AA violations of the page, by rule. */
