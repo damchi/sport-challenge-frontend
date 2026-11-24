@@ -524,9 +524,10 @@ Captures dans `docs/design/maquettes/` : `accueil.png`, `classement.png`
      téléphone), fuseau de saisie nommé dessous. L'heure se tape sur 24 h
      dans deux cases numériques « h » et « min », comme la durée : « 8 » dans
      la case h suffit (minutes vides = 00). Pas de champ heure natif : il
-     suit la langue du navigateur (AM/PM en anglais). Durée : h / min / s, unité dans le champ. Distance : mention
-     « obligatoire pour ce sport » ou « facultative » à côté du titre, « km »
-     dans le champ ; absente pour un sport sans distance.
+     suit la langue du navigateur (AM/PM en anglais). Durée : h / min / s,
+     unité dans le champ. Distance : mention « obligatoire pour ce sport » ou
+     « facultative » à côté du titre, « km » dans le champ ; absente pour un
+     sport sans distance.
    - Carte « Résumé » (sport, début avec le jour, durée, distance), remplie
      au fil de la saisie, sans allure ni vitesse : sous les champs en
      mobile, en colonne de droite à partir de `lg`, avec la phrase sur
