@@ -76,6 +76,19 @@ describe('LandingPage', () => {
     expect(screen.getAllByText('Au choix')).toHaveLength(4);
   });
 
+  it('gives Hyrox, paragliding and CrossFit their catalogue factor', () => {
+    renderLanding();
+    const list = screen.getByRole('list', { name: 'Coefficients de distance par sport' });
+    const chip = (name: string) =>
+      within(list)
+        .getAllByRole('listitem')
+        .find((item) => item.textContent?.startsWith(name));
+
+    expect(chip('Hyrox')).toHaveTextContent('Hyrox×1');
+    expect(chip('Parapente')).toHaveTextContent('Parapente×0,3');
+    expect(chip('CrossFit')).toHaveTextContent('CrossFittemps');
+  });
+
   it('never announces a sync with another service', () => {
     renderLanding();
 
@@ -171,7 +184,8 @@ describe('LandingPage', () => {
 
   it('switches to English, numbers included', async () => {
     renderLanding();
-    expect(screen.getByText('×0,3')).toBeInTheDocument();
+    // Cycling and paragliding.
+    expect(screen.getAllByText('×0,3')).toHaveLength(2);
 
     fireEvent.click(screen.getByRole('radio', { name: 'English' }));
 
@@ -181,7 +195,7 @@ describe('LandingPage', () => {
         name: 'Challenge your friends, week after week.',
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText('×0.3')).toBeInTheDocument();
+    expect(screen.getAllByText('×0.3')).toHaveLength(2);
     expect(screen.getByText(/^Week 3 of 4 · ends Saturday, Nov(\.)? 28/)).toBeInTheDocument();
   });
 

@@ -574,8 +574,21 @@ export const handlers = [
           suggested_factor: null,
           elevation_allowed: false,
         },
+        {
+          code: 'crossfit',
+          distance_mode: 'none',
+          suggested_factor: null,
+          elevation_allowed: false,
+        },
         { code: 'hike', distance_mode: 'required', suggested_factor: 1, elevation_allowed: true },
+        { code: 'hyrox', distance_mode: 'required', suggested_factor: 1, elevation_allowed: false },
         { code: 'other', distance_mode: 'optional', suggested_factor: 1, elevation_allowed: true },
+        {
+          code: 'paragliding',
+          distance_mode: 'required',
+          suggested_factor: 0.3,
+          elevation_allowed: false,
+        },
         { code: 'ride', distance_mode: 'required', suggested_factor: 0.3, elevation_allowed: true },
         {
           code: 'roller',

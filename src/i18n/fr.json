@@ -840,7 +840,10 @@
     "run": "Course",
     "yoga": "Yoga",
     "climbing": "Escalade",
-    "strength": "Renforcement musculaire"
+    "strength": "Renforcement musculaire",
+    "crossfit": "CrossFit",
+    "hyrox": "Hyrox",
+    "paragliding": "Parapente"
   },
   "leaderboard": {
     "categories": "Catégorie du classement",

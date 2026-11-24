@@ -819,7 +819,10 @@
     "run": "Running",
     "yoga": "Yoga",
     "climbing": "Climbing",
-    "strength": "Strength training"
+    "strength": "Strength training",
+    "crossfit": "CrossFit",
+    "hyrox": "Hyrox",
+    "paragliding": "Paragliding"
   },
   "leaderboard": {
     "categories": "Leaderboard category",

@@ -8,7 +8,10 @@ import {
   PersonStanding,
   Sailboat,
   Snowflake,
+  Timer,
   Waves,
+  Weight,
+  Wind,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -25,6 +28,9 @@ const ICONS: Partial<Record<string, LucideIcon>> = {
   yoga: PersonStanding,
   climbing: MountainSnow,
   strength: Dumbbell,
+  crossfit: Weight,
+  hyrox: Timer,
+  paragliding: Wind,
 };
 
 /** The sport's icon in an accent tile, decorative: the sport is written beside it. */
