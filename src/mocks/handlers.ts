@@ -29,6 +29,10 @@ type ActivityPage = components['schemas']['ActivityPage'];
 type ChallengeActivityPage = components['schemas']['ChallengeActivityPage'];
 type InvitationCreated = components['schemas']['InvitationCreated'];
 type AdminStats = components['schemas']['AdminStats'];
+type AdminChallengeSummary = components['schemas']['AdminChallengeSummary'];
+type AdminChallengeDetail = components['schemas']['AdminChallengeDetail'];
+type AdminChallengePage = components['schemas']['AdminChallengePage'];
+type AdminUserRef = components['schemas']['AdminUserRef'];
 type InvitationPreview = components['schemas']['InvitationPreview'];
 type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
 
@@ -161,6 +165,80 @@ function mockCategories(
 }
 
 const PAGE_SIZE = 20;
+
+const mockAdminUser = (index: number): AdminUserRef => ({
+  id: `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+  pseudo: `ami_${index}`,
+  first_name: 'Ami',
+  last_name: String(index),
+});
+
+/** Every challenge of the mocks as an admin lists it; the last one is deleted. */
+export const mockAdminChallenges: AdminChallengeSummary[] = mockChallenges.map(
+  (challenge, index) => ({
+    id: challenge.id,
+    title: challenge.title,
+    visibility: challenge.visibility,
+    status: challenge.status,
+    timezone: challenge.timezone,
+    starts_at: challenge.starts_at,
+    ends_at: challenge.ends_at,
+    created_at: '2026-10-20T14:00:00Z',
+    deleted_at: index === mockChallenges.length - 1 ? '2026-11-20T15:00:00Z' : null,
+    participant_count: challenge.participant_count,
+    creators: index % 5 === 0 ? [mockAdminUser(1), mockAdminUser(2)] : [mockAdminUser(1)],
+  }),
+);
+
+/** A challenge as an admin reads it: four weeks, two judged, one elimination. */
+export function mockAdminChallengeDetail(summary: AdminChallengeSummary): AdminChallengeDetail {
+  const week = (number: number, closed: boolean) => {
+    const start = Date.parse('2026-11-02T05:00:00Z') + (number - 1) * 7 * 86_400_000;
+    return {
+      number,
+      starts_at: new Date(start).toISOString(),
+      ends_at: new Date(start + 7 * 86_400_000).toISOString(),
+      locks_at: new Date(start + 7 * 86_400_000 + 7 * 3_600_000).toISOString(),
+      locked: closed,
+      closed_at: closed ? new Date(start + 7 * 86_400_000 + 8 * 3_600_000).toISOString() : null,
+    };
+  };
+  return {
+    ...summary,
+    ...mockCategories(summary.id),
+    description: 'Un mois pour courir ensemble.',
+    members_can_invite: true,
+    weeks: [week(1, true), week(2, true), week(3, false), week(4, false)],
+    eliminations: [
+      { user: mockAdminUser(3), week_number: 2, distance_meters: 3500, required_meters: 4000 },
+    ],
+    results_frozen_at: null,
+    invitations: [
+      {
+        id: '20000000-0000-4000-8000-000000000001',
+        invited_by: mockAdminUser(1),
+        created_at: '2026-10-21T14:00:00Z',
+        expires_at: '2026-11-09T05:00:00Z',
+        revoked_at: null,
+        status: 'expired',
+      },
+    ],
+    recent_actions: [
+      {
+        id: '30000000-0000-4000-8000-000000000001',
+        admin: mockAdminUser(9),
+        created_at: '2026-11-18T16:00:00Z',
+        action: 'participant.reinstate',
+        target_type: 'participant',
+        target_id: mockAdminUser(4).id,
+        challenge_ids: [summary.id],
+        old_value: { status: 'eliminated' },
+        new_value: { status: 'active' },
+        reason: 'Séance oubliée, vue ensemble',
+      },
+    ],
+  };
+}
 
 /** The mock activities of `sport`, or all of them. */
 function ofSport(sport: string | null): Activity[] {
@@ -365,6 +443,35 @@ export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   http.delete('*/api/v1/me', () => new HttpResponse(null, { status: 204 })),
   http.get('*/api/v1/admin/stats', () => HttpResponse.json<AdminStats>(mockAdminStats)),
+  // Newest first in the API; the mocks keep their order. The cursor is the
+  // index of the next item.
+  http.get('*/api/v1/admin/challenges', ({ request }) => {
+    const query = new URL(request.url).searchParams;
+    const q = query.get('q')?.toLocaleLowerCase();
+    const deleted = query.get('deleted');
+    const filtered = mockAdminChallenges.filter(
+      (challenge) =>
+        (!q || challenge.title.toLocaleLowerCase().includes(q)) &&
+        (!query.get('status') || challenge.status === query.get('status')) &&
+        (!query.get('visibility') || challenge.visibility === query.get('visibility')) &&
+        (deleted === null || (challenge.deleted_at !== null) === (deleted === 'true')),
+    );
+    const from = Number(query.get('cursor') ?? 0);
+    const size = Number(query.get('limit') ?? PAGE_SIZE);
+    const items = filtered.slice(from, from + size);
+    const next = from + size < filtered.length ? String(from + size) : null;
+    return HttpResponse.json<AdminChallengePage>({ items, next_cursor: next });
+  }),
+  http.get('*/api/v1/admin/challenges/:challengeId', ({ params }) => {
+    const summary = mockAdminChallenges.find((challenge) => challenge.id === params.challengeId);
+    if (!summary) {
+      const body: ApiErrorBody = {
+        error: { code: 'challenge_not_found', message: 'Challenge not found' },
+      };
+      return HttpResponse.json(body, { status: 404 });
+    }
+    return HttpResponse.json<AdminChallengeDetail>(mockAdminChallengeDetail(summary));
+  }),
   // The cursor is the index of the next item; `mine` keeps the challenges
   // the user created or joined, and `status` keeps those with that status.
   http.get('*/api/v1/challenges', ({ request }) => {

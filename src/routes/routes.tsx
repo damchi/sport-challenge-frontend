@@ -4,7 +4,7 @@ import { LoadingState } from '../components/states/LoadingState';
 import { CallbackPage } from '../pages/CallbackPage';
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
-import { AdminDashboardRoute } from './AdminDashboardRoute';
+import { AdminPart } from './AdminPart';
 import { AppShell } from './AppShell';
 import { HOME_PATH } from '../lib/paths';
 import { pages } from './pages';
@@ -105,12 +105,17 @@ export const routes: RouteObject[] = [
                         children: [
                           {
                             index: true,
-                            element: <AdminDashboardRoute />,
+                            element: <AdminPart name="dashboard" />,
                             handle: title('admin.nav.dashboard'),
                           },
-                          { path: 'challenges', handle: title('admin.nav.challenges') },
+                          {
+                            path: 'challenges',
+                            element: <AdminPart name="challenges" />,
+                            handle: title('admin.nav.challenges'),
+                          },
                           {
                             path: 'challenges/:challengeId',
+                            element: <AdminPart name="challenge" />,
                             handle: title('admin.nav.challenges'),
                           },
                           { path: 'users', handle: title('admin.nav.users') },

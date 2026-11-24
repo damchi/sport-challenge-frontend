@@ -957,6 +957,116 @@
         }
       },
       "version": "API version: {{version}} ({{commit}})"
+    },
+    "challenges": {
+      "listLabel": "All challenges",
+      "search": {
+        "label": "Search a challenge by its title",
+        "placeholder": "Challenge title",
+        "submit": "Search"
+      },
+      "visibility": {
+        "label": "Visibility",
+        "all": "All",
+        "public": "Public",
+        "private": "Private",
+        "privateOne": "Private"
+      },
+      "deleted": "Deleted",
+      "deletedOne": "Deleted",
+      "status": {
+        "upcoming": "Upcoming",
+        "ongoing": "Ongoing",
+        "finished": "Finished"
+      },
+      "period": "{{start}} – {{end}}",
+      "columns": {
+        "title": "Title",
+        "creators": "Creators",
+        "participants": "Participants",
+        "period": "Period",
+        "status": "Status"
+      },
+      "empty": {
+        "none": "No challenges yet.",
+        "filtered": "No challenge matches these filters."
+      },
+      "clearFilters": "Clear the filters",
+      "unnamed": "Deleted account",
+      "back": "All challenges",
+      "notFound": "This challenge doesn't exist.",
+      "sheet": {
+        "status": "Status",
+        "creators": "Creators",
+        "participants": "Participants",
+        "createdAt": "Created on",
+        "results": "Results",
+        "frozenAt": "Frozen on {{date}}",
+        "notFrozen": "Not frozen yet",
+        "deletedAt": "Deleted on {{date}}. Its page is closed.",
+        "open": "See the challenge page",
+        "zone": "Challenge times: {{zone}}.",
+        "settings": "Settings"
+      },
+      "weeks": {
+        "title": "Weeks",
+        "week": "Week",
+        "number": "Week {{number}}",
+        "days": "Days",
+        "lock": "Lock",
+        "judged": "Judged on",
+        "locked": "Locked",
+        "open": "Not locked yet",
+        "notJudged": "Not judged"
+      },
+      "eliminations": {
+        "title": "Eliminations",
+        "empty": "No one has been eliminated.",
+        "participant": "Participant",
+        "week": "Week",
+        "distance": "Distance",
+        "done": "{{done}} of {{required}}"
+      },
+      "invitations": {
+        "title": "Invitation links",
+        "empty": "No invitation links.",
+        "by": "Created by",
+        "createdAt": "Created on",
+        "expiresAt": "Expires on",
+        "status": "Status",
+        "statuses": {
+          "active": "Active",
+          "expired": "Expired",
+          "revoked": "Revoked",
+          "cancelled": "Cancelled"
+        },
+        "revokedAt": "Revoked on {{date}}"
+      },
+      "actions": {
+        "title": "Latest admin actions",
+        "empty": "No admin action on this challenge.",
+        "by": "{{date}} · {{name}}",
+        "reason": "Reason: {{reason}}"
+      }
+    },
+    "actions": {
+      "challenge": {
+        "update": "Settings changed"
+      },
+      "creator": {
+        "add": "Creator added",
+        "remove": "Creator removed"
+      },
+      "participant": {
+        "add": "Participant added",
+        "exclude": "Participant excluded",
+        "reinstate": "Participant reinstated"
+      },
+      "activity": {
+        "create": "Activity added",
+        "update": "Activity corrected",
+        "delete": "Activity deleted"
+      }
     }
   }
 }

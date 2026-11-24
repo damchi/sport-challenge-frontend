@@ -980,6 +980,116 @@
         }
       },
       "version": "Version de l'API : {{version}} ({{commit}})"
+    },
+    "challenges": {
+      "listLabel": "Tous les défis",
+      "search": {
+        "label": "Rechercher un défi par son titre",
+        "placeholder": "Titre du défi",
+        "submit": "Rechercher"
+      },
+      "visibility": {
+        "label": "Visibilité",
+        "all": "Toutes",
+        "public": "Publics",
+        "private": "Privés",
+        "privateOne": "Privé"
+      },
+      "deleted": "Supprimés",
+      "deletedOne": "Supprimé",
+      "status": {
+        "upcoming": "À venir",
+        "ongoing": "En cours",
+        "finished": "Terminé"
+      },
+      "period": "{{start}} – {{end}}",
+      "columns": {
+        "title": "Titre",
+        "creators": "Créateurs",
+        "participants": "Participants",
+        "period": "Période",
+        "status": "Statut"
+      },
+      "empty": {
+        "none": "Aucun défi pour l'instant.",
+        "filtered": "Aucun défi ne correspond à ces filtres."
+      },
+      "clearFilters": "Effacer les filtres",
+      "unnamed": "Compte supprimé",
+      "back": "Tous les défis",
+      "notFound": "Ce défi n'existe pas.",
+      "sheet": {
+        "status": "Statut",
+        "creators": "Créateurs",
+        "participants": "Participants",
+        "createdAt": "Créé le",
+        "results": "Résultats",
+        "frozenAt": "Figés le {{date}}",
+        "notFrozen": "Pas encore figés",
+        "deletedAt": "Supprimé le {{date}} : sa page n'est plus ouverte.",
+        "open": "Voir la page du défi",
+        "zone": "Heures du défi : {{zone}}.",
+        "settings": "Réglages"
+      },
+      "weeks": {
+        "title": "Semaines",
+        "week": "Semaine",
+        "number": "Semaine {{number}}",
+        "days": "Jours",
+        "lock": "Verrouillage",
+        "judged": "Jugée le",
+        "locked": "Verrouillée",
+        "open": "Pas encore verrouillée",
+        "notJudged": "Pas jugée"
+      },
+      "eliminations": {
+        "title": "Éliminations",
+        "empty": "Personne n'a été éliminé.",
+        "participant": "Participant",
+        "week": "Semaine",
+        "distance": "Distance",
+        "done": "{{done}} sur {{required}}"
+      },
+      "invitations": {
+        "title": "Liens d'invitation",
+        "empty": "Aucun lien d'invitation.",
+        "by": "Créé par",
+        "createdAt": "Créé le",
+        "expiresAt": "Expire le",
+        "status": "Statut",
+        "statuses": {
+          "active": "Actif",
+          "expired": "Expiré",
+          "revoked": "Révoqué",
+          "cancelled": "Annulé"
+        },
+        "revokedAt": "Révoqué le {{date}}"
+      },
+      "actions": {
+        "title": "Dernières actions admin",
+        "empty": "Aucune action admin sur ce défi.",
+        "by": "{{date}} · {{name}}",
+        "reason": "Motif : {{reason}}"
+      }
+    },
+    "actions": {
+      "challenge": {
+        "update": "Réglages modifiés"
+      },
+      "creator": {
+        "add": "Créateur ajouté",
+        "remove": "Créateur retiré"
+      },
+      "participant": {
+        "add": "Participant ajouté",
+        "exclude": "Participant exclu",
+        "reinstate": "Participant réintégré"
+      },
+      "activity": {
+        "create": "Activité ajoutée",
+        "update": "Activité corrigée",
+        "delete": "Activité supprimée"
+      }
     }
   }
 }

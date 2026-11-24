@@ -18,19 +18,21 @@ function dayFormat(locale: string, timeZone: string, withYear: boolean): Intl.Da
 
 /**
  * First and last day of a challenge, in its time zone ("3 nov. – 30 nov.").
- * The year shows when the two days are in different years.
+ * The year shows when the two days are in different years, or always with
+ * `alwaysYear` (a list that mixes years: the admin's).
  */
 export function challengePeriod(
   startsAt: string,
   endsAt: string,
   timeZone: string,
   locale: string,
+  alwaysYear = false,
 ): { start: string; end: string } {
   const start = new Date(startsAt);
   const end = lastInstant(endsAt);
   const year = (date: Date) =>
     new Intl.DateTimeFormat('en', { timeZone, year: 'numeric' }).format(date);
-  const withYear = year(start) !== year(end);
+  const withYear = alwaysYear || year(start) !== year(end);
   return {
     start: dayFormat(locale, timeZone, withYear).format(start),
     end: dayFormat(locale, timeZone, withYear).format(end),
