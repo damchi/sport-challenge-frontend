@@ -170,7 +170,11 @@ function Sheet({ challenge }: { challenge: AdminChallengeDetail }) {
         <AdminChallengeEliminations eliminations={challenge.eliminations} locale={locale} />
       )}
       <AdminChallengeInvitations invitations={challenge.invitations} at={at} />
-      <AdminChallengeActions actions={challenge.recent_actions} at={at} />
+      <AdminChallengeActions
+        challengeId={challenge.id}
+        actions={challenge.recent_actions}
+        at={at}
+      />
     </article>
   );
 }

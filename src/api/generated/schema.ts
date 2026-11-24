@@ -820,7 +820,21 @@ export interface paths {
         get: operations["getAdminChallenge"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete any challenge, for an admin
+         * @description Admin only (404 `not_found` otherwise). Deletes the challenge as one
+         *     of its creators would, at any time (README §2.1, §2.12): from then on
+         *     it is not found for everyone but the admins, its invitation links
+         *     answer `invitation_invalid`, and the worker judges none of its weeks. It
+         *     is not judged again: its eliminations and frozen results stay as they
+         *     are, for a restore. The change is recorded in the journal with its
+         *     `reason` and the challenge marked as corrected, in one transaction; with `dry_run`, it is rolled back. The
+         *     answer gives the rankings `before` the deletion, `after` being null.
+         *     An unknown or deleted challenge answers 404 `challenge_not_found`.
+         *     The body carries the reason: a client that cannot send one with
+         *     `DELETE` cannot call this route.
+         */
+        delete: operations["deleteAdminChallenge"];
         options?: never;
         head?: never;
         /**
@@ -847,6 +861,37 @@ export interface paths {
          *     400 `validation_failed` to an admin, 404 `not_found` to anyone else.
          */
         patch: operations["updateAdminChallenge"];
+        trace?: never;
+    };
+    "/api/v1/admin/challenges/{challengeId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore a deleted challenge, for an admin
+         * @description Admin only (404 `not_found` otherwise). Restores a deleted challenge,
+         *     at any time (README §2.12): it is found again as before its deletion,
+         *     and its invitation links neither revoked nor expired are valid again.
+         *     The accounts deleted meanwhile do not come back. The challenge is
+         *     then judged again as the worker would (the weeks locked while it was
+         *     deleted included), the change recorded in the journal with its
+         *     `reason` and the challenge marked as corrected, all in one
+         *     transaction; with `dry_run`, everything is rolled back. The answer
+         *     gives the rankings `after` the restore, `before` being null, and the
+         *     eliminations that change against those kept at the deletion. An
+         *     unknown challenge, or one that is not deleted, answers 404
+         *     `challenge_not_found`.
+         */
+        post: operations["restoreAdminChallenge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/challenges/{challengeId}/participants": {
@@ -1080,11 +1125,71 @@ export interface paths {
          */
         get: operations["listAdminUserActivities"];
         put?: never;
-        post?: never;
+        /**
+         * Record an activity for any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Records an activity for the
+         *     account, in any week, locked ones and those of a finished challenge
+         *     included (README §2.12), with the validations of `POST /activities`:
+         *     the account needs a complete profile (`profile_incomplete`), the
+         *     activity never overlaps another of the account (`activity_overlap`),
+         *     and its end is never in the future. Its source is `manual`, as an
+         *     entry by the account; the journal tells them apart. An unknown or
+         *     deleted account answers 404 `user_not_found`. Every challenge where
+         *     the activity counts (the account an active participant, its window
+         *     holding `started_at`, or a challenge the account left once that week
+         *     was locked, whose points category and elimination still judge them) is then judged again as
+         *     the worker would, the change recorded in the journal with its
+         *     `reason` and those challenges marked as corrected, all in one
+         *     transaction; with `dry_run`, everything is rolled back and the answer
+         *     tells what the change would do. The answer lists those challenges,
+         *     none for an activity that counts nowhere.
+         */
+        post: operations["createAdminActivity"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/activities/{activityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete the activity of any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Deletes the activity, in any
+         *     week, locked ones and those of a finished challenge included (README
+         *     §2.12): it stops counting at once. A missing or deleted activity, or
+         *     that of a deleted account, answers 404 `activity_not_found`. Every
+         *     challenge where it counted is judged again; journal, mark and
+         *     `dry_run` as for `POST /admin/users/{userId}/activities`. The body
+         *     carries the reason: a client that cannot send one with `DELETE`
+         *     cannot call this route.
+         */
+        delete: operations["deleteAdminActivity"];
+        options?: never;
+        head?: never;
+        /**
+         * Replace the activity of any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Replaces the activity, in any
+         *     week, locked ones and those of a finished challenge included (README
+         *     §2.12), with the validations of `PATCH /activities/{activityId}`: the
+         *     body replaces every field entered, a field left out is cleared. The
+         *     source stays. A missing or deleted activity, or that of a deleted
+         *     account, answers 404 `activity_not_found`. Every challenge where it
+         *     counts before the change, and after it (a new `started_at` may move
+         *     it from a challenge to another), is judged again; journal, mark and
+         *     `dry_run` as for `POST /admin/users/{userId}/activities`.
+         */
+        patch: operations["updateAdminActivity"];
         trace?: never;
     };
     "/api/v1/admin/actions": {
@@ -1414,6 +1519,29 @@ export interface components {
             user_id: string;
         };
         /**
+         * @description An activity written by an admin: the fields of `ActivityCreate`, with
+         *     their bounds and rules, and the reason of the change.
+         */
+        AdminActivityWrite: {
+            reason: components["schemas"]["AdminReason"];
+            /** @description Preview the change, writing nothing. `false` when absent. */
+            dry_run?: boolean;
+            /** @description As in `ActivityCreate`. */
+            sport_code: string;
+            /** @description As in `ActivityCreate`. */
+            sport_label?: string;
+            /**
+             * Format: date-time
+             * @description As in `ActivityCreate`.
+             */
+            started_at: string;
+            duration_seconds: number;
+            /** @description As in `ActivityCreate`. */
+            distance_meters?: number;
+            /** @description As in `ActivityCreate`. */
+            elevation_gain_meters?: number;
+        };
+        /**
          * @description Why the admin makes the change, kept in the journal: 3 to 500
          *     characters once surrounding spaces are removed, 3 of them visible; no
          *     control character but line breaks and tabs.
@@ -1429,10 +1557,16 @@ export interface components {
         AdminChallengePreview: {
             /** Format: uuid */
             challenge_id: string;
-            /** @description The rankings before the change, whole (no `limit`). */
-            before: components["schemas"]["Leaderboard"];
-            /** @description The rankings after the change and the new judgement, whole. */
-            after: components["schemas"]["Leaderboard"];
+            /**
+             * @description The rankings before the change, whole (no `limit`); null for the
+             *     restore of a deleted challenge, which has none.
+             */
+            before: components["schemas"]["Leaderboard"] | null;
+            /**
+             * @description The rankings after the change and the new judgement, whole; null
+             *     for the deletion of a challenge.
+             */
+            after: components["schemas"]["Leaderboard"] | null;
             /**
              * @description The participants whose elimination the change gives, removes or
              *     moves to another week or distance.
@@ -2704,6 +2838,21 @@ export interface components {
          *     `params`.
          */
         AdminChallengeNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /**
+         * @description The account has no `admin` permission (`not_found`), or no such
+         *     activity, a deleted one, or that of a deleted account
+         *     (`activity_not_found`). `not_found` also answers a malformed request
+         *     (an id that is not a UUID, a body or a parameter that does not
+         *     match) without the permission, without `params`.
+         */
+        AdminActivityNotFound: {
             headers: {
                 [name: string]: unknown;
             };
@@ -4000,6 +4149,38 @@ export interface operations {
             500: components["responses"]["InternalError"];
         };
     };
+    deleteAdminChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the deletion did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminChallengeNotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
     updateAdminChallenge: {
         parameters: {
             query?: never;
@@ -4029,6 +4210,52 @@ export interface operations {
             /**
              * @description The account has no `admin` permission (`not_found`), or no such
              *     challenge, or a deleted one (`challenge_not_found`). `not_found` also answers a malformed request (an id that is not a
+             *     UUID, a body or a parameter that does not match) without the
+             *     permission, without `params`.
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    restoreAdminChallenge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                challengeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the restore did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            /**
+             * @description The account has no `admin` permission (`not_found`), or no such
+             *     challenge, or one that is not deleted (`challenge_not_found`).
+             *     `not_found` also answers a malformed request (an id that is not a
              *     UUID, a body or a parameter that does not match) without the
              *     permission, without `params`.
              */
@@ -4408,6 +4635,133 @@ export interface operations {
             404: components["responses"]["AdminUserNotFound"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    createAdminActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["AdminUserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminActivityWrite"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminUserNotFound"];
+            /**
+             * @description The profile of the account is incomplete (`profile_incomplete`),
+             *     the sport needs a distance (`distance_required`) or takes none
+             *     (`distance_not_allowed`), an elevation gain is sent for a sport
+             *     or an activity that takes none (`elevation_not_allowed`), or the
+             *     activity would overlap another of the account
+             *     (`activity_overlap`).
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    deleteAdminActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCorrectionReason"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminActivityNotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    updateAdminActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminActivityWrite"];
+            };
+        };
+        responses: {
+            /** @description What the change did, or would do with `dry_run`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCorrection"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminActivityNotFound"];
+            /**
+             * @description The sport needs a distance (`distance_required`) or takes none
+             *     (`distance_not_allowed`), an elevation gain is sent for a sport
+             *     or an activity that takes none (`elevation_not_allowed`), or the
+             *     activity would overlap another of the account
+             *     (`activity_overlap`).
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
         };
     };
     listAdminActions: {

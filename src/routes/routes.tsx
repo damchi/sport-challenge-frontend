@@ -128,7 +128,11 @@ export const routes: RouteObject[] = [
                             element: <AdminPart name="user" />,
                             handle: title('admin.nav.users'),
                           },
-                          { path: 'journal', handle: title('admin.nav.journal') },
+                          {
+                            path: 'journal',
+                            element: <AdminPart name="journal" />,
+                            handle: title('admin.nav.journal'),
+                          },
                         ],
                       },
                       { path: '*', element: <NotFoundPage />, handle: title('notFound.title') },

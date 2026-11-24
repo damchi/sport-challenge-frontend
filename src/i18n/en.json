@@ -1046,12 +1046,15 @@
         "title": "Latest admin actions",
         "empty": "No admin action on this challenge.",
         "by": "{{date}} · {{name}}",
-        "reason": "Reason: {{reason}}"
+        "reason": "Reason: {{reason}}",
+        "journal": "Full log of the challenge"
       }
     },
     "actions": {
       "challenge": {
-        "update": "Settings changed"
+        "update": "Settings changed",
+        "delete": "Challenge deleted",
+        "restore": "Challenge restored"
       },
       "creator": {
         "add": "Creator added",
@@ -1135,6 +1138,58 @@
         "elevation": "Elev. gain",
         "none": "—"
       }
+    },
+    "reason": {
+      "label": "Reason",
+      "hint": "{{min}} to {{max}} characters. It is kept in the log.",
+      "count": "{{count}} / {{max}}",
+      "cancel": "Cancel",
+      "short": "The reason needs at least {{min}} characters.",
+      "long": "The reason can't be longer than {{max}} characters.",
+      "characters": "The reason has an invisible character. Remove it.",
+      "serverInvalid": "Reason refused: write {{min}} to {{max}} characters, with no invisible character."
+    },
+    "journal": {
+      "listLabel": "Log of admin actions",
+      "columns": {
+        "date": "Date",
+        "admin": "Admin",
+        "action": "Action",
+        "target": "Target",
+        "reason": "Reason"
+      },
+      "targetType": {
+        "label": "Target type",
+        "all": "All",
+        "challenge": "Challenge",
+        "participant": "Participant",
+        "activity": "Activity",
+        "user": "Account"
+      },
+      "target": {
+        "sheet": {
+          "challenge": "Challenge sheet",
+          "participant": "Account sheet",
+          "user": "Account sheet"
+        },
+        "journal": "Actions on this target"
+      },
+      "oneTarget": {
+        "target": "Only the actions on one target are shown.",
+        "challenge": "Only the actions that touch one challenge are shown.",
+        "clear": "Show every target"
+      },
+      "values": {
+        "show": "Show the values",
+        "before": "Before:",
+        "after": "After:",
+        "none": "none"
+      },
+      "empty": {
+        "none": "No admin actions yet.",
+        "filtered": "No action matches these filters."
+      },
+      "clearFilters": "Clear the filters"
     }
   }
 }
