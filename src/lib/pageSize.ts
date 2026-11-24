@@ -9,7 +9,10 @@ export type SizedList =
   | 'challengeActivities'
   | 'participantActivities'
   | 'leaderboard'
-  | 'adminChallenges';
+  | 'adminChallenges'
+  | 'adminUsers'
+  | 'adminUserChallenges'
+  | 'adminUserActivities';
 
 const key = (list: SizedList) => `sport-challenge:page-size:${list}`;
 

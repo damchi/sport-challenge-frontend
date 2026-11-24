@@ -1067,6 +1067,74 @@
         "update": "Activity corrected",
         "delete": "Activity deleted"
       }
+    },
+    "users": {
+      "listLabel": "All accounts",
+      "search": {
+        "label": "Search an account by nickname, name or email",
+        "placeholder": "Nickname, name or email",
+        "submit": "Search"
+      },
+      "columns": {
+        "account": "Account",
+        "state": "State",
+        "createdAt": "Signed up",
+        "lastActivity": "Last activity",
+        "challenges": "Challenges"
+      },
+      "states": {
+        "active": "Active",
+        "deleted": "Deleted",
+        "auth0_deletion_pending": "Auth0 deletion pending"
+      },
+      "never": "None",
+      "noName": "No name",
+      "unnamed": "Deleted account",
+      "empty": {
+        "none": "No accounts yet.",
+        "search": "No account matches this search."
+      },
+      "clearSearch": "Clear the search",
+      "back": "All accounts",
+      "notFound": "This account does not exist.",
+      "sheet": {
+        "state": "State",
+        "pseudo": "Nickname",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "email": "Email",
+        "missing": "Not set",
+        "createdAt": "Signed up on",
+        "deletedAt": "Deleted on",
+        "lastActivity": "Last activity",
+        "challenges": "Challenges"
+      },
+      "challenges": {
+        "title": "Challenges of the account",
+        "empty": "This account is in no challenge.",
+        "challenge": "Challenge",
+        "role": "Role",
+        "status": "Status",
+        "joinedAt": "Joined on",
+        "notJoined": "Not participating",
+        "abandonedAt": "Since {{date}}",
+        "roles": {
+          "creator": "Creator",
+          "participant": "Participant",
+          "abandoned": "Abandoned or excluded",
+          "creatorAbandoned": "Creator, abandoned or excluded"
+        }
+      },
+      "activities": {
+        "title": "Activities of the account",
+        "empty": "This account has no activities.",
+        "sport": "Sport",
+        "startedAt": "Session",
+        "duration": "Duration",
+        "distance": "Distance",
+        "elevation": "Elev. gain",
+        "none": "—"
+      }
     }
   }
 }

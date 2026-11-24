@@ -14,6 +14,8 @@ const PARTS = {
   challenge: lazy(() =>
     import('../pages/AdminChallengePage').then((m) => ({ default: m.AdminChallengePage })),
   ),
+  users: lazy(() => import('../pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage }))),
+  user: lazy(() => import('../pages/AdminUserPage').then((m) => ({ default: m.AdminUserPage }))),
 };
 
 /** A part of the admin section, under its navigation. */

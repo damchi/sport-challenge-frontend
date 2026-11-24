@@ -62,5 +62,15 @@ export const queryKeys = {
         ['admin', 'challenges', 'list', filters, { size }] as const,
       detail: (challengeId: string) => ['admin', 'challenges', challengeId] as const,
     },
+    users: {
+      // The search (maybe an e-mail) stays in the memory cache, never stored.
+      list: (q: string | undefined, size: string) =>
+        ['admin', 'users', 'list', { q, size }] as const,
+      detail: (userId: string) => ['admin', 'users', userId] as const,
+      challenges: (userId: string, size: string) =>
+        ['admin', 'users', userId, 'challenges', size] as const,
+      activities: (userId: string, size: string) =>
+        ['admin', 'users', userId, 'activities', size] as const,
+    },
   },
 };
