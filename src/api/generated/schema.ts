@@ -828,7 +828,7 @@ export interface paths {
          *     answer `invitation_invalid`, and the worker judges none of its weeks. It
          *     is not judged again: its eliminations and frozen results stay as they
          *     are, for a restore. The change is recorded in the journal with its
-         *     `reason` and the challenge marked as corrected, in one transaction; with `dry_run`, it is rolled back. The
+         *     `reason`, naming the challenge, in one transaction; with `dry_run`, it is rolled back. The
          *     answer gives the rankings `before` the deletion, `after` being null.
          *     An unknown or deleted challenge answers 404 `challenge_not_found`.
          *     The body carries the reason: a client that cannot send one with
@@ -853,8 +853,8 @@ export interface paths {
          *     The challenge is then judged again as the worker would (its
          *     eliminations and frozen results erased, its locked weeks judged again,
          *     its results frozen again once its last week is locked), the change
-         *     recorded in the journal with its `reason` and the challenge marked as
-         *     corrected, all in one transaction. With `dry_run`, everything is
+         *     recorded in the journal with its `reason`, naming the challenge, all in
+         *     one transaction. With `dry_run`, everything is
          *     rolled back and the answer tells what the change would do. An unknown
          *     or deleted challenge answers 404 `challenge_not_found`. The body is
          *     optional in the contract: without one, the missing `reason` answers
@@ -880,7 +880,7 @@ export interface paths {
          *     The accounts deleted meanwhile do not come back. The challenge is
          *     then judged again as the worker would (the weeks locked while it was
          *     deleted included), the change recorded in the journal with its
-         *     `reason` and the challenge marked as corrected, all in one
+         *     `reason`, naming the challenge, all in one
          *     transaction; with `dry_run`, everything is rolled back. The answer
          *     gives the rankings `after` the restore, `before` being null, and the
          *     eliminations that change against those kept at the deletion. An
@@ -913,8 +913,8 @@ export interface paths {
          *     abandoned or was excluded, a creator included, answers 422
          *     `participation_abandoned` (reinstate them instead). An unknown or deleted account answers 404 `user_not_found`.
          *     The challenge is then judged again as the worker would, the change
-         *     recorded in the journal with its `reason` and the challenge marked as
-         *     corrected, all in one transaction; with `dry_run`, everything is
+         *     recorded in the journal with its `reason`, naming the challenge, all in
+         *     one transaction; with `dry_run`, everything is
          *     rolled back and the answer tells what the change would do. An unknown
          *     or deleted challenge answers 404 `challenge_not_found`.
          */
@@ -944,7 +944,7 @@ export interface paths {
          *     (`DELETE …/creators/{userId}`). A participant already out answers 200
          *     and changes nothing but the journal and the judgement. Someone who
          *     never joined, or a deleted account, answers 404 `not_found`. Judged
-         *     again, journal, mark and `dry_run` as for `POST …/participants`. The
+         *     again, journal and `dry_run` as for `POST …/participants`. The
          *     body carries the reason: a client that cannot send one with
          *     `DELETE` cannot call this route.
          */
@@ -970,7 +970,7 @@ export interface paths {
          *     again, ranked in every category, the weeks locked meanwhile judged
          *     again. An active participant answers 200 and changes nothing but the
          *     journal and the judgement. Someone who never joined, or a deleted
-         *     account, answers 404 `not_found`. Judged again, journal, mark and
+         *     account, answers 404 `not_found`. Judged again, journal and
          *     `dry_run` as for `POST …/participants`.
          */
         post: operations["reinstateAdminParticipant"];
@@ -995,8 +995,8 @@ export interface paths {
          *     (README §2.12). Someone who never joined, or a deleted account,
          *     answers 422 `not_active_participant`: every creator is a participant,
          *     the admin adds them first. A creator already answers 200 and changes
-         *     nothing but the journal and the judgement. Judged again, journal,
-         *     mark and `dry_run` as for `POST …/participants`.
+         *     nothing but the journal and the judgement. Judged again, journal
+         *     and `dry_run` as for `POST …/participants`.
          */
         put: operations["addAdminCreator"];
         post?: never;
@@ -1008,7 +1008,7 @@ export interface paths {
          *     `last_creator` (`params.challenges`: the challenge). A participant who
          *     is not a creator answers 200 and changes nothing but the journal and
          *     the judgement. Someone who never joined, or a deleted account,
-         *     answers 404 `not_found`. Judged again, journal, mark and `dry_run` as
+         *     answers 404 `not_found`. Judged again, journal and `dry_run` as
          *     for `POST …/participants`.
          */
         delete: operations["removeAdminCreator"];
@@ -1081,6 +1081,90 @@ export interface paths {
         get: operations["getAdminUser"];
         put?: never;
         post?: never;
+        /**
+         * Delete any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Deletes the account with the
+         *     effect of `DELETE /me` (README §2.12, §6): it abandons its challenges
+         *     not finished, is anonymized and every row tied to it is erased; its
+         *     deletion at Auth0 follows, replayed by the worker
+         *     (`retry-auth0-deletions`) when it fails. The profile values (pseudo,
+         *     first name, last name, e-mail) of the journal lines that target the
+         *     account are erased too. Nothing is judged again, as for `DELETE /me`.
+         *     The change is recorded in the journal with its `reason`, in the
+         *     transaction of the deletion. Refused (422 `last_creator`) while the
+         *     account is the last creator with an account of a challenge not
+         *     finished: the admin first names another creator, or deletes the
+         *     challenge; `params.challenges` lists their ids. An unknown or deleted
+         *     account answers 404 `user_not_found`. The body carries the reason: a
+         *     client that cannot send one with `DELETE` cannot call this route.
+         */
+        delete: operations["deleteAdminUser"];
+        options?: never;
+        head?: never;
+        /**
+         * Change the profile of any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Changes the pseudo, the first
+         *     name and the last name of an account with the rules of `PATCH /me`
+         *     (README §2.8, §2.12): an absent field is left unchanged, `pseudo:
+         *     null` removes the pseudo, a pseudo already taken, regardless of case,
+         *     answers 409. The language and the e-mail stay the user's. The change
+         *     is recorded in the journal with its `reason` (the fields that
+         *     change, before and after), in one transaction; its journal
+         *     line names no challenge. The answer is the account after the change.
+         *     An unknown or deleted account answers 404 `user_not_found`.
+         */
+        patch: operations["updateAdminUser"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Block any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Blocks the account (README
+         *     §2.12): from then on, every request of it answers 403
+         *     `account_blocked`. Its challenges are left as they are: it stays
+         *     ranked and its activities count. An account already blocked stays
+         *     blocked since the first time; the call still answers and is
+         *     recorded. The change is recorded in the journal with its `reason`,
+         *     in one transaction; its journal line names no challenge. An admin
+         *     cannot block their own account (403 `forbidden`). The answer is the
+         *     account after the change. An unknown or deleted account answers 404
+         *     `user_not_found`.
+         */
+        post: operations["blockAdminUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/unblock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unblock any account, for an admin
+         * @description Admin only (404 `not_found` otherwise). Unblocks the account (README
+         *     §2.12): its requests are served again; nothing else changes. An
+         *     account that is not blocked stays so; the call still answers and is
+         *     recorded. The change is recorded in the journal with its `reason`,
+         *     in one transaction; its journal line names no challenge. The answer is
+         *     the account after the change. An unknown or deleted account answers
+         *     404 `user_not_found`.
+         */
+        post: operations["unblockAdminUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1139,7 +1223,7 @@ export interface paths {
          *     holding `started_at`, or a challenge the account left once that week
          *     was locked, whose points category and elimination still judge them) is then judged again as
          *     the worker would, the change recorded in the journal with its
-         *     `reason` and those challenges marked as corrected, all in one
+         *     `reason`, naming those challenges, all in one
          *     transaction; with `dry_run`, everything is rolled back and the answer
          *     tells what the change would do. The answer lists those challenges,
          *     none for an activity that counts nowhere.
@@ -1169,7 +1253,7 @@ export interface paths {
          *     week, locked ones and those of a finished challenge included (README
          *     §2.12): it stops counting at once. A missing or deleted activity, or
          *     that of a deleted account, answers 404 `activity_not_found`. Every
-         *     challenge where it counted is judged again; journal, mark and
+         *     challenge where it counted is judged again; journal and
          *     `dry_run` as for `POST /admin/users/{userId}/activities`. The body
          *     carries the reason: a client that cannot send one with `DELETE`
          *     cannot call this route.
@@ -1186,7 +1270,7 @@ export interface paths {
          *     source stays. A missing or deleted activity, or that of a deleted
          *     account, answers 404 `activity_not_found`. Every challenge where it
          *     counts before the change, and after it (a new `started_at` may move
-         *     it from a challenge to another), is judged again; journal, mark and
+         *     it from a challenge to another), is judged again; journal and
          *     `dry_run` as for `POST /admin/users/{userId}/activities`.
          */
         patch: operations["updateAdminActivity"];
@@ -1239,7 +1323,7 @@ export interface components {
          * @description Stable error codes. Each ticket adds the codes it returns.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
+        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "account_blocked" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
         AdminStats: {
             /**
              * Format: date-time
@@ -1266,6 +1350,8 @@ export interface components {
             new_last_7_days: number;
             /** @description Accounts not deleted that recorded at least one activity in the last 7 days. */
             active_last_7_days: number;
+            /** @description Accounts not deleted that an admin blocked, counted in `total` too. */
+            blocked: number;
         };
         /**
          * @description Every challenge, private ones included. The statuses are those at
@@ -1449,12 +1535,8 @@ export interface components {
          *     left out keeps its value, `null` is refused.
          */
         AdminChallengeUpdate: {
-            /**
-             * @description Why the admin makes the change, kept in the journal: 3 to 500
-             *     characters once surrounding spaces are removed, 3 of them
-             *     visible; no control character but line breaks and tabs.
-             */
-            reason: string;
+            /** @description Required, except with `dry_run` (a preview writes nothing); checked whenever present. */
+            reason?: components["schemas"]["AdminReason"];
             /** @description Preview the change, writing nothing. `false` when absent. */
             dry_run?: boolean;
             /** @description As at creation. */
@@ -1504,12 +1586,33 @@ export interface components {
         };
         /** @description An admin change that carries nothing but its reason. */
         AdminCorrectionReason: {
-            reason: components["schemas"]["AdminReason"];
+            /** @description Required, except with `dry_run` (a preview writes nothing); checked whenever present. */
+            reason?: components["schemas"]["AdminReason"];
             /** @description Preview the change, writing nothing. `false` when absent. */
             dry_run?: boolean;
         };
-        AdminParticipantAdd: {
+        /**
+         * @description An admin change of an account that carries nothing but its reason. It
+         *     judges no challenge again, hence no `dry_run`.
+         */
+        AdminAccountReason: {
             reason: components["schemas"]["AdminReason"];
+        };
+        /**
+         * @description The profile fields of `MeUpdate` an admin may change, with their
+         *     rules, and the reason of the change. An absent field is left
+         *     unchanged; `pseudo: null` removes the pseudo.
+         */
+        AdminUserUpdate: {
+            reason: components["schemas"]["AdminReason"];
+            /** @description `null` removes the pseudo. */
+            pseudo?: (string & components["schemas"]["Pseudo"]) | null;
+            first_name?: components["schemas"]["PersonName"];
+            last_name?: components["schemas"]["PersonName"];
+        };
+        AdminParticipantAdd: {
+            /** @description Required, except with `dry_run` (a preview writes nothing); checked whenever present. */
+            reason?: components["schemas"]["AdminReason"];
             /** @description Preview the change, writing nothing. `false` when absent. */
             dry_run?: boolean;
             /**
@@ -1523,7 +1626,8 @@ export interface components {
          *     their bounds and rules, and the reason of the change.
          */
         AdminActivityWrite: {
-            reason: components["schemas"]["AdminReason"];
+            /** @description Required, except with `dry_run` (a preview writes nothing); checked whenever present. */
+            reason?: components["schemas"]["AdminReason"];
             /** @description Preview the change, writing nothing. `false` when absent. */
             dry_run?: boolean;
             /** @description As in `ActivityCreate`. */
@@ -1544,7 +1648,9 @@ export interface components {
         /**
          * @description Why the admin makes the change, kept in the journal: 3 to 500
          *     characters once surrounding spaces are removed, 3 of them visible; no
-         *     control character but line breaks and tabs.
+         *     control character but line breaks and tabs. It stays in the journal
+         *     once the target account is deleted, unlike its profile values: it
+         *     should carry no personal data.
          */
         AdminReason: string;
         AdminCorrection: {
@@ -1557,6 +1663,41 @@ export interface components {
         AdminChallengePreview: {
             /** Format: uuid */
             challenge_id: string;
+            /** @description The title of the challenge after the change. */
+            title: string;
+            /**
+             * @description The status of the challenge after the change, from its dates (a
+             *     deleted challenge has the status of its dates too).
+             * @enum {string}
+             */
+            status: "upcoming" | "ongoing" | "finished";
+            reference_sport: components["schemas"]["AdminReferenceSportChange"];
+            /**
+             * @description What the change does to the frozen results: `refrozen` (frozen,
+             *     reopened then frozen again), `reopened` (frozen, reopened only:
+             *     the challenge is ongoing again), `frozen` (frozen by the change);
+             *     null when frozen neither before nor after, and for the deletion
+             *     of a challenge, which leaves them as they are.
+             * @enum {string|null}
+             */
+            results: "refrozen" | "reopened" | "frozen" | null;
+            /**
+             * @description The weeks whose outcome the change moves, by number:
+             *     `judged_again`, a locked week whose eliminations or acquired
+             *     points change; `recomputed`, a week not locked whose provisional
+             *     points or provisional elimination minimum change, or that loses
+             *     the eliminations judged while it was locked (its first day moved
+             *     later). A week where
+             *     nothing changes is left out; empty for the deletion or the
+             *     restore of a challenge.
+             */
+            weeks: components["schemas"]["AdminWeekChange"][];
+            /**
+             * @description In the points category, each participant whose points of a week
+             *     change, by week then participant; empty without a points
+             *     category, and for the deletion or the restore of a challenge.
+             */
+            points: components["schemas"]["AdminPointsChange"][];
             /**
              * @description The rankings before the change, whole (no `limit`); null for the
              *     restore of a deleted challenge, which has none.
@@ -1572,6 +1713,30 @@ export interface components {
              *     moves to another week or distance.
              */
             eliminations: components["schemas"]["AdminEliminationChange"][];
+        };
+        /**
+         * @description The reference sport before and after the change: a change of the
+         *     settings may move it, and the elimination and the equivalent
+         *     distance are named after it.
+         */
+        AdminReferenceSportChange: {
+            before: string;
+            after: string;
+        };
+        AdminWeekChange: {
+            week_number: number;
+            /** @enum {string} */
+            change: "judged_again" | "recomputed";
+        };
+        AdminPointsChange: {
+            user: components["schemas"]["AdminUserRef"];
+            week_number: number;
+            /** @description The points of the week before the change; 0 when not ranked in it. */
+            before: number;
+            /** @description The points of the week after the change; 0 when not ranked in it. */
+            after: number;
+            /** @description The week is not locked after the change, its points provisional. */
+            provisional: boolean;
         };
         AdminEliminationChange: {
             user: components["schemas"]["AdminUserRef"];
@@ -1639,12 +1804,13 @@ export interface components {
              */
             email: string | null;
             /**
-             * @description `active` until the account is deleted; then
-             *     `auth0_deletion_pending` while the deletion of its identity at
-             *     Auth0 is still to be replayed by the worker, `deleted` once done.
+             * @description `active` until the account is deleted, `blocked` instead while an
+             *     admin blocks it; once deleted, `auth0_deletion_pending` while the
+             *     deletion of its identity at Auth0 is still to be replayed by the
+             *     worker, `deleted` once done.
              * @enum {string}
              */
-            state: "active" | "deleted" | "auth0_deletion_pending";
+            state: "active" | "blocked" | "deleted" | "auth0_deletion_pending";
             /**
              * Format: date-time
              * @description When the account was created, at its first login.
@@ -2818,9 +2984,10 @@ export interface components {
         };
         /**
          * @description The account has no `admin` permission (`not_found`), or no such
-         *     account (`user_not_found`). `not_found` also answers a malformed
-         *     request (an id that is not a UUID, a parameter that does not match)
-         *     without the permission, without `params`.
+         *     account, or a deleted one (`user_not_found`). `not_found` also
+         *     answers a malformed request (an id that is not a UUID, a body or a
+         *     parameter that does not match) without the permission, without
+         *     `params`.
          */
         AdminUserNotFound: {
             headers: {
@@ -4573,6 +4740,165 @@ export interface operations {
             404: components["responses"]["AdminUserNotFound"];
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    deleteAdminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["AdminUserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminAccountReason"];
+            };
+        };
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminUserNotFound"];
+            /**
+             * @description The account is the last creator of challenges not finished
+             *     (`last_creator`); `params.challenges` lists them.
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    updateAdminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["AdminUserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminUserUpdate"];
+            };
+        };
+        responses: {
+            /** @description The account, changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminUserNotFound"];
+            /**
+             * @description The pseudo is already taken, regardless of case
+             *     (`validation_failed`, `params.fields` = `pseudo`).
+             */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    blockAdminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["AdminUserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminAccountReason"];
+            };
+        };
+        responses: {
+            /** @description The account, blocked. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            /** @description The admin tried to block their own account (`forbidden`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: components["responses"]["AdminUserNotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
+        };
+    };
+    unblockAdminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: components["parameters"]["AdminUserId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminAccountReason"];
+            };
+        };
+        responses: {
+            /** @description The account, unblocked. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUser"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["AdminUserNotFound"];
+            429: components["responses"]["RateLimited"];
+            500: components["responses"]["InternalError"];
+            503: components["responses"]["Busy"];
         };
     };
     listAdminUserChallenges: {

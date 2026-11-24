@@ -461,7 +461,9 @@
         "label": "First day",
         "hint": "Today at the earliest, one year ahead at the latest.",
         "required": "Choose the start date.",
-        "range": "The start date must be between today and the same date next year."
+        "range": "The start date must be between today and the same date next year.",
+        "hintAdmin": "In the past if need be, one year ahead at the latest.",
+        "rangeAdmin": "The start date must be at the latest the same date next year."
       },
       "timezone": {
         "label": "Time zone",
@@ -1087,6 +1089,7 @@
       },
       "states": {
         "active": "Active",
+        "blocked": "Blocked",
         "deleted": "Deleted",
         "auth0_deletion_pending": "Auth0 deletion pending"
       },
@@ -1230,6 +1233,48 @@
       "touched_other": "{{count}} challenges recomputed:",
       "in": "Enters the ranking:",
       "out": "Leaves the ranking:"
+    },
+    "settings": {
+      "edit": "Edit the settings",
+      "title": "Edit the settings",
+      "back": "Challenge sheet",
+      "deleted": "This challenge is deleted: restore it before changing its settings.",
+      "warning": {
+        "upcoming": "<b>This challenge is upcoming, and these settings are frozen for its participants.</b> Changing them recomputes its rankings.",
+        "ongoing": "<b>This challenge is ongoing, and these settings are frozen for its participants.</b> Changing them recomputes its rankings.",
+        "finished": "<b>This challenge is finished, and these settings are frozen for its participants.</b> Changing them recomputes its rankings and its results."
+      },
+      "sections": {
+        "info": "The challenge",
+        "dates": "Dates",
+        "categories": "Categories"
+      },
+      "changes_one": "{{count}} change",
+      "changes_other": "{{count}} changes",
+      "noChange": "No change yet.",
+      "to": "becomes",
+      "row": "{{label}}: {{before}} → {{after}}",
+      "rowChanged": "{{label}}: changed",
+      "lockedWeeks_one": "Week 1, already locked, will be replayed.",
+      "lockedWeeks_other": "Weeks 1 to {{count}}, already locked, will be replayed.",
+      "noLockedWeek": "No week is locked yet.",
+      "previewNote": "The preview shows which ones change and the rankings before and after, before anything is saved.",
+      "cancel": "Cancel",
+      "preview": "See the preview",
+      "previewBusy": "Preparing the preview…",
+      "change": "Edit the settings of “{{title}}”",
+      "reasonTitle": "Confirm the change of settings",
+      "confirm": "Confirm the change",
+      "changed": "Changed",
+      "changedFrom": "Changed · was: {{before}}",
+      "empty": "empty",
+      "weeks_one": "{{count}} week",
+      "weeks_other": "{{count}} weeks",
+      "minutes": "{{count}} min",
+      "minSession": "Minimum session length",
+      "factor": "Factor: {{sport}}",
+      "serverInvalid": "Value refused. Check it, then see the preview again.",
+      "bounds": "The bounds stay the same: 2 to 52 weeks, factors from 0.1 to 2."
     }
   }
 }

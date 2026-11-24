@@ -9,8 +9,8 @@ export type AdminEliminationChange = components['schemas']['AdminEliminationChan
 
 /**
  * What every admin change that judges a challenge again sends, besides its
- * own fields. No reason for a preview (asked from the API: SC-API-176,
- * damchi/sport-challenge-api#337): it is given once the preview is seen.
+ * own fields. No reason for a preview (optional with `dry_run` in the API
+ * contract): it is given once the preview is seen.
  */
 export interface CorrectionBody {
   reason?: string;

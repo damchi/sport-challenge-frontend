@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { usesDistanceFactors } from '../challengeCreate';
-import { isCalendarDate, isStartDateInRange, isTimeZone } from '../challengeWindow';
+import {
+  isCalendarDate,
+  isStartDateInRange,
+  isStartDateWithinAYear,
+  isTimeZone,
+} from '../challengeWindow';
 import {
   characterCount,
   hasOnlyAllowedCharacters,
@@ -57,8 +62,11 @@ const descriptionField = z
 /**
  * Challenge creation input. `now` dates "today" for the start date, which
  * must be between today and the same day next year in the chosen time zone.
+ * With `pastStart`, for an admin changing a challenge's settings, it may be
+ * in the past too, at most a year ahead all the same (API contract,
+ * AdminChallengeUpdate).
  */
-export function challengeCreateSchema(now: Date) {
+export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
   return z
     .object({
       title: titleField,
@@ -149,14 +157,22 @@ export function challengeCreateSchema(now: Date) {
         }
       }
     })
-    .refine(({ start_date: startDate, timezone }) => isStartDateInRange(startDate, timezone, now), {
-      path: ['start_date'],
-      message: 'challengeCreate.fields.startDate.range',
-      // Checked as soon as the date and the time zone are valid, whatever
-      // the other fields: an error elsewhere would otherwise hide it.
-      when: ({ issues }) =>
-        !issues.some((issue) => ['start_date', 'timezone'].includes(String(issue.path?.[0]))),
-    });
+    .refine(
+      ({ start_date: startDate, timezone }) =>
+        pastStart
+          ? isStartDateWithinAYear(startDate, timezone, now)
+          : isStartDateInRange(startDate, timezone, now),
+      {
+        path: ['start_date'],
+        message: pastStart
+          ? 'challengeCreate.fields.startDate.rangeAdmin'
+          : 'challengeCreate.fields.startDate.range',
+        // Checked as soon as the date and the time zone are valid, whatever
+        // the other fields: an error elsewhere would otherwise hide it.
+        when: ({ issues }) =>
+          !issues.some((issue) => ['start_date', 'timezone'].includes(String(issue.path?.[0]))),
+      },
+    );
 }
 
 /** What the form holds while it is filled in. */

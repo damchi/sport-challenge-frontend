@@ -2,8 +2,10 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type { AdminChallengeFilters } from '../../../domain/adminChallenges';
 import { pageLimit, type PageSize } from '../../../domain/pageSize';
 import { useApiClient } from '../../ApiClientContext';
+import type { ApiClient } from '../../client';
 import type { components } from '../../generated/schema';
 import { queryKeys } from '../../queryKeys';
+import type { CorrectionBody } from './useAdminCorrection';
 
 export type AdminChallengeSummary = components['schemas']['AdminChallengeSummary'];
 export type AdminChallengeDetail = components['schemas']['AdminChallengeDetail'];
@@ -51,4 +53,27 @@ export function useAdminChallenge(challengeId: string, enabled = true) {
     // Read now on the server, never stored: the state of the moment.
     staleTime: 0,
   });
+}
+
+/** The settings an admin changes, besides the reason and the preview. */
+export type AdminChallengeSettingsUpdate = Omit<
+  components['schemas']['AdminChallengeUpdate'],
+  'reason' | 'dry_run'
+>;
+
+/**
+ * Changes the settings of a challenge (`update`, the fields that change),
+ * as `RecomputeFlow` sends it: previewed, then made with the reason.
+ */
+export async function updateAdminChallenge(
+  client: ApiClient,
+  challengeId: string,
+  update: AdminChallengeSettingsUpdate,
+  body: CorrectionBody,
+) {
+  const { data } = await client.PATCH('/api/v1/admin/challenges/{challengeId}', {
+    params: { path: { challengeId } },
+    body: { ...update, ...body },
+  });
+  return data;
 }

@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Pencil } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -120,13 +120,23 @@ function Sheet({ challenge }: { challenge: AdminChallengeDetail }) {
             {t('admin.challenges.sheet.deletedAt', { date: at(challenge.deleted_at) })}
           </p>
         ) : (
-          <Link
-            to={`/challenges/${challenge.id}`}
-            className="inline-flex h-11 items-center gap-2 self-start font-bold text-accent underline underline-offset-4 hover-link"
-          >
-            {t('admin.challenges.sheet.open')}
-            <ExternalLink aria-hidden="true" size={16} />
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Link
+              to={`/challenges/${challenge.id}`}
+              className="inline-flex h-11 items-center gap-2 font-bold text-accent underline underline-offset-4 hover-link"
+            >
+              {t('admin.challenges.sheet.open')}
+              <ExternalLink aria-hidden="true" size={16} />
+            </Link>
+            {/* A deleted challenge is restored before its settings change. */}
+            <Link
+              to={`/admin/challenges/${encodeURIComponent(challenge.id)}/settings`}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-accent px-5 font-bold text-on-accent hover-accent"
+            >
+              <Pencil aria-hidden="true" size={18} />
+              {t('admin.settings.edit')}
+            </Link>
+          </div>
         )}
         {challenge.description && (
           <p className="whitespace-pre-line break-words text-muted">{challenge.description}</p>

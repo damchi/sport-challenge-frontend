@@ -118,29 +118,29 @@ export function usesDistanceFactors(values: {
   );
 }
 
+/** The choices of the categories, as the form holds them. */
+export type CategoryChoices = Pick<
+  ChallengeCreateValues,
+  | 'cumulative_distance'
+  | 'elimination'
+  | 'elimination_step_km'
+  | 'points'
+  | 'points_criteria'
+  | 'points_podium'
+  | 'points_min_session_minutes'
+  | 'cumulative_elevation'
+>;
+
 /**
- * The creation request. The cumulative time is always there: only the
- * categories chosen are sent, X in meters, the minimum session entered with
- * the number of sessions alone (the default otherwise). The factors go with the categories that use
- * them, and only those the creator changed from the suggestions brought back
- * to the reference.
+ * The optional categories of a request (the cumulative time is always
+ * there): only those chosen, X in meters, the minimum session entered with
+ * the number of sessions alone (the default otherwise).
  */
-export function challengeCreateRequest(
-  values: ChallengeCreateValues,
-  sports: readonly CatalogueSport[],
-) {
-  const suggested = new Map(
-    factorSports(sports, values.reference_sport).map((sport) => [sport.code, sport.suggested]),
-  );
-  const changed = usesDistanceFactors(values)
-    ? Object.entries(values.factors).filter(
-        ([code, factor]) => suggested.has(code) && suggested.get(code) !== factor,
-      )
-    : [];
+export function challengeCategories(values: CategoryChoices) {
   const stepKm = values.elimination_step_km;
   const podium = values.points_podium;
   const criteria = values.points_criteria;
-  const categories = {
+  return {
     ...(values.cumulative_distance && { cumulative_distance: {} }),
     ...(values.elimination &&
       stepKm !== undefined && { elimination: { step_meters: Math.round(stepKm * 1000) } }),
@@ -156,6 +156,27 @@ export function challengeCreateRequest(
       }),
     ...(values.cumulative_elevation && { cumulative_elevation: {} }),
   };
+}
+
+/**
+ * The creation request. The cumulative time is always there: only the
+ * categories chosen are sent (`challengeCategories`). The factors go with the categories that use
+ * them, and only those the creator changed from the suggestions brought back
+ * to the reference.
+ */
+export function challengeCreateRequest(
+  values: ChallengeCreateValues,
+  sports: readonly CatalogueSport[],
+) {
+  const suggested = new Map(
+    factorSports(sports, values.reference_sport).map((sport) => [sport.code, sport.suggested]),
+  );
+  const changed = usesDistanceFactors(values)
+    ? Object.entries(values.factors).filter(
+        ([code, factor]) => suggested.has(code) && suggested.get(code) !== factor,
+      )
+    : [];
+  const categories = challengeCategories(values);
   return {
     title: values.title,
     description: values.description,

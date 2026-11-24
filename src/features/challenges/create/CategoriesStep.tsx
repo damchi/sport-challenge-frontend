@@ -15,6 +15,7 @@ import {
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import { POINTS_CRITERIA, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { CATEGORY_ICONS } from '../detail/categoryIcons';
+import { ChangedPill } from './ChangedPill';
 import { FieldError } from './FieldError';
 import { choiceCardClass, describedBy, inputClass } from './fields';
 import { Switch } from './Switch';
@@ -117,6 +118,7 @@ function CategoryCard({
         <span id={`${id}-explanation`} className="mt-1 block text-muted">
           {explanation}
         </span>
+        {toggle && <ChangedPill field={toggle} className="mt-2" />}
       </span>
     </>
   );
@@ -229,6 +231,7 @@ function Categories({ sports }: { sports: Sports }) {
           {t('challengeCreate.fields.referenceSport.hint')}
         </p>
         <FieldError id="reference_sport-error" message={referenceError} />
+        <ChangedPill field="reference_sport" className="mt-2" />
       </div>
 
       <section aria-labelledby="categories-title">
@@ -303,6 +306,7 @@ function Categories({ sports }: { sports: Sports }) {
                 {t('challengeCreate.fields.eliminationStep.hint')}
               </p>
               <FieldError id="elimination_step_km-error" message={stepError} />
+              <ChangedPill field="elimination_step_km" className="mt-2" />
             </div>
             <div id="elimination-example" className="rounded-row bg-bg p-4">
               <p className="text-xs font-bold tracking-[0.6px] text-muted uppercase">
@@ -360,6 +364,7 @@ function Categories({ sports }: { sports: Sports }) {
                   {t('challengeDetail.categories.pointsParams.weeklyElevation')}
                 </p>
               )}
+              <ChangedPill field="points_criteria" className="mt-2" />
             </fieldset>
             {criteria.includes('session_count') && (
               <div>
@@ -382,6 +387,7 @@ function Categories({ sports }: { sports: Sports }) {
                   {t('challengeCreate.fields.minSession.hint')}
                 </p>
                 <FieldError id="points_min_session_minutes-error" message={minSessionError} />
+                <ChangedPill field="points_min_session_minutes" className="mt-2" />
               </div>
             )}
             <fieldset aria-describedby={podiumError ? 'points_podium-error' : undefined}>
@@ -415,6 +421,7 @@ function Categories({ sports }: { sports: Sports }) {
                   </label>
                 ))}
               </div>
+              <ChangedPill field="points_podium" className="mt-2" />
             </fieldset>
           </CategoryCard>
 
@@ -484,6 +491,7 @@ function DistanceFactors({ sports, reference }: { sports: Sports; reference: str
         )}
       </div>
       <p className="mt-2 text-muted">{t('challengeCreate.fields.factors.intro')}</p>
+      <ChangedPill field="factors" className="mt-2" />
 
       {open ? (
         <fieldset
@@ -528,6 +536,7 @@ function DistanceFactors({ sports, reference }: { sports: Sports; reference: str
                     })}
                   </p>
                   <FieldError id={`${id}-error`} message={error} />
+                  <ChangedPill field={`factors.${code}`} className="mt-1" />
                 </li>
               );
             })}

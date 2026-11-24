@@ -40,6 +40,10 @@ describe('AdminChallengeSheet', () => {
       'href',
       `/challenges/${first.id}`,
     );
+    expect(screen.getByRole('link', { name: 'Modifier les réglages' })).toHaveAttribute(
+      'href',
+      `/admin/challenges/${first.id}/settings`,
+    );
     expect(screen.getByRole('link', { name: 'Tous les défis' })).toHaveAttribute(
       'href',
       '/admin/challenges',
@@ -140,6 +144,8 @@ describe('AdminChallengeSheet', () => {
       await screen.findByText("Supprimé le 20 nov. 2026, 10:00 : sa page n'est plus ouverte."),
     ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Voir la page du défi' })).not.toBeInTheDocument();
+    // Restored first: the server refuses to change a deleted challenge.
+    expect(screen.queryByRole('link', { name: 'Modifier les réglages' })).not.toBeInTheDocument();
   });
 
   it('says an unknown challenge does not exist', async () => {

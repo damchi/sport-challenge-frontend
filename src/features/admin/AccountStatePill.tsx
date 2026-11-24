@@ -1,10 +1,11 @@
-import { CircleCheck, Clock, Trash2 } from 'lucide-react';
+import { Ban, CircleCheck, Clock, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { AdminUser } from '../../api/hooks/admin/useAdminUsers';
 import { StatusPill } from '../../components/StatusPill';
 
 const PILLS = {
   active: { Icon: CircleCheck, tone: 'ok' },
+  blocked: { Icon: Ban, tone: 'risk' },
   deleted: { Icon: Trash2, tone: 'neutral' },
   auth0_deletion_pending: { Icon: Clock, tone: 'risk' },
 } as const;

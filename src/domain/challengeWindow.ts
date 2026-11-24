@@ -65,6 +65,14 @@ export function isStartDateInRange(startDate: string, timeZone: string, now: Dat
   return startDate >= today && startDate <= addToDate(today, { years: 1 });
 }
 
+/**
+ * Whether `startDate` is at most a year ahead of today in `timeZone`, past
+ * days included: the first day an admin may give a challenge.
+ */
+export function isStartDateWithinAYear(startDate: string, timeZone: string, now: Date): boolean {
+  return startDate <= addToDate(localDate(now, timeZone), { years: 1 });
+}
+
 // Offset of `timeZone` from UTC at `instant`, in milliseconds.
 function offset(instant: number, timeZone: string): number {
   const parts = new Intl.DateTimeFormat('en', {
