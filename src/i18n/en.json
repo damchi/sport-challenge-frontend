@@ -856,6 +856,29 @@
     },
     "elevation": "{{elevation}} climbed"
   },
+  "sheet": {
+    "close": "Close"
+  },
+  "pointsBreakdown": {
+    "title": "{{name}}'s points",
+    "titleMine": "Your points",
+    "acquired_one": "{{count}} pt secured",
+    "acquired_other": "{{count}} pts secured",
+    "rule": "Each week, one ranking per criterion: the top places score points. A week's points are provisional until 7 am, challenge time, on the first day of the next week.",
+    "frozen": "Final results: these points won't change.",
+    "abandoned": "Abandoned: only the points secured before abandoning count.",
+    "zone": "Weeks in the challenge time zone: {{zone}}.",
+    "provisionalWeeks": "Provisional weeks",
+    "acquiredWeeks": "Secured weeks",
+    "week": "Week {{week}}",
+    "weekDates": "{{start}} – {{end}}",
+    "provisionalPoints_one": "{{count}} provisional pt",
+    "provisionalPoints_other": "{{count}} provisional pts",
+    "rank": "{{rank}} of the week",
+    "unranked": "Not ranked",
+    "empty": "No week to show yet.",
+    "activities": "See the activities"
+  },
   "standings": {
     "title": "Where you stand",
     "time": "all sports together",

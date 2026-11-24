@@ -19,6 +19,11 @@ interface EntryProps {
   me: boolean;
   /** Address of the participant's activities, for those who may open them. */
   href: string | undefined;
+  /**
+   * Opens where the participant's points come from (grand prix), with the
+   * name the entry shows: the entry is then a button.
+   */
+  onOpen?: ((name: string) => void) | undefined;
 }
 
 interface RankedProps extends EntryProps {
@@ -31,20 +36,37 @@ interface RankedProps extends EntryProps {
 const BOX = 'rounded-row border';
 const BOX_ON = 'border-2 border-accent bg-accent-soft';
 const BOX_OFF = 'border-border bg-surface';
-// Only a plain entry that links shows the hover: mine and one at risk keep their border.
-const boxOff = (href: string | undefined) => (href ? `${BOX_OFF} hover-border` : BOX_OFF);
+// Only a plain entry that opens something shows the hover: mine and one at risk keep their border.
+const boxOff = (active: boolean) => (active ? `${BOX_OFF} hover-border` : BOX_OFF);
 const BOX_RISK = 'border-2 border-risk-border bg-surface';
 
-/** The entry as a link to the participant's activities, or as plain text. */
+/**
+ * The entry as a button that opens the participant's points, a link to their
+ * activities, or plain text.
+ */
 function EntryBox({
   href,
+  onOpen,
   className,
   children,
 }: {
   href: string | undefined;
+  onOpen: (() => void) | undefined;
   className: string;
   children: ReactNode;
 }) {
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={onOpen}
+        className={`w-full ${className}`}
+      >
+        {children}
+      </button>
+    );
+  }
   return href ? (
     <Link to={href} className={className}>
       {children}
@@ -84,14 +106,15 @@ function useEntryValue(type: CategoryType, value: number | null, referenceSport:
 }
 
 /** A card of the podium: the rank as an ordinal ("1er"), noted when shared. */
-export function PodiumCard({ entry, type, me, href, tied, referenceSport }: RankedProps) {
+export function PodiumCard({ entry, type, me, href, onOpen, tied, referenceSport }: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const value = useEntryValue(type, entry.value, referenceSport);
   return (
     <EntryBox
       href={href}
-      className={`flex w-full flex-col items-center gap-1 p-3 text-center ${BOX} ${me ? BOX_ON : boxOff(href)}`}
+      onOpen={onOpen && (() => onOpen(name))}
+      className={`flex w-full flex-col items-center gap-1 p-3 text-center ${BOX} ${me ? BOX_ON : boxOff(Boolean(href ?? onOpen))}`}
     >
       <span className="font-display text-lg font-bold">
         {t('leaderboard.rank', { count: entry.rank ?? 0, ordinal: true })}
@@ -115,7 +138,15 @@ export function PodiumCard({ entry, type, me, href, tied, referenceSport }: Rank
  * A row of the full ranking: the rank written as text (1, 1, 3), as the
  * server gives it, and in the elimination the week of the participant.
  */
-export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: RankedProps) {
+export function LeaderboardRow({
+  entry,
+  type,
+  me,
+  href,
+  onOpen,
+  tied,
+  referenceSport,
+}: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const value = useEntryValue(type, entry.value, referenceSport);
@@ -123,7 +154,8 @@ export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: 
   return (
     <EntryBox
       href={href}
-      className={`flex min-h-14 items-center gap-3 px-3 py-2 ${BOX} ${me ? BOX_ON : atRisk ? BOX_RISK : boxOff(href)}`}
+      onOpen={onOpen && (() => onOpen(name))}
+      className={`flex min-h-14 items-center gap-3 px-3 py-2 text-left ${BOX} ${me ? BOX_ON : atRisk ? BOX_RISK : boxOff(Boolean(href ?? onOpen))}`}
     >
       <span className="min-w-[22px] shrink-0 text-center font-bold text-muted tabular-nums">
         {entry.rank}
@@ -148,14 +180,15 @@ export function LeaderboardRow({ entry, type, me, href, tied, referenceSport }: 
  * A participant out of the ranking, who abandoned or was eliminated from the
  * elimination: dashed and muted, without a rank nor a value (design.md).
  */
-export function OutRow({ entry, me, href }: EntryProps) {
+export function OutRow({ entry, me, href, onOpen }: EntryProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
   const week = entry.elimination?.eliminated_week;
   return (
     <EntryBox
       href={href}
-      className={`flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-row border border-dashed border-border-dashed px-3 py-2 text-muted ${href ? 'hover-border' : ''}`}
+      onOpen={onOpen && (() => onOpen(name))}
+      className={`flex min-h-14 flex-wrap items-center gap-x-3 gap-y-1 rounded-row border border-dashed border-border-dashed px-3 py-2 text-left text-muted ${href || onOpen ? 'hover-border' : ''}`}
     >
       <Avatar userId={entry.user.id} user={entry.user} muted />
       <span className="min-w-0 flex-1 truncate font-semibold" title={name}>
