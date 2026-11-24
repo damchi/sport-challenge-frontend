@@ -77,7 +77,8 @@ test('the landing page switches to English', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 1, name: 'Challenge your friends, week after week.' }),
   ).toBeVisible();
-  await expect(page.getByText('×0.3')).toBeVisible();
+  // Cycling and paragliding.
+  await expect(page.getByText('×0.3')).toHaveCount(2);
 });
 
 test('the landing page fits a 360 px phone', async ({ page }) => {
