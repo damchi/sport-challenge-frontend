@@ -13,7 +13,21 @@ const CARD = 'rounded-card border border-border bg-surface p-4 lg:p-5';
  * visibility, who invites and the reference sport, then the distance factors
  * when the challenge has some, the reference sport first.
  */
-export function ChallengeDetails({ challenge }: { challenge: ChallengeDetail }) {
+export function ChallengeDetails({
+  challenge,
+}: {
+  challenge: Pick<
+    ChallengeDetail,
+    | 'starts_at'
+    | 'ends_at'
+    | 'timezone'
+    | 'visibility'
+    | 'members_can_invite'
+    | 'reference_sport'
+    | 'categories'
+    | 'week_count'
+  >;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();

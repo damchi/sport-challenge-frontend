@@ -32,6 +32,13 @@ describe('challengePeriod', () => {
     });
   });
 
+  it('writes the year on both days when asked', () => {
+    expect(challengePeriod(startsAt, endsAt, 'America/Montreal', 'fr', true)).toEqual({
+      start: '1 nov. 2026',
+      end: '30 nov. 2026',
+    });
+  });
+
   it('does not take the day of the device time zone', () => {
     // In Paris the same instants are already the next day.
     expect(challengePeriod(startsAt, endsAt, 'Europe/Paris', 'fr')).toEqual({

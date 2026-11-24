@@ -1,3 +1,5 @@
+import type { AdminChallengeFilters } from '../domain/adminChallenges';
+
 // Query keys of the whole app, in one place. They are hierarchical: invalidating
 // a key also invalidates every key that starts with it (a challenge, then its
 // leaderboards). Each ticket adds the keys of its hooks.
@@ -54,5 +56,11 @@ export const queryKeys = {
   admin: {
     // Stale at once (useAdminStats): read again on each opening of the dashboard.
     stats: ['admin', 'stats'] as const,
+    challenges: {
+      // One cache per filters and page size; objects, never read as an id.
+      list: (filters: AdminChallengeFilters, size: string) =>
+        ['admin', 'challenges', 'list', filters, { size }] as const,
+      detail: (challengeId: string) => ['admin', 'challenges', challengeId] as const,
+    },
   },
 };
