@@ -919,6 +919,44 @@
       "challenges": "Challenges",
       "users": "Accounts",
       "journal": "Log"
+    },
+    "dashboard": {
+      "computedAt": "Figures as of {{date}}",
+      "accounts": {
+        "title": "Accounts",
+        "total": "Total",
+        "new": "New in the last 7 days",
+        "active": "Active in the last 7 days"
+      },
+      "challenges": {
+        "title": "Challenges",
+        "upcoming": "Upcoming",
+        "ongoing": "Ongoing",
+        "finished": "Finished",
+        "deleted": "Deleted"
+      },
+      "activity": {
+        "title": "Activity",
+        "activities": "Activities in the last 7 days",
+        "pendingDeletions": "Auth0 deletions pending"
+      },
+      "worker": {
+        "title": "Worker",
+        "task": "Task",
+        "lastRun": "Last run",
+        "lastFailure": "Last failure",
+        "never": "Never",
+        "noFailure": "None",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "unfinished": "Running or stopped",
+        "tasks": {
+          "close-weeks": "Week closing",
+          "finalize-challenges": "Challenge finalization",
+          "retry-auth0-deletions": "Auth0 deletions"
+        }
+      },
+      "version": "API version: {{version}} ({{commit}})"
     }
   }
 }

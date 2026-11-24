@@ -51,4 +51,8 @@ export const queryKeys = {
     activities: (challengeId: string, size: string) =>
       ['challenges', challengeId, 'activities', size] as const,
   },
+  admin: {
+    // Stale at once (useAdminStats): read again on each opening of the dashboard.
+    stats: ['admin', 'stats'] as const,
+  },
 };

@@ -28,6 +28,7 @@ type ActivityCreate = components['schemas']['ActivityCreate'];
 type ActivityPage = components['schemas']['ActivityPage'];
 type ChallengeActivityPage = components['schemas']['ChallengeActivityPage'];
 type InvitationCreated = components['schemas']['InvitationCreated'];
+type AdminStats = components['schemas']['AdminStats'];
 type InvitationPreview = components['schemas']['InvitationPreview'];
 type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
 
@@ -42,6 +43,42 @@ export const mockMe: Me = {
   language: 'fr',
   profile_complete: true,
   is_admin: false,
+};
+
+/** Figures of the admin dashboard: every task ran, one failed last. */
+export const mockAdminStats: AdminStats = {
+  computed_at: '2026-11-24T14:00:00Z',
+  accounts: { total: 1284, new_last_7_days: 37, active_last_7_days: 412 },
+  challenges: { upcoming: 6, ongoing: 21, finished: 143, deleted: 4 },
+  activities_last_7_days: 1890,
+  pending_auth0_deletions: 2,
+  worker_tasks: [
+    {
+      task: 'close-weeks',
+      last_run: {
+        started_at: '2026-11-24T05:00:00Z',
+        ended_at: '2026-11-24T05:00:04Z',
+        outcome: 'succeeded',
+      },
+    },
+    {
+      task: 'finalize-challenges',
+      last_run: {
+        started_at: '2026-11-24T05:05:00Z',
+        ended_at: '2026-11-24T05:05:02Z',
+        outcome: 'failed',
+        error_code: 'internal_error',
+      },
+      last_failure: {
+        started_at: '2026-11-24T05:05:00Z',
+        ended_at: '2026-11-24T05:05:02Z',
+        outcome: 'failed',
+        error_code: 'internal_error',
+      },
+    },
+    { task: 'retry-auth0-deletions' },
+  ],
+  build: { version: 'v1.4.0', commit: '0123456789abcdef0123456789abcdef01234567' },
 };
 
 type Role = ChallengeSummary['my_role'];
@@ -327,6 +364,7 @@ function activityNotFound() {
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   http.delete('*/api/v1/me', () => new HttpResponse(null, { status: 204 })),
+  http.get('*/api/v1/admin/stats', () => HttpResponse.json<AdminStats>(mockAdminStats)),
   // The cursor is the index of the next item; `mine` keeps the challenges
   // the user created or joined, and `status` keeps those with that status.
   http.get('*/api/v1/challenges', ({ request }) => {
