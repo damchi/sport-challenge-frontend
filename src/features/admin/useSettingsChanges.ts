@@ -28,7 +28,12 @@ const FEMININE: Record<Toggle, boolean> = {
   cumulative_elevation: false,
 };
 
-const LABELS: Partial<Record<SettingField, string>> = {
+type FactorField = `factors.${string}`;
+
+const isFactor = (field: SettingField): field is FactorField => field.startsWith('factors.');
+
+// Every setting but the factors and the elimination, named after a sport.
+const LABELS: Record<Exclude<SettingField, FactorField | 'elimination'>, string> = {
   title: 'challengeCreate.fields.title.label',
   description: 'challengeCreate.recap.description',
   visibility: 'challengeCreate.recap.visibility',
@@ -138,7 +143,7 @@ export function useSettingsChanges(
   };
 
   const label = (field: SettingField) => {
-    if (field.startsWith('factors.')) {
+    if (isFactor(field)) {
       return t('admin.settings.factor', { sport: sportName(field.slice('factors.'.length)) });
     }
     if (field === 'elimination') {
@@ -146,7 +151,7 @@ export function useSettingsChanges(
         sport: sportName(values.reference_sport),
       });
     }
-    return t(LABELS[field] ?? field);
+    return t(LABELS[field]);
   };
 
   const changes = changed.map((field) => ({
