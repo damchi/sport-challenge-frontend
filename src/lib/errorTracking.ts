@@ -84,10 +84,12 @@ export function scrubBreadcrumb(crumb: Breadcrumb): Breadcrumb | null {
 
 /**
  * Errors worth a report: a bug of the app, a server failure or an unreadable
- * answer. The expected answers (4xx, no network) are shown to the user, not reported.
+ * answer. The expected answers (4xx, no network, a 503 `busy` where nothing was
+ * written and a retry is enough) are shown to the user, not reported.
  */
 export function shouldReport(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
+  if (error.status === 503 && error.code === 'busy') return false;
   return error.status >= 500 || error.code === 'unknown';
 }
 

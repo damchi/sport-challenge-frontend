@@ -58,8 +58,24 @@ describe('error messages', () => {
     );
   });
 
+  it('says a busy refusal changed nothing', () => {
+    expect(errorMessage(new ApiError('busy', 503), (key) => i18n.exists(key))).toEqual({
+      key: 'errors.busy',
+      values: {},
+    });
+  });
+
+  it.each(['invalid_token', 'token_expired', 'account_deleted'])(
+    'has a text for the session code %s',
+    (code) => {
+      expect(errorMessage(new ApiError(code, 401), (key) => i18n.exists(key)).key).toBe(
+        `errors.${code}`,
+      );
+    },
+  );
+
   it('falls back on errors.unknown for a code without text', () => {
-    const error = new ApiError('token_expired', 401, { week: '3' });
+    const error = new ApiError('cursor_invalid', 400, { week: '3' });
 
     expect(errorMessage(error, (key) => i18n.exists(key))).toEqual({
       key: 'errors.unknown',
