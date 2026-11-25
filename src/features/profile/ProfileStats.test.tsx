@@ -5,6 +5,8 @@ import type { ActivitySummary } from '../../api/hooks/useActivities';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { ProfileStats } from './ProfileStats';
 
 const EMPTY_WEEK: ActivitySummary['current_week'] = {
@@ -31,10 +33,10 @@ function answering(counts: { challenges: number; activities: number; seconds: nu
   );
 }
 
-function renderStats() {
+function renderStats(queryClient = createTestQueryClient()) {
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
   render(
-    <AppProviders auth={auth}>
+    <AppProviders auth={auth} queryClient={queryClient}>
       <ProfileStats />
     </AppProviders>,
   );
@@ -131,4 +133,20 @@ describe('ProfileStats', () => {
 
     expect(await items()).toEqual(['2défis', '4activités', '1 hde sport1 heure de sport']);
   });
+
+  it.each([500, 429] as const)(
+    'keeps the numbers when their refresh fails (%i)',
+    async (status) => {
+      answering({ challenges: 3, activities: 18, seconds: 3600 });
+      const queryClient = createTestQueryClient();
+      renderStats(queryClient);
+      expect(await items()).toHaveLength(3);
+
+      server.use(http.get('*/api/v1/me/activities/summary', () => failure(status)));
+      await refreshAll(queryClient);
+
+      expect(await items()).toEqual(['3défis', '18activités', '1 hde sport1 heure de sport']);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  );
 });

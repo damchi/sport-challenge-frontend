@@ -199,7 +199,7 @@ export function ChallengeCreateWizard({
     const valid = fields ? await form.trigger(fields, { shouldFocus: true }) : true;
     // The reference and the factors are seen before going on: not while
     // the catalogue is loading or failed. The step then says why it stays.
-    if (fields?.some((field) => field === 'reference_sport') && !sports.isSuccess) {
+    if (fields?.some((field) => field === 'reference_sport') && !sports.data) {
       setSportsWaiting(true);
       return false;
     }

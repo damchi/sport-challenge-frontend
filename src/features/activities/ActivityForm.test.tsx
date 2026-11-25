@@ -8,6 +8,8 @@ import { mockChallenges } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { ActivityForm } from './ActivityForm';
 
 type ChallengePage = components['schemas']['ChallengePage'];
@@ -32,7 +34,10 @@ function keyMaker() {
   };
 }
 
-function renderForm({ deviceTimeZone = 'Asia/Tokyo' }: { deviceTimeZone?: string } = {}) {
+function renderForm({
+  deviceTimeZone = 'Asia/Tokyo',
+  queryClient = createTestQueryClient(),
+}: { deviceTimeZone?: string; queryClient?: ReturnType<typeof createTestQueryClient> } = {}) {
   const router = createMemoryRouter(
     [
       {
@@ -51,7 +56,10 @@ function renderForm({ deviceTimeZone = 'Asia/Tokyo' }: { deviceTimeZone?: string
     { initialEntries: ['/activities/new'] },
   );
   render(
-    <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+    <AppProviders
+      auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}
+      queryClient={queryClient}
+    >
       <RouterProvider router={router} />
     </AppProviders>,
   );
@@ -396,6 +404,27 @@ describe('ActivityForm', () => {
     ]);
     expect(links[1]).toHaveTextContent('Course du midi');
   });
+
+  it.each([500, 429] as const)(
+    'keeps the entry under way when the sports and the challenges fail to reload (%i)',
+    async (status) => {
+      const queryClient = createTestQueryClient();
+      renderForm({ queryClient });
+      await fill();
+
+      server.use(
+        http.get('*/api/v1/challenges', () => failure(status)),
+        http.get('*/api/v1/sports', () => failure(status)),
+      );
+      await refreshAll(queryClient);
+
+      expect(screen.getByRole('radio', { name: 'Course' })).toBeChecked();
+      expect(startDate()).toHaveValue('2026-11-20');
+      expect(minutes()).toHaveValue('45');
+      expect(distanceField()).toHaveValue('8,2');
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    },
+  );
 
   it('keeps the outcome when the challenges cannot reload afterwards', async () => {
     recordWith(() => recorded([contribution('c1', 'Novembre en mouvement')]));

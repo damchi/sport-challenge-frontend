@@ -47,17 +47,18 @@ export function CategoriesStep({ sportsWaiting }: { sportsWaiting: boolean }) {
 
   return (
     <div className="flex flex-col gap-8">
-      {sportsWaiting && !sports.isSuccess && (
+      {sportsWaiting && !sports.data && (
         <p role="alert" className="text-sm text-risk-fg">
           {t('challengeCreate.categories.waiting')}
         </p>
       )}
       {sports.isPending ? (
         <LoadingState />
-      ) : sports.isError ? (
-        <ErrorState error={sports.error} onRetry={() => void sports.refetch()} />
-      ) : (
+      ) : sports.data ? (
+        // A failed refresh keeps the catalogue: the global banner says so.
         <Categories sports={sports.data} />
+      ) : (
+        <ErrorState error={sports.error} onRetry={() => void sports.refetch()} />
       )}
     </div>
   );

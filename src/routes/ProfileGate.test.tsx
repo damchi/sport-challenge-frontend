@@ -6,11 +6,13 @@ import { mockMe } from '../mocks/handlers';
 import { server } from '../mocks/server';
 import { AppProviders } from '../test/AppProviders';
 import { createFakeAuth } from '../test/fakeAuth';
+import { failure, refreshAll } from '../test/refresh';
+import { createTestQueryClient } from '../test/render';
 import { ProfileGate } from './ProfileGate';
 
 type Entry = string | { pathname: string; state: unknown };
 
-function renderGate(entry: Entry = '/challenges') {
+function renderGate(entry: Entry = '/challenges', queryClient = createTestQueryClient()) {
   const router = createMemoryRouter(
     [
       {
@@ -24,7 +26,10 @@ function renderGate(entry: Entry = '/challenges') {
     { initialEntries: [entry] },
   );
   render(
-    <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+    <AppProviders
+      auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}
+      queryClient={queryClient}
+    >
       <RouterProvider router={router} />
     </AppProviders>,
   );
@@ -62,6 +67,21 @@ describe('ProfileGate', () => {
 
     expect(await screen.findByText('app page')).toBeInTheDocument();
   });
+
+  it.each([500, 429] as const)(
+    'keeps the app in place when a refresh of the profile fails (%i)',
+    async (status) => {
+      const queryClient = createTestQueryClient();
+      renderGate('/challenges', queryClient);
+      expect(await screen.findByText('app page')).toBeInTheDocument();
+
+      server.use(http.get('*/api/v1/me', () => failure(status)));
+      await refreshAll(queryClient);
+
+      expect(screen.getByText('app page')).toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  );
 
   it('sends a complete profile away from /onboarding, back to the invitation it broke into', async () => {
     const router = renderGate({

@@ -48,6 +48,22 @@ describe('createQueryClient global errors', () => {
     expect(onError).toHaveBeenCalledWith(error);
   });
 
+  it('ends the session when a refresh of data on screen is refused for it', async () => {
+    const { client, onError, onAuthError } = setup();
+    for (const [key, error] of [
+      ['a', new ApiError('token_expired', 401)],
+      ['b', new ApiError('account_blocked', 403)],
+    ] as const) {
+      client.setQueryData([key], 'previous');
+      await client
+        .fetchQuery({ queryKey: [key], queryFn: failingWith(error), retry: false, staleTime: 0 })
+        .catch(() => undefined);
+    }
+
+    expect(onAuthError).toHaveBeenCalledTimes(2);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
   it('reports a failed action', async () => {
     const { client, onError } = setup();
     const error = new ApiError('week_locked', 409);

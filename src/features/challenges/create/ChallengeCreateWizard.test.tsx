@@ -8,6 +8,8 @@ import { server } from '../../../mocks/server';
 import { timeZoneName } from '../../../domain/format/challengeDates';
 import { AppProviders } from '../../../test/AppProviders';
 import { createFakeAuth } from '../../../test/fakeAuth';
+import { failure, refreshAll } from '../../../test/refresh';
+import { createTestQueryClient } from '../../../test/render';
 import { ChallengeCreateWizard } from './ChallengeCreateWizard';
 
 // Wednesday 30 September 2026, 11:00 in Montréal.
@@ -18,7 +20,10 @@ function ChallengePage() {
   return <p>Défi {useParams().id}</p>;
 }
 
-function renderWizard({ timeZones = ZONES }: { timeZones?: readonly string[] } = {}) {
+function renderWizard({
+  timeZones = ZONES,
+  queryClient = createTestQueryClient(),
+}: { timeZones?: readonly string[]; queryClient?: ReturnType<typeof createTestQueryClient> } = {}) {
   const router = createMemoryRouter(
     [
       {
@@ -38,7 +43,10 @@ function renderWizard({ timeZones = ZONES }: { timeZones?: readonly string[] } =
   // StrictMode, as in the app: its double mount must not count as input.
   render(
     <StrictMode>
-      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+      <AppProviders
+        auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}
+        queryClient={queryClient}
+      >
         <RouterProvider router={router} />
       </AppProviders>
     </StrictMode>,
@@ -471,6 +479,28 @@ describe('ChallengeCreateWizard', () => {
   });
 
   describe('categories step', () => {
+    it.each([500, 429] as const)(
+      'keeps its fields when the sports fail to reload, and goes on (%i)',
+      async (status) => {
+        const queryClient = createTestQueryClient();
+        renderWizard({ queryClient });
+        await fillInfoStep();
+        await fillDurationStep();
+        await addDistance();
+
+        server.use(http.get('*/api/v1/sports', () => failure(status)));
+        await refreshAll(queryClient);
+
+        expect(reference()).toHaveValue('run');
+        expect(screen.getByRole('switch', { name: 'Distance cumulée' })).toBeChecked();
+        expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+        next();
+        expect(
+          await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' }),
+        ).toBeInTheDocument();
+      },
+    );
+
     it('starts on the run as reference, with the total time alone', async () => {
       renderWizard();
       await fillInfoStep();

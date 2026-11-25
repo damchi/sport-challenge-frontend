@@ -7,14 +7,15 @@ import { activityTimeZone } from '../../domain/activity';
  * of their ongoing challenges when they share one, the device's otherwise.
  * Every page of those challenges is loaded first: a zone missed would read a
  * start in the wrong one. `paused` stops loading more once it is no longer
- * needed.
+ * needed. A failed refresh keeps the zone of the challenges already loaded:
+ * it fails only with nothing loaded, or a page still missing.
  */
 export function useActivityTimeZone(deviceTimeZone: string | undefined, paused = false) {
   const ongoing = useChallenges('mine', 'ongoing', 'all');
   useFetchAllPages(ongoing, !paused);
   const { hasNextPage, isError } = ongoing;
   const isPending = ongoing.isPending || (hasNextPage && !isError);
-  const failed = !isPending && (!ongoing.data || isError);
+  const failed = !isPending && (!ongoing.data || (isError && hasNextPage));
   const device = deviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   return {
     isPending,

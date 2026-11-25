@@ -6,6 +6,8 @@ import type { components } from '../../api/generated/schema';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { ActivityEdit } from './ActivityEdit';
 
 type ActivityPage = components['schemas']['ActivityPage'];
@@ -66,7 +68,7 @@ function refusal(code: string, status: number) {
   return HttpResponse.json({ error: { code, message: 'Refused' } }, { status });
 }
 
-function renderEdit(activityId: string = RUN_ID) {
+function renderEdit(activityId: string = RUN_ID, queryClient = createTestQueryClient()) {
   const router = createMemoryRouter(
     [
       {
@@ -78,7 +80,10 @@ function renderEdit(activityId: string = RUN_ID) {
     { initialEntries: [`/activities/${activityId}/edit`] },
   );
   render(
-    <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+    <AppProviders
+      auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}
+      queryClient={queryClient}
+    >
       <RouterProvider router={router} />
     </AppProviders>,
   );
@@ -99,6 +104,45 @@ describe('ActivityEdit', () => {
     expect(screen.getByRole('textbox', { name: 'Minutes' })).toHaveValue('45');
     expect(screen.getByRole('textbox', { name: 'Secondes' })).toHaveValue('30');
     expect(screen.getByRole('textbox', { name: 'Distance en kilomètres' })).toHaveValue('8,2');
+  });
+
+  it.each([500, 429] as const)(
+    'keeps the changes under way when the data fails to reload (%i)',
+    async (status) => {
+      listing([run]);
+      const queryClient = createTestQueryClient();
+      renderEdit(RUN_ID, queryClient);
+      const minutes = await screen.findByRole('textbox', { name: 'Minutes' });
+      fireEvent.change(minutes, { target: { value: '50' } });
+
+      server.use(
+        http.get('*/api/v1/me/activities', () => failure(status)),
+        http.get('*/api/v1/challenges', () => failure(status)),
+        http.get('*/api/v1/sports', () => failure(status)),
+      );
+      await refreshAll(queryClient);
+
+      expect(screen.getByRole('textbox', { name: 'Minutes' })).toHaveValue('50');
+      expect(screen.getByRole('radio', { name: 'Course' })).toBeChecked();
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    },
+  );
+
+  it('offers a retry when the time zone cannot load at first', async () => {
+    listing([run]);
+    let calls = 0;
+    server.use(
+      // The first answer fails; the next ones are the mock challenges'.
+      http.get('*/api/v1/challenges', () => {
+        calls += 1;
+        return calls === 1 ? failure(500) : undefined;
+      }),
+    );
+    renderEdit();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByRole('radio', { name: 'Course' })).toBeChecked();
   });
 
   it('finds an activity beyond the first page, by 100, whatever size the list shows', async () => {
