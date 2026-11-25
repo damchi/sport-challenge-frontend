@@ -11,6 +11,8 @@ import {
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { AdminActivityEditor } from './AdminActivityEditor';
 
 const [marie, , deleted] = mockAdminUsers;
@@ -70,7 +72,7 @@ function serve(answer?: (sent: Sent) => Response | undefined) {
   return sent;
 }
 
-function renderEditor(path: string) {
+function renderEditor(path: string, queryClient = createTestQueryClient()) {
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
   const editor = <AdminActivityEditor now={() => NOW} deviceTimeZone="Asia/Tokyo" />;
   const router = createMemoryRouter(
@@ -82,7 +84,7 @@ function renderEditor(path: string) {
     { initialEntries: [path] },
   );
   render(
-    <AppProviders auth={auth}>
+    <AppProviders auth={auth} queryClient={queryClient}>
       <RouterProvider router={router} />
     </AppProviders>,
   );
@@ -295,5 +297,103 @@ describe('AdminActivityEditor', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "Ce compte n'a pas encore indiqué son prénom et son nom",
     );
+  });
+
+  it.each([500, 429] as const)(
+    'keeps the entry under way when reading the account again fails (%i)',
+    async (status) => {
+      const queryClient = createTestQueryClient();
+      renderEditor(`/admin/users/${marie.id}/activities/new`, queryClient);
+      await fill();
+
+      server.use(
+        http.get('*/api/v1/admin/users/:userId', () => failure(status)),
+        http.get('*/api/v1/admin/users/:userId/challenges', () => failure(status)),
+        http.get('*/api/v1/admin/challenges/:challengeId', () => failure(status)),
+        http.get('*/api/v1/sports', () => failure(status)),
+      );
+      await refreshAll(queryClient);
+
+      expect(textbox('Minutes')).toHaveValue('46');
+      expect(textbox('Distance en kilomètres')).toHaveValue('8,2');
+      expect(screen.getByRole('radio', { name: 'Course' })).toBeChecked();
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    },
+  );
+
+  it('keeps an activity being changed when reading the account again fails', async () => {
+    const queryClient = createTestQueryClient();
+    renderEditor(`/admin/users/${marie.id}/activities/${locked.id}`, queryClient);
+    const minutes = await screen.findByRole('textbox', { name: 'Minutes' });
+    type(minutes, '59');
+
+    server.use(
+      http.get('*/api/v1/admin/users/:userId', () => failure(500)),
+      http.get('*/api/v1/admin/users/:userId/activities', () => failure(500)),
+    );
+    await refreshAll(queryClient);
+
+    expect(textbox('Minutes')).toHaveValue('59');
+  });
+
+  it.each([
+    ['the account', '*/api/v1/admin/users/:userId'],
+    ['its challenges', '*/api/v1/admin/users/:userId/challenges'],
+    ['an ongoing challenge of the account', '*/api/v1/admin/challenges/:challengeId'],
+    ['the sports', '*/api/v1/sports'],
+  ])('offers a retry when %s cannot be read at first', async (_, route) => {
+    let calls = 0;
+    server.use(
+      http.get(route, () => {
+        calls += 1;
+        return calls === 1 ? failure(500) : undefined;
+      }),
+    );
+    renderEditor(`/admin/users/${marie.id}/activities/new`);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+
+    expect(await screen.findByRole('radio', { name: 'Course' })).toBeInTheDocument();
+  });
+
+  it.each([
+    ['the activities looked through for the one changed', '*/api/v1/admin/users/:userId/activities'],
+    ['the challenges giving the zone', '*/api/v1/admin/users/:userId/challenges'],
+  ])('offers a retry, not a missing activity, when a next page of %s fails', async (_, route) => {
+    // An empty first page, then a next page failing once: the activity may be there.
+    let failed = false;
+    server.use(
+      http.get(route, ({ request }) => {
+        if (new URL(request.url).searchParams.get('cursor') === null) {
+          return HttpResponse.json({ items: [], next_cursor: '0' });
+        }
+        if (failed) return undefined;
+        failed = true;
+        return failure(500);
+      }),
+    );
+    renderEditor(`/admin/users/${marie.id}/activities/${locked.id}`);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+    expect(
+      screen.queryByText("Cette activité n'existe plus : elle a peut-être été supprimée entre-temps."),
+    ).not.toBeInTheDocument();
+
+    expect(await screen.findByRole('textbox', { name: 'Minutes' })).toBeInTheDocument();
+  });
+
+  it('says the account does not exist when reading it again answers so', async () => {
+    const queryClient = createTestQueryClient();
+    renderEditor(`/admin/users/${marie.id}/activities/new`, queryClient);
+    await screen.findByRole('radio', { name: 'Course' });
+
+    server.use(
+      http.get('*/api/v1/admin/users/:userId', () =>
+        HttpResponse.json({ error: { code: 'user_not_found', message: 'gone' } }, { status: 404 }),
+      ),
+    );
+    await refreshAll(queryClient);
+
+    expect(screen.getByText("Ce compte n'existe pas.")).toBeInTheDocument();
   });
 });

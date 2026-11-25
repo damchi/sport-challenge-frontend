@@ -71,9 +71,11 @@ export function AdminChallengeSettings({
     content = <p className={`${CARD} text-muted`}>{t('admin.challenges.notFound')}</p>;
   } else if (challenge.isPending || sports.isPending) {
     content = <LoadingState />;
-  } else if (challenge.isError) {
+  } else if (!challenge.data) {
+    // Only with nothing loaded: a failed refresh keeps the form and its
+    // changes, and the global banner says so.
     content = <ErrorState error={challenge.error} onRetry={() => void challenge.refetch()} />;
-  } else if (sports.isError) {
+  } else if (!sports.data) {
     content = <ErrorState error={sports.error} onRetry={() => void sports.refetch()} />;
   } else if (challenge.data.deleted_at !== null) {
     // The server refuses to change a deleted challenge: it is restored first.

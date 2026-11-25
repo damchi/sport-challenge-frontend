@@ -76,7 +76,9 @@ export function AdminActivityEditor({
     );
   } else if (user.isPending) {
     content = <LoadingState />;
-  } else if (user.isError) {
+  } else if (!user.data) {
+    // Only with nothing loaded: a failed refresh keeps the form and its
+    // entry, and the global banner says so.
     content = <ErrorState error={user.error} onRetry={() => void user.refetch()} />;
   } else if (user.data.deleted_at !== null) {
     content = <p className={`${CARD} text-muted`}>{t('admin.activityForm.deleted')}</p>;
@@ -150,7 +152,8 @@ function Entry({
     );
   }
   if (editing && !activity) {
-    if (!activities.data || isError) {
+    // Not found only once every page is read.
+    if (!activities.data || (isError && hasNextPage)) {
       return <ErrorState error={activities.error} onRetry={() => void activities.refetch()} />;
     }
     return (

@@ -42,7 +42,8 @@ export function AdminDashboard() {
   let content: ReactNode;
   if (stats.isPending) {
     content = <LoadingState />;
-  } else if (stats.isError) {
+  } else if (!stats.data) {
+    // Only with nothing loaded: a failed refresh keeps the figures.
     content = <ErrorState error={stats.error} onRetry={() => void stats.refetch()} />;
   } else {
     const { accounts, challenges, build } = stats.data;

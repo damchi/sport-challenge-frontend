@@ -4,6 +4,8 @@ import { mockAdminStats } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { AdminDashboard } from './AdminDashboard';
 
 // The device's time zone, fixed: the times below are Montreal's.
@@ -16,10 +18,10 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-function renderDashboard() {
+function renderDashboard(queryClient = createTestQueryClient()) {
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
   render(
-    <AppProviders auth={auth}>
+    <AppProviders auth={auth} queryClient={queryClient}>
       <AdminDashboard />
     </AppProviders>,
   );
@@ -107,4 +109,20 @@ describe('AdminDashboard', () => {
 
     expect(await screen.findByRole('heading', { level: 2, name: 'Comptes' })).toBeInTheDocument();
   });
+
+  it.each([500, 429] as const)(
+    'keeps the figures when reading them again fails (%i)',
+    async (status) => {
+      const queryClient = createTestQueryClient();
+      renderDashboard(queryClient);
+      await screen.findByText('Comptes', { selector: 'h2' });
+      const before = figure('Total');
+
+      server.use(http.get('*/api/v1/admin/stats', () => failure(status)));
+      await refreshAll(queryClient);
+
+      expect(figure('Total')).toBe(before);
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    },
+  );
 });
