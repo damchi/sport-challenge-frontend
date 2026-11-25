@@ -61,6 +61,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   // Unmount first: a mounted page would apply its profile language again.
@@ -795,7 +796,6 @@ describe('ChallengeDetailView', () => {
 
     expect(screen.getByRole('textbox', { name: 'Lien à partager' })).toBe(link);
     expect(await title()).toBe(heading);
-    vi.useRealTimers();
   });
 
   it('shows the same page for a missing, deleted or hidden challenge', async () => {
