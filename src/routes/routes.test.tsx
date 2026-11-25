@@ -156,6 +156,8 @@ describe('routes', () => {
       ['/admin/challenges/c-1/settings', 'Défis'],
       ['/admin/users', 'Comptes'],
       ['/admin/users/u-1', 'Comptes'],
+      ['/admin/users/u-1/activities/new', 'Comptes'],
+      ['/admin/users/u-1/activities/a-1', 'Comptes'],
       ['/admin/journal', 'Journal'],
     ])('opens %s to an admin, under its part', async (path, part) => {
       asAdmin();

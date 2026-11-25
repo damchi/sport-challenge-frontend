@@ -21,6 +21,9 @@ const PARTS = {
   ),
   users: lazy(() => import('../pages/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage }))),
   user: lazy(() => import('../pages/AdminUserPage').then((m) => ({ default: m.AdminUserPage }))),
+  userActivity: lazy(() =>
+    import('../pages/AdminUserActivityPage').then((m) => ({ default: m.AdminUserActivityPage })),
+  ),
   journal: lazy(() =>
     import('../pages/AdminJournalPage').then((m) => ({ default: m.AdminJournalPage })),
   ),

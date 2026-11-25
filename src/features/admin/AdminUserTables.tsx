@@ -1,8 +1,10 @@
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import {
   useAdminUserActivities,
   useAdminUserChallenges,
+  type AdminActivity,
 } from '../../api/hooks/admin/useAdminUsers';
 import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
 import { userChallengeRole } from '../../domain/adminUsers';
@@ -15,6 +17,9 @@ import { CELL } from './adminCells';
 import { PagedPart } from './PagedPart';
 
 type At = (instant: string) => string;
+
+// Said where the eye is: the row clicked is gone, or far below the message.
+const focusOnShow = (element: HTMLElement | null) => element?.focus();
 
 /**
  * The challenges of the account, deleted ones included, most recently
@@ -83,18 +88,32 @@ export function AdminUserChallenges({ userId, at }: { userId: string; at: At }) 
   );
 }
 
+/** What the admin may do to the activities of an account not deleted. */
+export interface ActivityChanges {
+  /** A change is being previewed: no other is asked meanwhile. */
+  pending: boolean;
+  /** Why the preview of a deletion was refused. */
+  refused: string | undefined;
+  /** Said once a deletion is made. */
+  deleted: boolean;
+  onDelete: (activity: AdminActivity) => void;
+}
+
 /**
  * The activities of the account, deleted ones excluded, the most recent
- * session first: sport, start, duration, distance and elevation gain.
+ * session first: sport, start, duration, distance and elevation gain. With
+ * `changes`, the admin adds one, or changes or deletes any, in any week.
  */
 export function AdminUserActivities({
   userId,
   at,
   locale,
+  changes,
 }: {
   userId: string;
   at: At;
   locale: string;
+  changes?: ActivityChanges;
 }) {
   const { t } = useTranslation();
   const sportName = useSportName();
@@ -110,6 +129,31 @@ export function AdminUserActivities({
       list={activities}
       size={size}
       onSize={setSize}
+      action={
+        changes && (
+          <Link
+            to={`/admin/users/${encodeURIComponent(userId)}/activities/new`}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-accent px-5 font-bold text-on-accent hover-accent"
+          >
+            <Plus aria-hidden="true" size={18} />
+            {t('admin.users.activities.add')}
+          </Link>
+        )
+      }
+      intro={
+        changes &&
+        (changes.refused ? (
+          <p ref={focusOnShow} tabIndex={-1} role="alert" className="font-semibold text-risk-fg">
+            {changes.refused}
+          </p>
+        ) : (
+          changes.deleted && (
+            <p ref={focusOnShow} tabIndex={-1} role="status" className="font-semibold text-ok-fg">
+              {t('admin.users.activities.deleted')}
+            </p>
+          )
+        ))
+      }
       table={
         <AdminTable
           caption={t('admin.users.activities.title')}
@@ -119,6 +163,7 @@ export function AdminUserActivities({
             t('admin.users.activities.duration'),
             t('admin.users.activities.distance'),
             t('admin.users.activities.elevation'),
+            ...(changes ? [t('admin.users.activities.actions')] : []),
           ]}
         >
           {items.map((activity) => (
@@ -142,6 +187,32 @@ export function AdminUserActivities({
                   ? none
                   : formatMeters(activity.elevation_gain_meters, locale)}
               </td>
+              {changes && (
+                <td className={CELL}>
+                  <div className="flex gap-2">
+                    <Link
+                      to={`/admin/users/${encodeURIComponent(userId)}/activities/${encodeURIComponent(activity.id)}`}
+                      aria-label={t('admin.users.activities.edit', {
+                        activity: at(activity.started_at),
+                      })}
+                      className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface hover-fill"
+                    >
+                      <Pencil aria-hidden="true" size={18} />
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={changes.pending}
+                      onClick={() => changes.onDelete(activity)}
+                      aria-label={t('admin.users.activities.delete', {
+                        activity: at(activity.started_at),
+                      })}
+                      className="inline-flex size-11 items-center justify-center rounded-full border border-risk-border bg-surface text-risk-fg hover-fill disabled:opacity-60"
+                    >
+                      <Trash2 aria-hidden="true" size={18} />
+                    </button>
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </AdminTable>

@@ -22,6 +22,12 @@ export interface RecomputeChange {
 
 type Step = 'input' | 'preview' | 'reason';
 
+/** Told to the fields that asked for the preview: shown, or refused (and why). */
+export interface PreviewOutcome {
+  onShown: () => void;
+  onRefused: (error: unknown) => void;
+}
+
 /** The title of a challenge the change touches, from its admin sheet. */
 function ChallengeTitle({ challengeId }: { challengeId: string }) {
   const { t } = useTranslation();
@@ -85,7 +91,9 @@ function useErrorText(error: unknown, scope: string | undefined): string | undef
  * reason in a dialog, which makes the change. "Modifier la saisie" and
  * "Retour" go back to the fields, kept by the caller, which also keeps its
  * preview's refusal (`error`) in sight, beside its button, and its
- * "Voir l'aperçu" unavailable while `pending`. `send` makes the change's
+ * "Voir l'aperçu" unavailable while `pending` (or is told, through
+ * `showPreview`'s `outcome`, that the preview is shown or refused, to show the
+ * refusal itself). `send` makes the change's
  * request; `onDone` gets the server's answer once it is made, and leaves
  * the flow (the reason dialog stays unavailable until then).
  */
@@ -109,7 +117,7 @@ export function RecomputeFlow({
   send: (client: ApiClient, body: CorrectionBody) => Promise<AdminCorrection | undefined>;
   onDone: (correction: AdminCorrection) => void;
   children: (input: {
-    showPreview: () => void;
+    showPreview: (outcome?: PreviewOutcome) => void;
     pending: boolean;
     /** Why the preview was refused, for the caller to show by its button. */
     error: string | undefined;
@@ -132,14 +140,16 @@ export function RecomputeFlow({
     if (step === 'input' && returned) input.current?.focus();
   }, [step, returned]);
 
-  const showPreview = () => {
+  const showPreview = (outcome?: PreviewOutcome) => {
     correction.mutate(
       { dry_run: true },
       {
         onSuccess: (answer) => {
           setPreview(answer);
           setStep('preview');
+          outcome?.onShown();
         },
+        onError: (error) => outcome?.onRefused(error),
       },
     );
   };

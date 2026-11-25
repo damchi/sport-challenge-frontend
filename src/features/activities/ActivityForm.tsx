@@ -13,6 +13,7 @@ import { timeZoneName } from '../../domain/format/challengeDates';
 import {
   activityCreateSchema,
   activityFormFieldOf,
+  EMPTY_ACTIVITY_INPUT,
   takesElevation,
   type ActivityCreateInput,
   type ActivityCreateValues,
@@ -53,19 +54,6 @@ const sportChipClass =
 // The unit written inside a field, at its end.
 const unitClass =
   'pointer-events-none absolute inset-y-0 right-4 flex items-center font-semibold text-muted';
-
-const EMPTY: ActivityCreateInput = {
-  sport_code: '',
-  sport_label: '',
-  start_date: '',
-  start_hour: '',
-  start_minute: '',
-  hours: '',
-  minutes: '',
-  seconds: '',
-  distance_km: '',
-  elevation_m: '',
-};
 
 /**
  * Entry of an activity, once the catalogue of sports and the user's ongoing
@@ -118,7 +106,7 @@ export function ActivityForm({
       sports={loaded.sports}
       timeZone={loaded.timeZone}
       now={now ?? (() => new Date())}
-      initialValues={EMPTY}
+      initialValues={EMPTY_ACTIVITY_INPUT}
       submitKey="activityForm.submit"
       busy={createActivity.isPending}
       save={record}
@@ -136,8 +124,9 @@ export function ActivityForm({
  * API computes it. A summary of the entry goes with them. They open with
  * `initialValues`; `save` sends the request and throws the API's refusal,
  * shown here: on the refused fields, or above the button (`weekLockedKey`
- * words a week that has ended). `submitKey` holds the button's label and
- * busy label. Leaving with a changed entry asks first.
+ * words a week that has ended; `errorScope` holds the caller's own words for
+ * the API's codes). `submitKey` holds the button's label and busy label;
+ * "Annuler" goes to `cancelTo`. Leaving with a changed entry asks first.
  */
 export function ActivityFormFields({
   sports,
@@ -148,15 +137,19 @@ export function ActivityFormFields({
   busy,
   save,
   weekLockedKey,
+  errorScope,
+  cancelTo = '/activities',
 }: {
   sports: readonly Sport[];
   timeZone: string;
   now: () => Date;
   initialValues: ActivityCreateInput;
-  submitKey: 'activityForm.submit' | 'activityEdit.submit';
+  submitKey: 'activityForm.submit' | 'activityEdit.submit' | 'admin.activityForm.preview';
   busy: boolean;
   save: (activity: ActivityCreateValues) => Promise<void>;
   weekLockedKey?: 'activityEdit.weekLocked';
+  errorScope?: string;
+  cancelTo?: string;
 }) {
   const { t, i18n } = useTranslation();
   const sportName = useSportName();
@@ -221,7 +214,7 @@ export function ActivityFormFields({
       error instanceof ApiError
         ? weekLockedKey && error.code === 'week_locked'
           ? { key: weekLockedKey, values: {} }
-          : errorMessage(error, (candidate) => i18n.exists(candidate))
+          : errorMessage(error, (candidate) => i18n.exists(candidate), errorScope)
         : { key: 'errors.unknown', values: {} };
     setSubmitError(t(key, values));
     // Said where the eye is: the message may be off screen on a phone.
@@ -510,7 +503,7 @@ export function ActivityFormFields({
             </button>
             {/* A phone leaves by the arrow of the header. */}
             <Link
-              to="/activities"
+              to={cancelTo}
               className="hidden h-11 items-center font-semibold text-muted underline underline-offset-4 md:inline-flex hover-link"
             >
               {t('activityForm.cancel')}

@@ -134,6 +134,16 @@ export const routes: RouteObject[] = [
                             handle: title('admin.nav.users'),
                           },
                           {
+                            path: 'users/:userId/activities/new',
+                            element: <AdminPart name="userActivity" />,
+                            handle: title('admin.nav.users'),
+                          },
+                          {
+                            path: 'users/:userId/activities/:activityId',
+                            element: <AdminPart name="userActivity" />,
+                            handle: title('admin.nav.users'),
+                          },
+                          {
                             path: 'journal',
                             element: <AdminPart name="journal" />,
                             handle: title('admin.nav.journal'),

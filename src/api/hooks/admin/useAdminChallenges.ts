@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
 import type { AdminChallengeFilters } from '../../../domain/adminChallenges';
 import { pageLimit, type PageSize } from '../../../domain/pageSize';
 import { useApiClient } from '../../ApiClientContext';
@@ -39,9 +39,19 @@ export function useAdminChallenges(filters: AdminChallengeFilters, size: PageSiz
  */
 export function useAdminChallenge(challengeId: string, enabled = true) {
   const client = useApiClient();
-  return useQuery({
+  return useQuery({ ...adminChallengeQuery(client, challengeId), enabled });
+}
+
+/** Several challenges as an admin sees them, each read as `useAdminChallenge` does. */
+export function useAdminChallengesById(challengeIds: readonly string[]) {
+  const client = useApiClient();
+  return useQueries({ queries: challengeIds.map((id) => adminChallengeQuery(client, id)) });
+}
+
+function adminChallengeQuery(client: ApiClient, challengeId: string) {
+  return {
     queryKey: queryKeys.admin.challenges.detail(challengeId),
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }: { signal: AbortSignal }) => {
       const { data } = await client.GET('/api/v1/admin/challenges/{challengeId}', {
         params: { path: { challengeId } },
         signal,
@@ -49,10 +59,9 @@ export function useAdminChallenge(challengeId: string, enabled = true) {
       if (!data) throw new Error('Empty admin challenge');
       return data;
     },
-    enabled,
     // Read now on the server, never stored: the state of the moment.
     staleTime: 0,
-  });
+  };
 }
 
 /** The settings an admin changes, besides the reason and the preview. */

@@ -1,5 +1,7 @@
 import en from './en.json';
 import fr from './fr.json';
+import adminEn from './admin/en.json';
+import adminFr from './admin/fr.json';
 import landingEn from './landing/en.json';
 import landingFr from './landing/fr.json';
 import { missingKeys, missingPluralForms } from './parity';
@@ -44,6 +46,13 @@ describe('missingKeys', () => {
     expect(missingPluralForms(en, 'en')).toEqual([]);
     expect(missingKeys(fr, en)).toEqual([]);
     expect(missingKeys(en, fr)).toEqual([]);
+  });
+
+  it('finds the same keys and every plural form in the admin section files', () => {
+    expect(missingPluralForms(adminFr, 'fr')).toEqual([]);
+    expect(missingPluralForms(adminEn, 'en')).toEqual([]);
+    expect(missingKeys(adminFr, adminEn)).toEqual([]);
+    expect(missingKeys(adminEn, adminFr)).toEqual([]);
   });
 
   it('finds the same keys and every plural form in the landing page files', () => {
