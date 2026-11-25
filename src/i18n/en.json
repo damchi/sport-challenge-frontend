@@ -25,6 +25,7 @@
     "internal_error": "The service is temporarily unavailable. Try again in a moment.",
     "invalid_token": "Your session has ended. Sign in again.",
     "invitation_invalid": "This invitation link is not valid or has expired.",
+    "language_unavailable": "This language could not be loaded. Check your connection and try again.",
     "last_creator": "You're the last creator of a challenge in progress. Add another creator or delete the challenge.",
     "network_error": "Unable to connect. Check your internet connection, then try again.",
     "not_active_participant": "Only an active participant can become a creator.",

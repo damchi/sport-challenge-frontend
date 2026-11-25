@@ -5,6 +5,13 @@ import type { Auth } from '../lib/auth/auth';
 import { createFakeAuth } from '../test/fakeAuth';
 import { AppProviders } from '../test/AppProviders';
 import { LandingPage } from './LandingPage';
+import { changeLanguage } from '../i18n';
+
+// The download of a language's texts, made to fail in some tests.
+vi.mock('../i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../i18n')>();
+  return { ...actual, changeLanguage: vi.fn(actual.changeLanguage) };
+});
 
 function renderLanding(auth: Auth = createFakeAuth()) {
   const router = createMemoryRouter([
@@ -197,6 +204,25 @@ describe('LandingPage', () => {
     ).toBeInTheDocument();
     expect(screen.getAllByText('×0.3')).toHaveLength(2);
     expect(screen.getByText(/^Week 3 of 4 · ends Saturday, Nov(\.)? 28/)).toBeInTheDocument();
+  });
+
+  it('stays in French when English cannot be downloaded, and says so', async () => {
+    vi.mocked(changeLanguage)
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockRejectedValueOnce(new Error('offline'));
+    renderLanding();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'English' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Cette langue n'a pas pu être chargée. Vérifie ta connexion et réessaie.",
+    );
+    expect(screen.getByRole('radio', { name: 'Français' })).toBeChecked();
+
+    // The footer's choice says it too.
+    const footer = screen.getByRole('contentinfo');
+    fireEvent.click(within(footer).getByRole('button', { name: 'English' }));
+    expect(await within(footer).findByRole('alert')).toBeInTheDocument();
+    expect(i18n.language).toBe('fr');
   });
 
   it('answers the first question, the others on demand', () => {

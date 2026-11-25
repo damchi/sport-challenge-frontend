@@ -8,6 +8,13 @@ import { OnboardingPage } from '../../pages/OnboardingPage';
 import { ProfileGate } from '../../routes/ProfileGate';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { changeLanguage } from '../../i18n';
+
+// The download of a language's texts, made to fail in some tests.
+vi.mock('../../i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../i18n')>();
+  return { ...actual, changeLanguage: vi.fn(actual.changeLanguage) };
+});
 
 const newProfile = {
   ...mockMe,
@@ -89,6 +96,33 @@ describe('profile onboarding', () => {
     await typePseudo('marie_92');
     expect(within(preview).getByText('marie_92')).toBeInTheDocument();
     expect(within(preview).queryByText('Marie Tremblay')).not.toBeInTheDocument();
+  });
+
+  it('keeps the language when the other one cannot be downloaded, and says so', async () => {
+    let sent: unknown;
+    server.use(
+      http.patch('*/api/v1/me', async ({ request }) => {
+        sent = await request.json();
+        return HttpResponse.json(mockMe);
+      }),
+    );
+    vi.mocked(changeLanguage).mockRejectedValueOnce(new Error('offline'));
+    renderApp('/challenges');
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'English' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Cette langue n'a pas pu être chargée. Vérifie ta connexion et réessaie.",
+    );
+    expect(screen.getByRole('radio', { name: 'Français' })).toBeChecked();
+
+    await type('Prénom', 'Marie');
+    await type('Nom', 'Tremblay');
+    fireEvent.click(screen.getByRole('button', { name: "C'est parti" }));
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'asked page' }),
+    ).toBeInTheDocument();
+    expect(sent).toEqual({ first_name: 'Marie', last_name: 'Tremblay', language: 'fr' });
   });
 
   it('switches the interface to the language chosen, then sends it', async () => {

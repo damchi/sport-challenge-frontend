@@ -1,5 +1,5 @@
 import i18n from 'i18next';
-import { FALLBACK_LANGUAGE, pickLanguage } from '.';
+import { FALLBACK_LANGUAGE, initI18n, loadLanguage, pickLanguage } from '.';
 
 describe('pickLanguage', () => {
   it('keeps the first supported language of the device, whatever its region', () => {
@@ -12,6 +12,80 @@ describe('pickLanguage', () => {
     expect(FALLBACK_LANGUAGE).toBe('en');
     expect(pickLanguage(['es-ES', 'de'])).toBe('en');
     expect(pickLanguage([])).toBe('en');
+  });
+});
+
+describe('loading the languages', () => {
+  // Starts again from nothing (the setup of the tests loads both languages),
+  // with a fresh copy of this module so that its texts can be mocked.
+  async function freshStart() {
+    vi.resetModules();
+    const texts = await import('.');
+    return { instance: i18n, ...texts };
+  }
+  afterEach(async () => {
+    vi.doUnmock('./fr.json');
+    vi.resetModules();
+    // Back to the setup's state for the other tests.
+    await initI18n('fr');
+    await loadLanguage('en');
+  });
+
+  it('starts with the texts of the active language only', async () => {
+    const { instance, initI18n } = await freshStart();
+
+    await initI18n('en');
+
+    expect(instance.t('errors.unknown')).toBe('Something went wrong. Try again.');
+    expect(instance.hasResourceBundle('fr', 'translation')).toBe(false);
+  });
+
+  it('downloads the other language when it is chosen, then applies it', async () => {
+    const { instance, initI18n, changeLanguage } = await freshStart();
+    await initI18n('en');
+
+    await changeLanguage('fr');
+
+    expect(instance.language).toBe('fr');
+    expect(instance.t('errors.unknown')).toBe('Une erreur est survenue. Réessaie.');
+  });
+
+  it('keeps the texts added apart when the language comes after them', async () => {
+    const { instance, initI18n, changeLanguage } = await freshStart();
+    await initI18n('en');
+    instance.addResourceBundle('fr', 'translation', { landing: { title: 'Accueil' } }, true);
+
+    await changeLanguage('fr');
+
+    expect(instance.t('landing.title')).toBe('Accueil');
+    expect(instance.t('errors.unknown')).toBe('Une erreur est survenue. Réessaie.');
+  });
+
+  it('downloads a language once, and applies the one asked for last', async () => {
+    const { instance, initI18n, changeLanguage } = await freshStart();
+    await initI18n('en');
+    const added = vi.spyOn(instance, 'addResourceBundle');
+
+    const first = changeLanguage('fr');
+    const last = changeLanguage('en');
+    const again = changeLanguage('fr');
+
+    expect(await Promise.all([first, last, again])).toEqual([true, false, true]);
+    expect(instance.language).toBe('fr');
+    expect(added).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the current language when the other one cannot be downloaded', async () => {
+    vi.doMock('./fr.json', () => {
+      throw new Error('offline');
+    });
+    const { instance, initI18n, changeLanguage } = await freshStart();
+    await initI18n('en');
+
+    await expect(changeLanguage('fr')).rejects.toThrow();
+
+    expect(instance.language).toBe('en');
+    expect(instance.t('errors.unknown')).toBe('Something went wrong. Try again.');
   });
 });
 

@@ -3,6 +3,7 @@ import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe } from '../../api/hooks/useMe';
 import { Segmented } from '../../components/Segmented';
 import { SUPPORTED_LANGUAGES, type Language } from '../../i18n';
+import { useLanguageChoice } from '../../lib/language';
 import { setThemeChoice, useThemeChoice, type ThemeChoice } from '../../lib/theme';
 import { PROFILE_CARD } from './profileCard';
 
@@ -16,10 +17,12 @@ export function ProfilePreferences() {
   const { t, i18n } = useTranslation();
   const updateMe = useUpdateMe();
   const theme = useThemeChoice();
+  const languageChoice = useLanguageChoice();
 
-  const chooseLanguage = (language: Language) => {
-    void i18n.changeLanguage(language);
-    updateMe.mutate({ language });
+  // Kept in the profile once applied: a language that could not be downloaded
+  // stays out of it.
+  const chooseLanguage = async (language: Language) => {
+    if (await languageChoice.choose(language)) updateMe.mutate({ language });
   };
 
   // The language could not be kept in the profile: the next load would bring
@@ -44,10 +47,15 @@ export function ProfilePreferences() {
             legend={t('onboarding.language.label')}
             options={SUPPORTED_LANGUAGES}
             selected={i18n.resolvedLanguage}
-            onSelect={chooseLanguage}
+            onSelect={(language) => void chooseLanguage(language)}
             label={(language) => t(`onboarding.language.${language}`)}
             lang={(language) => language}
           />
+          {languageChoice.failed && (
+            <p role="alert" className="mt-2 text-sm text-risk-fg">
+              {t('errors.language_unavailable')}
+            </p>
+          )}
           {saveError && (
             <div className="mt-2 flex items-center gap-3">
               <p role="alert" className="flex-1 text-sm text-risk-fg">

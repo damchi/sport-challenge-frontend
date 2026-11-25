@@ -6,6 +6,16 @@ import { expect, signInAt, test } from './fixtures';
 // build (project "pwa" of playwright.config.ts): it keeps the app shell to
 // start offline, never the data.
 
+// A page on the real clock: the fixed one of the fixtures fakes `performance`
+// too, whose list of the files loaded tells the app what to keep on a first
+// visit (src/lib/serviceWorker.ts). For the tests that do not sign in (the
+// fake sign-in service dates its tokens on the fixed clock).
+const onRealClock = test.extend({
+  page: async ({ context }, use) => {
+    await use(await context.newPage());
+  },
+});
+
 // The name of the shell's cache in public/sw.js: keep them the same.
 const SHELL_CACHE = 'sport-challenge-shell';
 
@@ -23,6 +33,26 @@ async function firstVisit(page: Page, path = '/'): Promise<void> {
     .toBe(true);
 }
 
+/**
+ * The scripts of /assets/ the page loaded, and those no cache holds: the app
+ * does not start without them (it does without a font).
+ */
+function scriptsKept(page: Page): Promise<{ loaded: string[]; missing: string[] }> {
+  return page.evaluate(async () => {
+    const loaded = performance
+      .getEntriesByType('resource')
+      .map(({ name }) => new URL(name))
+      .filter((url) => url.origin === location.origin && url.pathname.startsWith('/assets/'))
+      .map((url) => url.pathname)
+      .filter((file) => file.endsWith('.js'));
+    const missing: string[] = [];
+    for (const file of loaded) {
+      if (!(await caches.match(file, { ignoreVary: true }))) missing.push(file);
+    }
+    return { loaded, missing };
+  });
+}
+
 /** Every address kept in the caches of the page's origin. */
 function cachedUrls(page: Page): Promise<string[]> {
   return page.evaluate(async () => {
@@ -34,35 +64,38 @@ function cachedUrls(page: Page): Promise<string[]> {
   });
 }
 
-test('starts offline after a first visit, says a connection is required, and waits to sign in', async ({
-  page,
-  context,
-}) => {
-  await firstVisit(page);
-  // Every request to the sign-in service, offline or back online.
-  const signIns: string[] = [];
-  page.on('request', (request) => {
-    if (new URL(request.url()).host === AUTH0_DOMAIN) signIns.push(request.url());
-  });
+onRealClock(
+  'starts offline after a first visit, says a connection is required, and waits to sign in',
+  async ({ page, context }) => {
+    await firstVisit(page);
+    // The scripts loaded apart from index.html, the language's texts among them, kept too.
+    await expect.poll(async () => (await scriptsKept(page)).missing).toEqual([]);
+    expect((await scriptsKept(page)).loaded.length).toBeGreaterThan(0);
+    // Every request to the sign-in service, offline or back online.
+    const signIns: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).host === AUTH0_DOMAIN) signIns.push(request.url());
+    });
 
-  await context.setOffline(true);
-  await page.goto('/challenges');
+    await context.setOffline(true);
+    await page.goto('/challenges');
 
-  const banner = page.getByText('Tu es hors ligne : une connexion internet est nécessaire.');
-  await expect(banner).toBeVisible();
-  await expect(
-    page.getByText('Tu pourras te connecter dès que tu seras de nouveau en ligne.'),
-  ).toBeVisible();
-  // No sign-in started: nothing asked of the sign-in service, the page stays the app's.
-  expect(signIns).toEqual([]);
-  expect(new URL(page.url()).pathname).toBe('/challenges');
+    const banner = page.getByText('Tu es hors ligne : une connexion internet est nécessaire.');
+    await expect(banner).toBeVisible();
+    await expect(
+      page.getByText('Tu pourras te connecter dès que tu seras de nouveau en ligne.'),
+    ).toBeVisible();
+    // No sign-in started: nothing asked of the sign-in service, the page stays the app's.
+    expect(signIns).toEqual([]);
+    expect(new URL(page.url()).pathname).toBe('/challenges');
 
-  // Back online, the banner goes and the sign-in starts.
-  await context.setOffline(false);
-  await expect(banner).toBeHidden();
-  await expect(page.getByRole('link', { name: FAKE_SIGN_IN })).toBeVisible();
-  expect(signIns.length).toBeGreaterThan(0);
-});
+    // Back online, the banner goes and the sign-in starts.
+    await context.setOffline(false);
+    await expect(banner).toBeHidden();
+    await expect(page.getByRole('link', { name: FAKE_SIGN_IN })).toBeVisible();
+    expect(signIns.length).toBeGreaterThan(0);
+  },
+);
 
 test('keeps only the shell and the files of /assets/, never the data nor an address', async ({
   page,

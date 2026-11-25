@@ -3,9 +3,17 @@ import { startServiceWorker } from './serviceWorker';
 
 vi.mock('./errorTracking', () => ({ reportError: vi.fn() }));
 
-function fakeContainer() {
+function fakeContainer(controller: ServiceWorker | null = null) {
   const register = vi.fn(() => Promise.resolve({} as ServiceWorkerRegistration));
-  return { register, container: { register } as unknown as ServiceWorkerContainer };
+  const events = new EventTarget();
+  const container = Object.assign(events, { register, controller });
+  return { register, container: container as unknown as ServiceWorkerContainer };
+}
+
+function loaded(...urls: string[]) {
+  vi.spyOn(performance, 'getEntriesByType').mockReturnValue(
+    urls.map((name) => ({ name }) as PerformanceEntry),
+  );
 }
 
 describe('startServiceWorker', () => {
@@ -38,9 +46,42 @@ describe('startServiceWorker', () => {
     const failure = new TypeError('bad script');
     const register = vi.fn(() => Promise.reject(failure));
 
-    startServiceWorker({ register } as unknown as ServiceWorkerContainer);
+    const { container } = fakeContainer();
+    startServiceWorker(Object.assign(container, { register }));
 
     await vi.waitFor(() => expect(reportError).toHaveBeenCalledWith(failure));
+  });
+
+  it('asks again, once the worker controls the page, the files of /assets/ loaded before', () => {
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
+    const origin = window.location.origin;
+    loaded(
+      `${origin}/assets/app-1.js`,
+      `${origin}/assets/fr-2.js`,
+      `${origin}/assets/fr-2.js`,
+      `${origin}/favicon.svg`,
+      'https://api.test/api/v1/me',
+    );
+    const fetch = vi.spyOn(window, 'fetch').mockResolvedValue(new Response());
+    const { container } = fakeContainer();
+
+    startServiceWorker(container);
+    expect(fetch).not.toHaveBeenCalled();
+    container.dispatchEvent(new Event('controllerchange'));
+
+    expect(fetch.mock.calls.map(([file]) => file)).toEqual(['/assets/app-1.js', '/assets/fr-2.js']);
+  });
+
+  it('asks nothing again when the worker already controls the page', () => {
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
+    loaded(`${window.location.origin}/assets/fr-2.js`);
+    const fetch = vi.spyOn(window, 'fetch').mockResolvedValue(new Response());
+    const { container } = fakeContainer({} as ServiceWorker);
+
+    startServiceWorker(container);
+    container.dispatchEvent(new Event('controllerchange'));
+
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it('does nothing in a browser without service workers', () => {

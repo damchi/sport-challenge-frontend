@@ -14,8 +14,9 @@ if (!rootElement) {
   throw new Error('Root element #root not found');
 }
 
-// Before anything renders: the error screen below is translated too.
-startLanguage();
+// Before anything renders, the error screen below included: its texts are
+// downloaded first, so no screen shows a raw key.
+await startLanguage();
 startTheme();
 // React's own error hooks: a crash of the tree, or an error an error boundary
 // caught. Setting them replaces React's console output, kept here.
