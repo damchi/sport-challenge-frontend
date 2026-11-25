@@ -58,7 +58,8 @@ export function DurationStep({
 
   const validZone = isTimeZone(timeZone) ? timeZone : undefined;
   const today = validZone ? localDate(now, validZone) : undefined;
-  const preview = validZone && windowPreview(startDate, weeks, validZone, now, locale);
+  const preview =
+    validZone && windowPreview(startDate, weeks, validZone, now, locale, { pastStart });
   const weeksError = errors.weeks?.message;
   const startDateError = errors.start_date?.message;
   const timeZoneError = errors.timezone?.message;

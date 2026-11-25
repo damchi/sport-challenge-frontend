@@ -3,6 +3,7 @@ import {
   challengeWindow,
   isCalendarDate,
   isStartDateInRange,
+  isStartDateWithinAYear,
   localDate,
   zonedMidnight,
 } from '../../../domain/challengeWindow';
@@ -18,7 +19,9 @@ import {
  * are valid: never one the form would refuse. `short` is its first and last
  * day ("22 nov.", "2 janv."), `full` the same in full, `weekday` the day each
  * week starts on, `weeks` the first and last day of each week, and `started`
- * whether it starts today (a start in the past is refused).
+ * whether it has started. The first day follows the rule of the form: from
+ * today to a year ahead, or, with `pastStart` (an admin changing a
+ * challenge), any day up to a year ahead.
  */
 export function windowPreview(
   startDate: string,
@@ -26,10 +29,13 @@ export function windowPreview(
   timeZone: string,
   now: Date,
   locale: string,
+  { pastStart = false } = {},
 ) {
   if (
     !isCalendarDate(startDate) ||
-    !isStartDateInRange(startDate, timeZone, now) ||
+    !(pastStart
+      ? isStartDateWithinAYear(startDate, timeZone, now)
+      : isStartDateInRange(startDate, timeZone, now)) ||
     !Number.isInteger(weeks) ||
     weeks < 2 ||
     weeks > 52
@@ -43,7 +49,7 @@ export function windowPreview(
     full: challengeFullDays(startsAt, endsAt, timeZone, locale),
     weekday: challengeWeekday(startsAt, timeZone, locale),
     zone: timeZoneName(timeZone, locale),
-    started: startDate === localDate(now, timeZone),
+    started: startDate <= localDate(now, timeZone),
     weeks: Array.from({ length: weeks }, (_, week) =>
       challengePeriod(
         iso(addToDate(startDate, { days: week * 7 })),

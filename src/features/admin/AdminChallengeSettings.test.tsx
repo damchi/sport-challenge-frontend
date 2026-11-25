@@ -93,6 +93,20 @@ describe('AdminChallengeSettings', () => {
     expect(screen.queryByText(/^Modifié/)).not.toBeInTheDocument();
   });
 
+  it('shows the calendar of a challenge whose first day is past', async () => {
+    renderSettings(first.id);
+
+    const calendar = await screen.findByRole('region', { name: 'Calendrier du défi' });
+    expect(calendar).toHaveTextContent(
+      'Du lundi 2 novembre 2026 au dimanche 29 novembre 2026 inclus.',
+    );
+    expect(calendar).toHaveTextContent('heure de l’Est nord-américain');
+    const weeks = within(calendar).getAllByRole('listitem');
+    expect(weeks).toHaveLength(4);
+    expect(within(weeks[0] as HTMLElement).getByText('Semaine 1')).toBeInTheDocument();
+    expect(within(weeks[0] as HTMLElement).getByText('2 nov. – 8 nov.')).toBeInTheDocument();
+  });
+
   it('lists each change, with what it was beside the field', async () => {
     renderSettings(first.id);
 
