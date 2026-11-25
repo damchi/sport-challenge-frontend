@@ -7,6 +7,7 @@
     "backHome": "Retour à l'accueil"
   },
   "errors": {
+    "account_blocked": "Ce compte est bloqué par l'administrateur de l'app.",
     "activity_not_found": "Cette activité n'existe pas ou plus.",
     "activity_overlap": "Cette activité chevauche une autre de tes activités. Vérifie le début et la durée.",
     "already_participant": "Tu participes déjà à ce défi.",
@@ -54,6 +55,11 @@
       "error": "La connexion n'a pas abouti. Réessaie."
     },
     "signInRequired": "Connecte-toi pour continuer.",
+    "accountBlocked": {
+      "title": "Compte bloqué",
+      "message": "L'administrateur de l'app a bloqué ton compte : tu ne peux plus utiliser l'app. « Se déconnecter » ferme ta session.",
+      "signOut": "Se déconnecter"
+    },
     "accountDeleted": {
       "title": "Compte supprimé",
       "message": "Ce compte a été supprimé : tu as été déconnecté.",

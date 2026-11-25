@@ -77,6 +77,28 @@ describe('createQueryClient global errors', () => {
     expect(onError).not.toHaveBeenCalled();
   });
 
+  it('turns a blocked account into a session end, on any query or action', async () => {
+    const { client, onError, onAuthError } = setup();
+    const blocked = new ApiError('account_blocked', 403);
+
+    await client
+      .getMutationCache()
+      .build(client, { mutationFn: failingWith(blocked), meta: { handlesError: true } })
+      .execute(undefined)
+      .catch(() => undefined);
+    await client
+      .fetchQuery({ queryKey: ['b'], queryFn: failingWith(blocked) })
+      .catch(() => undefined);
+    // Any other refusal stays the screen's.
+    await client
+      .fetchQuery({ queryKey: ['c'], queryFn: failingWith(new ApiError('forbidden', 403)) })
+      .catch(() => undefined);
+
+    expect(onAuthError).toHaveBeenCalledTimes(2);
+    expect(onAuthError).toHaveBeenCalledWith(blocked);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
   it('passes every failure to the error tracking, shown by a screen or not', async () => {
     const { client, onFailure } = setup();
     const shown = new ApiError('not_found', 404);

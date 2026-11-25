@@ -15,9 +15,15 @@ export function isInvalidCursor(error: unknown): boolean {
   return error instanceof ApiError && error.code === 'cursor_invalid';
 }
 
-/** A lost session: the client already tried to renew it before failing. */
+/**
+ * A lost session (the client already tried to renew it before failing), or a
+ * blocked account, which every route refuses: the app handles both.
+ */
 function isAuthError(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 401;
+  return (
+    error instanceof ApiError &&
+    (error.status === 401 || (error.status === 403 && error.code === 'account_blocked'))
+  );
 }
 
 // Only failures that may pass on a new attempt: no response, or a server error.
@@ -28,7 +34,10 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
 }
 
 export interface QueryClientHandlers {
-  /** Authentication lost (401 after a renewal attempt): the session is handled by the app. */
+  /**
+   * Authentication lost (401 after a renewal attempt) or account blocked (403
+   * `account_blocked`): the session is handled by the app.
+   */
   onAuthError: (error: unknown) => void;
   /** Error no screen shows by itself: a failed action, or a failed background refresh. */
   onError: (error: unknown) => void;

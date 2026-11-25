@@ -7,6 +7,7 @@
     "backHome": "Back to home"
   },
   "errors": {
+    "account_blocked": "This account is blocked by the app's administrator.",
     "activity_not_found": "This activity does not exist or was deleted.",
     "activity_overlap": "This activity overlaps another of your activities. Check the start and the duration.",
     "already_participant": "You are already taking part in this challenge.",
@@ -54,6 +55,11 @@
       "error": "Signing in didn't work. Try again."
     },
     "signInRequired": "Sign in to continue.",
+    "accountBlocked": {
+      "title": "Account blocked",
+      "message": "The app's administrator blocked your account: you can no longer use the app. “Sign out” ends your session.",
+      "signOut": "Sign out"
+    },
     "accountDeleted": {
       "title": "Account deleted",
       "message": "This account was deleted: you have been signed out.",

@@ -17,6 +17,7 @@ import { isUserId } from '../../domain/challenge';
 import { displayName } from '../../domain/displayName';
 import { dateTime } from '../../domain/format/instant';
 import { AccountStatePill } from './AccountStatePill';
+import { AdminAccountChanges, type AccountParts } from './AdminAccountChanges';
 import { useActivityLine } from './activityLine';
 import { AdminUserActivities, AdminUserChallenges, type ActivityChanges } from './AdminUserTables';
 import { RecomputeFlow } from './RecomputeFlow';
@@ -54,12 +55,13 @@ export function AdminUserSheet() {
   let content: ReactNode;
   if (!valid || (user.error instanceof ApiError && user.error.code === 'user_not_found')) {
     content = <p className={`${CARD} text-muted`}>{t('admin.users.notFound')}</p>;
-  } else if (user.isPending) {
-    content = <LoadingState />;
+  } else if (user.data) {
+    // Kept when reading it again fails after a change: the change is made, and said.
+    content = <Sheet key={user.data.id} user={user.data} />;
   } else if (user.isError) {
     content = <ErrorState error={user.error} onRetry={() => void user.refetch()} />;
   } else {
-    content = <Sheet user={user.data} />;
+    content = <LoadingState />;
   }
   return (
     <div className="mt-6 flex flex-col gap-6">
@@ -95,47 +97,53 @@ function Sheet({ user }: { user: AdminUser }) {
   };
 
   return (
-    <RecomputeFlow
-      key={round}
-      change={{
-        title: t('admin.activityForm.delete.title', { name }),
-        details: target ? line(target, zone) : undefined,
-      }}
-      reasonTitle={t('admin.activityForm.delete.reasonTitle')}
-      confirmLabel={t('admin.activityForm.delete.confirm')}
-      variant="danger"
-      errorScope="admin.activityForm.errors"
-      send={send}
-      onDone={() => {
-        asked.current = null;
-        setTarget(null);
-        setDeleted(true);
-        setRound((value) => value + 1);
-      }}
-    >
-      {({ showPreview, pending, error }) => (
-        <SheetContent
-          user={user}
-          name={name}
-          zone={zone}
-          changes={
-            user.deleted_at === null
-              ? {
-                  pending,
-                  refused: target ? error : undefined,
-                  deleted,
-                  onDelete: (activity) => {
-                    asked.current = activity;
-                    setTarget(activity);
-                    setDeleted(false);
-                    showPreview();
-                  },
-                }
-              : undefined
-          }
-        />
+    <AdminAccountChanges user={user} name={name}>
+      {(account) => (
+        <RecomputeFlow
+          key={round}
+          change={{
+            title: t('admin.activityForm.delete.title', { name }),
+            details: target ? line(target, zone) : undefined,
+          }}
+          reasonTitle={t('admin.activityForm.delete.reasonTitle')}
+          confirmLabel={t('admin.activityForm.delete.confirm')}
+          variant="danger"
+          errorScope="admin.activityForm.errors"
+          send={send}
+          onDone={() => {
+            asked.current = null;
+            setTarget(null);
+            setDeleted(true);
+            setRound((value) => value + 1);
+          }}
+        >
+          {({ showPreview, pending, error }) => (
+            <SheetContent
+              user={user}
+              name={name}
+              zone={zone}
+              account={account}
+              changes={
+                user.deleted_at === null
+                  ? {
+                      pending,
+                      refused: target ? error : undefined,
+                      deleted,
+                      onDelete: (activity) => {
+                        account?.dismiss();
+                        asked.current = activity;
+                        setTarget(activity);
+                        setDeleted(false);
+                        showPreview();
+                      },
+                    }
+                  : undefined
+              }
+            />
+          )}
+        </RecomputeFlow>
       )}
-    </RecomputeFlow>
+    </AdminAccountChanges>
   );
 }
 
@@ -143,11 +151,14 @@ function SheetContent({
   user,
   name,
   zone,
+  account,
   changes,
 }: {
   user: AdminUser;
   name: string;
   zone: string;
+  /** Its own changes; none for a deleted account. */
+  account: AccountParts | null;
   changes: ActivityChanges | undefined;
 }) {
   const { t, i18n } = useTranslation();
@@ -172,9 +183,13 @@ function SheetContent({
   ];
   return (
     <article aria-labelledby="admin-user-title" className="flex flex-col gap-8">
-      <h2 id="admin-user-title" className={`${H2} break-words`}>
-        {name}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="admin-user-title" className={`${H2} min-w-0 break-words`}>
+          {name}
+        </h2>
+        {account?.edit}
+      </div>
+      {account?.form}
       <dl className={CARD}>
         {facts.map(([term, value]) => (
           <div
@@ -188,6 +203,7 @@ function SheetContent({
       </dl>
       <AdminUserChallenges userId={user.id} at={at} />
       <AdminUserActivities userId={user.id} at={at} locale={locale} changes={changes} />
+      {account?.danger}
     </article>
   );
 }

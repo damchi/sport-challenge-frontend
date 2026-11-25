@@ -11,10 +11,11 @@ export interface AuthErrorEvent {
 /**
  * Why the session ended, when the app shows it instead of signing in again:
  * the account is gone (`account_deleted`), the user just deleted it
- * (`account_deleted_by_user`), or the session could not be restored.
+ * (`account_deleted_by_user`), an admin blocked it (`account_blocked`), or
+ * the session could not be restored.
  */
 export interface SessionEnd {
-  reason: 'account_deleted' | 'account_deleted_by_user' | 'unavailable';
+  reason: 'account_deleted' | 'account_deleted_by_user' | 'account_blocked' | 'unavailable';
   /** Page in use when it ended: a retry comes back to it. */
   returnTo: string;
 }
@@ -48,7 +49,8 @@ interface LostSessionOptions {
 /**
  * Handles a lost session (authentication error after a renewal attempt).
  * While signed in, the user's data is cleared, then:
- * - a deleted account (`account_deleted`) signs out locally, the app shows it;
+ * - a deleted account (`account_deleted`) or a blocked one (`account_blocked`)
+ *   signs out locally, the app shows it;
  * - otherwise the app signs in again and comes back to the page in use,
  *   silently when the Auth0 session is still valid; if the API refuses the
  *   new session too (a 401 right after an automatic re-sign-in), it signs
@@ -75,13 +77,11 @@ export function useHandleLostSession(
     const allowNextAttempt = () => {
       acting.current = false;
     };
-    const deleted =
-      authError.error instanceof ApiError && authError.error.code === 'account_deleted';
-    if (deleted || !reauth.allowed()) {
-      onSessionEnd({
-        reason: deleted ? 'account_deleted' : 'unavailable',
-        returnTo: currentPath(),
-      });
+    const code = authError.error instanceof ApiError ? authError.error.code : undefined;
+    // Signing in again would not help: the account is gone or blocked.
+    const ended = code === 'account_deleted' || code === 'account_blocked' ? code : undefined;
+    if (ended || !reauth.allowed()) {
+      onSessionEnd({ reason: ended ?? 'unavailable', returnTo: currentPath() });
       auth.signOut({ local: true }).catch(allowNextAttempt);
     } else {
       reauth.record();
@@ -94,8 +94,8 @@ export function useHandleLostSession(
 }
 
 /**
- * Action of the session-end screen: a deleted account ends the Auth0 session
- * too; an unavailable session forgets the loop guard and signs in again,
+ * Action of the session-end screen: a deleted or blocked account ends the
+ * Auth0 session too; an unavailable session forgets the loop guard and signs in again,
  * back to the page in use.
  */
 export function sessionEndAction(end: SessionEnd, auth: Auth, reauth: ReauthGuard): Promise<void> {
