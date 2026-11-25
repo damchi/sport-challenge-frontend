@@ -55,6 +55,8 @@ export function RootLayout() {
     previous.current = { pathname, page };
     const focusLost =
       document.activeElement === document.body && lastFocused.current?.isConnected === false;
+    // Only what is focused from now on counts for the next navigation.
+    lastFocused.current = null;
     if (samePage && !focusLost) return;
     const heading = document.querySelector('main h1');
     if (heading instanceof HTMLElement) {
