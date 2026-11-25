@@ -231,6 +231,20 @@ export type ActivityCreateInput = z.input<ReturnType<typeof activityCreateSchema
 /** The request, once the form is valid. */
 export type ActivityCreateValues = z.output<ReturnType<typeof activityCreateSchema>>;
 
+/** A new entry: nothing typed yet. */
+export const EMPTY_ACTIVITY_INPUT: ActivityCreateInput = {
+  sport_code: '',
+  sport_label: '',
+  start_date: '',
+  start_hour: '',
+  start_minute: '',
+  hours: '',
+  minutes: '',
+  seconds: '',
+  distance_km: '',
+  elevation_m: '',
+};
+
 /** What is entered so far that reads as a value, for a summary of the entry. */
 interface ActivityDraft {
   start?: Date;

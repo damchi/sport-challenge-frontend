@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { mockAdminChallenges, mockAdminUsers } from '../../mocks/handlers';
+import { mockActivities, mockAdminChallenges, mockAdminUsers } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
@@ -186,5 +186,63 @@ describe('AdminUserSheet', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     expect(await screen.findByRole('heading', { level: 2, name: 'marie_92' })).toBeInTheDocument();
+  });
+  it('adds an activity, or changes one, on its own page', async () => {
+    renderSheet(marie.id);
+
+    await rowsOf('Activités du compte');
+    const activities = part('Activités du compte');
+    expect(await activities.findByRole('link', { name: 'Ajouter une activité' })).toHaveAttribute(
+      'href',
+      `/admin/users/${marie.id}/activities/new`,
+    );
+    expect(
+      await activities.findByRole('link', {
+        name: "Modifier l'activité du 19 nov. 2026, 07:30",
+      }),
+    ).toHaveAttribute('href', `/admin/users/${marie.id}/activities/${mockActivities[0]?.id ?? ''}`);
+  });
+
+  it('deletes an activity of any week after the preview and the reason', async () => {
+    const sent: { path: string; body: unknown }[] = [];
+    server.use(
+      http.delete('*/api/v1/admin/activities/:activityId', async ({ request }) => {
+        const body = (await request.json()) as { dry_run?: boolean };
+        sent.push({ path: new URL(request.url).pathname, body });
+        return HttpResponse.json({ dry_run: body.dry_run === true, challenges: [] });
+      }),
+    );
+    renderSheet(marie.id);
+
+    // Five days back: a locked week.
+    const old = mockActivities[5];
+    if (!old) throw new Error('No mock activity');
+    await rowsOf('Activités du compte');
+    fireEvent.click(
+      screen.getByRole('button', { name: "Supprimer l'activité du 14 nov. 2026, 07:30" }),
+    );
+    expect(
+      await screen.findByRole('heading', { level: 2, name: 'Aperçu des changements' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Supprimer une activité de marie_92')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    const dialog = screen.getByRole('dialog', { name: "Confirmer la suppression de l'activité" });
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Motif' }), {
+      target: { value: 'Doublon' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: "Supprimer l'activité" }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Activité supprimée.');
+    const path = `/api/v1/admin/activities/${old.id}`;
+    expect(sent).toEqual([
+      { path, body: { dry_run: true } },
+      { path, body: { reason: 'Doublon', dry_run: false } },
+    ]);
+  });
+
+  it('offers no change to the activities of a deleted account', async () => {
+    renderSheet(deleted.id);
+    await screen.findByText("Ce compte n'a aucune activité.");
+    expect(screen.queryByRole('link', { name: 'Ajouter une activité' })).not.toBeInTheDocument();
   });
 });

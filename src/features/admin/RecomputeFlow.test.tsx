@@ -98,7 +98,7 @@ function renderFlow() {
       >
         {({ showPreview, pending, error }) => (
           <>
-            <button type="button" onClick={showPreview} disabled={pending}>
+            <button type="button" onClick={() => showPreview()} disabled={pending}>
               Voir l'aperçu
             </button>
             {error && <p role="alert">{error}</p>}

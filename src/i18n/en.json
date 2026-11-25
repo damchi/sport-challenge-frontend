@@ -1139,7 +1139,12 @@
         "duration": "Duration",
         "distance": "Distance",
         "elevation": "Elev. gain",
-        "none": "—"
+        "none": "—",
+        "add": "Add an activity",
+        "actions": "Actions",
+        "edit": "Edit the activity of {{activity}}",
+        "delete": "Delete the activity of {{activity}}",
+        "deleted": "Activity deleted. The challenges it counted in are recomputed."
       }
     },
     "reason": {
@@ -1354,6 +1359,36 @@
         "not_found": "This account no longer takes part in this challenge.",
         "challenge_not_found": "This challenge no longer exists or was deleted."
       }
+    },
+    "activityForm": {
+      "preview": {
+        "label": "See the preview",
+        "busy": "Computing the preview…"
+      },
+      "deleted": "This account is deleted: its activities are erased.",
+      "note": "<b>Admin mode.</b> Judged weeks and finished challenges do not block the entry. The entry rules stay the same: duration, distance required depending on the sport, no overlap with another activity of {{name}}.",
+      "add": {
+        "title": "Add an activity for {{name}}",
+        "reasonTitle": "Confirm adding the activity",
+        "confirm": "Add the activity"
+      },
+      "edit": {
+        "title": "Edit an activity of {{name}}",
+        "reasonTitle": "Confirm the change to the activity",
+        "confirm": "Save the change"
+      },
+      "delete": {
+        "title": "Delete an activity of {{name}}",
+        "reasonTitle": "Confirm deleting the activity",
+        "confirm": "Delete the activity"
+      },
+      "errors": {
+        "activity_overlap": "This activity overlaps another activity of this account. Check the start and the duration.",
+        "profile_incomplete": "This account has not entered its first and last name yet: no activity can be added to it.",
+        "user_not_found": "This account no longer exists.",
+        "activity_not_found": "This activity no longer exists: it may have been deleted in the meantime."
+      },
+      "zoned": "{{start}} ({{zone}})"
     }
   }
 }

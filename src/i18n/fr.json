@@ -1162,7 +1162,12 @@
         "duration": "Durée",
         "distance": "Distance",
         "elevation": "D+",
-        "none": "—"
+        "none": "—",
+        "add": "Ajouter une activité",
+        "actions": "Actions",
+        "edit": "Modifier l'activité du {{activity}}",
+        "delete": "Supprimer l'activité du {{activity}}",
+        "deleted": "Activité supprimée. Les défis où elle comptait sont recalculés."
       }
     },
     "reason": {
@@ -1380,6 +1385,36 @@
         "not_found": "Ce compte ne participe plus à ce défi.",
         "challenge_not_found": "Ce défi n'existe plus ou a été supprimé."
       }
+    },
+    "activityForm": {
+      "preview": {
+        "label": "Voir l'aperçu",
+        "busy": "Calcul de l'aperçu…"
+      },
+      "deleted": "Ce compte est supprimé : ses activités sont effacées.",
+      "note": "<b>Mode admin.</b> Les semaines jugées et les défis terminés ne bloquent pas la saisie. Les règles de saisie restent les mêmes : durée, distance obligatoire selon le sport, pas de chevauchement avec une autre activité de {{name}}.",
+      "add": {
+        "title": "Ajouter une activité pour {{name}}",
+        "reasonTitle": "Confirmer l'ajout de l'activité",
+        "confirm": "Ajouter l'activité"
+      },
+      "edit": {
+        "title": "Modifier une activité de {{name}}",
+        "reasonTitle": "Confirmer la modification de l'activité",
+        "confirm": "Enregistrer la modification"
+      },
+      "delete": {
+        "title": "Supprimer une activité de {{name}}",
+        "reasonTitle": "Confirmer la suppression de l'activité",
+        "confirm": "Supprimer l'activité"
+      },
+      "errors": {
+        "activity_overlap": "Cette activité chevauche une autre activité de ce compte. Vérifie le début et la durée.",
+        "profile_incomplete": "Ce compte n'a pas encore indiqué son prénom et son nom : on ne peut pas lui ajouter d'activité.",
+        "user_not_found": "Ce compte n'existe plus.",
+        "activity_not_found": "Cette activité n'existe plus : elle a peut-être été supprimée entre-temps."
+      },
+      "zoned": "{{start}} ({{zone}})"
     }
   }
 }
