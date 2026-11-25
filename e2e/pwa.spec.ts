@@ -140,3 +140,24 @@ test('does not keep a page answered for a file of /assets/ that a release remove
   expect(kept).not.toContain(removed);
   expect(kept.some((path) => path.startsWith('/assets/'))).toBe(true);
 });
+
+test('says the app could not open when its texts cannot be downloaded, and tries again', async ({
+  page,
+}) => {
+  // The French texts (the page's language is fr-CA) fail once.
+  let failed = false;
+  await page.route('**/assets/fr-*.js', async (route) => {
+    if (failed) return route.continue();
+    failed = true;
+    return route.abort('internetdisconnected');
+  });
+
+  await page.goto('/');
+
+  await expect(page.getByRole('alert')).toHaveText(
+    "Impossible d'ouvrir l'application. Vérifie ta connexion et réessaie.",
+  );
+  await page.getByRole('button', { name: 'Réessayer' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('alert')).toBeHidden();
+});

@@ -37,7 +37,8 @@ describe('loading the languages', () => {
     await initI18n('en');
 
     expect(instance.t('errors.unknown')).toBe('Something went wrong. Try again.');
-    expect(instance.hasResourceBundle('fr', 'translation')).toBe(false);
+    // French has only the few startup texts that come with the app.
+    expect(instance.exists('errors.unknown', { lng: 'fr', fallbackLng: false })).toBe(false);
   });
 
   it('downloads the other language when it is chosen, then applies it', async () => {
@@ -86,6 +87,20 @@ describe('loading the languages', () => {
 
     expect(instance.language).toBe('en');
     expect(instance.t('errors.unknown')).toBe('Something went wrong. Try again.');
+  });
+
+  it('can still say the app could not open when the language cannot be downloaded at start', async () => {
+    vi.doMock('./fr.json', () => {
+      throw new Error('offline');
+    });
+    const { instance, initI18n } = await freshStart();
+
+    await expect(initI18n('fr')).rejects.toThrow();
+
+    expect(instance.t('startup.unavailable')).toBe(
+      "Impossible d'ouvrir l'application. Vérifie ta connexion et réessaie.",
+    );
+    expect(instance.t('startup.retry')).toBe('Réessayer');
   });
 });
 
