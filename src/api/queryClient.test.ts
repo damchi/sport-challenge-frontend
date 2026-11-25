@@ -36,10 +36,13 @@ describe('createQueryClient global errors', () => {
     expect(onAuthError).not.toHaveBeenCalled();
   });
 
-  it('reports a failed refresh of data already on screen', async () => {
+  it.each([
+    ['internal_error', 500],
+    ['rate_limited', 429],
+  ] as const)('reports a failed refresh of data already on screen (%s)', async (code, status) => {
     const { client, onError } = setup();
     client.setQueryData(['a'], 'previous');
-    const error = new ApiError('internal_error', 500);
+    const error = new ApiError(code, status);
 
     await client
       .fetchQuery({ queryKey: ['a'], queryFn: failingWith(error), retry: false, staleTime: 0 })
