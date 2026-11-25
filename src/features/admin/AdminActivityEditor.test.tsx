@@ -356,6 +356,32 @@ describe('AdminActivityEditor', () => {
     expect(await screen.findByRole('radio', { name: 'Course' })).toBeInTheDocument();
   });
 
+  it.each([
+    ['the activities looked through for the one changed', '*/api/v1/admin/users/:userId/activities'],
+    ['the challenges giving the zone', '*/api/v1/admin/users/:userId/challenges'],
+  ])('offers a retry, not a missing activity, when a next page of %s fails', async (_, route) => {
+    // An empty first page, then a next page failing once: the activity may be there.
+    let failed = false;
+    server.use(
+      http.get(route, ({ request }) => {
+        if (new URL(request.url).searchParams.get('cursor') === null) {
+          return HttpResponse.json({ items: [], next_cursor: '0' });
+        }
+        if (failed) return undefined;
+        failed = true;
+        return failure(500);
+      }),
+    );
+    renderEditor(`/admin/users/${marie.id}/activities/${locked.id}`);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
+    expect(
+      screen.queryByText("Cette activité n'existe plus : elle a peut-être été supprimée entre-temps."),
+    ).not.toBeInTheDocument();
+
+    expect(await screen.findByRole('textbox', { name: 'Minutes' })).toBeInTheDocument();
+  });
+
   it('says the account does not exist when reading it again answers so', async () => {
     const queryClient = createTestQueryClient();
     renderEditor(`/admin/users/${marie.id}/activities/new`, queryClient);
