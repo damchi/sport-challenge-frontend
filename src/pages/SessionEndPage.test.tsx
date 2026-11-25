@@ -22,6 +22,19 @@ describe('SessionEndPage', () => {
     expect(screen.getByRole('button', { name: 'Terminer' })).toBeInTheDocument();
   });
 
+  it('tells about a blocked account and offers to sign out', () => {
+    const onAction = vi.fn(() => Promise.resolve());
+    render(<SessionEndPage reason="account_blocked" onAction={onAction} />);
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Compte bloqué' })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      "L'administrateur de l'app a bloqué ton compte",
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+  });
+
   it('runs the action once, even on a double click', () => {
     const onAction = vi.fn(() => new Promise<void>(() => undefined));
     render(<SessionEndPage reason="account_deleted" onAction={onAction} />);

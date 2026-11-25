@@ -85,6 +85,21 @@ describe('useHandleLostSession', () => {
     expect(auth.signIn).not.toHaveBeenCalled();
   });
 
+  it('signs out locally and reports a blocked account, without signing in again', () => {
+    const auth = signedIn();
+    const { clearCache, onSessionEnd, authError } = setup(auth);
+
+    authError(new ApiError('account_blocked', 403));
+
+    expect(clearCache).toHaveBeenCalledTimes(1);
+    expect(onSessionEnd).toHaveBeenCalledWith({
+      reason: 'account_blocked',
+      returnTo: '/challenges/42',
+    });
+    expect(auth.signOut).toHaveBeenCalledWith({ local: true });
+    expect(auth.signIn).not.toHaveBeenCalled();
+  });
+
   it('does nothing when signed out', () => {
     const auth = createFakeAuth();
     const { clearCache, authError } = setup(auth);
@@ -140,8 +155,8 @@ describe('useHandleLostSession', () => {
 describe('sessionEndAction', () => {
   const reauth = () => ({ allowed: vi.fn(() => true), record: vi.fn(), forget: vi.fn() });
 
-  it.each(['account_deleted', 'account_deleted_by_user'] as const)(
-    'ends the Auth0 session of a deleted account (%s)',
+  it.each(['account_deleted', 'account_deleted_by_user', 'account_blocked'] as const)(
+    'ends the Auth0 session of a deleted or blocked account (%s)',
     async (reason) => {
       const auth = createFakeAuth();
 

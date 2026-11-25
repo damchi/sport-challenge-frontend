@@ -495,5 +495,49 @@
       "confirm": "Restaurer le défi",
       "made": "« {{title}} » est restauré et ses classements sont recalculés."
     }
+  },
+  "account": {
+    "update": {
+      "button": "Modifier le profil",
+      "save": "Enregistrer",
+      "pseudoHint": "3 à 20 caractères : lettres, chiffres, _, . ou -. Vide, le pseudo est retiré.",
+      "field": "{{label}} : {{before}} → {{after}}",
+      "reasonTitle": "Modifier le profil ?",
+      "summary": "Le profil de {{name}} change ainsi :",
+      "confirm": "Enregistrer",
+      "made": "Le profil de {{name}} est modifié."
+    },
+    "block": {
+      "title": "Bloquer le compte",
+      "help": "{{name}} ne pourra plus utiliser l'app. Ses classements restent : pour retirer ce compte d'un défi, exclus-le de ce défi.",
+      "button": "Bloquer",
+      "reasonTitle": "Bloquer le compte ?",
+      "summary": "{{name}} ne pourra plus utiliser l'app tant que le compte reste bloqué. Ses défis ne changent pas.",
+      "confirm": "Bloquer le compte",
+      "made": "Le compte de {{name}} est bloqué."
+    },
+    "unblock": {
+      "title": "Débloquer le compte",
+      "help": "Le compte est bloqué : {{name}} ne peut plus utiliser l'app.",
+      "button": "Débloquer",
+      "reasonTitle": "Débloquer le compte ?",
+      "summary": "{{name}} pourra de nouveau utiliser l'app.",
+      "confirm": "Débloquer le compte",
+      "made": "Le compte de {{name}} est débloqué."
+    },
+    "delete": {
+      "title": "Supprimer le compte",
+      "help": "Même effet que s'il était supprimé par son titulaire : abandon de ses défis en cours, effacement de ses activités, suppression chez Auth0.",
+      "button": "Supprimer le compte",
+      "reasonTitle": "Supprimer le compte ?",
+      "summary": "Le compte de {{name}} sera supprimé : ses défis en cours sont abandonnés et ses activités effacées. C'est définitif.",
+      "confirm": "Supprimer le compte",
+      "made": "Le compte est supprimé."
+    },
+    "errors": {
+      "forbidden": "Tu ne peux pas bloquer ton propre compte.",
+      "last_creator": "Ce compte est le dernier créateur d'un défi en cours : nomme d'abord un autre créateur, ou supprime le défi.",
+      "user_not_found": "Ce compte n'existe plus."
+    }
   }
 }

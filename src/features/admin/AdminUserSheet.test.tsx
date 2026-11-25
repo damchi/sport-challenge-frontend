@@ -232,7 +232,9 @@ describe('AdminUserSheet', () => {
     });
     fireEvent.click(within(dialog).getByRole('button', { name: "Supprimer l'activité" }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Activité supprimée.');
+    expect(
+      await screen.findByText('Activité supprimée. Les défis où elle comptait sont recalculés.'),
+    ).toHaveAttribute('role', 'status');
     const path = `/api/v1/admin/activities/${old.id}`;
     expect(sent).toEqual([
       { path, body: { dry_run: true } },

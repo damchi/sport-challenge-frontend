@@ -5,7 +5,7 @@ import { Page, PageTitle } from '../components/Page';
 
 interface SessionEndPageProps {
   reason: SessionEnd['reason'];
-  /** Account deleted: ends the Auth0 session too. Unavailable: tries again. */
+  /** Account deleted or blocked: ends the Auth0 session too. Unavailable: tries again. */
   onAction: () => Promise<void>;
 }
 
@@ -31,14 +31,20 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
           message: t('auth.sessionUnavailable.message'),
           action: t('errorPage.retry'),
         }
-      : {
-          title: t('auth.accountDeleted.title'),
-          message:
-            reason === 'account_deleted_by_user'
-              ? t('auth.accountDeleted.byUser')
-              : t('auth.accountDeleted.message'),
-          action: t('auth.accountDeleted.finish'),
-        };
+      : reason === 'account_blocked'
+        ? {
+            title: t('auth.accountBlocked.title'),
+            message: t('auth.accountBlocked.message'),
+            action: t('auth.accountBlocked.signOut'),
+          }
+        : {
+            title: t('auth.accountDeleted.title'),
+            message:
+              reason === 'account_deleted_by_user'
+                ? t('auth.accountDeleted.byUser')
+                : t('auth.accountDeleted.message'),
+            action: t('auth.accountDeleted.finish'),
+          };
 
   return (
     <Page>
