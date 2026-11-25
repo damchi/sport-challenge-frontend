@@ -16,6 +16,7 @@ import { dateTime } from '../../domain/format/instant';
 import { ChallengeDetails } from '../challenges/detail/ChallengeDetails';
 import { CategoryParams } from '../challenges/detail/CategoryParams';
 import { useCategoryName } from '../challenges/detail/categoryNames';
+import { AdminParticipantChanges } from './AdminChallengeParticipants';
 import {
   AdminChallengeActions,
   AdminChallengeEliminations,
@@ -43,8 +44,9 @@ function BackToList() {
 
 /**
  * The admin's sheet of a challenge, deleted or not: who made it and when,
- * its settings, its weeks and how each was judged, its eliminations, its
- * frozen results, its invitation links and the last admin changes. The
+ * its participants and their changes, its settings, its weeks and how each
+ * was judged, its eliminations, its frozen results, its invitation links and
+ * the last admin changes. The
  * instants are the challenge's, in its time zone (named when it is not the
  * device's). A challenge not deleted links to its usual page, which the admin
  * may read.
@@ -66,8 +68,16 @@ export function AdminChallengeSheet() {
     content = <LoadingState />;
   } else if (challenge.isError) {
     content = <ErrorState error={challenge.error} onRetry={() => void challenge.refetch()} />;
+  } else if (challenge.data.deleted_at !== null) {
+    // The server changes no one in a deleted challenge, nor lists them.
+    content = <Sheet challenge={challenge.data} participants={null} />;
   } else {
-    content = <Sheet challenge={challenge.data} />;
+    const { id, timezone } = challenge.data;
+    content = (
+      <AdminParticipantChanges challengeId={id} timeZone={timezone}>
+        {(participants) => <Sheet challenge={challenge.data} participants={participants} />}
+      </AdminParticipantChanges>
+    );
   }
   return (
     <div className="mt-6 flex flex-col gap-6">
@@ -77,7 +87,14 @@ export function AdminChallengeSheet() {
   );
 }
 
-function Sheet({ challenge }: { challenge: AdminChallengeDetail }) {
+function Sheet({
+  challenge,
+  participants,
+}: {
+  challenge: AdminChallengeDetail;
+  /** The participants and their changes; none for a deleted challenge. */
+  participants: ReactNode;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const zone = challenge.timezone;
@@ -159,6 +176,8 @@ function Sheet({ challenge }: { challenge: AdminChallengeDetail }) {
           </div>
         ))}
       </dl>
+
+      {participants}
 
       <SheetPart title={t('admin.challenges.sheet.settings')}>
         {/* No week_count in the admin's challenge: the server lists its weeks. */}

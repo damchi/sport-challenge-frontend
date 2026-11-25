@@ -67,12 +67,12 @@ function Steps() {
 }
 
 /** The translated words of an error the server answered. */
-function useErrorText(error: unknown): string | undefined {
+function useErrorText(error: unknown, scope: string | undefined): string | undefined {
   const { t, i18n } = useTranslation();
   if (!error) return undefined;
   const { key, values } =
     error instanceof ApiError
-      ? errorMessage(error, (candidate) => i18n.exists(candidate))
+      ? errorMessage(error, (candidate) => i18n.exists(candidate), scope)
       : { key: 'errors.unknown', values: {} };
   return t(key, values);
 }
@@ -94,6 +94,7 @@ export function RecomputeFlow({
   reasonTitle,
   confirmLabel,
   variant = 'default',
+  errorScope,
   send,
   onDone,
   children,
@@ -103,6 +104,8 @@ export function RecomputeFlow({
   reasonTitle: string;
   confirmLabel: string;
   variant?: 'default' | 'danger';
+  /** Where the change's own words for the server's errors are (`errorMessage`). */
+  errorScope?: string;
   send: (client: ApiClient, body: CorrectionBody) => Promise<AdminCorrection | undefined>;
   onDone: (correction: AdminCorrection) => void;
   children: (input: {
@@ -121,7 +124,7 @@ export function RecomputeFlow({
   const input = useRef<HTMLDivElement>(null);
   // Back from the preview: the focus goes to the fields, not lost on the page.
   const [returned, setReturned] = useState(false);
-  const previewError = useErrorText(step === 'input' ? correction.error : undefined);
+  const previewError = useErrorText(step === 'input' ? correction.error : undefined, errorScope);
 
   // On the preview, the focus goes to its title so a screen reader announces it.
   useEffect(() => {
@@ -239,6 +242,7 @@ export function RecomputeFlow({
         }
         confirmLabel={confirmLabel}
         variant={variant}
+        errorScope={errorScope}
         pending={correction.isPending || done}
         error={correction.error}
         onConfirm={confirm}

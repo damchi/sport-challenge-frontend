@@ -1273,6 +1273,87 @@
       "serverInvalid": "Value refused. Check it, then see the preview again.",
       "bounds": "The bounds stay the same: {{minWeeks}} to {{maxWeeks}} weeks, factors from {{minFactor}} to {{maxFactor}}.",
       "invalid": "A field is refused: fix it, then see the preview again."
+    },
+    "participants": {
+      "title": "Participants",
+      "add": "Add a participant",
+      "empty": "No one takes part in this challenge.",
+      "columns": {
+        "participant": "Participant",
+        "role": "Role",
+        "status": "Status",
+        "joinedAt": "Joined on",
+        "actions": "Actions"
+      },
+      "roles": {
+        "creator": "Creator",
+        "participant": "Participant"
+      },
+      "status": {
+        "active": "Active",
+        "abandoned": "Left or excluded"
+      },
+      "menu": "Changes for {{name}}",
+      "account": "Open their account",
+      "help": {
+        "exclude": "Once excluded, they are eliminated from every category and shown as having left. You can reinstate them.",
+        "excludeCreator": "Once excluded, they are eliminated from every category and shown as having left, but keep the creator role: remove it separately. You can reinstate them.",
+        "reinstate": "Once reinstated, they are active again: the weeks already locked are judged again with them."
+      },
+      "search": {
+        "label": "Search the account to add by username, name or email",
+        "hint": "Search the account by its username, name or email.",
+        "found": "Accounts found",
+        "choose": "Add",
+        "chooseNamed": "Add {{name}} to the challenge",
+        "close": "Close the search"
+      },
+      "changes": {
+        "add": {
+          "title": "Add {{name}} to the challenge",
+          "reasonTitle": "Confirm the new participant",
+          "confirm": "Add to the challenge",
+          "made": "{{name}} was added to the challenge."
+        },
+        "exclude": {
+          "button": "Exclude",
+          "title": "Exclude {{name}} from the challenge",
+          "reasonTitle": "Confirm the exclusion",
+          "confirm": "Exclude from the challenge",
+          "made": "{{name}} was excluded from the challenge."
+        },
+        "reinstate": {
+          "button": "Reinstate in the challenge",
+          "title": "Reinstate {{name}} in the challenge",
+          "reasonTitle": "Confirm the reinstatement",
+          "confirm": "Reinstate",
+          "made": "{{name}} was reinstated in the challenge."
+        },
+        "makeCreator": {
+          "button": "Make creator",
+          "title": "Make {{name}} a creator",
+          "reasonTitle": "Confirm the new creator",
+          "confirm": "Make creator",
+          "made": "{{name}} is now a creator of the challenge."
+        },
+        "removeCreator": {
+          "button": "Remove the creator role",
+          "title": "Remove the creator role from {{name}}",
+          "reasonTitle": "Confirm the role removal",
+          "confirm": "Remove the role",
+          "made": "{{name}} is no longer a creator of the challenge."
+        }
+      },
+      "errors": {
+        "already_participant": "This account already takes part in this challenge.",
+        "participation_abandoned": "This account left this challenge or was excluded from it: reinstate it from the participant list.",
+        "profile_incomplete": "This account has not given its first and last names yet: it cannot join any challenge.",
+        "user_not_found": "This account no longer exists.",
+        "not_active_participant": "This account does not take part in this challenge.",
+        "last_creator": "This is the last creator of the challenge: make someone else a creator first.",
+        "not_found": "This account no longer takes part in this challenge.",
+        "challenge_not_found": "This challenge no longer exists or was deleted."
+      }
     }
   }
 }
