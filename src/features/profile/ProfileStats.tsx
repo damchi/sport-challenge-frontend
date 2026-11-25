@@ -25,7 +25,8 @@ export function ProfileStats() {
       </div>
     );
   }
-  if (summary.isError) {
+  // A failed refresh keeps the figures: the global banner says so.
+  if (!summary.data) {
     return (
       <div className="mt-5 flex w-full flex-col items-center gap-2">
         <p role="alert" className="text-sm text-muted">

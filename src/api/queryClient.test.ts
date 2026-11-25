@@ -36,16 +36,35 @@ describe('createQueryClient global errors', () => {
     expect(onAuthError).not.toHaveBeenCalled();
   });
 
-  it('reports a failed refresh of data already on screen', async () => {
+  it.each([
+    ['internal_error', 500],
+    ['rate_limited', 429],
+  ] as const)('reports a failed refresh of data already on screen (%s)', async (code, status) => {
     const { client, onError } = setup();
     client.setQueryData(['a'], 'previous');
-    const error = new ApiError('internal_error', 500);
+    const error = new ApiError(code, status);
 
     await client
       .fetchQuery({ queryKey: ['a'], queryFn: failingWith(error), retry: false, staleTime: 0 })
       .catch(() => undefined);
 
     expect(onError).toHaveBeenCalledWith(error);
+  });
+
+  it('ends the session when a refresh of data on screen is refused for it', async () => {
+    const { client, onError, onAuthError } = setup();
+    for (const [key, error] of [
+      ['a', new ApiError('token_expired', 401)],
+      ['b', new ApiError('account_blocked', 403)],
+    ] as const) {
+      client.setQueryData([key], 'previous');
+      await client
+        .fetchQuery({ queryKey: [key], queryFn: failingWith(error), retry: false, staleTime: 0 })
+        .catch(() => undefined);
+    }
+
+    expect(onAuthError).toHaveBeenCalledTimes(2);
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it('reports a failed action', async () => {

@@ -8,6 +8,8 @@ import { mockActivities } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { ActivityList } from './ActivityList';
 
 type ActivityPage = components['schemas']['ActivityPage'];
@@ -139,7 +141,11 @@ const weekOf = (
 });
 
 // The device in the time zone of the mock challenges, unless said otherwise.
-function renderList({ deviceTimeZone = 'America/Montreal', path = '/activities' } = {}) {
+function renderList({
+  deviceTimeZone = 'America/Montreal',
+  path = '/activities',
+  queryClient = createTestQueryClient(),
+} = {}) {
   const router = createMemoryRouter(
     [
       {
@@ -151,7 +157,10 @@ function renderList({ deviceTimeZone = 'America/Montreal', path = '/activities' 
     { initialEntries: [path] },
   );
   render(
-    <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+    <AppProviders
+      auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}
+      queryClient={queryClient}
+    >
       <RouterProvider router={router} />
     </AppProviders>,
   );
@@ -792,6 +801,32 @@ describe('ActivityList', () => {
     /** The totals line of a week, its duration also in words for a screen reader. */
     const totalsOf = (region: HTMLElement) => within(region).getByText(/^\d+ séances?/);
 
+    it.each([500, 429] as const)(
+      'keeps the list and its totals when they fail to reload (%i)',
+      async (status) => {
+        weeksTotals(weekOf('2026-11-16', 4, 9360, 26_000));
+        listing([run]);
+        const queryClient = createTestQueryClient();
+        renderList({ queryClient });
+        await item('Course');
+        await waitFor(() =>
+          expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(/^4 séances/),
+        );
+
+        server.use(
+          http.get('*/api/v1/challenges', () => failure(status)),
+          http.get('*/api/v1/me/activities', () => failure(status)),
+          http.get('*/api/v1/me/activities/summary', () => failure(status)),
+          http.get('*/api/v1/me/activities/weeks', () => failure(status)),
+        );
+        await refreshAll(queryClient);
+
+        expect(screen.getByRole('article', { name: 'Course' })).toBeInTheDocument();
+        expect(totalsOf(week(/^Semaine dernière/))).toHaveTextContent(/^4 séances/);
+        expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+      },
+    );
+
     it("shows the server's totals beside each week, the distance left out at 0", async () => {
       weeksTotals(weekOf('2026-11-16', 4, 9360, 26_000), weekOf('2026-11-02', 1, 2730, 0));
       listing([run, padel]);
@@ -865,6 +900,29 @@ describe('ActivityList', () => {
 
       const older = await screen.findByRole('region', { name: /^Semaine du 2 nov/ });
       await waitFor(() => expect(totalsOf(older)).toHaveTextContent('1 séance · 0:45'));
+    });
+
+    it('keeps the retry while a week shown still has no totals, a refresh failing too', async () => {
+      server.use(
+        http.get('*/api/v1/me/activities/weeks', ({ request }) =>
+          new URL(request.url).searchParams.get('cursor') === '2'
+            ? failure(500)
+            : HttpResponse.json<ActivityWeekPage>({
+                items: [weekOf('2026-11-16', 1, 2730, 8200)],
+                next_cursor: '2',
+              }),
+        ),
+      );
+      listing([run, padel]);
+      const queryClient = createTestQueryClient();
+      renderList({ queryClient });
+      expect(await screen.findByRole('button', { name: 'Réessayer' })).toBeInTheDocument();
+
+      server.use(http.get('*/api/v1/me/activities/weeks', () => failure(500)));
+      await refreshAll(queryClient);
+
+      expect(screen.getByRole('button', { name: 'Réessayer' })).toBeInTheDocument();
+      expect(screen.getByRole('article', { name: 'Padel' })).toBeInTheDocument();
     });
 
     it('keeps the list and offers a retry when they fail', async () => {

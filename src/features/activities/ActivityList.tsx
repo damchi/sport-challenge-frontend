@@ -66,7 +66,7 @@ export function ActivityList({
   const [size, setSize] = usePageSize('activities');
   const activities = useMyActivities(sport, size);
   useFetchAllPages(activities, size === 'all');
-  const { weeks, totals } = useWeekTotals(
+  const { weeks, totals, missing } = useWeekTotals(
     timeZone,
     sport,
     activities.data?.pages.at(-1)?.items.at(-1),
@@ -103,6 +103,7 @@ export function ActivityList({
           size={size}
           onSize={setSize}
           weeks={weeks}
+          weeksMissing={missing}
           totals={totals}
           onDeleted={() => setDeletions((count) => count + 1)}
         />
@@ -124,6 +125,7 @@ function WeekList({
   size,
   onSize,
   weeks,
+  weeksMissing,
   totals,
   onDeleted,
 }: {
@@ -135,6 +137,8 @@ function WeekList({
   size: PageSize;
   onSize: (size: PageSize) => void;
   weeks: ReturnType<typeof useWeekTotals>['weeks'];
+  /** A week shown has no totals among the weeks loaded. */
+  weeksMissing: boolean;
   totals: ReadonlyMap<string, ActivityWeekTotals>;
   onDeleted: () => void;
 }) {
@@ -194,8 +198,9 @@ function WeekList({
   const listed = items !== undefined && items.length > 0;
   return (
     <>
-      {/* Totals missing (a page of weeks failed): the list stays, a retry above. */}
-      {weeks.isError && listed && (
+      {/* Totals missing (a page of weeks failed): the list stays, a retry above.
+          A failed refresh keeps the totals: the global banner says so. */}
+      {listed && weeks.isError && (!weeks.data || weeksMissing) && (
         <div className="mb-6">
           <ErrorState
             error={weeks.error}

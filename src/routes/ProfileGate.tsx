@@ -51,7 +51,8 @@ export function ProfileGate() {
       </Page>
     );
   }
-  if (me.isError) {
+  // A failed refresh keeps the profile loaded: the global banner says so.
+  if (!me.data) {
     const { key, values } =
       me.error instanceof ApiError
         ? errorMessage(me.error, (candidate) => i18n.exists(candidate))

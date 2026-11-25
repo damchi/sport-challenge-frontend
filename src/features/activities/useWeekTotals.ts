@@ -10,7 +10,7 @@ import { missesOlderWeek, mondayOf, weeksByMonday } from '../../domain/activityW
 /**
  * The server's totals of the user's weeks (of `sport` only when given), by
  * Monday in `timeZone`: more pages of weeks load while the oldest activity
- * shown is in a week older than every week loaded.
+ * shown is in a week older than every week loaded (`missing`).
  */
 export function useWeekTotals(
   timeZone: string | undefined,
@@ -32,5 +32,5 @@ export function useWeekTotals(
   useEffect(() => {
     if (missing && hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
   }, [missing, hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
-  return { weeks, totals };
+  return { weeks, totals, missing };
 }
