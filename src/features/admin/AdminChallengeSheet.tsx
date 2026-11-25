@@ -16,6 +16,7 @@ import { dateTime } from '../../domain/format/instant';
 import { ChallengeDetails } from '../challenges/detail/ChallengeDetails';
 import { CategoryParams } from '../challenges/detail/CategoryParams';
 import { useCategoryName } from '../challenges/detail/categoryNames';
+import { AdminChallengeLifecycle } from './AdminChallengeLifecycle';
 import { AdminParticipantChanges } from './AdminChallengeParticipants';
 import {
   AdminChallengeActions,
@@ -64,20 +65,13 @@ export function AdminChallengeSheet() {
     (challenge.error instanceof ApiError && challenge.error.code === 'challenge_not_found')
   ) {
     content = <p className={`${CARD} text-muted`}>{t('admin.challenges.notFound')}</p>;
-  } else if (challenge.isPending) {
-    content = <LoadingState />;
+  } else if (challenge.data) {
+    // Kept when reading it again fails after a change: the change is made, and said.
+    content = <LoadedSheet key={challenge.data.id} challenge={challenge.data} />;
   } else if (challenge.isError) {
     content = <ErrorState error={challenge.error} onRetry={() => void challenge.refetch()} />;
-  } else if (challenge.data.deleted_at !== null) {
-    // The server changes no one in a deleted challenge, nor lists them.
-    content = <Sheet challenge={challenge.data} participants={null} />;
   } else {
-    const { id, timezone } = challenge.data;
-    content = (
-      <AdminParticipantChanges challengeId={id} timeZone={timezone}>
-        {(participants) => <Sheet challenge={challenge.data} participants={participants} />}
-      </AdminParticipantChanges>
-    );
+    content = <LoadingState />;
   }
   return (
     <div className="mt-6 flex flex-col gap-6">
@@ -87,18 +81,54 @@ export function AdminChallengeSheet() {
   );
 }
 
+/**
+ * The sheet of a challenge, with its deletion or its restore, which turns it
+ * into the other sheet: a deleted challenge lists no participant, as the
+ * server changes no one in it.
+ */
+function LoadedSheet({ challenge }: { challenge: AdminChallengeDetail }) {
+  const { i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const { id, timezone } = challenge;
+  const at = (instant: string) => dateTime(instant, timezone, locale);
+  return (
+    <AdminChallengeLifecycle challenge={challenge} at={at}>
+      {(lifecycle) =>
+        challenge.deleted_at !== null ? (
+          <Sheet challenge={challenge} at={at} participants={null} lifecycle={lifecycle} />
+        ) : (
+          <AdminParticipantChanges challengeId={id} timeZone={timezone}>
+            {(participants) => (
+              <Sheet
+                challenge={challenge}
+                at={at}
+                participants={participants}
+                lifecycle={lifecycle}
+              />
+            )}
+          </AdminParticipantChanges>
+        )
+      }
+    </AdminChallengeLifecycle>
+  );
+}
+
 function Sheet({
   challenge,
+  at,
   participants,
+  lifecycle,
 }: {
   challenge: AdminChallengeDetail;
+  at: (instant: string) => string;
   /** The participants and their changes; none for a deleted challenge. */
   participants: ReactNode;
+  /** The notice of its deletion and its restore, or the card to delete it. */
+  lifecycle: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const zone = challenge.timezone;
-  const at = (instant: string) => dateTime(instant, zone, locale);
   const otherZone = otherTimeZoneName(
     zone,
     Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -131,12 +161,8 @@ function Sheet({
         <h2 id="admin-challenge-title" className={`${H2} break-words`}>
           {challenge.title}
         </h2>
-        {challenge.deleted_at !== null ? (
-          // Its usual page is closed to everyone, the admin too.
-          <p role="note" className="rounded-row bg-segment px-4 py-3 font-semibold">
-            {t('admin.challenges.sheet.deletedAt', { date: at(challenge.deleted_at) })}
-          </p>
-        ) : (
+        {/* A deleted challenge's usual page is closed to everyone, the admin too. */}
+        {challenge.deleted_at === null && (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <Link
               to={`/challenges/${challenge.id}`}
@@ -164,6 +190,8 @@ function Sheet({
           </p>
         )}
       </header>
+
+      {challenge.deleted_at !== null && lifecycle}
 
       <dl className={CARD}>
         {facts.map(([term, value]) => (
@@ -204,6 +232,7 @@ function Sheet({
         actions={challenge.recent_actions}
         at={at}
       />
+      {challenge.deleted_at === null && lifecycle}
     </article>
   );
 }
