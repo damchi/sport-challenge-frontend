@@ -36,6 +36,7 @@ import { CategoriesStep } from '../challenges/create/CategoriesStep';
 import { PreviousValueProvider } from '../challenges/create/ChangedPill';
 import { DurationStep } from '../challenges/create/DurationStep';
 import { InfoStep } from '../challenges/create/InfoStep';
+import { LeaveWarning } from './LeaveWarning';
 import { RecomputeFlow } from './RecomputeFlow';
 import { useSettingsChanges } from './useSettingsChanges';
 
@@ -197,6 +198,8 @@ function SettingsForm({
     >
       {({ showPreview, pending, error }) => (
         <FormProvider {...form}>
+          {/* On the fields only: the preview and the reason ask in their turn. */}
+          <LeaveWarning active={changes.length > 0} />
           <PreviousValueProvider value={previous}>
             <form
               noValidate
