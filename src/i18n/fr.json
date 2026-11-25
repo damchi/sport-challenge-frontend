@@ -1299,6 +1299,87 @@
       "serverInvalid": "Valeur refusée. Vérifie-la, puis relance l'aperçu.",
       "bounds": "Les bornes ne changent pas : {{minWeeks}} à {{maxWeeks}} semaines, coefficients de {{minFactor}} à {{maxFactor}}.",
       "invalid": "Un champ est refusé : corrige-le, puis relance l'aperçu."
+    },
+    "participants": {
+      "title": "Participants",
+      "add": "Ajouter un participant",
+      "empty": "Personne ne participe à ce défi.",
+      "columns": {
+        "participant": "Participant",
+        "role": "Rôle",
+        "status": "Statut",
+        "joinedAt": "Inscrit le",
+        "actions": "Actions"
+      },
+      "roles": {
+        "creator": "Créateur",
+        "participant": "Participant"
+      },
+      "status": {
+        "active": "Actif",
+        "abandoned": "A abandonné ou exclu"
+      },
+      "menu": "Modifications pour {{name}}",
+      "account": "Voir sa fiche",
+      "help": {
+        "exclude": "Exclu, il est éliminé de toutes les catégories et affiché « a abandonné ». Tu pourras le réintégrer.",
+        "excludeCreator": "Exclu, il est éliminé de toutes les catégories et affiché « a abandonné », mais garde son rôle de créateur : retire-le à part. Tu pourras le réintégrer.",
+        "reinstate": "Réintégré, il redevient actif : les semaines déjà verrouillées sont jugées de nouveau avec lui."
+      },
+      "search": {
+        "label": "Rechercher le compte à ajouter par pseudo, nom ou e-mail",
+        "hint": "Cherche le compte par son pseudo, son nom ou son e-mail.",
+        "found": "Comptes trouvés",
+        "choose": "Ajouter",
+        "chooseNamed": "Ajouter {{name}} au défi",
+        "close": "Fermer la recherche"
+      },
+      "changes": {
+        "add": {
+          "title": "Ajouter {{name}} au défi",
+          "reasonTitle": "Confirmer l'ajout du participant",
+          "confirm": "Ajouter au défi",
+          "made": "{{name}} a été ajouté au défi."
+        },
+        "exclude": {
+          "button": "Exclure",
+          "title": "Exclure {{name}} du défi",
+          "reasonTitle": "Confirmer l'exclusion",
+          "confirm": "Exclure du défi",
+          "made": "{{name}} a été exclu du défi."
+        },
+        "reinstate": {
+          "button": "Réintégrer dans le défi",
+          "title": "Réintégrer {{name}} dans le défi",
+          "reasonTitle": "Confirmer la réintégration",
+          "confirm": "Réintégrer",
+          "made": "{{name}} a été réintégré dans le défi."
+        },
+        "makeCreator": {
+          "button": "Nommer créateur",
+          "title": "Nommer {{name}} créateur",
+          "reasonTitle": "Confirmer le nouveau créateur",
+          "confirm": "Nommer créateur",
+          "made": "{{name}} est maintenant créateur du défi."
+        },
+        "removeCreator": {
+          "button": "Retirer le rôle de créateur",
+          "title": "Retirer le rôle de créateur à {{name}}",
+          "reasonTitle": "Confirmer le retrait du rôle",
+          "confirm": "Retirer le rôle",
+          "made": "{{name}} n'est plus créateur du défi."
+        }
+      },
+      "errors": {
+        "already_participant": "Ce compte participe déjà à ce défi.",
+        "participation_abandoned": "Ce compte a abandonné ce défi ou en a été exclu : réintègre-le depuis la liste des participants.",
+        "profile_incomplete": "Ce compte n'a pas encore indiqué son prénom et son nom : il ne peut rejoindre aucun défi.",
+        "user_not_found": "Ce compte n'existe plus.",
+        "not_active_participant": "Ce compte ne participe pas à ce défi.",
+        "last_creator": "C'est le dernier créateur du défi : nomme d'abord un autre créateur.",
+        "not_found": "Ce compte ne participe plus à ce défi.",
+        "challenge_not_found": "Ce défi n'existe plus ou a été supprimé."
+      }
     }
   }
 }

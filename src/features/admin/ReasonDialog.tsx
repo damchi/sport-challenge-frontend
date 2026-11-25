@@ -43,6 +43,7 @@ export function ReasonDialog({
   variant = 'default',
   pending = false,
   error,
+  errorScope,
   onConfirm,
   onCancel,
 }: {
@@ -56,6 +57,8 @@ export function ReasonDialog({
   /** While the change is sent: the confirmation waits, and so does cancelling (it may be made). */
   pending?: boolean;
   error?: unknown;
+  /** Where the change's own words for the server's errors are (`errorMessage`). */
+  errorScope?: string;
   onConfirm: (reason: string) => void;
   onCancel: () => void;
 }) {
@@ -87,7 +90,7 @@ export function ReasonDialog({
   if (error && !refusedReason(error)) {
     const { key, values } =
       error instanceof ApiError
-        ? errorMessage(error, (candidate) => i18n.exists(candidate))
+        ? errorMessage(error, (candidate) => i18n.exists(candidate), errorScope)
         : { key: 'errors.unknown', values: {} };
     otherError = t(key, values);
   }

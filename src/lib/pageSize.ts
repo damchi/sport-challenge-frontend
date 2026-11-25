@@ -12,6 +12,7 @@ export type SizedList =
   | 'adminChallenges'
   | 'adminUsers'
   | 'adminUserChallenges'
+  | 'adminParticipants'
   | 'adminUserActivities'
   | 'adminActions';
 

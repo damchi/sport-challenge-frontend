@@ -43,6 +43,21 @@ describe('error messages', () => {
     });
   });
 
+  it('takes the words of a scope first, the usual ones without', () => {
+    const keys = new Set(['admin.participants.errors.last_creator', 'errors.last_creator']);
+    const hasKey = (key: string) => keys.has(key);
+    const scope = 'admin.participants.errors';
+
+    expect(errorMessage(new ApiError('last_creator', 422), hasKey, scope).key).toBe(
+      'admin.participants.errors.last_creator',
+    );
+    expect(errorMessage(new ApiError('last_creator', 422), hasKey).key).toBe('errors.last_creator');
+    keys.add('errors.not_found');
+    expect(errorMessage(new ApiError('not_found', 404), hasKey, scope).key).toBe(
+      'errors.not_found',
+    );
+  });
+
   it('falls back on errors.unknown for a code without text', () => {
     const error = new ApiError('token_expired', 401, { week: '3' });
 

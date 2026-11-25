@@ -107,14 +107,20 @@ export function networkError(cause: unknown): ApiError {
 /**
  * Translation key and values of an error, for i18next. `hasKey` tells
  * whether a key is translated (i18next.exists); a code without text falls
- * back on errors.unknown rather than showing the raw key.
+ * back on errors.unknown rather than showing the raw key. With `scope`, the
+ * words of that screen come first (`<scope>.<code>`), when it has some: the
+ * admin is told about an account, not about themselves.
  */
 export function errorMessage(
   error: ApiError,
   hasKey: (key: string) => boolean,
+  scope?: string,
 ): { key: string; values: Record<string, string> } {
   if (error.code === 'rate_limited' && error.params.retry_after) {
     return { key: 'errors.rate_limited_delay', values: error.params };
+  }
+  if (scope && hasKey(`${scope}.${error.code}`)) {
+    return { key: `${scope}.${error.code}`, values: error.params };
   }
   const key = `errors.${error.code}`;
   return hasKey(key) ? { key, values: error.params } : { key: 'errors.unknown', values: {} };
