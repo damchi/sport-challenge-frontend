@@ -16,6 +16,8 @@ import { RouteError } from './RouteError';
 import type { RouteHandle } from './routeHandle';
 
 const title = (titleKey: string): RouteHandle => ({ titleKey });
+// Its children are sections of one page: moving between them keeps it.
+const sectioned = (titleKey: string): RouteHandle => ({ titleKey, sections: true });
 
 export const routes: RouteObject[] = [
   {
@@ -66,7 +68,7 @@ export const routes: RouteObject[] = [
                         // Sections of the challenge: the leaderboard is its first page.
                         path: '/challenges/:challengeId',
                         lazy: pages.challenge,
-                        handle: title('challengeDetail.title'),
+                        handle: sectioned('challengeDetail.title'),
                         children: [
                           { index: true, lazy: pages.leaderboard },
                           { path: 'participants', lazy: pages.participants },
@@ -101,7 +103,7 @@ export const routes: RouteObject[] = [
                         // loads once the guard has let the admin in.
                         path: '/admin',
                         element: <RequireAdmin />,
-                        handle: title('admin.title'),
+                        handle: sectioned('admin.title'),
                         children: [
                           {
                             index: true,

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Outlet, useParams } from 'react-router';
+import { Outlet, useLocation, useParams } from 'react-router';
 import { ApiError } from '../../../api/errors';
 import { useChallenge } from '../../../api/hooks/useChallenges';
 import { ErrorState } from '../../../components/states/ErrorState';
@@ -40,6 +40,9 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
   // A section of this challenge whose code still loads.
   const pending = usePendingPath();
   const sectionLoading = pending !== undefined && isWithin(pending, `/challenges/${challengeId}`);
+  // A section starts afresh at each address (another participant too); the
+  // header above stays, with what its actions show (a link just created).
+  const { pathname } = useLocation();
   // The action chosen in the header's menu; once done, the focus goes back
   // to the menu's button.
   const [action, setAction] = useState<MenuAction | null>(null);
@@ -108,7 +111,7 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
                   challengeId={challengeId}
                   activities={canSeeParticipantActivities(challenge.data.my_role)}
                 />
-                <div className="mt-4">{sectionLoading ? <LoadingState /> : <Outlet />}</div>
+                <div className="mt-4">{sectionLoading ? <LoadingState /> : <Outlet key={pathname} />}</div>
               </div>
               <HowToWin challenge={challenge.data} />
             </div>

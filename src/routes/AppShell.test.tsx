@@ -162,4 +162,47 @@ describe('application shell', () => {
     expect(states).not.toContain('loading');
     expect(screen.getByLabelText('draft')).toHaveValue('typed');
   });
+
+  it('opens another challenge afresh, keeping the shell and its sections', async () => {
+    const challenge = (
+      <>
+        <input aria-label="draft" defaultValue="" />
+        <Outlet />
+      </>
+    );
+    const router = createMemoryRouter(
+      [
+        {
+          element: <AppShell />,
+          children: [
+            {
+              path: '/challenges/:challengeId',
+              element: challenge,
+              handle: { titleKey: 'challengeDetail.title', sections: true },
+              children: [
+                { index: true, element: <p>leaderboard</p> },
+                { path: 'participants', element: <p>participants</p> },
+              ],
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/challenges/a'] },
+    );
+    render(
+      <AppProviders auth={createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } })}>
+        <RouterProvider router={router} />
+      </AppProviders>,
+    );
+    const nav = screen.getByRole('navigation', { name: 'Navigation principale' });
+    fireEvent.change(screen.getByLabelText('draft'), { target: { value: 'typed' } });
+
+    await act(() => router.navigate('/challenges/a/participants'));
+    expect(screen.getByText('participants')).toBeInTheDocument();
+    expect(screen.getByLabelText('draft')).toHaveValue('typed');
+
+    await act(() => router.navigate('/challenges/b'));
+    expect(screen.getByLabelText('draft')).toHaveValue('');
+    expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBe(nav);
+  });
 });

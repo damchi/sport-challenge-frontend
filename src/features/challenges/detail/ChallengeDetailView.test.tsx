@@ -773,6 +773,31 @@ describe('ChallengeDetailView', () => {
     );
   });
 
+  it('keeps the link just created and the focus on the tab across its sections', async () => {
+    // In week 1, before the end of the registrations: the user may invite.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-05T12:00:00Z'));
+    answer({ current_week: 1, members_can_invite: true });
+    renderAt(`/challenges/${id}`);
+    const heading = await title();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Inviter des amis' }));
+    const link = await screen.findByRole('textbox', { name: 'Lien à partager' });
+
+    const nav = screen.getByRole('navigation', { name: 'Sections du défi' });
+    for (const name of ['Participants', 'Activités']) {
+      const tab = within(nav).getByRole('link', { name });
+      tab.focus();
+      fireEvent.click(tab);
+      await screen.findByRole('link', { name, current: 'page' });
+      expect(tab).toHaveFocus();
+    }
+
+    expect(screen.getByRole('textbox', { name: 'Lien à partager' })).toBe(link);
+    expect(await title()).toBe(heading);
+    vi.useRealTimers();
+  });
+
   it('shows the same page for a missing, deleted or hidden challenge', async () => {
     renderAt('/challenges/00000000-0000-4000-8000-999999999999');
 
