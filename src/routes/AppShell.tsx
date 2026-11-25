@@ -6,6 +6,7 @@ import { LoadingState } from '../components/states/LoadingState';
 import { inBackground } from '../lib/background';
 import { isWithin, usePendingPath } from '../lib/pendingNavigation';
 import { preloadPages } from './pages';
+import { usePageKey } from './routeHandle';
 
 /**
  * Pages of the signed-in app, with the main navigation first in the page
@@ -13,10 +14,13 @@ import { preloadPages } from './pages';
  * bottom of a phone. While the code of the next page loads (pages are
  * loaded on demand, and preloaded once signed in), the page gives way to the
  * loading state. Within a challenge, its sections swap below its header
- * instead (ChallengeDetailView): the page stays.
+ * instead (ChallengeDetailView): the page stays. The shell stays across
+ * navigations; the page below starts afresh when another one opens (another
+ * challenge too), not between its sections.
  */
 export function AppShell() {
   const pending = usePendingPath();
+  const page = usePageKey();
   const challenge = matchPath(
     { path: '/challenges/:challengeId', end: false },
     useLocation().pathname,
@@ -37,7 +41,7 @@ export function AppShell() {
             <LoadingState />
           </Page>
         ) : (
-          <Outlet />
+          <Outlet key={page} />
         )}
       </div>
     </div>

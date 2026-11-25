@@ -6,12 +6,12 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { GlobalErrorBanner } from '../components/GlobalErrorBanner';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { useGlobalError } from '../lib/globalError';
-import { isRouteHandle } from './routeHandle';
+import { isRouteHandle, usePageKey } from './routeHandle';
 
 /**
  * Wraps every page: the offline and global error banners above it, and an
  * error boundary around it. A navigation leaves both the error banner and
- * the error page behind.
+ * the error page behind, without remounting the app below.
  */
 export function RootLayout() {
   const { pathname } = useLocation();
@@ -30,20 +30,40 @@ export function RootLayout() {
   const appName = t('home.title');
   const title = titleKey ? `${t(titleKey)} · ${appName}` : appName;
 
-  // After a navigation (not the first page), focus moves to the new page's
-  // title, so a screen reader starts reading there. Comparing the path (not a
-  // flag) keeps StrictMode's second run from moving it on the first page.
-  // A page shows its h1 while it loads, or the focus stays where it was.
-  const previousPath = useRef(pathname);
+  // After a navigation to another page (not the first page), focus moves to
+  // its title, so a screen reader starts reading there. Between the sections
+  // of a page, it stays where it was (the tab chosen), unless the element
+  // focused is gone (the link followed, in a list replaced by a detail).
+  // Comparing the path (not a flag) keeps StrictMode's second run from moving
+  // it on the first page. A page shows its h1 while it loads, or the focus
+  // stays where it was.
+  const page = usePageKey();
+  const previous = useRef({ pathname, page });
+  // The last element focused: the focus is lost when it is gone. A clicked
+  // link takes no focus in Safari, which must not count as lost.
+  const lastFocused = useRef<Element | null>(null);
   useEffect(() => {
-    if (previousPath.current === pathname) return;
-    previousPath.current = pathname;
+    const remember = (event: FocusEvent) => {
+      if (event.target instanceof Element) lastFocused.current = event.target;
+    };
+    document.addEventListener('focusin', remember);
+    return () => document.removeEventListener('focusin', remember);
+  }, []);
+  useEffect(() => {
+    if (previous.current.pathname === pathname) return;
+    const samePage = previous.current.page === page;
+    previous.current = { pathname, page };
+    const focusLost =
+      document.activeElement === document.body && lastFocused.current?.isConnected === false;
+    // Only what is focused from now on counts for the next navigation.
+    lastFocused.current = null;
+    if (samePage && !focusLost) return;
     const heading = document.querySelector('main h1');
     if (heading instanceof HTMLElement) {
       heading.tabIndex = -1;
       heading.focus();
     }
-  }, [pathname]);
+  }, [pathname, page]);
 
   return (
     <>
@@ -55,7 +75,7 @@ export function RootLayout() {
           <GlobalErrorBanner error={error} onDismiss={dismiss} />
         </div>
       )}
-      <ErrorBoundary key={pathname}>
+      <ErrorBoundary resetKey={pathname}>
         <Outlet />
       </ErrorBoundary>
     </>
