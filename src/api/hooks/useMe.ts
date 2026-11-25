@@ -20,8 +20,10 @@ export function useMe() {
 }
 
 /**
- * Updates the profile and keeps the answer as the cached profile. Its errors
- * are shown by the form (a taken pseudo under its field), not the global banner.
+ * Updates the profile and keeps the answer as the cached profile. A new name
+ * also makes the challenges stale (leaderboards, participants, activities show
+ * it); a language alone does not. Its errors are shown by the form (a taken
+ * pseudo under its field), not the global banner.
  */
 export function useUpdateMe() {
   const client = useApiClient();
@@ -33,8 +35,17 @@ export function useUpdateMe() {
       if (!data) throw new Error('Empty profile response');
       return data;
     },
-    onSuccess: (me) => queryClient.setQueryData(queryKeys.me, me),
+    onSuccess: (me, update) => {
+      queryClient.setQueryData(queryKeys.me, me);
+      if (changesName(update)) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.challenges.all });
+      }
+    },
   });
+}
+
+function changesName(update: MeUpdate): boolean {
+  return 'pseudo' in update || 'first_name' in update || 'last_name' in update;
 }
 
 /**
