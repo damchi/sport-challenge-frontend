@@ -188,7 +188,8 @@ export function AdminAccountChanges({
         details={asked?.kind === 'update' && <UpdateDetails user={user} update={asked.update} />}
         confirmLabel={words('confirm')}
         variant={kind === 'block' || kind === 'delete' ? 'danger' : 'default'}
-        errorScope="admin.account.errors"
+        // Only a block is refused for one's own account: its own words for it.
+        errorScope={kind === 'block' ? 'admin.account.block.errors' : 'admin.account.errors'}
         pending={mutation.isPending || closing}
         error={mutation.error}
         onConfirm={confirm}

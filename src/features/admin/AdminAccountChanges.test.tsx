@@ -239,6 +239,20 @@ describe('AdminAccountChanges', () => {
     expect(within(dialog).queryByText('raw server text')).toBeNull();
   });
 
+  it('says a refused deletion in general words, not those of a block', async () => {
+    serveAccount(account, () => error(403, 'forbidden'));
+    renderSheet();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le compte' }));
+    const dialog = screen.getByRole('dialog', { name: 'Supprimer le compte ?' });
+    giveReason(dialog, 'Supprimer le compte');
+
+    expect(
+      await within(dialog).findByText('Tu ne peux pas faire ce changement sur ce compte.'),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByText('Tu ne peux pas bloquer ton propre compte.')).toBeNull();
+  });
+
   it('deletes an account, in a danger dialog: it then changes no more', async () => {
     const sent = serveAccount();
     renderSheet();

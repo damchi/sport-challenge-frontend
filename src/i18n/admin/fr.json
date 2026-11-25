@@ -514,7 +514,11 @@
       "reasonTitle": "Bloquer le compte ?",
       "summary": "{{name}} ne pourra plus utiliser l'app tant que le compte reste bloqué. Ses défis ne changent pas.",
       "confirm": "Bloquer le compte",
-      "made": "Le compte de {{name}} est bloqué."
+      "made": "Le compte de {{name}} est bloqué.",
+      "errors": {
+        "forbidden": "Tu ne peux pas bloquer ton propre compte.",
+        "user_not_found": "Ce compte n'existe plus."
+      }
     },
     "unblock": {
       "title": "Débloquer le compte",
@@ -535,7 +539,7 @@
       "made": "Le compte est supprimé."
     },
     "errors": {
-      "forbidden": "Tu ne peux pas bloquer ton propre compte.",
+      "forbidden": "Tu ne peux pas faire ce changement sur ce compte.",
       "last_creator": "Ce compte est le dernier créateur d'un défi en cours : nomme d'abord un autre créateur, ou supprime le défi.",
       "user_not_found": "Ce compte n'existe plus."
     }

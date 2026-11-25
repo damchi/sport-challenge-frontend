@@ -511,7 +511,11 @@
       "reasonTitle": "Block the account?",
       "summary": "{{name}} will not be able to use the app while the account stays blocked. Their challenges do not change.",
       "confirm": "Block the account",
-      "made": "The account of {{name}} is blocked."
+      "made": "The account of {{name}} is blocked.",
+      "errors": {
+        "forbidden": "You cannot block your own account.",
+        "user_not_found": "This account no longer exists."
+      }
     },
     "unblock": {
       "title": "Unblock the account",
@@ -532,7 +536,7 @@
       "made": "The account is deleted."
     },
     "errors": {
-      "forbidden": "You cannot block your own account.",
+      "forbidden": "You cannot make this change to this account.",
       "last_creator": "This account is the last creator of an ongoing challenge: first name another creator, or delete the challenge.",
       "user_not_found": "This account no longer exists."
     }
