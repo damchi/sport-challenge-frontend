@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { usesDistanceFactors } from '../challengeCreate';
-import { isCalendarDate, isStartDateInRange, isTimeZone } from '../challengeWindow';
+import {
+  isCalendarDate,
+  isStartDateInRange,
+  isStartDateWithinAYear,
+  isTimeZone,
+} from '../challengeWindow';
 import {
   characterCount,
   hasOnlyAllowedCharacters,
@@ -25,6 +30,14 @@ export const POINTS_CRITERIA = [
   'session_count',
   'weekly_elevation',
 ] as const;
+
+/** Duration bounds of the contract, in weeks. */
+export const MIN_WEEKS = 2;
+export const MAX_WEEKS = 52;
+
+/** Distance factor bounds of the contract. */
+export const MIN_FACTOR = 0.1;
+export const MAX_FACTOR = 2;
 
 /** Longest title the contract takes, in characters (code points). */
 export const TITLE_MAX_LENGTH = 80;
@@ -57,8 +70,11 @@ const descriptionField = z
 /**
  * Challenge creation input. `now` dates "today" for the start date, which
  * must be between today and the same day next year in the chosen time zone.
+ * With `pastStart`, for an admin changing a challenge's settings, it may be
+ * in the past too, at most a year ahead all the same (API contract,
+ * AdminChallengeUpdate).
  */
-export function challengeCreateSchema(now: Date) {
+export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
   return z
     .object({
       title: titleField,
@@ -69,8 +85,8 @@ export function challengeCreateSchema(now: Date) {
       weeks: z
         .number('challengeCreate.fields.weeks.range')
         .int('challengeCreate.fields.weeks.range')
-        .min(2, 'challengeCreate.fields.weeks.range')
-        .max(52, 'challengeCreate.fields.weeks.range'),
+        .min(MIN_WEEKS, 'challengeCreate.fields.weeks.range')
+        .max(MAX_WEEKS, 'challengeCreate.fields.weeks.range'),
       start_date: z.string().refine(isCalendarDate, 'challengeCreate.fields.startDate.required'),
       timezone: z.string().refine(isTimeZone, 'challengeCreate.fields.timezone.required'),
       // A sport of the catalogue whose distance is required: the server
@@ -140,7 +156,7 @@ export function challengeCreateSchema(now: Date) {
       for (const [code, factor] of Object.entries(values.factors)) {
         // The reference keeps no field: it always counts ×1.
         if (code === values.reference_sport) continue;
-        if (!(factor >= 0.1 && factor <= 2 && hasDecimals(factor, 2))) {
+        if (!(factor >= MIN_FACTOR && factor <= MAX_FACTOR && hasDecimals(factor, 2))) {
           context.addIssue({
             code: 'custom',
             path: ['factors', code],
@@ -149,14 +165,22 @@ export function challengeCreateSchema(now: Date) {
         }
       }
     })
-    .refine(({ start_date: startDate, timezone }) => isStartDateInRange(startDate, timezone, now), {
-      path: ['start_date'],
-      message: 'challengeCreate.fields.startDate.range',
-      // Checked as soon as the date and the time zone are valid, whatever
-      // the other fields: an error elsewhere would otherwise hide it.
-      when: ({ issues }) =>
-        !issues.some((issue) => ['start_date', 'timezone'].includes(String(issue.path?.[0]))),
-    });
+    .refine(
+      ({ start_date: startDate, timezone }) =>
+        pastStart
+          ? isStartDateWithinAYear(startDate, timezone, now)
+          : isStartDateInRange(startDate, timezone, now),
+      {
+        path: ['start_date'],
+        message: pastStart
+          ? 'challengeCreate.fields.startDate.rangeAdmin'
+          : 'challengeCreate.fields.startDate.range',
+        // Checked as soon as the date and the time zone are valid, whatever
+        // the other fields: an error elsewhere would otherwise hide it.
+        when: ({ issues }) =>
+          !issues.some((issue) => ['start_date', 'timezone'].includes(String(issue.path?.[0]))),
+      },
+    );
 }
 
 /** What the form holds while it is filled in. */

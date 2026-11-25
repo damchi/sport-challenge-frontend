@@ -14,6 +14,16 @@ import { RecomputePreview } from './RecomputePreview';
 const challenge = mockAdminChallenges[0];
 if (!challenge) throw new Error('No mock challenge');
 
+// What the change leaves as it was, besides the rankings and eliminations.
+const unchanged = {
+  title: 'Défi 1',
+  status: 'ongoing' as const,
+  reference_sport: { before: 'run', after: 'run' },
+  results: null,
+  weeks: [],
+  points: [],
+};
+
 function entry(
   pseudo: string,
   rank: number | null,
@@ -79,6 +89,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([
           entry('ami_1', 1, 7200),
           entry('ami_2', 2, 3600),
@@ -120,12 +131,14 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200), entry('ami_2', 2, 3600)]),
         after: ranking([entry('ami_2', 1, 3600), entry('ami_1', null, null)]),
         eliminations: [],
       },
       {
         challenge_id: mockAdminChallenges[1]?.id ?? '',
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200)]),
         after: ranking([entry('ami_1', 1, 7200)]),
         eliminations: [],
@@ -151,6 +164,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([
           entry('ami_1', 1, 7200),
           entry('ami_2', null, null),
@@ -181,6 +195,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200)]),
         after: ranking([entry('ami_1', 1, 7200)]),
         eliminations: [
@@ -212,6 +227,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200)]),
         after: ranking([entry('ami_1', 1, 7200)]),
         eliminations: [
@@ -247,6 +263,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: null,
         after: ranking([entry('ami_1', 1, 7200)]),
         eliminations: [],
@@ -269,6 +286,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200)]),
         after: null,
         eliminations: [],
@@ -291,6 +309,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200)]),
         after: ranking([entry('ami_1', null, 7200, { abandoned: false })]),
         eliminations: [],
@@ -316,6 +335,7 @@ describe('RecomputePreview', () => {
     renderPreview([
       {
         challenge_id: challenge.id,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200)]),
         after: ranking([entry('ami_1', 1, 9000)]),
         eliminations: [],

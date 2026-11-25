@@ -59,7 +59,7 @@ export const mockMe: Me = {
 /** Figures of the admin dashboard: every task ran, one failed last. */
 export const mockAdminStats: AdminStats = {
   computed_at: '2026-11-24T14:00:00Z',
-  accounts: { total: 1284, new_last_7_days: 37, active_last_7_days: 412 },
+  accounts: { total: 1284, new_last_7_days: 37, active_last_7_days: 412, blocked: 3 },
   challenges: { upcoming: 6, ongoing: 21, finished: 143, deleted: 4 },
   activities_last_7_days: 1890,
   pending_auth0_deletions: 2,

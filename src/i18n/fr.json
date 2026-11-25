@@ -473,7 +473,9 @@
         "label": "Premier jour",
         "hint": "Aujourd'hui au plus tôt, dans un an au plus tard.",
         "required": "Choisis la date de début.",
-        "range": "La date de début doit être entre aujourd'hui et la même date l'an prochain."
+        "range": "La date de début doit être entre aujourd'hui et la même date l'an prochain.",
+        "hintAdmin": "Dans le passé si besoin, dans un an au plus tard.",
+        "rangeAdmin": "La date de début doit être au plus tard la même date l'an prochain."
       },
       "timezone": {
         "label": "Fuseau horaire",
@@ -1110,6 +1112,7 @@
       },
       "states": {
         "active": "Actif",
+        "blocked": "Bloqué",
         "deleted": "Supprimé",
         "auth0_deletion_pending": "Suppression Auth0 en attente"
       },
@@ -1254,6 +1257,48 @@
       "touched_other": "{{count}} défis recalculés :",
       "in": "Entre dans le classement :",
       "out": "Sort du classement :"
+    },
+    "settings": {
+      "edit": "Modifier les réglages",
+      "title": "Modifier les réglages",
+      "back": "Fiche du défi",
+      "deleted": "Ce défi est supprimé : restaure-le avant de changer ses réglages.",
+      "warning": {
+        "upcoming": "<b>Ce défi est à venir, et ces réglages sont figés pour ses participants.</b> En les changeant, tu recalcules ses classements.",
+        "ongoing": "<b>Ce défi est en cours, et ces réglages sont figés pour ses participants.</b> En les changeant, tu recalcules ses classements.",
+        "finished": "<b>Ce défi est terminé, et ces réglages sont figés pour ses participants.</b> En les changeant, tu recalcules ses classements et ses résultats."
+      },
+      "sections": {
+        "info": "Le défi",
+        "dates": "Dates",
+        "categories": "Catégories"
+      },
+      "changes_one": "{{count}} changement",
+      "changes_many": "{{count}} changements",
+      "changes_other": "{{count}} changements",
+      "noChange": "Aucun changement pour l'instant.",
+      "to": "devient",
+      "row": "{{label}} : {{before}} → {{after}}",
+      "rowChanged": "{{label}} : modifié",
+      "previewNote": "L'aperçu montre les semaines rejugées et les classements avant et après, avant toute validation.",
+      "cancel": "Annuler",
+      "preview": "Voir l'aperçu",
+      "previewBusy": "Préparation de l'aperçu…",
+      "change": "Modifier les réglages de « {{title}} »",
+      "reasonTitle": "Confirmer la modification des réglages",
+      "confirm": "Confirmer la modification",
+      "changed": "Modifié",
+      "changedFrom": "Modifié · avant : {{before}}",
+      "empty": "vide",
+      "weeks_one": "{{count}} semaine",
+      "weeks_many": "{{count}} semaines",
+      "weeks_other": "{{count}} semaines",
+      "minutes": "{{count}} min",
+      "minSession": "Durée minimale d'une séance",
+      "factor": "Coefficient : {{sport}}",
+      "serverInvalid": "Valeur refusée. Vérifie-la, puis relance l'aperçu.",
+      "bounds": "Les bornes ne changent pas : {{minWeeks}} à {{maxWeeks}} semaines, coefficients de {{minFactor}} à {{maxFactor}}.",
+      "invalid": "Un champ est refusé : corrige-le, puis relance l'aperçu."
     }
   }
 }

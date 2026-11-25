@@ -2,6 +2,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { TITLE_MAX_LENGTH, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { characterCount } from '../../../domain/schemas/text';
+import { ChangedPill } from './ChangedPill';
 import { FieldError } from './FieldError';
 import { choiceCardClass, describedBy, inputClass } from './fields';
 import { Switch } from './Switch';
@@ -45,6 +46,7 @@ export function InfoStep() {
           </p>
         </div>
         <FieldError id="title-error" message={titleError} />
+        <ChangedPill field="title" className="mt-2" />
       </div>
 
       <div>
@@ -63,6 +65,7 @@ export function InfoStep() {
           {t('challengeCreate.fields.description.hint')}
         </p>
         <FieldError id="description-error" message={descriptionError} />
+        <ChangedPill field="description" className="mt-2" />
       </div>
 
       <fieldset aria-describedby={visibilityError ? 'visibility-error' : undefined}>
@@ -91,6 +94,7 @@ export function InfoStep() {
           ))}
         </div>
         <FieldError id="visibility-error" message={visibilityError} />
+        <ChangedPill field="visibility" className="mt-2" />
       </fieldset>
 
       <label className="flex cursor-pointer items-center gap-4 rounded-row border border-border bg-surface p-4 hover-border">
@@ -101,6 +105,7 @@ export function InfoStep() {
           <span id="members-can-invite-hint" className="mt-1 block text-muted">
             {t('challengeCreate.fields.membersCanInvite.hint')}
           </span>
+          <ChangedPill field="members_can_invite" className="mt-2" />
         </span>
         <Switch
           aria-labelledby="members-can-invite-label"

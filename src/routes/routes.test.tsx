@@ -153,6 +153,7 @@ describe('routes', () => {
       ['/admin', 'Tableau de bord'],
       ['/admin/challenges', 'Défis'],
       ['/admin/challenges/c-1', 'Défis'],
+      ['/admin/challenges/c-1/settings', 'Défis'],
       ['/admin/users', 'Comptes'],
       ['/admin/users/u-1', 'Comptes'],
       ['/admin/journal', 'Journal'],

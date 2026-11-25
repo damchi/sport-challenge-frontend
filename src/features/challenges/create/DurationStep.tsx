@@ -4,23 +4,29 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { Trans, useTranslation } from 'react-i18next';
 import { addToDate, isTimeZone, localDate } from '../../../domain/challengeWindow';
 import { timeZoneName } from '../../../domain/format/challengeDates';
-import type { ChallengeCreateInput } from '../../../domain/schemas/challenge';
+import { MAX_WEEKS, MIN_WEEKS, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
 import { groupTimeZones } from '../../../domain/timeZones';
+import { ChangedPill } from './ChangedPill';
 import { FieldError } from './FieldError';
 import { describedBy, inputClass } from './fields';
 import { windowPreview } from './windowPreview';
-
-// Bounds of the contract, which the buttons keep to.
-const MIN_WEEKS = 2;
-const MAX_WEEKS = 52;
 
 /**
  * Step 2 of the creation: duration in weeks, the first day, then the time
  * zone of the place it is run from (the first day's bounds depend on it),
  * with the challenge's calendar in that time zone: its days and its weeks.
- * `now` dates "today"; `timeZones` are the ones the picker offers.
+ * `now` dates "today"; `timeZones` are the ones the picker offers. With
+ * `pastStart` (an admin changing a challenge), the first day may be past.
  */
-export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonly string[] }) {
+export function DurationStep({
+  now,
+  timeZones,
+  pastStart = false,
+}: {
+  now: Date;
+  timeZones: readonly string[];
+  pastStart?: boolean;
+}) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const {
@@ -125,6 +131,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
             {t('challengeCreate.fields.weeks.hint')}
           </p>
           <FieldError id="weeks-error" message={weeksError} />
+          <ChangedPill field="weeks" className="mt-2" />
         </div>
 
         <div>
@@ -135,7 +142,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
             id="start_date"
             type="date"
             // Bounds of the contract, in the chosen time zone.
-            min={today}
+            min={pastStart ? undefined : today}
             max={today && addToDate(today, { years: 1 })}
             aria-invalid={startDateError ? true : undefined}
             aria-describedby={describedBy('start_date', startDateError)}
@@ -143,9 +150,14 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
             {...register('start_date')}
           />
           <p id="start_date-hint" className="mt-2 text-sm text-muted">
-            {t('challengeCreate.fields.startDate.hint')}
+            {t(
+              pastStart
+                ? 'challengeCreate.fields.startDate.hintAdmin'
+                : 'challengeCreate.fields.startDate.hint',
+            )}
           </p>
           <FieldError id="start_date-error" message={startDateError} />
+          <ChangedPill field="start_date" className="mt-2" />
         </div>
       </div>
 
@@ -181,6 +193,7 @@ export function DurationStep({ now, timeZones }: { now: Date; timeZones: readonl
           {t('challengeCreate.fields.timezone.hint')}
         </p>
         <FieldError id="timezone-error" message={timeZoneError} />
+        <ChangedPill field="timezone" className="mt-2" />
       </div>
 
       <section aria-labelledby="calendar-title" className="rounded-card bg-bg p-4 md:p-6">

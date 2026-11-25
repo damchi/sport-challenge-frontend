@@ -12,6 +12,16 @@ const challenge = mockAdminChallenges[0];
 if (!challenge) throw new Error('No mock challenge');
 const challengeId = challenge.id;
 
+// What the change leaves as it was, besides the rankings and eliminations.
+const unchanged = {
+  title: 'Défi 1',
+  status: 'ongoing' as const,
+  reference_sport: { before: 'run', after: 'run' },
+  results: null,
+  weeks: [],
+  points: [],
+};
+
 function correction(dryRun: boolean): AdminCorrection {
   const entry = (pseudo: string, rank: number, value: number) => ({
     rank,
@@ -39,6 +49,7 @@ function correction(dryRun: boolean): AdminCorrection {
     challenges: [
       {
         challenge_id: challengeId,
+        ...unchanged,
         before: ranking([entry('ami_1', 1, 7200), entry('ami_2', 2, 3600)]),
         after: ranking([entry('ami_2', 1, 9000), entry('ami_1', 2, 7200)]),
         eliminations: [],
@@ -85,10 +96,13 @@ function renderFlow() {
         }}
         onDone={onDone}
       >
-        {({ showPreview, pending }) => (
-          <button type="button" onClick={showPreview} disabled={pending}>
-            Voir l'aperçu
-          </button>
+        {({ showPreview, pending, error }) => (
+          <>
+            <button type="button" onClick={showPreview} disabled={pending}>
+              Voir l'aperçu
+            </button>
+            {error && <p role="alert">{error}</p>}
+          </>
         )}
       </RecomputeFlow>
     </AppProviders>,
