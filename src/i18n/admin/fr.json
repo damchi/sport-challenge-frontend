@@ -82,7 +82,6 @@
       "results": "Résultats",
       "frozenAt": "Figés le {{date}}",
       "notFrozen": "Pas encore figés",
-      "deletedAt": "Supprimé le {{date}} : sa page n'est plus ouverte.",
       "open": "Voir la page du défi",
       "zone": "Heures du défi : {{zone}}.",
       "settings": "Réglages"
@@ -469,5 +468,32 @@
       "activity_not_found": "Cette activité n'existe plus : elle a peut-être été supprimée entre-temps."
     },
     "zoned": "{{start}} ({{zone}})"
+  },
+  "lifecycle": {
+    "delete": {
+      "title": "Supprimer le défi",
+      "help": "Il disparaît pour tout le monde. Rien n'est effacé : tu pourras le restaurer.",
+      "button": "Supprimer le défi",
+      "reasonTitle": "Supprimer le défi ?",
+      "summary": "« {{title}} » disparaîtra pour tout le monde et ses liens d'invitation ne fonctionneront plus. Rien n'est effacé : tu pourras le restaurer.",
+      "confirm": "Supprimer le défi",
+      "made": "« {{title}} » est supprimé."
+    },
+    "restore": {
+      "deletedAt": "Supprimé le {{date}}",
+      "notice": "Il n'apparaît plus pour personne, mais rien n'est effacé : il peut être restauré à tout moment.",
+      "button": "Restaurer le défi",
+      "what": "À la restauration",
+      "points": {
+        "found": "Le défi réapparaît pour ses participants, avec leurs activités : elles n'ont jamais été effacées.",
+        "weeks": "Les semaines terminées pendant la suppression sont jugées au recalcul.",
+        "links": "Ses liens d'invitation ni révoqués ni expirés redeviennent valables. Les comptes supprimés entre-temps ne reviennent pas.",
+        "preview": "L'aperçu montre les classements obtenus avant que tu confirmes, puis le motif est demandé."
+      },
+      "title": "Restaurer « {{title}} »",
+      "reasonTitle": "Confirmer la restauration",
+      "confirm": "Restaurer le défi",
+      "made": "« {{title}} » est restauré et ses classements sont recalculés."
+    }
   }
 }

@@ -141,7 +141,7 @@ describe('AdminChallengeSheet', () => {
     renderSheet(deleted.id);
 
     expect(
-      await screen.findByText("Supprimé le 20 nov. 2026, 10:00 : sa page n'est plus ouverte."),
+      await screen.findByText("Supprimé le 20 nov. 2026, 10:00"),
     ).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Voir la page du défi' })).not.toBeInTheDocument();
     // Restored first: the server refuses to change a deleted challenge.

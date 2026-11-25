@@ -82,7 +82,6 @@
       "results": "Results",
       "frozenAt": "Frozen on {{date}}",
       "notFrozen": "Not frozen yet",
-      "deletedAt": "Deleted on {{date}}. Its page is closed.",
       "open": "See the challenge page",
       "zone": "Challenge times: {{zone}}.",
       "settings": "Settings"
@@ -466,5 +465,32 @@
       "activity_not_found": "This activity no longer exists: it may have been deleted in the meantime."
     },
     "zoned": "{{start}} ({{zone}})"
+  },
+  "lifecycle": {
+    "delete": {
+      "title": "Delete the challenge",
+      "help": "It disappears for everyone. Nothing is erased: you can restore it.",
+      "button": "Delete the challenge",
+      "reasonTitle": "Delete the challenge?",
+      "summary": "“{{title}}” will disappear for everyone and its invitation links will stop working. Nothing is erased: you can restore it.",
+      "confirm": "Delete the challenge",
+      "made": "“{{title}}” is deleted."
+    },
+    "restore": {
+      "deletedAt": "Deleted on {{date}}",
+      "notice": "It no longer shows for anyone, but nothing is erased: it can be restored at any time.",
+      "button": "Restore the challenge",
+      "what": "On restore",
+      "points": {
+        "found": "The challenge shows again for its participants, with their activities: they were never erased.",
+        "weeks": "The weeks that ended while it was deleted are judged by the recalculation.",
+        "links": "Its invitation links that are neither revoked nor expired work again. Accounts deleted in the meantime do not come back.",
+        "preview": "The preview shows the resulting rankings before you confirm, then the reason is asked."
+      },
+      "title": "Restore “{{title}}”",
+      "reasonTitle": "Confirm the restore",
+      "confirm": "Restore the challenge",
+      "made": "“{{title}}” is restored and its rankings are recalculated."
+    }
   }
 }
