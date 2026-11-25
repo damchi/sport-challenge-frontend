@@ -114,7 +114,14 @@ describe('RootLayout', () => {
           element: <RootLayout />,
           children: [
             { path: '/broken', element: <Broken /> },
-            { path: '/other', element: <p>other page</p> },
+            {
+              path: '/other',
+              element: (
+                <main>
+                  <h1>Other page</h1>
+                </main>
+              ),
+            },
           ],
         },
       ],
@@ -129,7 +136,7 @@ describe('RootLayout', () => {
 
     await act(() => router.navigate('/other'));
 
-    expect(screen.getByText('other page')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Other page' })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
     consoleError.mockRestore();
   });

@@ -10,13 +10,24 @@ interface BoundaryProps {
 
 interface BoundaryState {
   failed: boolean;
+  resetKey: string;
 }
 
 class Boundary extends Component<BoundaryProps, BoundaryState> {
-  override state: BoundaryState = { failed: false };
+  override state: BoundaryState = { failed: false, resetKey: this.props.resetKey };
 
-  static getDerivedStateFromError(): BoundaryState {
+  static getDerivedStateFromError(): Partial<BoundaryState> {
     return { failed: true };
+  }
+
+  // A new key (a navigation) leaves the error page in the same render, so
+  // the new page is there when the focus moves to its title. If the new page
+  // throws, getDerivedStateFromError shows the error page again.
+  static getDerivedStateFromProps(
+    props: BoundaryProps,
+    state: BoundaryState,
+  ): Partial<BoundaryState> | null {
+    return props.resetKey === state.resetKey ? null : { failed: false, resetKey: props.resetKey };
   }
 
   retry = () => {
@@ -24,10 +35,11 @@ class Boundary extends Component<BoundaryProps, BoundaryState> {
     this.setState({ failed: false });
   };
 
-  // Leaves the error page once shown, when the key changes (a navigation).
-  // Not on the update that failed: the new page itself may have thrown.
+  // Left by a navigation: the failed queries may load again too.
   override componentDidUpdate(previousProps: BoundaryProps, previousState: BoundaryState) {
-    if (previousState.failed && previousProps.resetKey !== this.props.resetKey) this.retry();
+    if (previousState.failed && previousProps.resetKey !== this.props.resetKey) {
+      this.props.onReset();
+    }
   }
 
   override render() {
