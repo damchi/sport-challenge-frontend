@@ -1,0 +1,470 @@
+{
+  "dashboard": {
+    "computedAt": "Figures as of {{date}}",
+    "accounts": {
+      "title": "Accounts",
+      "total": "Total",
+      "new": "New in the last 7 days",
+      "active": "Active in the last 7 days"
+    },
+    "challenges": {
+      "title": "Challenges",
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "finished": "Finished",
+      "deleted": "Deleted"
+    },
+    "activity": {
+      "title": "Activity",
+      "activities": "Activities in the last 7 days",
+      "pendingDeletions": "Auth0 deletions pending"
+    },
+    "worker": {
+      "title": "Worker",
+      "task": "Task",
+      "lastRun": "Last run",
+      "lastFailure": "Last failure",
+      "never": "Never",
+      "noFailure": "None",
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "unfinished": "Running or stopped",
+      "tasks": {
+        "close-weeks": "Week closing",
+        "finalize-challenges": "Challenge finalization",
+        "retry-auth0-deletions": "Auth0 deletions"
+      }
+    },
+    "version": "API version: {{version}} ({{commit}})"
+  },
+  "challenges": {
+    "listLabel": "All challenges",
+    "search": {
+      "label": "Search a challenge by its title",
+      "placeholder": "Challenge title",
+      "submit": "Search"
+    },
+    "visibility": {
+      "label": "Visibility",
+      "all": "All",
+      "public": "Public",
+      "private": "Private",
+      "privateOne": "Private"
+    },
+    "deleted": "Deleted",
+    "deletedOne": "Deleted",
+    "status": {
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "finished": "Finished"
+    },
+    "period": "{{start}} – {{end}}",
+    "columns": {
+      "title": "Title",
+      "creators": "Creators",
+      "participants": "Participants",
+      "period": "Period",
+      "status": "Status"
+    },
+    "empty": {
+      "none": "No challenges yet.",
+      "filtered": "No challenge matches these filters."
+    },
+    "clearFilters": "Clear the filters",
+    "unnamed": "Deleted account",
+    "back": "All challenges",
+    "notFound": "This challenge doesn't exist.",
+    "sheet": {
+      "status": "Status",
+      "creators": "Creators",
+      "participants": "Participants",
+      "createdAt": "Created on",
+      "results": "Results",
+      "frozenAt": "Frozen on {{date}}",
+      "notFrozen": "Not frozen yet",
+      "deletedAt": "Deleted on {{date}}. Its page is closed.",
+      "open": "See the challenge page",
+      "zone": "Challenge times: {{zone}}.",
+      "settings": "Settings"
+    },
+    "weeks": {
+      "title": "Weeks",
+      "week": "Week",
+      "number": "Week {{number}}",
+      "days": "Days",
+      "lock": "Lock",
+      "judged": "Judged on",
+      "locked": "Locked",
+      "open": "Not locked yet",
+      "notJudged": "Not judged"
+    },
+    "eliminations": {
+      "title": "Eliminations",
+      "empty": "No one has been eliminated.",
+      "participant": "Participant",
+      "week": "Week",
+      "distance": "Distance",
+      "done": "{{done}} of {{required}}"
+    },
+    "invitations": {
+      "title": "Invitation links",
+      "empty": "No invitation links.",
+      "by": "Created by",
+      "createdAt": "Created on",
+      "expiresAt": "Expires on",
+      "status": "Status",
+      "statuses": {
+        "active": "Active",
+        "expired": "Expired",
+        "revoked": "Revoked",
+        "cancelled": "Cancelled"
+      },
+      "revokedAt": "Revoked on {{date}}"
+    },
+    "actions": {
+      "title": "Latest admin actions",
+      "empty": "No admin action on this challenge.",
+      "by": "{{date}} · {{name}}",
+      "reason": "Reason: {{reason}}",
+      "journal": "Full log of the challenge"
+    }
+  },
+  "actions": {
+    "challenge": {
+      "update": "Settings changed",
+      "delete": "Challenge deleted",
+      "restore": "Challenge restored"
+    },
+    "creator": {
+      "add": "Creator added",
+      "remove": "Creator removed"
+    },
+    "participant": {
+      "add": "Participant added",
+      "exclude": "Participant excluded",
+      "reinstate": "Participant reinstated"
+    },
+    "activity": {
+      "create": "Activity added",
+      "update": "Activity corrected",
+      "delete": "Activity deleted"
+    }
+  },
+  "users": {
+    "listLabel": "All accounts",
+    "search": {
+      "label": "Search an account by nickname, name or email",
+      "placeholder": "Nickname, name or email",
+      "submit": "Search"
+    },
+    "columns": {
+      "account": "Account",
+      "state": "State",
+      "createdAt": "Signed up",
+      "lastActivity": "Last activity",
+      "challenges": "Challenges"
+    },
+    "states": {
+      "active": "Active",
+      "blocked": "Blocked",
+      "deleted": "Deleted",
+      "auth0_deletion_pending": "Auth0 deletion pending"
+    },
+    "never": "None",
+    "noName": "No name",
+    "unnamed": "Deleted account",
+    "empty": {
+      "none": "No accounts yet.",
+      "search": "No account matches this search."
+    },
+    "clearSearch": "Clear the search",
+    "back": "All accounts",
+    "notFound": "This account does not exist.",
+    "sheet": {
+      "state": "State",
+      "pseudo": "Nickname",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "missing": "Not set",
+      "createdAt": "Signed up on",
+      "deletedAt": "Deleted on",
+      "lastActivity": "Last activity",
+      "challenges": "Challenges"
+    },
+    "challenges": {
+      "title": "Challenges of the account",
+      "empty": "This account is in no challenge.",
+      "challenge": "Challenge",
+      "role": "Role",
+      "status": "Status",
+      "joinedAt": "Joined on",
+      "notJoined": "Not participating",
+      "abandonedAt": "Since {{date}}",
+      "roles": {
+        "creator": "Creator",
+        "participant": "Participant",
+        "abandoned": "Abandoned or excluded",
+        "creatorAbandoned": "Creator, abandoned or excluded"
+      }
+    },
+    "activities": {
+      "title": "Activities of the account",
+      "empty": "This account has no activities.",
+      "sport": "Sport",
+      "startedAt": "Session",
+      "duration": "Duration",
+      "distance": "Distance",
+      "elevation": "Elev. gain",
+      "none": "—",
+      "add": "Add an activity",
+      "actions": "Actions",
+      "edit": "Edit the activity of {{activity}}",
+      "delete": "Delete the activity of {{activity}}",
+      "deleted": "Activity deleted. The challenges it counted in are recomputed."
+    }
+  },
+  "reason": {
+    "label": "Reason",
+    "hint": "{{min}} to {{max}} characters. It is kept in the log.",
+    "count": "{{count}} / {{max}}",
+    "cancel": "Cancel",
+    "short": "The reason needs at least {{min}} characters.",
+    "long": "The reason can't be longer than {{max}} characters.",
+    "characters": "The reason has an invisible character. Remove it.",
+    "serverInvalid": "Reason refused: write {{min}} to {{max}} characters, with no invisible character."
+  },
+  "journal": {
+    "listLabel": "Log of admin actions",
+    "columns": {
+      "date": "Date",
+      "admin": "Admin",
+      "action": "Action",
+      "target": "Target",
+      "reason": "Reason"
+    },
+    "targetType": {
+      "label": "Target type",
+      "all": "All",
+      "challenge": "Challenge",
+      "participant": "Participant",
+      "activity": "Activity",
+      "user": "Account"
+    },
+    "target": {
+      "sheet": {
+        "challenge": "Challenge sheet",
+        "participant": "Account sheet",
+        "user": "Account sheet"
+      },
+      "journal": "Actions on this target"
+    },
+    "oneTarget": {
+      "target": "Only the actions on one target are shown.",
+      "challenge": "Only the actions that touch one challenge are shown.",
+      "clear": "Show every target"
+    },
+    "values": {
+      "show": "Show the values",
+      "before": "Before:",
+      "after": "After:",
+      "none": "none"
+    },
+    "empty": {
+      "none": "No admin actions yet.",
+      "filtered": "No action matches these filters."
+    },
+    "clearFilters": "Clear the filters"
+  },
+  "recompute": {
+    "none": "This change touches no ranking.",
+    "challenge": "Challenge",
+    "noBefore": "No ranking before: the challenge is deleted.",
+    "noAfter": "No ranking after: the challenge will be deleted.",
+    "participant": "Participant",
+    "rank": "Rank",
+    "before": "Before",
+    "after": "After",
+    "absent": "Not in the ranking",
+    "up": "Up:",
+    "down": "Down:",
+    "to": "to",
+    "nothing": "No rank and no value changes.",
+    "others": "The other ranks do not move.",
+    "elimination": {
+      "removed": "Elimination: {{name}} is no longer eliminated in week {{week}}.",
+      "given": "Elimination: {{name}} is eliminated in week {{week}}.",
+      "moved": "Elimination: {{name}} is eliminated in week {{week}} instead of week {{was}}.",
+      "was": "Distance done: {{done}} for a minimum of {{required}}.",
+      "done": "{{done}} for a minimum of {{required}}.",
+      "kept": "Elimination: {{name}} stays eliminated in week {{week}}.",
+      "changed": "Before: {{before}} After: {{after}}"
+    },
+    "title": "Preview of the changes",
+    "edit": "Edit the input",
+    "steps": {
+      "change": "Change",
+      "preview": "Preview",
+      "reason": "Reason"
+    },
+    "nothingSaved": "Nothing is saved before you confirm.",
+    "back": "Back",
+    "continue": "Continue",
+    "summary": "{{title}}: {{details}}",
+    "touched_one": "{{count}} challenge recomputed:",
+    "touched_other": "{{count}} challenges recomputed:",
+    "in": "Enters the ranking:",
+    "out": "Leaves the ranking:"
+  },
+  "settings": {
+    "edit": "Edit the settings",
+    "title": "Edit the settings",
+    "back": "Challenge sheet",
+    "deleted": "This challenge is deleted: restore it before changing its settings.",
+    "warning": {
+      "upcoming": "<b>This challenge is upcoming, and these settings are frozen for its participants.</b> Changing them recomputes its rankings.",
+      "ongoing": "<b>This challenge is ongoing, and these settings are frozen for its participants.</b> Changing them recomputes its rankings.",
+      "finished": "<b>This challenge is finished, and these settings are frozen for its participants.</b> Changing them recomputes its rankings and its results."
+    },
+    "sections": {
+      "info": "The challenge",
+      "dates": "Dates",
+      "categories": "Categories"
+    },
+    "changes_one": "{{count}} change",
+    "changes_other": "{{count}} changes",
+    "noChange": "No change yet.",
+    "to": "becomes",
+    "row": "{{label}}: {{before}} → {{after}}",
+    "rowChanged": "{{label}}: changed",
+    "previewNote": "The preview shows the weeks judged again and the rankings before and after, before anything is saved.",
+    "cancel": "Cancel",
+    "preview": "See the preview",
+    "previewBusy": "Preparing the preview…",
+    "change": "Edit the settings of “{{title}}”",
+    "reasonTitle": "Confirm the change of settings",
+    "confirm": "Confirm the change",
+    "changed": "Changed",
+    "changedFrom": "Changed · was: {{before}}",
+    "empty": "empty",
+    "weeks_one": "{{count}} week",
+    "weeks_other": "{{count}} weeks",
+    "minutes": "{{count}} min",
+    "minSession": "Minimum session length",
+    "factor": "Factor: {{sport}}",
+    "serverInvalid": "Value refused. Check it, then see the preview again.",
+    "bounds": "The bounds stay the same: {{minWeeks}} to {{maxWeeks}} weeks, factors from {{minFactor}} to {{maxFactor}}.",
+    "invalid": "A field is refused: fix it, then see the preview again."
+  },
+  "participants": {
+    "title": "Participants",
+    "add": "Add a participant",
+    "empty": "No one takes part in this challenge.",
+    "columns": {
+      "participant": "Participant",
+      "role": "Role",
+      "status": "Status",
+      "joinedAt": "Joined on",
+      "actions": "Actions"
+    },
+    "roles": {
+      "creator": "Creator",
+      "participant": "Participant"
+    },
+    "status": {
+      "active": "Active",
+      "abandoned": "Left or excluded"
+    },
+    "menu": "Changes for {{name}}",
+    "account": "Open their account",
+    "help": {
+      "exclude": "Once excluded, they are eliminated from every category and shown as having left. You can reinstate them.",
+      "excludeCreator": "Once excluded, they are eliminated from every category and shown as having left, but keep the creator role: remove it separately. You can reinstate them.",
+      "reinstate": "Once reinstated, they are active again: the weeks already locked are judged again with them."
+    },
+    "search": {
+      "label": "Search the account to add by username, name or email",
+      "hint": "Search the account by its username, name or email.",
+      "found": "Accounts found",
+      "choose": "Add",
+      "chooseNamed": "Add {{name}} to the challenge",
+      "close": "Close the search"
+    },
+    "changes": {
+      "add": {
+        "title": "Add {{name}} to the challenge",
+        "reasonTitle": "Confirm the new participant",
+        "confirm": "Add to the challenge",
+        "made": "{{name}} was added to the challenge."
+      },
+      "exclude": {
+        "button": "Exclude",
+        "title": "Exclude {{name}} from the challenge",
+        "reasonTitle": "Confirm the exclusion",
+        "confirm": "Exclude from the challenge",
+        "made": "{{name}} was excluded from the challenge."
+      },
+      "reinstate": {
+        "button": "Reinstate in the challenge",
+        "title": "Reinstate {{name}} in the challenge",
+        "reasonTitle": "Confirm the reinstatement",
+        "confirm": "Reinstate",
+        "made": "{{name}} was reinstated in the challenge."
+      },
+      "makeCreator": {
+        "button": "Make creator",
+        "title": "Make {{name}} a creator",
+        "reasonTitle": "Confirm the new creator",
+        "confirm": "Make creator",
+        "made": "{{name}} is now a creator of the challenge."
+      },
+      "removeCreator": {
+        "button": "Remove the creator role",
+        "title": "Remove the creator role from {{name}}",
+        "reasonTitle": "Confirm the role removal",
+        "confirm": "Remove the role",
+        "made": "{{name}} is no longer a creator of the challenge."
+      }
+    },
+    "errors": {
+      "already_participant": "This account already takes part in this challenge.",
+      "participation_abandoned": "This account left this challenge or was excluded from it: reinstate it from the participant list.",
+      "profile_incomplete": "This account has not given its first and last names yet: it cannot join any challenge.",
+      "user_not_found": "This account no longer exists.",
+      "not_active_participant": "This account does not take part in this challenge.",
+      "last_creator": "This is the last creator of the challenge: make someone else a creator first.",
+      "not_found": "This account no longer takes part in this challenge.",
+      "challenge_not_found": "This challenge no longer exists or was deleted."
+    }
+  },
+  "activityForm": {
+    "preview": {
+      "label": "See the preview",
+      "busy": "Computing the preview…"
+    },
+    "deleted": "This account is deleted: its activities are erased.",
+    "note": "<b>Admin mode.</b> Judged weeks and finished challenges do not block the entry. The entry rules stay the same: duration, distance required depending on the sport, no overlap with another activity of {{name}}.",
+    "add": {
+      "title": "Add an activity for {{name}}",
+      "reasonTitle": "Confirm adding the activity",
+      "confirm": "Add the activity"
+    },
+    "edit": {
+      "title": "Edit an activity of {{name}}",
+      "reasonTitle": "Confirm the change to the activity",
+      "confirm": "Save the change"
+    },
+    "delete": {
+      "title": "Delete an activity of {{name}}",
+      "reasonTitle": "Confirm deleting the activity",
+      "confirm": "Delete the activity"
+    },
+    "errors": {
+      "activity_overlap": "This activity overlaps another activity of this account. Check the start and the duration.",
+      "profile_incomplete": "This account has not entered its first and last name yet: no activity can be added to it.",
+      "user_not_found": "This account no longer exists.",
+      "activity_not_found": "This activity no longer exists: it may have been deleted in the meantime."
+    },
+    "zoned": "{{start}} ({{zone}})"
+  }
+}
