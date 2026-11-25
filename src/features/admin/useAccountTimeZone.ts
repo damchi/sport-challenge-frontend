@@ -22,9 +22,13 @@ export function useAccountTimeZone(userId: string, deviceTimeZone: string | unde
           challenge.participant_status === 'active',
       );
   const details = useAdminChallengesById(ongoing.map((challenge) => challenge.id));
-  const failedDetail = details.find((detail) => detail.isError);
+  // A failed refresh keeps the zone of what is loaded: it fails only with
+  // nothing loaded, a page still missing, or a challenge never read.
+  const failedDetail = details.find((detail) => detail.isError && !detail.data);
   const isPending = listed || details.some((detail) => detail.isPending);
-  const isError = !isPending && (!challenges.data || challenges.isError || !!failedDetail);
+  const isError =
+    !isPending &&
+    (!challenges.data || (challenges.isError && challenges.hasNextPage) || !!failedDetail);
   const device = deviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   return {
     isPending,

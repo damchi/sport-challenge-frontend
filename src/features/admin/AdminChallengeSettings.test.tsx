@@ -6,6 +6,8 @@ import { mockAdminChallengeDetail, mockAdminChallenges } from '../../mocks/handl
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { AdminChallengeSettings } from './AdminChallengeSettings';
 
 // Défi 1: upcoming, run, cumulative distance (ride ×0.3) and elimination (X = 2 km).
@@ -16,7 +18,7 @@ if (!first || !deleted) throw new Error('No mock challenges');
 const now = new Date('2026-11-24T12:00:00Z');
 const timeZones = ['America/Montreal', 'Europe/Paris'];
 
-function renderSettings(challengeId: string) {
+function renderSettings(challengeId: string, queryClient = createTestQueryClient()) {
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
   const router = createMemoryRouter(
     [
@@ -29,7 +31,7 @@ function renderSettings(challengeId: string) {
     { initialEntries: [`/admin/challenges/${challengeId}/settings`] },
   );
   render(
-    <AppProviders auth={auth}>
+    <AppProviders auth={auth} queryClient={queryClient}>
       <RouterProvider router={router} />
     </AppProviders>,
   );
@@ -266,5 +268,41 @@ describe('AdminChallengeSettings', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
 
     expect(await stepField()).toHaveValue(2);
+  });
+
+  it.each([500, 429] as const)(
+    'keeps the fields and the changes when reading again fails (%i)',
+    async (status) => {
+      const queryClient = createTestQueryClient();
+      renderSettings(first.id, queryClient);
+      fireEvent.change(await stepField(), { target: { value: '3' } });
+
+      server.use(
+        http.get('*/api/v1/admin/challenges/:challengeId', () => failure(status)),
+        http.get('*/api/v1/sports', () => failure(status)),
+      );
+      await refreshAll(queryClient);
+
+      expect(await stepField()).toHaveValue(3);
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    },
+  );
+
+  it('says the challenge does not exist when reading it again answers so', async () => {
+    const queryClient = createTestQueryClient();
+    renderSettings(first.id, queryClient);
+    await stepField();
+
+    server.use(
+      http.get('*/api/v1/admin/challenges/:challengeId', () =>
+        HttpResponse.json(
+          { error: { code: 'challenge_not_found', message: 'not found' } },
+          { status: 404 },
+        ),
+      ),
+    );
+    await refreshAll(queryClient);
+
+    expect(screen.getByText("Ce défi n'existe pas.")).toBeInTheDocument();
   });
 });

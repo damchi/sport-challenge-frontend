@@ -9,6 +9,8 @@ import { mockAdminChallenges } from '../../mocks/handlers';
 import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
+import { failure, refreshAll } from '../../test/refresh';
+import { createTestQueryClient } from '../../test/render';
 import { RecomputePreview } from './RecomputePreview';
 
 const challenge = mockAdminChallenges[0];
@@ -57,11 +59,11 @@ function ranking(entries: LeaderboardEntry[]) {
   };
 }
 
-function renderPreview(challenges: AdminChallengePreview[]) {
+function renderPreview(challenges: AdminChallengePreview[], queryClient = createTestQueryClient()) {
   const correction: AdminCorrection = { dry_run: true, challenges };
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
   render(
-    <AppProviders auth={auth}>
+    <AppProviders auth={auth} queryClient={queryClient}>
       <RecomputePreview correction={correction} />
     </AppProviders>,
   );
@@ -356,4 +358,30 @@ describe('RecomputePreview', () => {
 
     expect(screen.getByText('Cette modification ne touche aucun classement.')).toBeInTheDocument();
   });
+
+  it.each([500, 429] as const)(
+    "keeps the challenge's card when reading its sheet again fails (%i)",
+    async (status) => {
+      const queryClient = createTestQueryClient();
+      renderPreview(
+        [
+          {
+            challenge_id: challenge.id,
+            ...unchanged,
+            before: ranking([entry('ami_1', 1, 7200)]),
+            after: ranking([entry('ami_1', 1, 9000)]),
+            eliminations: [],
+          },
+        ],
+        queryClient,
+      );
+      await screen.findByRole('heading', { level: 3, name: 'Défi 1' });
+
+      server.use(http.get('*/api/v1/admin/challenges/:challengeId', () => failure(status)));
+      await refreshAll(queryClient);
+
+      expect(screen.getByRole('heading', { level: 3, name: 'Défi 1' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Réessayer' })).not.toBeInTheDocument();
+    },
+  );
 });

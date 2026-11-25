@@ -324,7 +324,8 @@ function ChallengePreview({ preview }: { preview: AdminChallengePreview }) {
   const challenge = useAdminChallenge(preview.challenge_id);
   // Its title and reference sport name the rankings: read before them.
   if (challenge.isPending) return <LoadingState />;
-  if (challenge.isError) {
+  // A failed refresh keeps the card: the global banner says so.
+  if (!challenge.data) {
     return <ErrorState error={challenge.error} onRetry={() => void challenge.refetch()} />;
   }
   const { title, status, reference_sport: referenceSport } = challenge.data;
