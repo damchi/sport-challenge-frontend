@@ -6,7 +6,8 @@ import { ApiError, errorMessage } from '../../api/errors';
 import { useUpdateMe, type Me } from '../../api/hooks/useMe';
 import { Segmented } from '../../components/Segmented';
 import { profileSchema, profileUpdate, type ProfileInput } from '../../domain/schemas/profile';
-import { SUPPORTED_LANGUAGES, type Language } from '../../i18n';
+import { changeLanguage, SUPPORTED_LANGUAGES, type Language } from '../../i18n';
+import { useLanguageChoice } from '../../lib/language';
 import { NameInput } from './NameInput';
 import { OnboardingPreview } from './OnboardingPreview';
 import { fieldErrors } from './profileErrors';
@@ -24,6 +25,7 @@ export function OnboardingForm({ me }: { me: Me }) {
   const { t, i18n } = useTranslation();
   const updateMe = useUpdateMe();
   const [formError, setFormError] = useState<string>();
+  const languageChoice = useLanguageChoice();
   const {
     register,
     handleSubmit,
@@ -49,7 +51,7 @@ export function OnboardingForm({ me }: { me: Me }) {
     try {
       await updateMe.mutateAsync(profileUpdate(profile, me.pseudo));
       // The profile is saved: a failed language switch is not a form error.
-      i18n.changeLanguage(profile.language).catch(() => undefined);
+      changeLanguage(profile.language).catch(() => undefined);
     } catch (error) {
       const invalid = fieldErrors(error);
       if (invalid.length > 0) {
@@ -75,11 +77,10 @@ export function OnboardingForm({ me }: { me: Me }) {
     .filter(Boolean)
     .join(' ');
 
-  // The interface follows the language as soon as it is chosen; the profile
-  // keeps it once sent.
-  const chooseLanguage = (chosen: Language) => {
-    setValue('language', chosen);
-    i18n.changeLanguage(chosen).catch(() => undefined);
+  // The interface follows the language as soon as its texts are there; the
+  // profile keeps it once sent. One that cannot be downloaded is not chosen.
+  const chooseLanguage = async (chosen: Language) => {
+    if (await languageChoice.choose(chosen)) setValue('language', chosen);
   };
 
   return (
@@ -141,14 +142,21 @@ export function OnboardingForm({ me }: { me: Me }) {
         )}
       </div>
 
-      <Segmented
-        legend={t('onboarding.language.label')}
-        options={SUPPORTED_LANGUAGES}
-        selected={language}
-        onSelect={chooseLanguage}
-        label={(option) => t(`onboarding.language.${option}`)}
-        lang={(option) => option}
-      />
+      <div>
+        <Segmented
+          legend={t('onboarding.language.label')}
+          options={SUPPORTED_LANGUAGES}
+          selected={language}
+          onSelect={(chosen) => void chooseLanguage(chosen)}
+          label={(option) => t(`onboarding.language.${option}`)}
+          lang={(option) => option}
+        />
+        {languageChoice.failed && (
+          <p role="alert" className="mt-2 text-sm text-risk-fg">
+            {t('errors.language_unavailable')}
+          </p>
+        )}
+      </div>
 
       <div>
         {formError && (

@@ -6,6 +6,7 @@ import { useMe } from '../api/hooks/useMe';
 import { safeReturnTo } from '../lib/auth/auth';
 import { Page } from '../components/Page';
 import { HOME_PATH } from '../lib/paths';
+import { changeLanguage } from '../i18n';
 
 const ONBOARDING = '/onboarding';
 const INVITE = '/invite';
@@ -35,11 +36,12 @@ export function ProfileGate() {
   const location = useLocation();
   const onOnboarding = location.pathname === ONBOARDING;
 
-  // The language kept in the profile wins over the device's.
+  // The language kept in the profile wins over the device's. Its texts may
+  // fail to download (offline): the device's language stays meanwhile.
   const profileLanguage = me.data?.language;
   useEffect(() => {
     if (profileLanguage && profileLanguage !== i18n.language)
-      void i18n.changeLanguage(profileLanguage);
+      changeLanguage(profileLanguage).catch(() => undefined);
   }, [profileLanguage, i18n]);
 
   if (me.isPending) {

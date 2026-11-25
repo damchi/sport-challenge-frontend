@@ -6,6 +6,13 @@ import { server } from '../../mocks/server';
 import { AppProviders } from '../../test/AppProviders';
 import { createFakeAuth } from '../../test/fakeAuth';
 import { ProfilePreferences } from './ProfilePreferences';
+import { changeLanguage } from '../../i18n';
+
+// The download of a language's texts, made to fail in some tests.
+vi.mock('../../i18n', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../i18n')>();
+  return { ...actual, changeLanguage: vi.fn(actual.changeLanguage) };
+});
 
 function renderSettings() {
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
@@ -59,6 +66,33 @@ describe('ProfilePreferences', () => {
 
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
     expect(calls).toBe(2);
+  });
+
+  it('keeps the language when the other one cannot be downloaded, says so, and saves nothing', async () => {
+    let calls = 0;
+    server.use(
+      http.patch('*/api/v1/me', () => {
+        calls += 1;
+        return HttpResponse.json(mockMe);
+      }),
+    );
+    vi.mocked(changeLanguage).mockRejectedValueOnce(new Error('offline'));
+    renderSettings();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'English' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Cette langue n'a pas pu être chargée. Vérifie ta connexion et réessaie.",
+    );
+    expect(screen.getByRole('radio', { name: 'Français' })).toBeChecked();
+    expect(i18n.language).toBe('fr');
+    expect(calls).toBe(0);
+
+    // A second try that works applies it and clears the message.
+    fireEvent.click(screen.getByRole('radio', { name: 'English' }));
+    expect(await screen.findByRole('radio', { name: 'English' })).toBeChecked();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await waitFor(() => expect(calls).toBe(1));
   });
 
   it('chooses the theme on the device', () => {

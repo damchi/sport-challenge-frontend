@@ -1,10 +1,12 @@
 import '@testing-library/jest-dom/vitest';
-import { initI18n } from './i18n';
+import { initI18n, loadLanguage } from './i18n';
 import { addAdminTranslations } from './i18n/admin';
 import { server } from './mocks/server';
 
-// Tests read the French texts.
-initI18n('fr');
+// Tests read the French texts; the English ones are there for the tests that
+// switch to them.
+await initI18n('fr');
+await loadLanguage('en');
 // The admin parts are tested without the page that brings their texts.
 addAdminTranslations();
 
