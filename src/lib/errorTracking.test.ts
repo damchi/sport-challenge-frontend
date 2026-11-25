@@ -146,12 +146,15 @@ describe('shouldReport', () => {
   it('reports bugs, server failures and unreadable answers', () => {
     expect(shouldReport(new TypeError('x is undefined'))).toBe(true);
     expect(shouldReport(new ApiError('internal_error', 500))).toBe(true);
+    expect(shouldReport(new ApiError('internal_error', 503))).toBe(true);
     expect(shouldReport(new ApiError('unknown', 418))).toBe(true);
   });
 
   it('leaves out the answers the user is shown', () => {
     expect(shouldReport(new ApiError('week_locked', 409))).toBe(false);
     expect(shouldReport(new ApiError('network_error', 0))).toBe(false);
+    // Nothing was written and a retry is enough: an expected refusal.
+    expect(shouldReport(new ApiError('busy', 503))).toBe(false);
   });
 });
 

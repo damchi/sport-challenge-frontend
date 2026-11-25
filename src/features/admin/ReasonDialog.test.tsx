@@ -123,6 +123,14 @@ describe('ReasonDialog', () => {
     expect(field()).not.toHaveAttribute('aria-invalid');
   });
 
+  it('says a busy refusal changed nothing', () => {
+    renderDialog({ error: new ApiError('busy', 503) });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      "Rien n'a été modifié : le service était occupé. Réessaie dans un instant.",
+    );
+  });
+
   it('waits while the change is sent', async () => {
     const { onConfirm } = renderDialog({ pending: true });
 
