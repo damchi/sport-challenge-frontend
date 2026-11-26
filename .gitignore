@@ -15,3 +15,6 @@ __pycache__/
 /firebase.json
 /.firebase
 /docs/superpowers/
+
+# Claude Code local settings
+.claude/settings.local.json

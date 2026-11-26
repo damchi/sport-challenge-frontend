@@ -11,8 +11,8 @@ Sources de vérité : `README.md` (règles et architecture), `CLAUDE.md` (conven
 Mise en place, une seule fois, par toi, depuis la racine du dépôt :
 
 1. `gh auth login`, puis `gh auth refresh -s project` (droit d'écrire dans les GitHub Projects).
-2. `python3 .claude/scripts/tasks.py import --dry-run` : liste ce qui serait créé, sans rien créer.
-3. `python3 .claude/scripts/tasks.py import --done 075` (remplace par les numéros des tickets déjà faits à la main) : crée les étiquettes, une issue par ticket et le GitHub Project « Sport Challenge », partagé avec l'autre dépôt (il est retrouvé par son titre). Sûr à relancer : un ticket déjà présent n'est jamais recréé.
+2. `ticket import --dry-run` (commande du plugin `dev-workflow`) : liste ce qui serait créé, sans rien créer.
+3. `ticket import --done 075` (remplace par les numéros des tickets déjà faits à la main) : crée les étiquettes, une issue par ticket et le GitHub Project « Sport Challenge », partagé avec l'autre dépôt (il est retrouvé par son titre). Sûr à relancer : un ticket déjà présent n'est jamais recréé.
 
 Correspondance avec les anciens statuts :
 
@@ -29,13 +29,13 @@ Correspondance avec les anciens statuts :
 
 ## Comment travailler avec les tickets dans Claude Code
 
-1. Lance le skill `/next-task` (ou « prends le ticket SC-WEB-0xx ») : `python3 .claude/scripts/tasks.py next` donne la première issue ouverte dont les dépendances sont fermées, hors reportées, bloquées et en cours.
-2. Claude lit l'issue (`gh issue view`), relit les sections du README citées, la marque « en cours » (`tasks.py start`) et annonce un court plan.
+1. Lance le skill `/dev-workflow:next-task` (ou « prends le ticket SC-WEB-0xx ») : `ticket next` donne la première issue ouverte dont les dépendances sont fermées, hors reportées, bloquées et en cours.
+2. Claude lit l'issue (`gh issue view`), relit les sections du README citées, la marque « en cours » (`ticket start`) et annonce un court plan.
    Si l'API du ticket n'est pas encore disponible (champ **Backend**), il travaille contre les **mocks MSW** (ticket 010) et le signale.
 3. Implémentation, puis `pnpm check` (et les tests de bout en bout pour un parcours critique).
 4. Revue par les agents indiqués.
-5. Claude coche les critères dans l'issue (`tasks.py tick`), puis **committe et pousse sans demander** sur la branche du ticket (message terminé par `Closes #N`), comme le prévoit `CLAUDE.md`.
-6. La pull request s'ouvre sur ta demande ; Claude attend la CI, lit les commentaires et corrige ce qui est fondé. Tu fusionnes : l'issue se ferme et le ticket suivant devient disponible.
+5. Claude coche les critères dans l'issue (`ticket tick`), puis **committe et pousse sans demander** sur la branche du ticket (message terminé par `Closes #N`), comme le prévoit `CLAUDE.md`.
+6. Claude ouvre aussitôt la pull request, attend la CI, lit les commentaires et corrige ce qui est fondé. Tu fusionnes : l'issue se ferme, la branche est supprimée (`ticket cleanup`) et le ticket suivant devient disponible.
 
 ## Conventions
 

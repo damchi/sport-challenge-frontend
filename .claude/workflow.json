@@ -1,0 +1,12 @@
+{
+  "ticket_prefix": "SC-WEB",
+  "project": "Sport Challenge",
+  "auto_pr": true,
+  "checks": [
+    { "run": "pnpm check" },
+    { "run": "pnpm e2e", "when": "le ticket touche un parcours critique (connexion, création de challenge, saisie d'activité, invitation)" },
+    { "run": "pnpm build && pnpm bundle:check", "when": "le ticket ajoute une dépendance, un écran ou une grosse fonctionnalité (budget de taille du bundle)" }
+  ],
+  "rules": ["README.md §2", "../sport-challenge-api/README.md §2"],
+  "pr_size": { "max_lines": 200, "exclude": ["openapi/openapi.yaml"] }
+}

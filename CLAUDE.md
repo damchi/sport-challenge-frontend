@@ -8,7 +8,8 @@ Frontend de l'application de challenges sportifs entre amis : **web (React + Vit
 - Légende du README : ✅ décidé · 🟡 proposition · ❓ question ouverte. Applique les ✅. Ne transforme jamais un 🟡 ou un ❓ en règle sans demander.
 - **Règles du produit** : la source de vérité est le README du backend (§2). Si le dépôt est cloné à côté (`../sport-challenge-api`), tu peux le lire, mais **tu ne le modifies jamais depuis ce projet**.
 - **Contrat d'API** : `openapi.yaml` du backend. Le client de `src/api` est généré ; si une route ou un champ manque, signale-le à l'utilisateur au lieu de contourner.
-- **Backlog** : issues GitHub (importées depuis `TASKS.md`, qui reste le document de référence ; 97 tickets `SC-WEB-001` à `SC-WEB-103`, numérotation non consécutive : les anciens tickets de préparation ont été fusionnés dans les tickets fonctionnels ; un ticket = un commit). Utilise le skill `next-task` pour le traiter ; le statut vit dans l'issue, pas dans `TASKS.md`.
+- **Backlog** : issues GitHub (importées depuis `TASKS.md`, qui reste le document de référence ; numérotation non consécutive : les anciens tickets de préparation ont été fusionnés dans les tickets fonctionnels ; un ticket = un commit). Utilise le skill `/dev-workflow:next-task` pour le traiter ; le statut vit dans l'issue, pas dans `TASKS.md`.
+- **Workflow Claude** : plugins `dev-workflow` et `frontend-review` de [claude-library](https://github.com/damchi/claude-library), configurés par `.claude/workflow.json` (préfixe, Project, vérifications, taille maximale d'une pull request). `ticket config` en donne le résumé. Si `ticket` est introuvable, le plugin `dev-workflow` n'est pas chargé, et sa garde Git non plus : arrête-toi et demande à l'utilisateur de l'installer (`/plugin`) avant toute écriture git.
 - Si le code et le README se contredisent, signale-le et demande, ne tranche pas seul.
 
 ## Stack
@@ -35,7 +36,7 @@ pnpm api:generate        régénère src/api/generated
 pnpm e2e                 Playwright
 ```
 
-**Avant de dire qu'une tâche est terminée** : `pnpm check` passe. Lance aussi les tests de bout en bout concernés si tu as touché à un parcours critique (connexion, création de challenge, saisie d'activité, invitation).
+**Avant de dire qu'une tâche est terminée** : `pnpm check` passe. Lance aussi les tests de bout en bout concernés si tu as touché à un parcours critique (connexion, création de challenge, saisie d'activité, invitation). La définition de terminé complète est dans `TASKS.md`, section Conventions.
 
 ## Architecture
 
@@ -104,15 +105,18 @@ Règles de structure :
 
 ## Workflow attendu
 
-1. Lis la partie du README concernée (et la règle du backend si besoin). S'il y a un ❓ ou un 🟡 qui bloque, pose la question.
+1. Lis la partie du README concernée (et la règle du backend si besoin). S'il y a un ❓ ou un 🟡 qui bloque, pose la question. Regarde le champ **Backend** du ticket : si son API n'existe pas encore, travaille contre les mocks MSW et signale-le ; ne modifie jamais le backend.
 2. Fais un court plan avant les changements importants (nouvel écran, nouvelle dépendance, changement de structure).
 3. Implémente, puis lance `pnpm check`.
 4. Fais relire par les agents adaptés (voir ci-dessous) avant de committer.
 5. **Git** : une fois `pnpm check` (et les tests de bout en bout concernés) et les relectures passés, tu **commits et pushes sans demander l'accord** (en anglais, un changement cohérent par commit, sur la branche du ticket). Tu présentes ensuite les fichiers modifiés, le résumé du diff et les commits poussés.
    - Tu peux utiliser `git status`, `git diff`, `git log`, `git add`, `git commit` et `git push` (branche de travail) librement.
-   - **Pull request** : une fois ouverte, et après chaque push, attends la fin de la CI (`Monitor` sur `gh pr checks`, sans sondage), vérifie qu'elle est entièrement verte, puis lis tous les commentaires (`gh pr view --comments`, commentaires en ligne). Applique les corrections fondées (commit et push sur la même branche) ou explique pourquoi tu ne les suis pas, et recommence jusqu'à une CI verte sans commentaire en suspens. Ne dis un ticket terminé qu'à ce moment-là ; un point qui touche une règle produit (🟡 ou ❓) ou le périmètre se demande à l'utilisateur.
-   - Push vers `main`, suppression de branche distante, merge, rebase, tag, reset, `gh pr create/merge` : uniquement sur demande explicite de l'utilisateur, une action à la fois.
-   - Push forcé, `git reset --hard`, `git clean`, `--no-verify` : interdits (bloqués par la configuration).
+   - **Pull request** : dès que le code est poussé, ouvre-la sans demander (`gh pr create`, titre = message du commit, description avec `Closes #<numéro>`) ; ne la fusionne jamais. Une fois ouverte, et après chaque push, attends la fin de la CI (`Monitor` sur `gh pr checks`, sans sondage), vérifie qu'elle est entièrement verte, puis lis tous les commentaires (`gh pr view --comments`, commentaires en ligne). Applique les corrections fondées (commit et push sur la même branche) ou explique pourquoi tu ne les suis pas, et recommence jusqu'à une CI verte sans commentaire en suspens. Ne dis un ticket terminé qu'à ce moment-là ; un point qui touche une règle produit (🟡 ou ❓) ou le périmètre se demande à l'utilisateur.
+   - **Taille** : une pull request fait au plus 200 lignes ajoutées + supprimées (`pr_size` de `.claude/workflow.json`, mesurée par `ticket size` ; `openapi/openapi.yaml` et le code généré ne comptent pas). Au-delà, découpe le ticket (skill `/dev-workflow:new-ticket`) ; la garde Git demande la validation de l'utilisateur pour pousser une branche plus grosse.
+   - **Issues** : toute issue créée rejoint le Project https://github.com/users/damchi/projects/7, statut « Todo » (`ticket new`, ou hook PostToolUse du plugin sur `gh issue create` ; à défaut `ticket add <numéro>`).
+   - **Branches fusionnées** : supprimées en local et sur GitHub par `ticket cleanup` (hook SessionStart du plugin et début de `next-task`), seule suppression distante autorisée sans demande.
+   - Push vers `main`, suppression manuelle de branche distante, merge, rebase, tag, reset, `gh pr merge` : uniquement sur demande explicite de l'utilisateur, une action à la fois.
+   - Push forcé, `git reset --hard`, `git clean`, `--no-verify` : interdits (bloqués par la garde Git du plugin et par les permissions).
 
 ## Ne jamais
 
@@ -129,17 +133,24 @@ Règles de structure :
 - Avant de construire un écran, regarder sa maquette dans `docs/design/maquettes/` s'il y en a une. Les noms et chiffres des maquettes sont des exemples, `design.md` fait foi.
 - Les couleurs passent par les tokens qui y sont définis, jamais en dur.
 
-## Agents et skills du projet
+## Agents et skills
+
+Du dépôt (`.claude/skills/`) :
 
 | Nom | Type | Quand l'utiliser |
 |---|---|---|
-| `next-task` | skill | Prendre la prochaine issue GitHub du backlog, l'implémenter, committer, pousser, relire les commentaires de la PR |
-| `bootstrap` | skill | Aperçu des phases du projet (le détail est dans `TASKS.md`) |
-| `new-screen` | skill | Créer un écran (page web + route mobile) avec sa feature |
+| `new-screen` | skill | Créer un écran (page web + route) avec sa feature |
 | `api-client-sync` | skill | Synchroniser le contrat, régénérer le client, ajouter un hook de requête |
 | `i18n-and-formats` | skill | Ajouter des textes FR/EN, formater dates, distances, durées, rangs |
 | `challenge-ui-rules` | skill | Règles d'affichage des challenges, classements, statuts, saisie d'activité |
-| `ts-reviewer` | agent | Relecture du code TypeScript et React après modification |
-| `ux-reviewer` | agent | Relecture des textes, de l'accessibilité et des états d'écran |
-| `spec-guardian` | agent | Vérifier que l'interface respecte les règles produit |
-| `security-reviewer` | agent | Relecture sécurité : jetons, liens profonds, secrets, consentement |
+
+Des plugins (les tickets peuvent garder les noms courts) :
+
+| Nom | Type | Quand l'utiliser |
+|---|---|---|
+| `dev-workflow:next-task` | skill | Prendre la prochaine issue GitHub du backlog, l'implémenter, committer, pousser, relire les commentaires de la PR |
+| `dev-workflow:new-ticket` | skill | Créer un ticket au format du backlog, ou découper un ticket trop gros |
+| `dev-workflow:spec-guardian` | agent | Vérifier que l'interface respecte les règles produit |
+| `frontend-review:ts-reviewer` | agent | Relecture du code TypeScript et React après modification |
+| `frontend-review:ux-reviewer` | agent | Relecture des textes, de l'accessibilité, des états d'écran et du design |
+| `frontend-review:security-reviewer` | agent | Relecture sécurité : jetons, liens profonds, secrets, consentement |
