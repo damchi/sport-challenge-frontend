@@ -26,7 +26,7 @@ Ce skill dit **comment** les afficher.
 
 - Affiche les catégories que le serveur renvoie, **dans son ordre**, sans supposer leur nombre : un onglet par catégorie, chacune avec son podium. Les noms viennent des clés de traduction, jamais des identifiants techniques.
 - Podium des 3 premiers rangs ; ex aequo au même rang ; la ligne de l'utilisateur est mise en évidence et reste visible ; heure de dernière mise à jour affichée. Ces choix d'affichage ne sont écrits qu'ici.
-- Un participant parti (abandon, exclusion) apparaît comme le README le décrit, hors podium.
+- Un participant parti (abandon ou exclusion) est affiché « A abandonné », sans mention « exclu », hors podium (README du backend §2.2, `docs/design/design.md`).
 - Challenge terminé : résultats en lecture seule.
 
 ## Statuts et échéances

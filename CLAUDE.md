@@ -75,7 +75,7 @@ Règles de structure :
 - **Erreurs** : l'API renvoie un code stable ; l'interface le traduit (`errors.<code>`). Jamais le message brut du serveur.
 - **Dates** : un challenge s'affiche dans **son** fuseau (ex. Montréal) ; indique-le quand le fuseau de l'utilisateur diffère. Utilise `Intl.DateTimeFormat` avec l'option `timeZone`.
 - **Distances** : km uniquement, formatés selon la langue (12,5 km / 12.5 km).
-- **Classement** : rangs, ex aequo et participants partis selon le README §2 ; rafraîchissement selon le README §4.3 (en V1, ni bouton « Actualiser » ni geste maison, pas de temps réel). Détail écran par écran : skill `challenge-ui-rules`.
+- **Classement** : rangs et ex aequo selon le README §2 ; un participant parti (abandon ou exclusion) est affiché « a abandonné », hors podium (README du backend §2.2, `docs/design/design.md`) ; rafraîchissement selon le README §4.3 (en V1, ni bouton « Actualiser » ni geste maison, pas de temps réel). Détail écran par écran : skill `challenge-ui-rules`.
 - **Le serveur décide, l'interface reflète** : ne recalcule pas côté client une règle que l'API peut fournir (peut-on rejoindre, objectif de la semaine, statut). Si le champ manque dans le contrat, demande-le au lieu de dupliquer la règle.
 - **États** : chaque écran gère chargement, erreur (avec réessai), vide et « connexion requise ».
 - **Accessibilité** : libellés sur les contrôles, contraste suffisant, zones tactiles d'au moins 44 pt, thème clair et sombre via les jetons de design.
