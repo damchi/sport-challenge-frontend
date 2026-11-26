@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { AdminUser } from '../../api/hooks/admin/useAdminUsers';
@@ -106,7 +106,7 @@ function giveReason(dialog: HTMLElement, confirmLabel: string) {
 async function said(text: string) {
   const status = await screen.findByText(text);
   expect(status).toHaveAttribute('role', 'status');
-  expect(status).toHaveFocus();
+  await waitFor(() => expect(status).toHaveFocus());
 }
 
 describe('AdminAccountChanges', () => {
@@ -141,7 +141,8 @@ describe('AdminAccountChanges', () => {
     const edit = await screen.findByRole('button', { name: 'Modifier le profil' });
     fireEvent.click(edit);
     expect(edit).toHaveAttribute('aria-expanded', 'true');
-    expect(await screen.findByRole('textbox', { name: 'Prénom' })).toHaveFocus();
+    const firstName = await screen.findByRole('textbox', { name: 'Prénom' });
+    await waitFor(() => expect(firstName).toHaveFocus());
 
     fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
     expect(screen.queryByRole('textbox', { name: 'Prénom' })).toBeNull();

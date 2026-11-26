@@ -139,7 +139,8 @@ describe('RecomputeFlow', () => {
     await openPreview();
 
     expect(bodies).toEqual([{ dry_run: true }]);
-    expect(screen.getByRole('heading', { level: 2, name: 'Aperçu des changements' })).toHaveFocus();
+    const preview = screen.getByRole('heading', { level: 2, name: 'Aperçu des changements' });
+    await waitFor(() => expect(preview).toHaveFocus());
     expect(screen.getByText('Aperçu').closest('li')).toHaveAttribute('aria-current', 'step');
     expect(screen.getByText('Restaurer « Défi 1 »')).toBeInTheDocument();
     expect(screen.getByText("Rien n'est enregistré avant ta confirmation.")).toBeInTheDocument();
