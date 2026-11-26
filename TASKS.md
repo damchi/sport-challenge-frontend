@@ -42,10 +42,10 @@ Correspondance avec les anciens statuts :
 - **Estimation** en points : 1, 2, 3, 5 (un ticket à 8 doit être découpé).
 - **Statut** : voir le tableau de correspondance ci-dessus (issue ouverte, étiquettes `en-cours`, `v1.1`, `blocked`, `needs-decision`, issue fermée). La ligne `Statut` de chaque ticket ci-dessous ne sert qu'à l'import.
 - **Commits** : Conventional Commits en anglais (`feat`, `fix`, `refactor`, `test`, `docs`, `chore`), scope = fonctionnalité, 72 caractères au plus, `Closes #N` (numéro de l'issue) puis `Refs: SC-WEB-0xx` en pied.
-- **Routes web** : `/` accueil · `/challenges/new` · `/challenges/:id` (onglets classement, participants, activités) · `/activities/new` · `/me` · `/invite#<jeton>` (jeton dans le fragment, README §4.4) · `/onboarding` · `/callback`.
+- **Routes web** : `/` landing page · `/challenges` accueil · `/challenges/new` · `/challenges/:id` (onglets classement, participants, activités) · `/activities` · `/activities/new` · `/activities/:id/edit` · `/me` · `/invite#<jeton>` (jeton dans le fragment, README §4.4) · `/onboarding` · `/callback` · `/admin` (comptes `is_admin`).
 - **Définition de terminé** :
   - [ ] Critères d'acceptation remplis
-  - [ ] `pnpm check` passe (typecheck, lint, tests)
+  - [ ] `pnpm check` passe (format, typecheck, lint, i18n:check, tests)
   - [ ] Aucune chaîne en dur : clés FR **et** EN présentes
   - [ ] États gérés : chargement, erreur avec réessai, vide, connexion requise
   - [ ] Aucun appel HTTP dans un composant (hooks de `src/api` uniquement)

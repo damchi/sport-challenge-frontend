@@ -32,7 +32,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ Les activités détaillées (date, sport, durée, distance) de chaque participant sont visibles par les autres participants du challenge. ✅ L'app n'a plus à le dire avant de rejoindre : un lien d'invitation inscrit directement (décision du 2026-11-23, SC-WEB-107).
 - ✅ « Quitter » = **abandon** : éliminé de toutes les catégories, définitivement (affiché « a abandonné »). Un compte supprimé est traité de la même façon. Les créateurs peuvent supprimer le challenge, ajouter un créateur et exclure un participant.
 
-**Catégories** (1 à 4, un podium chacune, affichées dans l'ordre du challenge : temps, distance, élimination, Grand prix)
+**Catégories** (1 à 5, un podium chacune, affichées dans l'ordre du challenge : temps, distance, élimination, Grand prix, D+ cumulé)
 - ✅ **1. Temps cumulé** : toutes les activités, tous sports confondus ; plus de temps cumulé.
 - ✅ **2. Distance cumulée** (au choix) : activités avec km, ramenées à une distance du sport de référence si le sport est plus rapide ; plus de distance équivalente (« 12,5 km éq. vélo »).
 - ✅ **3. Élimination** (au choix), nommée d'après le sport de référence (« Course avec élimination », « Vélo avec élimination ») : sport de référence seul, en distance réelle ; la distance d'une semaine doit être **au minimum** celle de la semaine précédente plus X km (incrément choisi à la création) ; si la personne court plus que le minimum, sa distance réelle devient la nouvelle base (X = 2 : 5 km, puis minimum 7 km ; 10 km courus, puis minimum 12 km). Éliminé de cette catégorie seulement ; pas d'élimination en semaine 1. Pendant la semaine, statut « objectif atteint », « en cours » ou « à risque ».
@@ -51,7 +51,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ La vitesse et l'allure ne sont **jamais saisies** : l'interface affiche les deux, telles que l'API les calcule à partir de la durée et de la distance (`speed_mps`, `pace_seconds_per_km`). Le résumé affiché pendant la saisie n'en montre aucune (décisions du 2026-11-22).
 - ✅ « Mes activités » groupe les activités par semaine, **du lundi au dimanche**, dans le fuseau de saisie (ce ne sont pas les semaines d'un challenge). Le résumé de la semaine, les filtres par sport et les totaux par semaine viennent de l'API (damchi/sport-challenge-api#282), jamais d'un calcul côté client (décisions du 2026-11-22, SC-WEB-075 et SC-WEB-076).
 - ✅ Les activités manuelles sont marquées « manuelle » (décision du propriétaire du 2026-11-20, consignée dans la PR #89).
-- ✅ Coefficients de distance suggérés : vélo ×0,3 ; aviron, roller, ski de fond ×0,5 ; tous les autres sports à km ×1. Ils viennent du catalogue de sports de l'API ; ils sont exprimés par rapport à la course ; pour une autre référence, la suggestion est `min(1, coefficient du sport / coefficient de la référence)`, arrondie à deux décimales et jamais sous 0,1 (README backend §2.4). Le créateur peut les changer à la création (0,1 à 2, deux décimales), le sport de référence restant ×1, puis ils sont figés. Sans distance cumulée ni critère de distance du Grand prix, il n'y a pas de coefficients (la création les refuse).
+- ✅ Coefficients de distance suggérés : vélo et parapente ×0,3 ; aviron, roller, ski de fond ×0,5 ; Hyrox et tous les autres sports à km ×1 ; le CrossFit n'a pas de distance, comme la musculation (README backend §2.4, §2.5, SC-API-174). Ils viennent du catalogue de sports de l'API ; ils sont exprimés par rapport à la course ; pour une autre référence, la suggestion est `min(1, coefficient du sport / coefficient de la référence)`, arrondie à deux décimales et jamais sous 0,1 (README backend §2.4). Le créateur peut les changer à la création (0,1 à 2, deux décimales), le sport de référence restant ×1, puis ils sont figés. Sans distance cumulée ni critère de distance du Grand prix, il n'y a pas de coefficients (la création les refuse).
 
 **Classement**
 - ✅ Mis à jour **au rafraîchissement** en V1 (pas de temps réel).
@@ -73,7 +73,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - 🟡 **Données serveur** : TanStack Query. **Formulaires** : react-hook-form avec schémas de validation partagés.
 - 🟡 **Navigation** : React Router (web) ; Expo Router (mobile, V2).
 - ✅ **Langues** : i18next, français et anglais.
-- ✅ **Authentification** : **Auth0**, flux Authorization Code avec PKCE ; en V1 le SDK `@auth0/auth0-react` ; le SDK mobile (`react-native-auth0`, builds de développement Expo) viendra en V2. La connexion est obligatoire pour toute l'application. Sign in with Apple devient obligatoire seulement avec l'application iOS (V2) si une autre connexion sociale y est proposée.
+- ✅ **Authentification** : **Auth0**, flux Authorization Code avec PKCE ; en V1 le SDK `@auth0/auth0-react` ; le SDK mobile (`react-native-auth0`, builds de développement Expo) viendra en V2. La connexion est obligatoire pour toute l'application, sauf la landing page (`/`) et `/callback`. Sign in with Apple devient obligatoire seulement avec l'application iOS (V2) si une autre connexion sociale y est proposée.
 - 🟡 **Tests** : Vitest et Testing Library (composants), Playwright (web), Maestro (parcours mobile).
 - **Suivi d'erreurs** sur web et mobile (ex. Sentry) ; analytics produit plus tard, avec consentement.
 
@@ -104,20 +104,29 @@ frontend/
     ├── App.tsx
     ├── routes/                      définition des routes, gardes (utilisateur connecté)
     ├── pages/                       une page par écran, fines : elles assemblent des features
-    │   ├── HomePage.tsx             challenges publics + mes challenges
+    │   ├── LandingPage.tsx          landing page publique (/)
+    │   ├── HomePage.tsx             challenges publics + mes challenges (/challenges)
     │   ├── ChallengePage.tsx        classement, participants, activités, infos
     │   ├── ChallengeCreatePage.tsx  assistant de création
-    │   ├── ActivityNewPage.tsx
+    │   ├── ActivitiesPage.tsx       mes activités, par semaine
+    │   ├── ActivityCreatePage.tsx
+    │   ├── ActivityEditPage.tsx
     │   ├── ProfilePage.tsx          profil, compte (badges en V1.1)
+    │   ├── OnboardingPage.tsx       prénom, nom et pseudo d'un nouveau compte
     │   ├── InvitePage.tsx           ouverture d'un lien d'invitation
-    │   ├── AuthCallbackPage.tsx
+    │   ├── CallbackPage.tsx         retour de connexion Auth0
+    │   ├── SessionEndPage.tsx       compte supprimé ou bloqué, connexion impossible
+    │   ├── Admin*Page.tsx           section d'administration (/admin)
     │   └── NotFoundPage.tsx
     ├── features/                    logique et composants par domaine
+    │   ├── landing/                 sections de la landing page
+    │   ├── auth/                    retour de connexion
     │   ├── challenges/              liste, carte, formulaire en étapes, édition titre/description
     │   ├── leaderboard/             tableau par catégorie, podium, statut « à risque »
     │   ├── activities/              formulaire de saisie, liste des activités
     │   ├── invitations/             partage de lien, inscription par le lien
     │   ├── profile/                 prénom, nom, pseudo, e-mail, langue (avatar en V1.1)
+    │   ├── admin/                   tableau de bord, défis, comptes, journal, recalcul
     │   └── badges/                  V1.1
     ├── components/                  interface réutilisable (boutons, champs, mise en page, modales)
     ├── api/                         portable : aucun import de react-dom ni du navigateur
@@ -146,13 +155,19 @@ frontend/
 
 | Écran | Fichier |
 |---|---|
+| Landing page | `pages/LandingPage.tsx` |
 | Accueil et mes challenges | `pages/HomePage.tsx` |
 | Détail et classement | `pages/ChallengePage.tsx` |
 | Création | `pages/ChallengeCreatePage.tsx` |
-| Saisie d'activité | `pages/ActivityNewPage.tsx` |
+| Mes activités | `pages/ActivitiesPage.tsx` |
+| Saisie d'activité | `pages/ActivityCreatePage.tsx` |
+| Modification d'activité | `pages/ActivityEditPage.tsx` |
 | Profil | `pages/ProfilePage.tsx` |
+| Premier passage (onboarding) | `pages/OnboardingPage.tsx` |
 | Invitation | `pages/InvitePage.tsx` |
-| Connexion (retour Auth0) | `pages/AuthCallbackPage.tsx` |
+| Connexion (retour Auth0) | `pages/CallbackPage.tsx` |
+| Fin de session (compte supprimé ou bloqué, connexion impossible) | `pages/SessionEndPage.tsx` |
+| Administration | `pages/AdminPage.tsx`, `pages/AdminDashboardPage.tsx`, `pages/AdminChallengesPage.tsx`, `pages/AdminChallengePage.tsx`, `pages/AdminChallengeSettingsPage.tsx`, `pages/AdminUsersPage.tsx`, `pages/AdminUserPage.tsx`, `pages/AdminUserActivityPage.tsx`, `pages/AdminJournalPage.tsx` |
 
 - En V2, l'interface mobile sera écrite séparément (composants natifs) ; la logique, les types et le client d'API sont partagés.
 
@@ -168,6 +183,7 @@ frontend/
 | Activité | Saisie : sport, date, durée, distance si le sport en produit |
 | Profil | Prénom et nom modifiables, e-mail (lecture seule), pseudo modifiable, avatar, langue, badges obtenus, supprimer le compte (traité comme un abandon) |
 | Badges (créateur) | Création et gestion des badges d'un challenge : nom, description, assistant de condition |
+| Administration | ✅ Section `/admin`, réservée aux comptes `is_admin` (les autres voient « Page introuvable », sans télécharger son code) : tableau de bord, défis (fiche, réglages, participants, recalcul avec aperçu et motif), comptes (fiche, activités), journal des actions |
 | V2 | Connexion aux marques sportives (Strava, Polar, Garmin, Coros) |
 
 ### 4.3 Données et état
@@ -194,7 +210,7 @@ frontend/
 - Un intercepteur du client API ajoute le jeton et renouvelle la session au besoin.
 - ✅ Web (SC-WEB-016) : `@auth0/auth0-react` derrière l'interface `Auth` (`src/lib/auth`), avec un double de test. Connexion par la page Auth0 (Universal Login, dans la langue de l'app) ; en V1, code à usage unique par e-mail. Jetons **en mémoire** avec refresh token tournant (`cacheLocation: 'memory'`, jamais `localStorage`) ; le refresh token est révoqué à la déconnexion. Retour après connexion par `/callback`, vers un chemin de l'app seulement.
 - ✅ Limite acceptée : après un rechargement de la page, le refresh token gardé en mémoire est perdu ; la session revient par la connexion silencieuse d'Auth0 (iframe, `useRefreshTokensFallback`) quand le navigateur l'autorise ; Safari et les navigateurs qui bloquent les cookies tiers repassent alors par la page de connexion Auth0 (un aller-retour, silencieux si la session Auth0 est encore valide). Un domaine personnalisé Auth0 (au déploiement) le supprimera.
-- ✅ Toute l'app exige une connexion (SC-WEB-017), sauf `/callback` : une personne non connectée part directement vers la page de connexion Auth0 et revient sur la page demandée (sans arrêt visible si la session Auth0 est encore valide, ce qui couvre aussi le rechargement sous Safari).
+- ✅ Toute l'app exige une connexion (SC-WEB-017), sauf `/` (landing page, SC-WEB-083) et `/callback` : une personne non connectée part directement vers la page de connexion Auth0 et revient sur la page demandée (sans arrêt visible si la session Auth0 est encore valide, ce qui couvre aussi le rechargement sous Safari).
 - ✅ Session perdue (401 après tentative de renouvellement) : le cache est vidé, puis l'app se reconnecte et revient sur la page en cours. Si l'API refuse aussi la nouvelle session (401 moins d'une minute après une reconnexion automatique), l'app s'arrête sur un écran « Connexion impossible » avec « Réessayer » au lieu de boucler. Compte supprimé (`account_deleted`) : déconnexion locale, écran dédié et bouton « Terminer » qui ferme aussi la session Auth0. La déconnexion volontaire (`useSignOut`) vide le cache avant de quitter l'app.
 - Configuration : `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID` (identifiant public de l'application « Sport Challenge Web », à reporter depuis le dashboard Auth0) et `VITE_AUTH0_AUDIENCE` ; l'app ne démarre pas tant qu'elles manquent.
 
@@ -245,7 +261,7 @@ frontend/
 - Les erreurs arrivent avec un **code stable** ; l'interface les traduit en français ou en anglais à partir de `src/i18n`.
 - Les listes utilisent une **pagination par curseur**.
 - Les créations d'activité envoient une **clé d'idempotence** (utile pour le hors-ligne et les envois répétés).
-- Les adresses de l'API et la configuration d'authentification (domaine, audience) viennent de variables d'environnement, une par environnement (développement, staging, production).
+- Les adresses de l'API et la configuration d'authentification (domaine, audience) viennent de variables d'environnement, une par environnement (développement, production) ; une seule configuration est déployée, la production (`docs/deploiement.md`).
 - Toute évolution de l'API passe d'abord par le backend ; le frontend régénère son client.
 - ✅ Synchronisation : `pnpm api:sync` copie le contrat dans `openapi/openapi.yaml` (versionné), depuis la variable `API_CONTRACT` (chemin ou adresse https), sinon le backend cloné à côté (`../backend` ou `../sport-challenge-api`), sinon la branche `main` du backend. Avant d'écraser la copie, il compare les deux contrats avec oasdiff (dans Docker) et s'arrête sur un changement incompatible ; `--accept-breaking` l'accepte après relecture.
 - ✅ Génération (FD6) : `pnpm api:generate` produit les types dans `src/api/generated/schema.ts` avec `openapi-typescript` ; la CI échoue si ces types ne correspondent plus au contrat. Le client `openapi-fetch` et les hooks TanStack Query arrivent avec le premier écran qui appelle l'API.
@@ -278,5 +294,5 @@ frontend/
 - ❓ V2 : l'application mobile arrive-t-elle avec les synchronisations Strava et Polar, ou avant ?
 - ✅ Hébergement du web : Firebase Hosting, production seule (décision du 2026-11-21, `docs/deploiement.md`).
 - ✅ Structure du dépôt : une seule application Vite en V1 ; monorepo pnpm (avec ou sans Turborepo, à décider alors) à l'arrivée du mobile en V2.
-- ❓ État local : contexte React ou Zustand.
+- ✅ État local : contextes React, sans bibliothèque d'état global (décision FD4, §4.3).
 - ❓ Confirmer les points marqués 🟡.

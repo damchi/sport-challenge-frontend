@@ -27,6 +27,7 @@ pnpm bundle:check        budget de taille du build (après pnpm build)
 pnpm hosting:config      écrit firebase.json (après pnpm build, utilisé par le déploiement)
 pnpm typecheck           tsc --noEmit
 pnpm lint                ESLint
+pnpm i18n:check          mêmes clés en français et en anglais, formes du pluriel
 pnpm format              Prettier (réécrit les fichiers)
 pnpm format:check        Prettier sans écrire (échoue sur un fichier non formaté)
 pnpm test                tests unitaires et composants (Vitest)
