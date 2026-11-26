@@ -1,14 +1,20 @@
 import { Activity, Trophy, User, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { AppMark } from './AppMark';
 import { HOME_PATH } from '../lib/paths';
 
-const TABS: { to: string; labelKey: string; Icon: LucideIcon; end?: boolean }[] = [
-  { to: HOME_PATH, labelKey: 'nav.challenges', Icon: Trophy, end: true },
-  { to: '/activities', labelKey: 'nav.activities', Icon: Activity },
-  { to: '/me', labelKey: 'nav.profile', Icon: User },
+// A tab stays active on the pages under it (design.md, « Barre de
+// navigation »): the challenges tab on a challenge and on its creation, the
+// profile tab on the admin section, opened from the profile.
+const TABS: { to: string; labelKey: string; Icon: LucideIcon; under: string[] }[] = [
+  { to: HOME_PATH, labelKey: 'nav.challenges', Icon: Trophy, under: [HOME_PATH] },
+  { to: '/activities', labelKey: 'nav.activities', Icon: Activity, under: ['/activities'] },
+  { to: '/me', labelKey: 'nav.profile', Icon: User, under: ['/me', '/admin'] },
 ];
+
+const isUnder = (pathname: string, path: string) =>
+  pathname === path || pathname.startsWith(`${path}/`);
 
 /**
  * Main navigation (design.md). Phone: a 72 px bar fixed at the bottom, icon
@@ -17,6 +23,7 @@ const TABS: { to: string; labelKey: string; Icon: LucideIcon; end?: boolean }[] 
  */
 export function MainNav() {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
   return (
     <nav
       aria-label={t('nav.label')}
@@ -31,24 +38,25 @@ export function MainNav() {
           {t('home.title')}
         </Link>
         <ul className="flex flex-1 md:flex-none md:gap-1">
-          {TABS.map(({ to, labelKey, Icon, end }) => (
-            <li key={to} className="flex-1 md:flex-none">
-              <NavLink
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  `flex h-18 flex-col items-center justify-center gap-1 text-nav md:h-11 md:flex-row md:gap-2 md:rounded-tab md:px-3.5 md:text-sm ${
+          {TABS.map(({ to, labelKey, Icon, under }) => {
+            const isActive = under.some((path) => isUnder(pathname, path));
+            return (
+              <li key={to} className="flex-1 md:flex-none">
+                <Link
+                  to={to}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex h-18 flex-col items-center justify-center gap-1 text-nav md:h-11 md:flex-row md:gap-2 md:rounded-tab md:px-3.5 md:text-sm ${
                     isActive
                       ? 'font-bold text-accent md:bg-accent-soft'
                       : 'font-semibold text-muted hover-fill'
-                  }`
-                }
-              >
-                <Icon aria-hidden="true" size={22} strokeWidth={2} />
-                {t(labelKey)}
-              </NavLink>
-            </li>
-          ))}
+                  }`}
+                >
+                  <Icon aria-hidden="true" size={22} strokeWidth={2} />
+                  {t(labelKey)}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </nav>

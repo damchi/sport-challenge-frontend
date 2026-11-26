@@ -361,7 +361,11 @@ le conteneur de 1120 px, sous la barre de navigation.
 **Mobile** (< `md`) : en bas, 72 px, fond `--color-surface`, bordure haute :
 **Défis**, **Activités**, **Profil** en V1 (**Badges** s'ajoute en V1.1, entre
 Activités et Profil), icône au-dessus du libellé. Onglet actif en
-`--color-accent` avec `aria-current="page"`. Dans un
+`--color-accent` avec `aria-current="page"`. ✅ Un onglet (mobile et web) reste actif sur les
+pages qui en dépendent : **Défis** sur la page d'un défi (et ses onglets) et
+sur la création d'un défi, **Activités** sur l'ajout et la modification d'une
+activité, **Profil** sur la section d'administration, qu'on ouvre depuis le
+profil (décision du 2026-11-26, SC-WEB-123). Dans un
 `<nav aria-label="Navigation principale">`.
 
 ✅ **Web** (à partir de `md`) : la même barre passe en haut de page, icône à
