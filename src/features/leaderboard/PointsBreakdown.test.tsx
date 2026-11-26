@@ -241,7 +241,10 @@ describe('PointsBreakdownSheet', () => {
       weeks: [
         {
           ...week1,
-          criteria: week1.criteria.map((criterion) => ({ ...criterion, value: null })),
+          criteria: [
+            ...week1.criteria,
+            { criterion: 'fastest_run' as const, rank: 2, value: 300, points: 8 },
+          ].map((criterion) => ({ ...criterion, value: null })),
         },
       ],
     });
@@ -250,6 +253,7 @@ describe('PointsBreakdownSheet', () => {
     const sheet = await open(/julie/);
     const week = await within(sheet).findByRole('region', { name: 'Semaine 1' });
     expect(week).toHaveTextContent('Séance la plus longue en temps1er de la semaine10 pts');
+    expect(week).toHaveTextContent('Sortie course la plus rapide2e de la semaine8 pts');
     expect(within(sheet).queryByRole('link')).not.toBeInTheDocument();
   });
 
@@ -286,7 +290,7 @@ describe('PointsBreakdownSheet', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the km equivalent to the reference sport and the meters climbed', async () => {
+  it('shows the km equivalent to the reference sport, the meters climbed and the pace', async () => {
     answer();
     leaderboard();
     breakdown({
@@ -296,6 +300,7 @@ describe('PointsBreakdownSheet', () => {
           criteria: [
             { criterion: 'longest_distance', rank: 3, value: 12_500, points: 6 },
             { criterion: 'weekly_elevation', rank: 1, value: 1_250, points: 10 },
+            { criterion: 'fastest_run', rank: 2, value: 292, points: 8 },
           ],
         },
       ],
@@ -308,6 +313,7 @@ describe('PointsBreakdownSheet', () => {
       'Séance la plus longue en distance équivalente12,5 km éq. course · 3e de la semaine6 pts',
     );
     expect(week).toHaveTextContent(/D\+ de la semaine1\s250 m D\+ · 1er de la semaine10 pts/);
+    expect(week).toHaveTextContent('Sortie course la plus rapide4:52 /km · 2e de la semaine8 pts');
   });
 
   it('does not open again by itself when coming back to the grand prix', async () => {

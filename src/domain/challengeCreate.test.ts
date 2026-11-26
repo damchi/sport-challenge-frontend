@@ -261,6 +261,10 @@ describe('challengeCreateRequest', () => {
       challengeCreateRequest({ ...values, points_criteria: ['weekly_elevation'] }, SPORTS)
         .distance_factors,
     ).toBeUndefined();
+    expect(
+      challengeCreateRequest({ ...values, points_criteria: ['fastest_run'] }, SPORTS)
+        .distance_factors,
+    ).toBeUndefined();
   });
 
   it('sends the total elevation gain without settings or factors', () => {

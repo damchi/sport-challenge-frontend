@@ -129,6 +129,18 @@ describe('AdminChallengeSettings', () => {
     expect(screen.getByText('Modifié · avant : Public')).toBeInTheDocument();
   });
 
+  it('ticks and unticks the fastest run among the criteria of the grand prix', async () => {
+    renderSettings(first.id);
+
+    await stepField();
+    fireEvent.click(screen.getByRole('switch', { name: 'Grand prix' }));
+    const fastestRun = screen.getByRole('checkbox', { name: 'Sortie course la plus rapide' });
+    fireEvent.click(fastestRun);
+    expect(fastestRun).toBeChecked();
+    fireEvent.click(fastestRun);
+    expect(fastestRun).not.toBeChecked();
+  });
+
   it('previews the change, then makes it with the reason', async () => {
     const bodies = servePatch();
     const router = renderSettings(first.id);

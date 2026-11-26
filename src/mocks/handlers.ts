@@ -64,6 +64,7 @@ export const mockAdminStats: AdminStats = {
   challenges: { upcoming: 6, ongoing: 21, finished: 143, deleted: 4 },
   activities_last_7_days: 1890,
   pending_auth0_deletions: 2,
+  blocked_auth0_deletions: 0,
   worker_tasks: [
     {
       task: 'close-weeks',
@@ -692,6 +693,7 @@ export const handlers = [
         id: challenge.id,
         title: challenge.title,
         visibility: challenge.visibility,
+        timezone: challenge.timezone,
         status: challenge.status,
         starts_at: challenge.starts_at,
         ends_at: challenge.ends_at,
@@ -723,6 +725,9 @@ export const handlers = [
       elevation_gain_meters: activity.elevation_gain_meters,
       source: activity.source,
       created_at: activity.started_at,
+      contributions: activity.contributions,
+      locked: activity.locked,
+      admin_change: null,
     }));
     return HttpResponse.json<AdminActivityPage>(
       mockPage(items, query.get('cursor'), Number(query.get('limit')) || null),

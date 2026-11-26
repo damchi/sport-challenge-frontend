@@ -29,6 +29,7 @@ export const POINTS_CRITERIA = [
   'longest_distance',
   'session_count',
   'weekly_elevation',
+  'fastest_run',
 ] as const;
 
 /** Duration bounds of the contract, in weeks. */

@@ -187,7 +187,12 @@ function Categories({ sports }: { sports: Sports }) {
   const referenceError = errors.reference_sport?.message;
   const stepError = errors.elimination_step_km?.message;
   const criteriaError = errors.points_criteria?.message;
-  const criteriaHint = criteria.includes('weekly_elevation');
+  // The criteria that do not use the equivalent distance say how they count.
+  const criteriaHints = [
+    criteria.includes('weekly_elevation') && 'weeklyElevation',
+    criteria.includes('fastest_run') && 'fastestRun',
+  ].filter((hint) => hint !== false);
+  const criteriaHint = criteriaHints.length > 0;
   const criteriaDescribedBy =
     [criteriaHint && 'points_criteria-hint', criteriaError && 'points_criteria-error']
       .filter(Boolean)
@@ -361,9 +366,11 @@ function Categories({ sports }: { sports: Sports }) {
                 ))}
               </div>
               {criteriaHint && (
-                <p id="points_criteria-hint" className="mt-2 text-sm text-muted">
-                  {t('challengeDetail.categories.pointsParams.weeklyElevation')}
-                </p>
+                <div id="points_criteria-hint" className="mt-2 space-y-1 text-sm text-muted">
+                  {criteriaHints.map((hint) => (
+                    <p key={hint}>{t(`challengeDetail.categories.pointsParams.${hint}`)}</p>
+                  ))}
+                </div>
               )}
               <ChangedPill field="points_criteria" className="mt-2" />
             </fieldset>
