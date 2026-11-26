@@ -40,6 +40,7 @@ type AdminUserChallengePage = components['schemas']['AdminUserChallengePage'];
 type AdminActivityPage = components['schemas']['AdminActivityPage'];
 type AdminAction = components['schemas']['AdminAction'];
 type AdminActionPage = components['schemas']['AdminActionPage'];
+type AdminCorrection = components['schemas']['AdminCorrection'];
 type InvitationPreview = components['schemas']['InvitationPreview'];
 type InvitationTokenRequest = components['schemas']['InvitationTokenRequest'];
 
@@ -379,6 +380,29 @@ function mockRanking(type: FullRanking['type'], value: (index: number) => number
   return { type, ranked_count: ranked.length, entries };
 }
 
+/** `ranking` once `userId` is out of it, as abandoned: the others ranked again. */
+function withoutUser(ranking: FullRanking, userId: string): FullRanking {
+  const out = (entry: LeaderboardEntry) => entry.abandoned || entry.user.id === userId;
+  const ranked = ranking.entries.filter((entry) => !out(entry));
+  return {
+    ...ranking,
+    ranked_count: ranked.length,
+    entries: [
+      ...ranked.map((entry) => ({
+        ...entry,
+        rank: ranked.findIndex((other) => other.value === entry.value) + 1,
+      })),
+      ...ranking.entries.filter(out).map((entry) => ({
+        ...entry,
+        rank: null,
+        value: null,
+        abandoned: true,
+        elimination: null,
+      })),
+    ],
+  };
+}
+
 /** The leaderboard of every mock challenge, with ties in each category. */
 const mockLeaderboard = {
   computedAt: '2026-11-18T15:00:00Z',
@@ -597,6 +621,43 @@ export const handlers = [
     }
     return HttpResponse.json<AdminChallengeDetail>(mockAdminChallengeDetail(summary));
   }),
+  // Excluding judges the challenge again: its whole rankings, then without
+  // the participant. The mocks write nothing, preview or not.
+  http.delete(
+    '*/api/v1/admin/challenges/:challengeId/participants/:userId',
+    async ({ params, request }) => {
+      const summary = mockAdminChallenges.find((challenge) => challenge.id === params.challengeId);
+      if (!summary) {
+        const body: ApiErrorBody = {
+          error: { code: 'challenge_not_found', message: 'Challenge not found' },
+        };
+        return HttpResponse.json(body, { status: 404 });
+      }
+      const { dry_run } = (await request.json()) as { dry_run?: boolean };
+      const { reference_sport, categories } = mockCategories(summary.id);
+      const types = new Set(categories.map((category) => category.type));
+      const before = mockLeaderboard.categories.filter((category) => types.has(category.type));
+      const whole = (rankings: readonly FullRanking[]) =>
+        answerLeaderboard(mockLeaderboard.computedAt, rankings, new URLSearchParams(), mockMe.id);
+      return HttpResponse.json<AdminCorrection>({
+        dry_run: dry_run === true,
+        challenges: [
+          {
+            challenge_id: summary.id,
+            title: summary.title,
+            status: summary.status,
+            reference_sport: { before: reference_sport, after: reference_sport },
+            results: null,
+            weeks: [],
+            points: [],
+            before: whole(before),
+            after: whole(before.map((ranking) => withoutUser(ranking, String(params.userId)))),
+            eliminations: [],
+          },
+        ],
+      });
+    },
+  ),
   // Newest first in the API; the mocks keep their order. `q` is looked for
   // in the pseudo, the names and the e-mail.
   http.post('*/api/v1/admin/users/search', async ({ request }) => {
