@@ -96,22 +96,22 @@ Tickets déplacés : 015 (PWA) en fin de parcours, 012 (réduit à la mise en pl
 
 ## Épopées
 
-Total : **277 points** (97 tickets), dont **263 pour la V1** ; 14 points sont reportés en V1.1 : les 13 de l'épopée F10 (décision D10 : badges et upload d'avatar) et SC-WEB-055 (rafraîchissement automatique du classement).
+Les tickets de chaque épopée, avec leurs points, sont les issues GitHub qui portent son étiquette (`F0` à `F11`) : la liste à jour est là, pas ici. Les tickets reportés en V1.1 (décision D10 : badges et upload d'avatar ; rafraîchissement automatique du classement) portent l'étiquette `v1.1`.
 
-| Épopée | Contenu | Tickets |
-|---|---|---|
-| F0 | Fondations minimales et CI | 001, 003, 005, 052, 062 |
-| F1 | Contrat et client d'API | 007, 008, 009, 010 |
-| F2 | Internationalisation | 012 |
-| F3 | Authentification et coque | 016, 017, 018, 019, 054, 067, 077 |
-| F4 | Accueil et challenges | 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 056, 057, 058, 061, 068, 069, 072, 073, 083, 097, 100 |
-| F5 | Classement | 030, 031, 032, 033, 055, 059, 063, 098, 099, 102 |
-| F6 | Activités | 034, 035, 036, 037, 060, 071, 074, 075, 076, 080, 081, 082, 101, 103 |
-| F7 | Invitations | 038, 039, 070 |
-| F8 | Profil et compte | 040, 053, 041, 042, 078, 079 |
-| F9 | Qualité et livraison | 043, 044, 045, 046, 015, 064, 047, 066, 048, 065 |
-| F10 | Reportés en V1.1 (avatar, badges) | 049, 050, 051 |
-| F11 | Administration (section `/admin`, rôle Auth0 « admin ») | 084, 085, 086, 087, 088, 089, 090, 091, 092, 093, 094, 095, 096 |
+| Épopée | Contenu |
+|---|---|
+| F0 | Fondations minimales et CI |
+| F1 | Contrat et client d'API |
+| F2 | Internationalisation |
+| F3 | Authentification et coque |
+| F4 | Accueil et challenges |
+| F5 | Classement |
+| F6 | Activités |
+| F7 | Invitations |
+| F8 | Profil et compte |
+| F9 | Qualité et livraison |
+| F10 | Reportés en V1.1 (avatar, badges) |
+| F11 | Administration (section `/admin`, rôle Auth0 « admin ») |
 
 ---
 
