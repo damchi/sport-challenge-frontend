@@ -226,6 +226,7 @@
   "reason": {
     "label": "Motif",
     "hint": "De {{min}} à {{max}} caractères. Il est gardé dans le journal.",
+    "privacy": "Ne nomme personne : ni nom, ni pseudo, ni e-mail.",
     "count": "{{count}} / {{max}}",
     "cancel": "Annuler",
     "short": "Le motif doit faire au moins {{min}} caractères.",

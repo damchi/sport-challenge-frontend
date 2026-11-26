@@ -226,6 +226,7 @@
   "reason": {
     "label": "Reason",
     "hint": "{{min}} to {{max}} characters. It is kept in the log.",
+    "privacy": "Don't name anyone: no name, nickname or email.",
     "count": "{{count}} / {{max}}",
     "cancel": "Cancel",
     "short": "The reason needs at least {{min}} characters.",
