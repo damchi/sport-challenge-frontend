@@ -7,6 +7,33 @@
     { "run": "pnpm e2e", "when": "le ticket touche un parcours critique (connexion, création de challenge, saisie d'activité, invitation)" },
     { "run": "pnpm build && pnpm bundle:check", "when": "le ticket ajoute une dépendance, un écran ou une grosse fonctionnalité (budget de taille du bundle)" }
   ],
+  "reviews": [
+    {
+      "agent": "frontend-review:ts-reviewer",
+      "paths": ["src/**/*.ts", "src/**/*.tsx", "e2e/**"],
+      "exclude": ["src/api/generated/**"]
+    },
+    {
+      "agent": "frontend-review:ux-reviewer",
+      "paths": ["src/features/**/*.tsx", "src/components/**/*.tsx", "src/pages/**", "src/i18n/**", "src/styles/**"],
+      "exclude": ["**/*.test.tsx"]
+    },
+    {
+      "agent": "frontend-review:security-reviewer",
+      "paths": ["src/lib/auth/**", "src/api/client.ts", "src/lib/config.ts", "src/lib/errorTracking.ts", "src/lib/paths.ts", "src/features/invitations/**", "package.json"],
+      "exclude": ["**/*.test.ts", "**/*.test.tsx"]
+    },
+    {
+      "agent": "dev-workflow:spec-guardian",
+      "paths": ["src/domain/**", "src/features/challenges/**", "src/features/leaderboard/**", "src/features/activities/**", "src/features/invitations/**", "src/features/admin/**"],
+      "exclude": ["**/*.test.ts", "**/*.test.tsx"]
+    },
+    {
+      "agent": "dev-workflow:rules-tester",
+      "paths": ["src/domain/**"],
+      "exclude": ["**/*.test.ts", "src/domain/uuid.ts"]
+    }
+  ],
   "rules": ["README.md §2", "../sport-challenge-api/README.md §2"],
   "pr_size": { "max_lines": 200, "exclude": ["openapi/openapi.yaml"] }
 }
