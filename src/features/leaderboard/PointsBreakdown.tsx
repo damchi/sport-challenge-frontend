@@ -13,7 +13,7 @@ import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { challengePeriod, otherTimeZoneName } from '../../domain/format/challengeDates';
 import { formatKm, formatMeters } from '../../domain/format/distance';
-import { formatDuration } from '../../domain/format/duration';
+import { formatDuration, formatPace } from '../../domain/format/duration';
 import { useSportName } from '../challenges/create/useSportName';
 
 /** The participant whose points are detailed, as the leaderboard names them. */
@@ -229,8 +229,9 @@ function Criterion({
 
 /**
  * The value of a criterion: h:mm, km equivalent to the reference sport,
- * sessions, or real meters climbed. None for a reader who may not see the
- * participants' activities (the server gives null).
+ * sessions, real meters climbed, or the pace of the fastest run. None for
+ * a reader who may not see the participants' activities (the server gives
+ * null).
  */
 function useCriterionValue(criterion: PointsCriterion, referenceSport: string): string | null {
   const { t, i18n } = useTranslation();
@@ -250,5 +251,7 @@ function useCriterionValue(criterion: PointsCriterion, referenceSport: string): 
       return t('activities.sessions', { count: value });
     case 'weekly_elevation':
       return t('leaderboard.elevation', { elevation: formatMeters(value, locale) });
+    case 'fastest_run':
+      return t('activities.paceValue', { pace: formatPace(value) });
   }
 }

@@ -83,6 +83,8 @@ export interface paths {
          *     with an account of a challenge not finished: the user first adds
          *     another creator, or deletes the challenge; `params.challenges` lists
          *     their ids, comma-separated. Nothing is deleted then.
+         *     Open to a blocked account (README §2.12), by the same path: the
+         *     only route it may still call.
          */
         delete: operations["deleteMe"];
         options?: never;
@@ -856,7 +858,11 @@ export interface paths {
          *     recorded in the journal with its `reason`, naming the challenge, all in
          *     one transaction. With `dry_run`, everything is
          *     rolled back and the answer tells what the change would do. An unknown
-         *     or deleted challenge answers 404 `challenge_not_found`. The body is
+         *     or deleted challenge answers 404 `challenge_not_found`. A change that
+         *     makes a challenge without any creator who still has an account
+         *     upcoming or ongoing (its status read after the change) answers 422
+         *     `no_creator`, `dry_run` included: the admin names a creator first
+         *     (README §2.12); one that leaves it finished goes through. The body is
          *     optional in the contract: without one, the missing `reason` answers
          *     400 `validation_failed` to an admin, 404 `not_found` to anyone else.
          */
@@ -886,6 +892,19 @@ export interface paths {
          *     eliminations that change against those kept at the deletion. An
          *     unknown challenge, or one that is not deleted, answers 404
          *     `challenge_not_found`.
+         *
+         *     A challenge always keeps a creator (README §2.12): one that the
+         *     restore would bring back upcoming or ongoing with no creator who still
+         *     has an account answers 422 `no_creator`, `dry_run` included, unless
+         *     `creator_user_id` names one. A finished one is restored without (README
+         *     §2.2). The account named becomes a creator in the transaction of the
+         *     restore, before the challenge is judged again, whether the challenge
+         *     has creators left or not: a participant, active or one who abandoned
+         *     (who is not reinstated), or an account that never joined, which is
+         *     first added as an active participant, as an admin adds one (422
+         *     `profile_incomplete` without a complete profile). An unknown or deleted
+         *     account answers 404 `user_not_found`. The journal line names the
+         *     account and what it became, by its id alone.
          */
         post: operations["restoreAdminChallenge"];
         delete?: never;
@@ -1084,8 +1103,9 @@ export interface paths {
         /**
          * Delete any account, for an admin
          * @description Admin only (404 `not_found` otherwise). Deletes the account with the
-         *     effect of `DELETE /me` (README §2.12, §6): it abandons its challenges
-         *     not finished, is anonymized and every row tied to it is erased; its
+         *     effect of `DELETE /me` (README §2.12, §6): refused (422
+         *     `last_creator`) while it is the last creator of a challenge not
+         *     finished, it is anonymized and every row tied to it is erased; its
          *     deletion at Auth0 follows, replayed by the worker
          *     (`retry-auth0-deletions`) when it fails. The profile values (pseudo,
          *     first name, last name, e-mail) of the journal lines that target the
@@ -1129,7 +1149,8 @@ export interface paths {
          * Block any account, for an admin
          * @description Admin only (404 `not_found` otherwise). Blocks the account (README
          *     §2.12): from then on, every request of it answers 403
-         *     `account_blocked`. Its challenges are left as they are: it stays
+         *     `account_blocked`, except the deletion of its own account
+         *     (`DELETE /api/v1/me`). Its challenges are left as they are: it stays
          *     ranked and its activities count. An account already blocked stays
          *     blocked since the first time; the call still answers and is
          *     recorded. The change is recorded in the journal with its `reason`,
@@ -1226,7 +1247,13 @@ export interface paths {
          *     `reason`, naming those challenges, all in one
          *     transaction; with `dry_run`, everything is rolled back and the answer
          *     tells what the change would do. The answer lists those challenges,
-         *     none for an activity that counts nowhere.
+         *     none for an activity that counts nowhere. With `Idempotency-Key`,
+         *     unique per account of the activity as for `POST /activities` (a key
+         *     the account used for its own entry included), a valid request sent again
+         *     with the same key, even with another body, records nothing, writes
+         *     no journal line and judges nothing again: it answers 200 with no
+         *     challenge, or 404 `activity_not_found` once that activity is
+         *     deleted. A `dry_run` records nothing and leaves the key free.
          */
         post: operations["createAdminActivity"];
         delete?: never;
@@ -1323,7 +1350,7 @@ export interface components {
          * @description Stable error codes. Each ticket adds the codes it returns.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "account_blocked" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
+        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "account_blocked" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "no_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
         AdminStats: {
             /**
              * Format: date-time
@@ -1339,6 +1366,14 @@ export interface components {
              *     replayed by the worker (`retry-auth0-deletions`).
              */
             pending_auth0_deletions: number;
+            /**
+             * @description Among `pending_auth0_deletions`, those Auth0 refused for good at
+             *     their last replay (a 4xx proper to the account, such as a malformed
+             *     identifier; neither 401 nor 403, which refuse every deletion and
+             *     still fail the task, nor 404, 408 and 429). Still replayed, they
+             *     no longer fail the task; they wait for someone to fix the cause.
+             */
+            blocked_auth0_deletions: number;
             /** @description Every task of the worker, in the order of the enum of `task`, run or not. */
             worker_tasks: components["schemas"]["AdminWorkerTask"][];
             build: components["schemas"]["AdminBuild"];
@@ -1610,6 +1645,23 @@ export interface components {
             first_name?: components["schemas"]["PersonName"];
             last_name?: components["schemas"]["PersonName"];
         };
+        /** @description The restore of a deleted challenge, with the creator it may name. */
+        AdminChallengeRestore: {
+            /** @description Required, except with `dry_run` (a preview writes nothing); checked whenever present. */
+            reason?: components["schemas"]["AdminReason"];
+            /** @description Preview the change, writing nothing. `false` when absent. */
+            dry_run?: boolean;
+            /**
+             * Format: uuid
+             * @description An account to make a creator in the restore: required when the
+             *     challenge would come back upcoming or ongoing without any creator
+             *     who still has an account (`no_creator` otherwise), accepted
+             *     otherwise (it joins the other creators). A participant, active or
+             *     not, or an account that never joined, then added as an active
+             *     participant (its profile must be complete).
+             */
+            creator_user_id?: string;
+        };
         AdminParticipantAdd: {
             /** @description Required, except with `dry_run` (a preview writes nothing); checked whenever present. */
             reason?: components["schemas"]["AdminReason"];
@@ -1648,13 +1700,9 @@ export interface components {
         /**
          * @description Why the admin makes the change, kept in the journal: 3 to 500
          *     characters once surrounding spaces are removed, 3 of them visible; no
-         *     control character but line breaks and tabs (line and paragraph
-         *     separators U+2028 and U+2029 allowed too), no invisible or
-         *     bidirectional formatting character (Unicode Cf, such as U+200B or
-         *     U+202E) but U+200C, U+200D, U+200E, U+200F and the tags of flags
-         *     (U+E0020 to U+E007F). It stays in the journal once the target account
-         *     is deleted, unlike its profile values: it should carry no personal
-         *     data.
+         *     control character but line breaks and tabs. It stays in the journal
+         *     once the target account is deleted, unlike its profile values: it
+         *     should carry no personal data.
          */
         AdminReason: string;
         AdminCorrection: {
@@ -1847,6 +1895,8 @@ export interface components {
             title: string;
             /** @enum {string} */
             visibility: "public" | "private";
+            /** @description IANA time zone of the challenge, the one its days and weeks follow. */
+            timezone: string;
             /**
              * @description From the dates, at the instant of the request, deleted or not.
              * @enum {string}
@@ -1887,7 +1937,7 @@ export interface components {
             /** @description Pass it as `cursor` for the next page; null on the last page. */
             next_cursor: string | null;
         };
-        /** @description An activity as stored. */
+        /** @description An activity as stored, with where it counts now. */
         AdminActivity: {
             /** Format: uuid */
             id: string;
@@ -1907,6 +1957,43 @@ export interface components {
              * @description When the activity was recorded.
              */
             created_at: string;
+            /**
+             * @description What the activity brings, now, to each challenge where it counts,
+             *     as `Activity.contributions`; possibly empty. A deleted challenge
+             *     never appears.
+             */
+            contributions: components["schemas"]["ActivityContribution"][];
+            /**
+             * @description As `Activity.locked`: true once the week of the activity is locked
+             *     in a challenge where it counts, or was already locked when the
+             *     author left a challenge (abandoned or excluded). An admin can
+             *     still change it.
+             */
+            locked: boolean;
+            /**
+             * @description The last time an admin added or changed the activity, from the
+             *     journal (`activity.create`, `activity.update`): its source stays
+             *     `manual`. Null when no admin added nor changed it.
+             */
+            admin_change: components["schemas"]["AdminActivityChange"] | null;
+        };
+        /** @description The last line of the journal where an admin added or changed an activity. */
+        AdminActivityChange: {
+            /**
+             * @description `created`: an admin added the activity; `updated`: an admin changed it.
+             * @enum {string}
+             */
+            action: "created" | "updated";
+            /**
+             * Format: date-time
+             * @description When the admin did it (the time of the journal line).
+             */
+            at: string;
+            /**
+             * Format: uuid
+             * @description The account of the admin, its id only.
+             */
+            admin_id: string;
         };
         AdminActionPage: {
             items: components["schemas"]["AdminAction"][];
@@ -2057,11 +2144,11 @@ export interface components {
             title: string;
             /**
              * @description 2000 characters at most; an empty string means no description. No
-             *     control character but line breaks and tabs (line and paragraph
-             *     separators U+2028 and U+2029 allowed too), no invisible or
-             *     bidirectional formatting character (Unicode Cf, such as U+200B or
-             *     U+202E) but U+200C, U+200D, U+200E, U+200F and the tags of flags
-             *     (U+E0020 to U+E007F).
+             *     control character but line breaks and tabs, no line or
+             *     paragraph separator (U+2028, U+2029), no invisible or bidirectional
+             *     formatting character (Unicode Cf, such as U+200B or U+202E) but
+             *     U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+             *     U+E007F).
              */
             description?: string;
             /** @enum {string} */
@@ -2147,10 +2234,13 @@ export interface components {
              *     session by equivalent distance (with the factors of
              *     `distance_factors`), the number of sessions of at least
              *     `min_session_minutes`, the elevation gain of the week (every
-             *     sport that takes one, in real meters, without factor). At least
-             *     one, each once.
+             *     sport that takes one, in real meters, without factor), the
+             *     fastest run (the lowest pace of a single `run` session with a
+             *     distance, in seconds per km, real distance without factor, the
+             *     lowest winning; it needs no `distance_factors`). At least one,
+             *     each once.
              */
-            criteria: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation")[];
+            criteria: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation" | "fastest_run")[];
             /**
              * @description Top 5 (10, 8, 6, 4, 2) or top 10 (25, 18, 15, 12, 10, 8, 6, 4, 2, 1).
              * @enum {integer}
@@ -2207,7 +2297,7 @@ export interface components {
             /** @description Elimination category only, increment X in meters. */
             step_meters?: number;
             /** @description Points category only, its criteria in the order chosen. */
-            criteria?: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation")[];
+            criteria?: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation" | "fastest_run")[];
             /**
              * @description Points category only, the size of the top that scores.
              * @enum {integer}
@@ -2360,16 +2450,20 @@ export interface components {
         };
         PointsCriterion: {
             /** @enum {string} */
-            criterion: "longest_duration" | "longest_distance" | "session_count" | "weekly_elevation";
+            criterion: "longest_duration" | "longest_distance" | "session_count" | "weekly_elevation" | "fastest_run";
             /**
              * @description The rank in the weekly ranking of the criterion, equal values
-             *     sharing it (1, 1, 3); null for a value of 0, which does not score.
+             *     sharing it (1, 1, 3), the lowest pace first for `fastest_run`;
+             *     null without a value, which does not score: a value of 0, or no
+             *     `run` session with a distance for `fastest_run` (a pace of 0 is
+             *     a value).
              */
             rank: number | null;
             /**
              * @description Seconds (`longest_duration`), equivalent meters
-             *     (`longest_distance`), sessions (`session_count`) or meters of
-             *     elevation gain (`weekly_elevation`). Null for a reader who may
+             *     (`longest_distance`), sessions (`session_count`), meters of
+             *     elevation gain (`weekly_elevation`) or seconds per km
+             *     (`fastest_run`). Null for a reader who may
              *     not see the activities of the participants (not a participant,
              *     abandoned ones included, a creator nor an admin: README §5.7);
              *     the rank and the points stay.
@@ -2619,11 +2713,11 @@ export interface components {
             title?: string;
             /**
              * @description 2000 characters at most; an empty string removes the description.
-             *     No control character but line breaks and tabs (line and paragraph
-             *     separators U+2028 and U+2029 allowed too), no invisible or
-             *     bidirectional formatting character (Unicode Cf, such as U+200B or
-             *     U+202E) but U+200C, U+200D, U+200E, U+200F and the tags of flags
-             *     (U+E0020 to U+E007F).
+             *     No control character but line breaks and tabs, no line or
+             *     paragraph separator (U+2028, U+2029), no invisible or bidirectional
+             *     formatting character (Unicode Cf, such as U+200B or U+202E) but
+             *     U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
+             *     U+E007F).
              */
             description?: string;
             /** @description Frozen at creation; sending it answers 422 `field_not_editable`, and `null` 400 `validation_failed`. */
@@ -2718,7 +2812,8 @@ export interface components {
             distance_meters?: number;
             /**
              * @description Positive elevation gain in meters, optional; it counts for the
-             *     `cumulative_elevation` category alone (no other category, no
+             *     `cumulative_elevation` category and the `weekly_elevation`
+             *     criterion of the `points` category, and for nothing else (no
              *     badge). Refused (`elevation_not_allowed`)
              *     when the sport's `elevation_allowed` is false or the activity has
              *     no distance. On a change, leaving it out removes it.
@@ -3047,9 +3142,11 @@ export interface components {
             };
         };
         /**
-         * @description The change waited too long for the activity writes and the runs of
-         *     the worker in progress (`busy`): nothing was written. Try again in a
-         *     moment.
+         * @description The change waited more than 10 s for one of its locks, held by the
+         *     activity writes and the runs of the worker in progress, or the
+         *     deadline of the request (25 s) fell before it ended, or it was
+         *     stopped by a deadlock with another change (`busy`): nothing was
+         *     written. Try again in a moment.
          */
         Busy: {
             headers: {
@@ -4392,6 +4489,18 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /**
+             * @description The change would make a challenge without any creator upcoming or
+             *     ongoing (`no_creator`).
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             429: components["responses"]["RateLimited"];
             500: components["responses"]["InternalError"];
             503: components["responses"]["Busy"];
@@ -4408,7 +4517,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AdminCorrectionReason"];
+                "application/json": components["schemas"]["AdminChallengeRestore"];
             };
         };
         responses: {
@@ -4425,12 +4534,26 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             /**
              * @description The account has no `admin` permission (`not_found`), or no such
-             *     challenge, or one that is not deleted (`challenge_not_found`).
+             *     challenge, or one that is not deleted (`challenge_not_found`), or
+             *     the account named is unknown or deleted (`user_not_found`).
              *     `not_found` also answers a malformed request (an id that is not a
              *     UUID, a body or a parameter that does not match) without the
              *     permission, without `params`.
              */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /**
+             * @description The challenge would come back upcoming or ongoing without any
+             *     creator and none is named (`no_creator`), or the account named
+             *     never joined and its profile is incomplete (`profile_incomplete`).
+             */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4970,7 +5093,10 @@ export interface operations {
     createAdminActivity: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Key chosen by the client (a UUID, for instance), unique per account of the activity. */
+                "Idempotency-Key"?: string;
+            };
             path: {
                 userId: components["parameters"]["AdminUserId"];
             };
@@ -4993,7 +5119,21 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthorized"];
-            404: components["responses"]["AdminUserNotFound"];
+            /**
+             * @description The account has no `admin` permission (`not_found`), no such
+             *     account, or a deleted one (`user_not_found`), or the
+             *     `Idempotency-Key` gave a deleted activity (`activity_not_found`).
+             *     `not_found` also answers a malformed request without the
+             *     permission, without `params`.
+             */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
             /**
              * @description The profile of the account is incomplete (`profile_incomplete`),
              *     the sport needs a distance (`distance_required`) or takes none

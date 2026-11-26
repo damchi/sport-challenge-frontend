@@ -46,6 +46,9 @@ export function CategoryParams({ category }: { category: Category }) {
         {params.criteria?.includes('weekly_elevation') && (
           <li>{t('challengeDetail.categories.pointsParams.weeklyElevation')}</li>
         )}
+        {params.criteria?.includes('fastest_run') && (
+          <li>{t('challengeDetail.categories.pointsParams.fastestRun')}</li>
+        )}
       </ul>
     );
   }

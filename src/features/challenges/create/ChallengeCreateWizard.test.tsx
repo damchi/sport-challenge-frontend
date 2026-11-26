@@ -715,6 +715,34 @@ describe('ChallengeCreateWizard', () => {
       expect(bodies[0]).not.toHaveProperty('distance_factors');
     });
 
+    it('explains the fastest run once ticked, and sends it without factors', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addPoints();
+
+      fireEvent.click(criterion('Sortie course la plus rapide'));
+      expect(
+        screen.getByRole('group', { name: 'Critères de la semaine' }),
+      ).toHaveAccessibleDescription(
+        "La sortie course la plus rapide retient la meilleure allure d'une seule séance de course, en distance réelle, sans coefficient, quel que soit le sport de référence",
+      );
+      fireEvent.click(screen.getByRole('radio', { name: /^Top 5/ }));
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+      expect(row('Grand prix')).toHaveTextContent('Critères : sortie course la plus rapide');
+      expect(step().queryByText('Coefficients')).not.toBeInTheDocument();
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.categories).toEqual({
+        points: { criteria: ['fastest_run'], podium: 5, min_session_minutes: 20 },
+      });
+      expect(bodies[0]).not.toHaveProperty('distance_factors');
+    });
+
     it('asks for a criterion, a scale and a valid minimum session', async () => {
       renderWizard();
       await fillInfoStep();

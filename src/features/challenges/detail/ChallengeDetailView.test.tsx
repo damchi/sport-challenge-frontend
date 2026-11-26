@@ -679,12 +679,16 @@ describe('ChallengeDetailView', () => {
     expect(within(section).queryByText(/Une séance compte/)).not.toBeInTheDocument();
   });
 
-  it('explains the elevation gain of the week in English', async () => {
+  it('explains the elevation gain and the fastest run in English', async () => {
     server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
     answer({
       categories: [
         { type: 'cumulative_time', position: 1, params: {} },
-        { type: 'points', position: 4, params: { criteria: ['weekly_elevation'], podium: 10 } },
+        {
+          type: 'points',
+          position: 4,
+          params: { criteria: ['weekly_elevation', 'fastest_run'], podium: 10 },
+        },
       ],
     });
     renderAt(`/challenges/${id}`);
@@ -694,6 +698,12 @@ describe('ChallengeDetailView', () => {
     expect(
       within(section).getByText(
         'The elevation gain of the week adds up every sport that has one, in real meters, without factor',
+      ),
+    ).toBeInTheDocument();
+    expect(within(section).getByText('Fastest run')).toBeInTheDocument();
+    expect(
+      within(section).getByText(
+        'The fastest run keeps the best pace of a single run, in real distance, without factor, whatever the reference sport',
       ),
     ).toBeInTheDocument();
   });
