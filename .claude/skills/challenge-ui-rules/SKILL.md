@@ -24,7 +24,7 @@ Ce skill dit **comment** les afficher.
 ## Catégories et classement
 
 - Affiche les catégories que le serveur renvoie, **dans son ordre**, sans supposer leur nombre : un onglet par catégorie, chacune avec son podium. Les noms viennent des clés de traduction, jamais des identifiants techniques.
-- Podium des 3 premiers rangs ; ex aequo au même rang ; la ligne de l'utilisateur est mise en évidence et reste visible ; heure de dernière mise à jour affichée.
+- Podium des 3 premiers rangs ; ex aequo au même rang ; la ligne de l'utilisateur est mise en évidence et reste visible ; heure de dernière mise à jour affichée. Ces choix d'affichage ne sont écrits qu'ici.
 - Un participant parti (abandon, exclusion) apparaît comme le README le décrit, hors podium.
 - Challenge terminé : résultats en lecture seule.
 
@@ -54,3 +54,4 @@ Ces décisions d'interface des badges ne sont écrites qu'ici : garde-les tant q
 
 - Dates, distances, durées et rangs : skill `i18n-and-formats`.
 - Contenu d'autres utilisateurs (pseudos) affiché comme du texte ; suppression de compte accessible depuis le profil.
+- Contenu public d'autres utilisateurs : prévoir de le signaler et de le bloquer (README §6, exigence des stores).
