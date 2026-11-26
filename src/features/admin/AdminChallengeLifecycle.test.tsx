@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse, type HttpResponseResolver } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { AdminCorrection } from '../../api/hooks/admin/useAdminCorrection';
@@ -95,7 +95,7 @@ describe('AdminChallengeLifecycle', () => {
 
     const status = await screen.findByText('« Défi 1 » est supprimé.');
     expect(status).toHaveAttribute('role', 'status');
-    expect(status).toHaveFocus();
+    await waitFor(() => expect(status).toHaveFocus());
     expect(await screen.findByText('Supprimé le 20 nov. 2026, 10:00')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Restaurer le défi' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -175,7 +175,7 @@ describe('AdminChallengeLifecycle', () => {
       '« Défi 1 » est restauré et ses classements sont recalculés.',
     );
     expect(status).toHaveAttribute('role', 'status');
-    expect(status).toHaveFocus();
+    await waitFor(() => expect(status).toHaveFocus());
     expect(await screen.findByRole('button', { name: 'Supprimer le défi' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir la page du défi' })).toBeInTheDocument();
     expect(sent).toEqual([

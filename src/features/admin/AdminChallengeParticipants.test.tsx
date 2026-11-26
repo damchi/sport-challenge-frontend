@@ -231,7 +231,8 @@ describe('AdminChallengeParticipants', () => {
     expect((await screen.findAllByText('Ajouter ami_5 au défi'))[0]).toBeInTheDocument();
     await confirm("Confirmer l'ajout du participant", 'Ajouter au défi');
 
-    expect(await screen.findByText('ami_5 a été ajouté au défi.')).toHaveFocus();
+    const added = await screen.findByText('ami_5 a été ajouté au défi.');
+    await waitFor(() => expect(added).toHaveFocus());
     const path = `/api/v1/admin/challenges/${challenge.id}/participants`;
     expect(sent).toEqual([
       { method: 'POST', path, body: { user_id: account.id, dry_run: true } },
