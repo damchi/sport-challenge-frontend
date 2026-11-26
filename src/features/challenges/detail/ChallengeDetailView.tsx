@@ -111,7 +111,9 @@ function ChallengeDetailContent({ challengeId }: { challengeId: string }) {
                   challengeId={challengeId}
                   activities={canSeeParticipantActivities(challenge.data.my_role)}
                 />
-                <div className="mt-4">{sectionLoading ? <LoadingState /> : <Outlet key={pathname} />}</div>
+                <div className="mt-4">
+                  {sectionLoading ? <LoadingState /> : <Outlet key={pathname} />}
+                </div>
               </div>
               <HowToWin challenge={challenge.data} />
             </div>

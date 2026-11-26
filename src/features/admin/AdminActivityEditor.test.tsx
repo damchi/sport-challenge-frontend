@@ -383,7 +383,10 @@ describe('AdminActivityEditor', () => {
   });
 
   it.each([
-    ['the activities looked through for the one changed', '*/api/v1/admin/users/:userId/activities'],
+    [
+      'the activities looked through for the one changed',
+      '*/api/v1/admin/users/:userId/activities',
+    ],
     ['the challenges giving the zone', '*/api/v1/admin/users/:userId/challenges'],
   ])('offers a retry, not a missing activity, when a next page of %s fails', async (_, route) => {
     // An empty first page, then a next page failing once: the activity may be there.
@@ -402,7 +405,9 @@ describe('AdminActivityEditor', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
     expect(
-      screen.queryByText("Cette activité n'existe plus : elle a peut-être été supprimée entre-temps."),
+      screen.queryByText(
+        "Cette activité n'existe plus : elle a peut-être été supprimée entre-temps.",
+      ),
     ).not.toBeInTheDocument();
 
     expect(await screen.findByRole('textbox', { name: 'Minutes' })).toBeInTheDocument();

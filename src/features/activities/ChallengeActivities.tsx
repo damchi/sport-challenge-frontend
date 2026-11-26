@@ -28,7 +28,9 @@ export function ChallengeActivities() {
   const challenge = useChallenge(challengeId);
   if (!challenge.data) return null;
   if (!canSeeParticipantActivities(challenge.data.my_role)) return <ChallengeActivitiesNotFound />;
-  return <ChallengeActivitiesContent challengeId={challengeId} timeZone={challenge.data.timezone} />;
+  return (
+    <ChallengeActivitiesContent challengeId={challengeId} timeZone={challenge.data.timezone} />
+  );
 }
 
 function ChallengeActivitiesContent({

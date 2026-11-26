@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check:
-    name: typecheck, lint, test, build
+    name: format, typecheck, lint, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -40,6 +40,10 @@ jobs:
           pnpm api:generate
           git diff --exit-code src/api/generated
           test -z "$(git status --porcelain src/api/generated)"
+
+      # Fails on a file that pnpm format would rewrite.
+      - name: Formatting
+        run: pnpm format:check
 
       - name: Typecheck
         run: pnpm typecheck

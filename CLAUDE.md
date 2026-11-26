@@ -26,9 +26,10 @@ pnpm bundle:check        budget de taille du build (après pnpm build)
 pnpm hosting:config      écrit firebase.json (après pnpm build, utilisé par le déploiement)
 pnpm typecheck           tsc --noEmit
 pnpm lint                ESLint
-pnpm format              Prettier
+pnpm format              Prettier (réécrit les fichiers)
+pnpm format:check        Prettier sans écrire (échoue sur un fichier non formaté)
 pnpm test                tests unitaires et composants (Vitest)
-pnpm check               typecheck + lint + test
+pnpm check               format:check + typecheck + lint + i18n:check + test
 pnpm api:sync            copie openapi.yaml depuis le backend
 pnpm api:generate        régénère src/api/generated
 pnpm e2e                 Playwright

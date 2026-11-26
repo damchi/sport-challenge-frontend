@@ -9,6 +9,7 @@ dist
 !.vscode/extensions.json
 .DS_Store
 *.log
+__pycache__/
 /test-results
 /playwright-report
 /firebase.json
