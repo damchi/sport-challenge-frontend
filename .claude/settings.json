@@ -1,4 +1,17 @@
 {
+  "extraKnownMarketplaces": {
+    "damchi": {
+      "source": {
+        "source": "github",
+        "repo": "damchi/claude-library"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "dev-workflow@damchi": true,
+    "frontend-review@damchi": true
+  },
   "permissions": {
     "allow": [
       "Bash(pnpm install)",
@@ -21,11 +34,19 @@
       "Bash(gh pr view:*)",
       "Bash(gh pr checks:*)",
       "Bash(gh pr list:*)",
-      "Bash(python3 .claude/scripts/tasks.py next)",
-      "Bash(python3 .claude/scripts/tasks.py start:*)",
-      "Bash(python3 .claude/scripts/tasks.py tick:*)",
+      "Bash(ticket config)",
+      "Bash(ticket size)",
+      "Bash(ticket new:*)",
+      "Bash(ticket next)",
+      "Bash(ticket start:*)",
+      "Bash(ticket tick:*)",
+      "Bash(ticket add:*)",
+      "Bash(ticket cleanup:*)",
       "Bash(gh issue view:*)",
-      "Bash(gh issue list:*)"
+      "Bash(gh issue list:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh project item-add:*)"
     ],
     "ask": [
       "Bash(pnpm add:*)",
@@ -39,8 +60,24 @@
       "Bash(git cherry-pick:*)",
       "Bash(git revert:*)",
       "Bash(git reset:*)",
-      "Bash(gh pr create:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(git push:* main*)",
+      "Bash(git push:*:main*)",
+      "Bash(git push:* master*)",
+      "Bash(git push:*:master*)",
+      "Bash(git push:*--delete*)",
+      "Bash(git push:* -d *)",
+      "Bash(git push:* :*)",
+      "Bash(git branch -d:*)",
+      "Bash(git branch -D:*)",
+      "Bash(git stash drop:*)",
+      "Bash(git stash clear:*)",
+      "Bash(git worktree remove:*)",
+      "Bash(git am:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh pr ready:*)",
+      "Bash(gh release:*)",
+      "Bash(gh workflow run:*)"
     ],
     "deny": [
       "Read(./.env)",
@@ -54,22 +91,16 @@
       "Bash(git push -f:*)",
       "Bash(git reset --hard:*)",
       "Bash(git clean:*)",
+      "Bash(git push:*--force*)",
+      "Bash(git push:* -f*)",
+      "Bash(git push:* +*)",
+      "Bash(git reset:*--hard*)",
+      "Bash(git commit:*--no-verify*)",
+      "Bash(git push:*--no-verify*)",
+      "Bash(gh repo delete:*)",
       "Bash(eas submit:*)",
       "Bash(eas update:*)",
       "Bash(firebase deploy:*)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard_git.py"
-          }
-        ]
-      }
     ]
   }
 }
