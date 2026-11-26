@@ -118,6 +118,7 @@ describe('challengeCreateSchema', () => {
     it.each([
       ['', 'empty'],
       ['Line one\nline two\r\n\tindented', 'line breaks and tabs'],
+      ['Line one\u2028line two\u2029paragraph', 'line and paragraph separators'],
       ['🏃'.repeat(2000), '2000 characters'],
     ])('accepts %j (%s)', (description) => {
       expect(firstMessage({ description })).toBeUndefined();
@@ -131,7 +132,6 @@ describe('challengeCreateSchema', () => {
 
     it.each([
       ['Bell\u0007', 'a control character'],
-      ['Split here', 'a paragraph separator'],
       ['Hidden​', 'a zero-width space'],
     ])('refuses %j (%s)', (description) => {
       expect(firstMessage({ description })).toBe('challengeCreate.fields.description.characters');
