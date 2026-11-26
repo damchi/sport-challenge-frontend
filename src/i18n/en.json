@@ -662,9 +662,6 @@
     "weekBanner": "Week {{week}} · ends {{date}}",
     "weekBanner_zone": "Week {{week}} · ends {{date}}, {{zone}}",
     "timeZone": "Challenge time zone: {{zone}}",
-    "week": "Week {{week}}",
-    "weekEnds": "Week ends {{date}}",
-    "weekEnds_zone": "Week ends {{date}}, {{zone}}",
     "registrationOpen": "Registration open until {{date}}.",
     "registrationOpen_zone": "Registration open until {{date}}, {{zone}}.",
     "categories": {

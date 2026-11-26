@@ -11,6 +11,5 @@ export function sessionFromAuth(auth: Auth): Session {
     getAccessToken: () => auth.getAccessToken(),
     renew: async () =>
       (await auth.getAccessToken({ forceRefresh: true }).catch(() => undefined)) !== undefined,
-    expire: () => undefined,
   };
 }

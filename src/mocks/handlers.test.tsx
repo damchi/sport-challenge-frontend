@@ -12,7 +12,6 @@ import { createTestQueryClient, renderWithProviders } from '../test/render';
 const signedOut = {
   getAccessToken: () => Promise.resolve(undefined),
   renew: () => Promise.resolve(false),
-  expire: () => undefined,
 };
 
 // Stand-in hook of this test only (the real sports hook comes with its screen,

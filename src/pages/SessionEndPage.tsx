@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SessionEnd } from '../lib/auth/useHandleLostSession';
+import { DocumentTitle } from '../components/DocumentTitle';
 import { Page, PageTitle } from '../components/Page';
 
 interface SessionEndPageProps {
@@ -48,6 +49,7 @@ export function SessionEndPage({ reason, onAction }: SessionEndPageProps) {
 
   return (
     <Page>
+      <DocumentTitle title={`${texts.title} · ${t('home.title')}`} />
       <PageTitle>{texts.title}</PageTitle>
       <p role="alert" className="mt-2 text-muted">
         {failed ? t('auth.callback.error') : texts.message}

@@ -18,7 +18,6 @@ function fakeSession(tokens: (string | undefined)[], renewed = true) {
       if (renewed) current = tokens.shift();
       return Promise.resolve(renewed);
     }),
-    expire: vi.fn(),
   } satisfies Session;
   return session;
 }
@@ -176,7 +175,6 @@ describe('createApiClient', () => {
 
     expect(data).toEqual({ items: [] });
     expect(session.renew).toHaveBeenCalledTimes(1);
-    expect(session.expire).not.toHaveBeenCalled();
   });
 
   it('shares one renewal between concurrent 401 responses', async () => {
@@ -195,7 +193,7 @@ describe('createApiClient', () => {
     expect(session.renew).toHaveBeenCalledTimes(1);
   });
 
-  it('expires the session when the renewal fails', async () => {
+  it('fails with the 401 when the renewal fails', async () => {
     server.use(
       http.get(SPORTS, () => HttpResponse.json(errorBody('token_expired'), { status: 401 })),
     );
@@ -205,10 +203,9 @@ describe('createApiClient', () => {
     const error = await failure(client.GET('/api/v1/sports'));
 
     expect(error).toMatchObject({ code: 'token_expired', status: 401 });
-    expect(session.expire).toHaveBeenCalledTimes(1);
   });
 
-  it('renews and expires once when concurrent 401 cannot be renewed', async () => {
+  it('renews once when concurrent 401 cannot be renewed', async () => {
     server.use(
       http.get(SPORTS, () => HttpResponse.json(errorBody('token_expired'), { status: 401 })),
     );
@@ -219,7 +216,6 @@ describe('createApiClient', () => {
     await failure(client.GET('/api/v1/sports'));
 
     expect(session.renew).toHaveBeenCalledTimes(1);
-    expect(session.expire).toHaveBeenCalledTimes(1);
   });
 
   it('turns a network failure of the replay into network_error', async () => {
@@ -239,7 +235,7 @@ describe('createApiClient', () => {
     expect(error).toMatchObject({ code: 'network_error', status: 0 });
   });
 
-  it('neither renews nor expires on a 401 sent without a session', async () => {
+  it('does not renew on a 401 sent without a session', async () => {
     server.use(
       http.get(SPORTS, () => HttpResponse.json(errorBody('unauthenticated'), { status: 401 })),
     );
@@ -250,10 +246,9 @@ describe('createApiClient', () => {
 
     expect(error).toMatchObject({ code: 'unauthenticated', status: 401 });
     expect(session.renew).not.toHaveBeenCalled();
-    expect(session.expire).not.toHaveBeenCalled();
   });
 
-  it('expires the session once when concurrent replays are still refused', async () => {
+  it('renews once when concurrent replays are still refused', async () => {
     server.use(
       http.get(SPORTS, () => HttpResponse.json(errorBody('account_deleted'), { status: 401 })),
     );
@@ -263,7 +258,6 @@ describe('createApiClient', () => {
     await Promise.allSettled([client.GET('/api/v1/sports'), client.GET('/api/v1/sports')]);
 
     expect(session.renew).toHaveBeenCalledTimes(1);
-    expect(session.expire).toHaveBeenCalledTimes(1);
   });
 
   it('replays without the previous token when the renewal leaves none', async () => {
@@ -284,7 +278,7 @@ describe('createApiClient', () => {
     expect(seen).toEqual(['Bearer stale', null]);
   });
 
-  it('expires the session when the replay is still refused', async () => {
+  it('fails with the 401 when the replay is still refused', async () => {
     server.use(
       http.get(SPORTS, () => HttpResponse.json(errorBody('account_deleted'), { status: 401 })),
     );
@@ -295,7 +289,19 @@ describe('createApiClient', () => {
 
     expect(error.code).toBe('account_deleted');
     expect(session.renew).toHaveBeenCalledTimes(1);
-    expect(session.expire).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not renew again a token still refused after its replay', async () => {
+    server.use(
+      http.get(SPORTS, () => HttpResponse.json(errorBody('account_deleted'), { status: 401 })),
+    );
+    const session = fakeSession(['stale', 'fresh']);
+    const client = createApiClient({ baseUrl: BASE_URL, session });
+
+    await failure(client.GET('/api/v1/sports'));
+    await failure(client.GET('/api/v1/sports'));
+
+    expect(session.renew).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the access token out of the error', async () => {

@@ -676,9 +676,6 @@
     "weekBanner": "Semaine {{week}} · se termine {{date}}",
     "weekBanner_zone": "Semaine {{week}} · se termine {{date}}, {{zone}}",
     "timeZone": "Fuseau du défi : {{zone}}",
-    "week": "Semaine {{week}}",
-    "weekEnds": "Fin de la semaine : {{date}}",
-    "weekEnds_zone": "Fin de la semaine : {{date}}, {{zone}}",
     "registrationOpen": "Inscriptions ouvertes jusqu'au {{date}}.",
     "registrationOpen_zone": "Inscriptions ouvertes jusqu'au {{date}}, {{zone}}.",
     "categories": {

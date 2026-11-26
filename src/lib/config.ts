@@ -5,7 +5,7 @@ export interface Config {
   /** Address of the backend API, without a trailing slash. */
   apiUrl: string;
   auth0: {
-    /** Auth0 tenant domain, without protocol (sport-challenge-dev.ca.auth0.com). */
+    /** Auth0 tenant domain, without protocol (sport-challenge-prod.ca.auth0.com). */
     domain: string;
     /** Client ID of the SPA: public, it identifies the app to Auth0. */
     clientId: string;

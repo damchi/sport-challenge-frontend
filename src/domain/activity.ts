@@ -4,6 +4,8 @@
 // decisions, 2026-11-20). The server then counts it in every ongoing
 // challenge whose window holds it.
 
+import { isUuid } from './uuid';
+
 /** A challenge of the user, as far as the time zone of an entry goes. */
 export interface ZonedChallenge {
   timezone: string;
@@ -28,12 +30,9 @@ export function activityTimeZone(
   return zones.size === 1 && only !== undefined ? only : deviceTimeZone;
 }
 
-// An activity id of the API: a UUID (any version), in lower or upper case.
-const ACTIVITY_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /** Whether an address parameter can be an activity id, checked before any request. */
 export function isActivityId(value: unknown): value is string {
-  return typeof value === 'string' && ACTIVITY_ID.test(value);
+  return isUuid(value);
 }
 
 // A sport code of the catalogue, as the API accepts it in a filter.

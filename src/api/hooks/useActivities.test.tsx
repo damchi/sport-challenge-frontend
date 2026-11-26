@@ -31,7 +31,6 @@ describe('useCreateActivity', () => {
       session: {
         getAccessToken: () => Promise.resolve('token'),
         renew: () => Promise.resolve(false),
-        expire: () => undefined,
       },
     });
     const wrapper = ({ children }: { children: ReactNode }) => (
@@ -77,7 +76,6 @@ function setup() {
     session: {
       getAccessToken: () => Promise.resolve('token'),
       renew: () => Promise.resolve(false),
-      expire: () => undefined,
     },
   });
   const wrapper = ({ children }: { children: ReactNode }) => (

@@ -14,8 +14,6 @@ export interface Session {
   getAccessToken: () => Promise<string | undefined>;
   /** Tries to get a new access token; resolves to false when it cannot. */
   renew: () => Promise<boolean>;
-  /** Session lost after a renewal attempt: sign out and clear the cache. */
-  expire: () => void;
 }
 
 export interface ApiClientOptions {
@@ -35,15 +33,16 @@ function withToken(request: Request, token: string | undefined): Request {
 /**
  * Typed client of the API. A request either resolves with its data or throws
  * an ApiError. A 401 triggers one session renewal (shared by concurrent
- * requests) and one replay; a second failure expires the session.
+ * requests) and one replay; the tokens still refused after it are not renewed
+ * again.
  */
 export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
   // Copies of the sent requests and their token, to replay them after a renewal.
   const sent = new Map<string, { request: Request; token: string | undefined }>();
   let renewal: Promise<boolean> | undefined;
-  // Tokens of the last lost session (two at most): no new renewal, no second
-  // expire(). Replaced, never accumulated.
-  let expiredTokens = new Set<string>();
+  // Tokens of the last lost session (two at most): no new renewal. Replaced,
+  // never accumulated.
+  let lostTokens = new Set<string>();
 
   function renewOnce(): Promise<boolean> {
     renewal ??= session
@@ -55,11 +54,10 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
     return renewal;
   }
 
-  function expireSession(...tokens: (string | undefined)[]): void {
+  function markLost(...tokens: (string | undefined)[]): void {
     const lost = tokens.filter((token): token is string => token !== undefined);
-    if (lost.every((token) => expiredTokens.has(token))) return;
-    expiredTokens = new Set(lost);
-    session.expire();
+    if (lost.every((token) => lostTokens.has(token))) return;
+    lostTokens = new Set(lost);
   }
 
   async function accessToken(): Promise<string | undefined> {
@@ -99,15 +97,15 @@ export function createApiClient({ baseUrl, session, fetch }: ApiClientOptions) {
       // Only a request sent with a session that is not already lost renews it;
       // a signed-out request just fails.
       const sentToken = original?.token;
-      if (final.status === 401 && original && sentToken && !expiredTokens.has(sentToken)) {
+      if (final.status === 401 && original && sentToken && !lostTokens.has(sentToken)) {
         // A request sent before a renewal that already ended only needs a replay.
         const current = await accessToken();
         if (current !== sentToken || (await renewOnce())) {
           const replayed = await replay(original.request, options.fetch);
           final = replayed.response;
-          if (final.status === 401) expireSession(sentToken, replayed.token);
+          if (final.status === 401) markLost(sentToken, replayed.token);
         } else {
-          expireSession(sentToken);
+          markLost(sentToken);
         }
       }
 
