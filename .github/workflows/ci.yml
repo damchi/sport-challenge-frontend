@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   check:
-    name: format, typecheck, lint, test, build
+    # Required by the main ruleset under this exact name: renaming it blocks merges.
+    name: typecheck, lint, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
