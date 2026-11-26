@@ -117,7 +117,9 @@ export function ReasonDialog({
           id={fieldId}
           rows={3}
           aria-invalid={fieldError ? true : undefined}
-          aria-describedby={fieldError ? `${id}-hint ${id}-error` : `${id}-hint`}
+          aria-describedby={
+            fieldError ? `${id}-hint ${id}-privacy ${id}-error` : `${id}-hint ${id}-privacy`
+          }
           className="mt-2 w-full rounded-row border border-border bg-surface px-4 py-3 text-ink aria-[invalid=true]:border-2 aria-[invalid=true]:border-risk-fg"
           {...form.register('reason')}
         />
@@ -134,6 +136,11 @@ export function ReasonDialog({
             })}
           </p>
         </div>
+        {/* Deleting an account erases its journal values but not the free-text reason,
+            so the reason must not name anyone (API README §2.12). */}
+        <p id={`${id}-privacy`} className="mt-1 text-sm text-muted">
+          {t('admin.reason.privacy')}
+        </p>
         {fieldError && (
           <p id={`${id}-error`} role="alert" className="mt-1 text-sm text-risk-fg">
             {t(fieldError, { min: REASON_MIN_LENGTH, max: REASON_MAX_LENGTH })}

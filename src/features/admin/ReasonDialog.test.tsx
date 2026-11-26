@@ -1,3 +1,4 @@
+import i18n from 'i18next';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ApiError } from '../../api/errors';
 import { ReasonDialog } from './ReasonDialog';
@@ -36,9 +37,22 @@ describe('ReasonDialog', () => {
     expect(dialog).toHaveAccessibleDescription('ami_4 ne compte plus dans le classement.');
     expect(screen.getByRole('button', { name: 'Annuler' })).toHaveFocus();
     expect(field()).toHaveAccessibleDescription(
-      'De 3 à 500 caractères. Il est gardé dans le journal.',
+      'De 3 à 500 caractères. Il est gardé dans le journal. Ne nomme personne : ni nom, ni pseudo, ni e-mail.',
     );
     expect(screen.getByText('0 / 500')).toBeInTheDocument();
+  });
+
+  it('asks not to name anyone, in English too', async () => {
+    await i18n.changeLanguage('en');
+    try {
+      renderDialog({ confirmLabel: 'Remove' });
+
+      expect(screen.getByRole('textbox', { name: 'Reason' })).toHaveAccessibleDescription(
+        "3 to 500 characters. It is kept in the log. Don't name anyone: no name, nickname or email.",
+      );
+    } finally {
+      await i18n.changeLanguage('fr');
+    }
   });
 
   it('keeps the confirmation unavailable under 3 characters', async () => {
@@ -112,7 +126,7 @@ describe('ReasonDialog', () => {
 
     expect(field()).toHaveAttribute('aria-invalid', 'true');
     expect(field()).toHaveAccessibleDescription(
-      'De 3 à 500 caractères. Il est gardé dans le journal. Motif refusé : écris de 3 à 500 caractères, sans caractère invisible.',
+      'De 3 à 500 caractères. Il est gardé dans le journal. Ne nomme personne : ni nom, ni pseudo, ni e-mail. Motif refusé : écris de 3 à 500 caractères, sans caractère invisible.',
     );
   });
 
