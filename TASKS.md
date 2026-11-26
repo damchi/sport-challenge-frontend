@@ -42,7 +42,7 @@ Correspondance avec les anciens statuts :
 - **Estimation** en points : 1, 2, 3, 5 (un ticket à 8 doit être découpé).
 - **Statut** : voir le tableau de correspondance ci-dessus (issue ouverte, étiquettes `en-cours`, `v1.1`, `blocked`, `needs-decision`, issue fermée). La ligne `Statut` de chaque ticket ci-dessous ne sert qu'à l'import.
 - **Commits** : Conventional Commits en anglais (`feat`, `fix`, `refactor`, `test`, `docs`, `chore`), scope = fonctionnalité, 72 caractères au plus, `Closes #N` (numéro de l'issue) puis `Refs: SC-WEB-0xx` en pied.
-- **Routes web** : `/` landing page · `/challenges` accueil · `/challenges/new` · `/challenges/:id` (onglets classement, participants, activités) · `/activities` · `/activities/new` · `/activities/:id/edit` · `/me` · `/invite#<jeton>` (jeton dans le fragment, README §4.4) · `/onboarding` · `/callback` · `/admin` (comptes `is_admin`).
+- **Routes web** : `/` landing page · `/challenges` accueil · `/challenges/new` · `/challenges/:id` (onglets classement, participants, activités) · `/challenges/:id/participants/:userId` (activités d'un participant) · `/activities` · `/activities/new` · `/activities/:id/edit` · `/me` · `/invite#<jeton>` (jeton dans le fragment, README §4.4) · `/onboarding` · `/callback` · `/admin` (comptes `is_admin` : tableau de bord, puis `challenges`, `challenges/:id`, `challenges/:id/settings`, `users`, `users/:id`, `users/:id/activities/new`, `users/:id/activities/:activityId`, `journal`).
 - **Définition de terminé** :
   - [ ] Critères d'acceptation remplis
   - [ ] `pnpm check` passe (format, typecheck, lint, i18n:check, tests)
