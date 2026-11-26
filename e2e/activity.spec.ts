@@ -1,3 +1,4 @@
+import { mockActivities } from '../src/mocks/handlers';
 import { expect, signInAt, test } from './fixtures';
 
 test('a user records an activity with an idempotency key', async ({ page }) => {
@@ -54,4 +55,29 @@ test('the lock of a judged week keeps its size, as the menu of the others', asyn
   if ((page.viewportSize()?.width ?? 0) < 1024) {
     expect(Math.abs(lockBox.y - lockRow.y - (menuBox.y - menuRow.y))).toBeLessThanOrEqual(1);
   }
+});
+
+test('a user edits, then deletes an activity of this week', async ({ page }) => {
+  const activity = mockActivities[0];
+  if (!activity || activity.locked) throw new Error('No open activity in the mocks');
+  await signInAt(page, '/activities');
+
+  const menu = page.getByRole('button', { name: "Actions de l'activité" }).first();
+  await menu.click();
+  await page.getByRole('link', { name: 'Modifier' }).first().click();
+  await expect(page).toHaveURL(`/activities/${activity.id}/edit`);
+  await page.getByRole('textbox', { name: 'Distance en kilomètres' }).fill('9,5');
+  const editing = page.waitForRequest((request) => request.method() === 'PATCH');
+  await page.getByRole('button', { name: 'Enregistrer les modifications' }).click();
+  expect((await editing).postDataJSON()).toMatchObject({ distance_meters: 9500 });
+  await expect(page.getByText('Activité modifiée.')).toBeVisible();
+
+  // Back through the app: a reload would ask to sign in again (fakeAuth0.ts).
+  await page.getByRole('link', { name: 'Retour à mes activités' }).click();
+  await menu.click();
+  await page.getByRole('button', { name: 'Supprimer', exact: true }).first().click();
+  const deleting = page.waitForRequest((request) => request.method() === 'DELETE');
+  await page.getByRole('button', { name: "Supprimer l'activité" }).click();
+  expect((await deleting).url()).toMatch(new RegExp(`/api/v1/activities/${activity.id}$`));
+  await expect(page.getByText('Activité supprimée.')).toBeVisible();
 });
