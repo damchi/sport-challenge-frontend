@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   check:
+    # Required by the main ruleset under this exact name: renaming it blocks merges.
     name: typecheck, lint, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -40,6 +41,10 @@ jobs:
           pnpm api:generate
           git diff --exit-code src/api/generated
           test -z "$(git status --porcelain src/api/generated)"
+
+      # Fails on a file that pnpm format would rewrite.
+      - name: Formatting
+        run: pnpm format:check
 
       - name: Typecheck
         run: pnpm typecheck
