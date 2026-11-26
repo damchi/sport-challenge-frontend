@@ -38,7 +38,6 @@ describe('useUpdateMe', () => {
       session: {
         getAccessToken: () => Promise.resolve('token'),
         renew: () => Promise.resolve(false),
-        expire: () => undefined,
       },
     });
     const wrapper = ({ children }: { children: ReactNode }) => (

@@ -13,6 +13,7 @@ import {
   challengeWeekday,
   timeZoneName,
 } from '../../../domain/format/challengeDates';
+import { MAX_WEEKS, MIN_WEEKS } from '../../../domain/schemas/challenge';
 
 /**
  * The window as it will run, written in its time zone, once the three fields
@@ -37,8 +38,8 @@ export function windowPreview(
       ? isStartDateWithinAYear(startDate, timeZone, now)
       : isStartDateInRange(startDate, timeZone, now)) ||
     !Number.isInteger(weeks) ||
-    weeks < 2 ||
-    weeks > 52
+    weeks < MIN_WEEKS ||
+    weeks > MAX_WEEKS
   ) {
     return undefined;
   }

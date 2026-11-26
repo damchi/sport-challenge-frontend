@@ -91,7 +91,7 @@ export function useParticipants(challengeId: string, size: PageSize) {
 }
 
 /**
- * The ranking of the 3 categories of a challenge, as the server computes it:
+ * The ranking of the categories of a challenge, as the server computes it:
  * ranks with their ties (1, 1, 3), then the participants who abandoned,
  * without a rank. Joining or abandoning reloads it (its key starts with the
  * challenge's).

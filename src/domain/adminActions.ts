@@ -1,3 +1,5 @@
+import { isUuid } from './uuid';
+
 export type AdminActionTargetType = 'challenge' | 'participant' | 'activity' | 'user';
 export const ADMIN_ACTION_TARGET_TYPES: readonly AdminActionTargetType[] = [
   'challenge',
@@ -15,8 +17,6 @@ export interface AdminActionFilters {
   challenge_id?: string;
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 function isTargetType(value: unknown): value is AdminActionTargetType {
   return ADMIN_ACTION_TARGET_TYPES.includes(value as AdminActionTargetType);
 }
@@ -32,8 +32,8 @@ export function readAdminActionFilters(params: URLSearchParams): AdminActionFilt
   const challengeId = params.get('challenge_id');
   return {
     ...(isTargetType(targetType) && { target_type: targetType }),
-    ...(targetId && UUID.test(targetId) && { target_id: targetId }),
-    ...(challengeId && UUID.test(challengeId) && { challenge_id: challengeId }),
+    ...(targetId && isUuid(targetId) && { target_id: targetId }),
+    ...(challengeId && isUuid(challengeId) && { challenge_id: challengeId }),
   };
 }
 

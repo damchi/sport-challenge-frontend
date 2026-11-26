@@ -7,6 +7,7 @@ describe('SessionEndPage', () => {
     render(<SessionEndPage reason="account_deleted" onAction={onAction} />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Compte supprimé' })).toBeInTheDocument();
+    expect(document.title).toBe('Compte supprimé · Sport Challenge');
     fireEvent.click(screen.getByRole('button', { name: 'Terminer' }));
 
     expect(onAction).toHaveBeenCalledTimes(1);
