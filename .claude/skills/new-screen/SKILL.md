@@ -14,10 +14,11 @@ Avant de commencer : vérifie dans le `README.md` (§4.1 et le tableau « Écran
 1. **Données** : liste les requêtes et mutations nécessaires. Elles doivent exister dans `src/api/hooks`. Sinon, utilise le skill `api-client-sync` ; si la route manque dans le contrat, signale-le à l'utilisateur au lieu de la contourner.
 2. **Feature** : crée ou complète `features/<domaine>/` (composants, hooks locaux, types), dans `src/features`. La logique pure va dans `src/domain`. Ne crée que les fichiers et composants dont l'écran a besoin maintenant.
 3. **Web** : `pages/<Nom>Page.tsx` (fine : elle assemble des composants), route dans `routes/` avec la garde « connecté » si nécessaire.
+4. **Design** : lis `docs/design/design.md` et la maquette de l'écran dans `docs/design/maquettes/` s'il y en a une (`design.md` fait foi sur les noms et chiffres d'exemple). Couleurs, typographie et composants passent par les jetons de design, jamais en dur.
 5. **États obligatoires** : chargement (squelette), erreur traduite avec réessai, vide avec explication, « connexion requise ».
 6. **Textes** : skill `i18n-and-formats`, clés françaises et anglaises, aucune chaîne en dur.
 7. **Accessibilité et thèmes** : libellés, zones tactiles d'au moins 44 pt, jetons de design, thème clair et sombre.
-8. **Rafraîchissement** : en V1, rechargement à l'ouverture et au retour dans l'app ; ni bouton ni geste maison, le tirer-pour-rafraîchir natif du navigateur recharge la page (pas de temps réel).
+8. **Rafraîchissement** : celui que décrit le README §4.3 (en V1, ni bouton « Actualiser » ni geste maison).
 9. **Tests** : composants avec Testing Library, hooks avec MSW ; un test de bout en bout si l'écran fait partie d'un parcours critique (connexion, création de challenge, saisie d'activité, invitation).
 10. **Revue** : agents `ts-reviewer`, `ux-reviewer`, et `spec-guardian` si l'écran porte une règle produit.
 
@@ -29,4 +30,4 @@ Avant de commencer : vérifie dans le `README.md` (§4.1 et le tableau « Écran
 
 ## Fin
 
-`pnpm check`, puis propose le commit (fichiers + message) sans l'exécuter.
+`pnpm check`, relectures, puis commit et push selon le workflow du dépôt (`CLAUDE.md`, skill `next-task`).

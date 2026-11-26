@@ -43,4 +43,4 @@ Teste les formateurs de `src/domain` avec des cas fixes (changement d'heure, fus
 
 ## Fin
 
-`pnpm check`, agent `ux-reviewer`, puis propose le commit sans l'exécuter.
+`pnpm check`, agent `ux-reviewer`, puis commit et push selon le workflow du dépôt (`CLAUDE.md`, skill `next-task`).
