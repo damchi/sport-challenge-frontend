@@ -275,6 +275,12 @@
     },
     "clearFilters": "Clear the filters"
   },
+  "leave": {
+    "title": "Leave without applying the change?",
+    "message": "The change is not applied: it will be lost.",
+    "confirm": "Leave",
+    "cancel": "Stay"
+  },
   "recompute": {
     "none": "This change touches no ranking.",
     "challenge": "Challenge",

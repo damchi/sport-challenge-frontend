@@ -275,6 +275,12 @@
     },
     "clearFilters": "Effacer les filtres"
   },
+  "leave": {
+    "title": "Quitter sans appliquer le changement ?",
+    "message": "Le changement n'est pas appliqué : il sera perdu.",
+    "confirm": "Quitter",
+    "cancel": "Rester"
+  },
   "recompute": {
     "none": "Cette modification ne touche aucun classement.",
     "challenge": "Défi",

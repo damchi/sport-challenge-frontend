@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
+import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { components } from '../../api/generated/schema';
 import type { AdminCorrection } from '../../api/hooks/admin/useAdminCorrection';
 import { mockAdminChallenges } from '../../mocks/handlers';
@@ -79,32 +80,37 @@ function serveRestore(answer: (body: Body) => Response | Promise<Response>) {
 function renderFlow() {
   const onDone = vi.fn();
   const auth = createFakeAuth({ isAuthenticated: true, user: { id: 'auth0|1' } });
+  // The flow asks before leaving: it needs a router that can hold it back.
+  const flow = (
+    <RecomputeFlow
+      change={{ title: 'Restaurer « Défi 1 »', details: 'Supprimé le 18 nov.' }}
+      reasonTitle="Confirmer la restauration"
+      confirmLabel="Confirmer"
+      send={async (client, body) => {
+        const { data } = await client.POST('/api/v1/admin/challenges/{challengeId}/restore', {
+          params: { path: { challengeId } },
+          // The contract still wants a reason on a preview, until SC-API-176
+          // (damchi/sport-challenge-api#337) makes it optional.
+          body: body as components['schemas']['AdminCorrectionReason'],
+        });
+        return data;
+      }}
+      onDone={onDone}
+    >
+      {({ showPreview, pending, error }) => (
+        <>
+          <button type="button" onClick={() => showPreview()} disabled={pending}>
+            Voir l'aperçu
+          </button>
+          {error && <p role="alert">{error}</p>}
+        </>
+      )}
+    </RecomputeFlow>
+  );
+  const router = createMemoryRouter([{ path: '/', element: flow }]);
   render(
     <AppProviders auth={auth}>
-      <RecomputeFlow
-        change={{ title: 'Restaurer « Défi 1 »', details: 'Supprimé le 18 nov.' }}
-        reasonTitle="Confirmer la restauration"
-        confirmLabel="Confirmer"
-        send={async (client, body) => {
-          const { data } = await client.POST('/api/v1/admin/challenges/{challengeId}/restore', {
-            params: { path: { challengeId } },
-            // The contract still wants a reason on a preview, until SC-API-176
-            // (damchi/sport-challenge-api#337) makes it optional.
-            body: body as components['schemas']['AdminCorrectionReason'],
-          });
-          return data;
-        }}
-        onDone={onDone}
-      >
-        {({ showPreview, pending, error }) => (
-          <>
-            <button type="button" onClick={() => showPreview()} disabled={pending}>
-              Voir l'aperçu
-            </button>
-            {error && <p role="alert">{error}</p>}
-          </>
-        )}
-      </RecomputeFlow>
+      <RouterProvider router={router} />
     </AppProviders>,
   );
   return { onDone };

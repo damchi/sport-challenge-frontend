@@ -88,6 +88,7 @@ function renderEditor(path: string, queryClient = createTestQueryClient()) {
       <RouterProvider router={router} />
     </AppProviders>,
   );
+  return router;
 }
 
 function type(field: HTMLElement, value: string) {
@@ -242,6 +243,31 @@ describe('AdminActivityEditor', () => {
     expect(screen.getByLabelText('Date')).toHaveValue('2026-11-12');
     expect(textbox('Minutes')).toHaveValue('46');
     expect(textbox('Distance en kilomètres')).toHaveValue('8,2');
+  });
+
+  it('asks before leaving the preview and the reason', async () => {
+    serve();
+    const router = renderEditor(`/admin/users/${marie.id}/activities/new`);
+
+    await fill();
+    fireEvent.click(screen.getByRole('button', { name: "Voir l'aperçu" }));
+    await screen.findByRole('heading', { level: 2, name: 'Aperçu des changements' });
+
+    void router.navigate(`/admin/users/${marie.id}`);
+    const leave = await screen.findByRole('dialog', {
+      name: 'Quitter sans appliquer le changement ?',
+    });
+    fireEvent.click(within(leave).getByRole('button', { name: 'Rester' }));
+    await waitFor(() => expect(leave).not.toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    void router.navigate(`/admin/users/${marie.id}`);
+    fireEvent.click(
+      within(
+        await screen.findByRole('dialog', { name: 'Quitter sans appliquer le changement ?' }),
+      ).getByRole('button', { name: 'Quitter' }),
+    );
+    expect(await screen.findByText('Fiche du compte')).toBeInTheDocument();
   });
 
   it('says so for an activity the account does not have', async () => {

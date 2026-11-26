@@ -176,6 +176,63 @@ describe('AdminChallengeSettings', () => {
     expect(screen.getByRole('heading', { level: 3, name: '1 changement' })).toBeInTheDocument();
   });
 
+  it('asks before leaving changed settings, and stays with them', async () => {
+    const router = renderSettings(first.id);
+
+    fireEvent.change(await stepField(), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('link', { name: 'Annuler' }));
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'Quitter sans appliquer le changement ?',
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Rester' }));
+
+    await waitFor(() => expect(dialog).not.toBeVisible());
+    expect(router.state.location.pathname).toBe(`/admin/challenges/${first.id}/settings`);
+    expect(await stepField()).toHaveValue(3);
+
+    fireEvent.click(screen.getByRole('link', { name: 'Défi 1' }));
+    fireEvent.click(
+      within(
+        await screen.findByRole('dialog', { name: 'Quitter sans appliquer le changement ?' }),
+      ).getByRole('button', { name: 'Quitter' }),
+    );
+    expect(await screen.findByText('Fiche du défi')).toBeInTheDocument();
+  });
+
+  it('leaves unchanged settings without asking', async () => {
+    renderSettings(first.id);
+
+    await stepField();
+    fireEvent.click(screen.getByRole('link', { name: 'Annuler' }));
+
+    expect(await screen.findByText('Fiche du défi')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('asks before leaving the preview and the reason', async () => {
+    servePatch();
+    const router = renderSettings(first.id);
+
+    fireEvent.change(await stepField(), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: "Voir l'aperçu" }));
+    await screen.findByRole('heading', { level: 2, name: 'Aperçu des changements' });
+
+    void router.navigate('/admin/challenges');
+    const leave = await screen.findByRole('dialog', {
+      name: 'Quitter sans appliquer le changement ?',
+    });
+    fireEvent.click(within(leave).getByRole('button', { name: 'Rester' }));
+    await waitFor(() => expect(leave).not.toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    void router.navigate('/admin/challenges');
+    expect(
+      await screen.findByRole('dialog', { name: 'Quitter sans appliquer le changement ?' }),
+    ).toBeVisible();
+    expect(router.state.location.pathname).toBe(`/admin/challenges/${first.id}/settings`);
+  });
+
   it('previews nothing while nothing changes', async () => {
     const bodies = servePatch();
     renderSettings(first.id);

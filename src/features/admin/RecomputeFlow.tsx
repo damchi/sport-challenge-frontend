@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowRight, Check, Info } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAdminChallenge } from '../../api/hooks/admin/useAdminChallenges';
 import {
@@ -9,6 +9,7 @@ import {
 } from '../../api/hooks/admin/useAdminCorrection';
 import type { ApiClient } from '../../api/client';
 import { ApiError, errorMessage } from '../../api/errors';
+import { LeaveWarning } from './LeaveWarning';
 import { ReasonDialog } from './ReasonDialog';
 import { RecomputePreview } from './RecomputePreview';
 
@@ -95,7 +96,9 @@ function useErrorText(error: unknown, scope: string | undefined): string | undef
  * `showPreview`'s `outcome`, that the preview is shown or refused, to show the
  * refusal itself). `send` makes the change's
  * request; `onDone` gets the server's answer once it is made, and leaves
- * the flow (the reason dialog stays unavailable until then).
+ * the flow (the reason dialog stays unavailable until then). Leaving the
+ * page from the preview or the reason asks first, until the change is made;
+ * on the fields, the caller asks (a router holds one blocker at a time).
  */
 export function RecomputeFlow({
   change,
@@ -127,12 +130,20 @@ export function RecomputeFlow({
   const correction = useAdminCorrection(send);
   const [step, setStep] = useState<Step>('input');
   const [preview, setPreview] = useState<AdminCorrection | null>(null);
-  const [done, setDone] = useState(false);
+  // The server's answer once the change is made.
+  const [made, setMade] = useState<AdminCorrection | null>(null);
+  const done = made !== null;
   const heading = useRef<HTMLHeadingElement>(null);
   const input = useRef<HTMLDivElement>(null);
   // Back from the preview: the focus goes to the fields, not lost on the page.
   const [returned, setReturned] = useState(false);
   const previewError = useErrorText(step === 'input' ? correction.error : undefined, errorScope);
+
+  // After the render that lifted the leave warning, so leaving does not ask.
+  const finish = useEffectEvent((answer: AdminCorrection) => onDone(answer));
+  useEffect(() => {
+    if (made) finish(made);
+  }, [made]);
 
   // On the preview, the focus goes to its title so a screen reader announces it.
   useEffect(() => {
@@ -162,10 +173,7 @@ export function RecomputeFlow({
     correction.mutate(
       { reason, dry_run: false },
       {
-        onSuccess: (answer) => {
-          setDone(true);
-          onDone(answer);
-        },
+        onSuccess: setMade,
       },
     );
   };
@@ -181,6 +189,7 @@ export function RecomputeFlow({
   const touched = preview.challenges;
   return (
     <div className="flex flex-col gap-6">
+      <LeaveWarning active={!done} />
       <button
         type="button"
         onClick={backToInput}
