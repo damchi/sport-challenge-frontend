@@ -18,7 +18,7 @@ Avant de commencer : vérifie dans le `README.md` (§4.1 et le tableau « Écran
 5. **États obligatoires** : chargement (squelette), erreur traduite avec réessai, vide avec explication, « connexion requise ».
 6. **Textes** : skill `i18n-and-formats`, clés françaises et anglaises, aucune chaîne en dur.
 7. **Accessibilité et thèmes** : libellés, zones tactiles d'au moins 44 pt, jetons de design, thème clair et sombre.
-8. **Rafraîchissement** : celui que décrit le README §2 (skill `challenge-ui-rules`).
+8. **Rafraîchissement** : celui que décrit le README §4.3 (en V1, ni bouton « Actualiser » ni geste maison).
 9. **Tests** : composants avec Testing Library, hooks avec MSW ; un test de bout en bout si l'écran fait partie d'un parcours critique (connexion, création de challenge, saisie d'activité, invitation).
 10. **Revue** : agents `ts-reviewer`, `ux-reviewer`, et `spec-guardian` si l'écran porte une règle produit.
 
@@ -30,4 +30,4 @@ Avant de commencer : vérifie dans le `README.md` (§4.1 et le tableau « Écran
 
 ## Fin
 
-`pnpm check`, relectures, puis commit et push selon le workflow du dépôt (`CLAUDE.md`, skill `dev-workflow:next-task`).
+`pnpm check`, relectures, puis commit et push selon le workflow du dépôt (`CLAUDE.md`, skill `next-task`).

@@ -7,7 +7,14 @@ description: Règles d'affichage et de saisie des challenges du frontend Sport C
 
 > **V1 = web uniquement.** Ignore tout ce qui concerne le mobile, Expo, EAS, Maestro et les liens profonds : c'est reporté à la V2.
 
-Les règles produit ne sont **pas** recopiées ici. Lis celles de l'écran avant de le construire : le §2 du `README.md` (résumé côté interface, avec les décisions propres à l'interface) et le §2 du README du backend, qui fait foi (§2.1 challenges, §2.2 participation, §2.3 catégories, §2.4 coefficients, §2.5 activités, §2.6 classement, §2.7 badges, §2.12 administration). Ce skill dit **comment** les afficher.
+Les règles produit ne sont **pas** recopiées ici. Lis celles de l'écran avant de le construire :
+
+- `README.md` §2 : résumé des règles côté interface et décisions propres à l'interface (mention « manuelle », visibilité des activités entre participants…) ;
+- `README.md` §4 : écrans (§4.2), rafraîchissement (§4.3 : ni bouton « Actualiser » ni geste maison en V1), invitations et liens invalides ou expirés (§4.4), dates et unités (§4.6) ;
+- `docs/design/design.md` : libellés (« Abandonner », pas « Quitter »), statuts (« A abandonné »), confirmations des actions définitives ;
+- README du backend §2, qui fait foi : §2.1 challenges, §2.2 participation (un exclu apparaît comme un abandon), §2.3 catégories, §2.4 coefficients, §2.5 activités, §2.6 classement, §2.7 badges, §2.12 administration.
+
+Ce skill dit **comment** les afficher.
 
 ## Le serveur décide, l'interface reflète
 

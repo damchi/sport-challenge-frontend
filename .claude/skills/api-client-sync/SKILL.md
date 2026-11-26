@@ -21,7 +21,7 @@ Le backend est la source de vérité du contrat (`openapi.yaml`). Le frontend ne
 - Mutations : invalide les clés concernées (création d'activité → classement et activités ; départ d'un challenge → challenge, participants, classement).
 - Listes : pagination par curseur (`useInfiniteQuery`).
 - Création d'activité : clé d'idempotence générée côté client et envoyée à chaque tentative.
-- Classement : `staleTime` court ; rechargement selon le README §2 (skill `challenge-ui-rules`).
+- Classement : `staleTime` court ; rechargement selon le README §4.3 (en V1, ni bouton ni temps réel).
 
 ## Erreurs
 
@@ -39,4 +39,4 @@ Il manque un champ (par exemple « peut rejoindre », objectif de la semaine, st
 
 ## Fin
 
-`pnpm check`, agent `ts-reviewer`, puis commit et push selon le workflow du dépôt (`CLAUDE.md`, skill `dev-workflow:next-task`).
+`pnpm check`, agent `ts-reviewer`, puis commit et push selon le workflow du dépôt (`CLAUDE.md`, skill `next-task`).
