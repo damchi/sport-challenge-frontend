@@ -25,6 +25,7 @@ describe('adminReasonSchema', () => {
 
   it('keeps line breaks and tabs, refuses other hidden characters', () => {
     expect(message('Séance\noubliée\tvue')).toBeUndefined();
+    expect(message('Séance\u2028oubliée\u2029vue')).toBeUndefined();
     expect(message('abc\u0007')).toBe('admin.reason.characters');
   });
 });
