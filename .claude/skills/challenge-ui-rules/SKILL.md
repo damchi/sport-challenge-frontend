@@ -19,6 +19,7 @@ Ce skill dit **comment** les afficher.
 ## Le serveur décide, l'interface reflète
 
 - Une action, une échéance ou un statut ne s'affiche que d'après les champs de l'API : `can_join`, `locked`, `week_ends_at`, statut de l'élimination (`reached`, `at_risk`, `in_progress`, `eliminated`), minimum de la semaine. Jamais de formule recopiée côté client.
+- Quand une action n'est plus possible (rejoindre après la semaine 1, ajouter une activité après la fin du challenge, inviter après la fermeture des inscriptions), son bouton disparaît et un texte dit pourquoi : jamais d'impasse. Les actions de créateur (ajouter un créateur, exclure, supprimer) ne s'affichent qu'aux créateurs.
 - Champ manquant : skill `api-client-sync`, section « Si le contrat ne suffit pas ».
 
 ## Catégories et classement
