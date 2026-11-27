@@ -212,6 +212,9 @@
       "empty": "This account has no activities.",
       "add": "Add an activity",
       "deleted": "Activity deleted. The challenges it counted in are recomputed.",
+      "judged": "Week judged",
+      "created": "Added by the admin on {{date}}",
+      "updated": "Changed by the admin on {{date}}",
       "noDistance": "no distance",
       "rule": "A judged week can only be changed by an admin. Any change recomputes every challenge the activity counts in."
     }

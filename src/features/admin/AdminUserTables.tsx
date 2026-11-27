@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Lock, Plus, Shield } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -10,9 +10,11 @@ import {
 import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
 import { groupByWeek, dayKind } from '../../domain/activityWeeks';
 import { userChallengeRole } from '../../domain/adminUsers';
+import { challengeDay } from '../../domain/format/challengeDates';
 import { activityClock, activityDay } from '../../domain/format/activityDates';
 import { formatKm } from '../../domain/format/distance';
 import { formatActivityDuration } from '../../domain/format/duration';
+import { StatusPill } from '../../components/StatusPill';
 import { usePageSize } from '../../lib/pageSize';
 import { ActivityMenu } from '../activities/ActivityMenu';
 import { WeekGroup } from '../activities/ActivityList';
@@ -224,11 +226,25 @@ function AdminActivityCard({
     <article aria-labelledby={titleId} className="flex gap-3 p-4">
       <SportIcon code={activity.sport_code} />
       <div className="min-w-0 flex-1">
-        <h5 id={titleId} className="font-bold break-words">
-          {sport}
-          {' · '}
-          <time dateTime={activity.started_at}>{start}</time>
-        </h5>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h5 id={titleId} className="font-bold break-words">
+            {sport}
+            {' · '}
+            <time dateTime={activity.started_at}>{start}</time>
+          </h5>
+          {activity.locked && (
+            <StatusPill label={t('admin.users.activities.judged')} Icon={Lock} tone="neutral" />
+          )}
+          {activity.admin_change && (
+            <StatusPill
+              label={t(`admin.users.activities.${activity.admin_change.action}`, {
+                date: challengeDay(activity.admin_change.at, timeZone, locale),
+              })}
+              Icon={Shield}
+              tone="raised"
+            />
+          )}
+        </div>
         <p className="text-muted tabular-nums">
           {formatActivityDuration(activity.duration_seconds)}
           {' · '}
@@ -242,6 +258,19 @@ function AdminActivityCard({
             </>
           )}
         </p>
+        {activity.contributions.length > 0 && (
+          <p className="text-sm text-muted break-words">
+            {t('activities.countsFor', {
+              challenges: activity.contributions
+                .map(({ challenge_title, distance_meters }) =>
+                  distance_meters === null
+                    ? `${challenge_title} ${t('activities.timeOnly')}`
+                    : challenge_title,
+                )
+                .join(', '),
+            })}
+          </p>
+        )}
       </div>
       {changes && (
         <ActivityMenu

@@ -158,6 +158,75 @@ describe('AdminUserSheet', () => {
     expect(await screen.findByText("Ce compte n'existe pas.")).toBeInTheDocument();
   });
 
+  it('says where each activity counts, a judged week and what an admin did', async () => {
+    const activity = (id: string, startedAt: string) => ({
+      id,
+      sport_code: 'run',
+      sport_label: null,
+      started_at: startedAt,
+      duration_seconds: 1800,
+      distance_meters: 5000,
+      elevation_gain_meters: null,
+      source: 'manual' as const,
+      created_at: startedAt,
+      contributions: [],
+      locked: false,
+      admin_change: null,
+    });
+    const adminId = '00000000-0000-4000-8000-0000000000aa';
+    server.use(
+      http.get('*/api/v1/admin/users/:userId/activities', () =>
+        HttpResponse.json({
+          items: [
+            {
+              ...activity('00000000-0000-4000-8000-000000000001', '2026-11-21T14:30:00Z'),
+              locked: true,
+              contributions: [
+                {
+                  challenge_id: '00000000-0000-4000-8000-0000000000c2',
+                  challenge_title: "Dénivelé d'hiver",
+                  distance_meters: null,
+                  duration_seconds: 1800,
+                },
+                {
+                  challenge_id: '00000000-0000-4000-8000-0000000000c1',
+                  challenge_title: "Défi d'automne",
+                  distance_meters: 5000,
+                  duration_seconds: 1800,
+                },
+              ],
+            },
+            {
+              ...activity('00000000-0000-4000-8000-000000000002', '2026-11-20T14:30:00Z'),
+              // 02:30 UTC on the 23rd: still the 22nd in Montreal.
+              admin_change: { action: 'created', at: '2026-11-23T02:30:00Z', admin_id: adminId },
+            },
+            {
+              ...activity('00000000-0000-4000-8000-000000000003', '2026-11-19T14:30:00Z'),
+              admin_change: { action: 'updated', at: '2026-11-21T15:00:00Z', admin_id: adminId },
+            },
+            activity('00000000-0000-4000-8000-000000000004', '2026-11-18T14:30:00Z'),
+          ],
+          next_cursor: null,
+        }),
+      ),
+    );
+    renderSheet(marie.id);
+
+    const [judged, added, changed, plain] = await activityCards();
+    if (!judged || !added || !changed || !plain) throw new Error('No activities');
+    expect(within(judged).getByText('Semaine jugée')).toBeInTheDocument();
+    expect(
+      within(judged).getByText("Compte pour : Dénivelé d'hiver (temps seulement), Défi d'automne"),
+    ).toBeInTheDocument();
+    expect(within(added).getByText("Ajoutée par l'admin le 22 nov.")).toBeInTheDocument();
+    expect(within(changed).getByText("Modifiée par l'admin le 21 nov.")).toBeInTheDocument();
+    expect(within(added).queryByText('Semaine jugée')).not.toBeInTheDocument();
+    expect(
+      within(plain).queryByText(/Compte pour|Semaine jugée|par l'admin/),
+    ).not.toBeInTheDocument();
+  });
+
   it('asks nothing for an address that is no account', async () => {
     const asked: string[] = [];
     server.events.on('request:start', ({ request }) => asked.push(request.url));
