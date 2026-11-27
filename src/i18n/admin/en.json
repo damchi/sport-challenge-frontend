@@ -210,17 +210,10 @@
     "activities": {
       "title": "Activities of the account",
       "empty": "This account has no activities.",
-      "sport": "Sport",
-      "startedAt": "Session",
-      "duration": "Duration",
-      "distance": "Distance",
-      "elevation": "Elev. gain",
-      "none": "—",
       "add": "Add an activity",
-      "actions": "Actions",
-      "edit": "Edit the activity of {{activity}}",
-      "delete": "Delete the activity of {{activity}}",
-      "deleted": "Activity deleted. The challenges it counted in are recomputed."
+      "deleted": "Activity deleted. The challenges it counted in are recomputed.",
+      "noDistance": "no distance",
+      "rule": "A judged week can only be changed by an admin. Any change recomputes every challenge the activity counts in."
     }
   },
   "reason": {

@@ -173,7 +173,7 @@ export function ActivityItem({
           </span>
         ) : (
           <ActivityMenu
-            activityId={activity.id}
+            editTo={`/activities/${activity.id}/edit`}
             describedBy={`${titleId} ${startId}`}
             buttonRef={menuButton}
             deleting={deleteActivity.isPending}

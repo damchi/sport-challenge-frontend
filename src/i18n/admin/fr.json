@@ -210,17 +210,10 @@
     "activities": {
       "title": "Activités du compte",
       "empty": "Ce compte n'a aucune activité.",
-      "sport": "Sport",
-      "startedAt": "Séance",
-      "duration": "Durée",
-      "distance": "Distance",
-      "elevation": "D+",
-      "none": "—",
       "add": "Ajouter une activité",
-      "actions": "Actions",
-      "edit": "Modifier l'activité du {{activity}}",
-      "delete": "Supprimer l'activité du {{activity}}",
-      "deleted": "Activité supprimée. Les défis où elle comptait sont recalculés."
+      "deleted": "Activité supprimée. Les défis où elle comptait sont recalculés.",
+      "noDistance": "pas de distance",
+      "rule": "Une semaine jugée ne se modifie plus que par un admin. Toute modification recalcule chaque défi où l'activité compte."
     }
   },
   "reason": {

@@ -10,17 +10,18 @@ const ITEM =
  * The "…" button of an activity that can still change: a disclosure with
  * "Edit" (a link to its form) and "Delete" (`onDelete` asks first). Escape
  * or a click elsewhere closes it, the focus back on the button, the same as
- * the challenge's menu. `describedBy` names the activity to a screen reader;
- * `buttonRef` lets the caller give the focus back to the button.
+ * the challenge's menu. `editTo` is the address of the form; `describedBy`
+ * names the activity to a screen reader; `buttonRef` lets the caller give
+ * the focus back to the button.
  */
 export function ActivityMenu({
-  activityId,
+  editTo,
   describedBy,
   buttonRef,
   deleting,
   onDelete,
 }: {
-  activityId: string;
+  editTo: string;
   describedBy: string;
   buttonRef: RefObject<HTMLButtonElement | null>;
   deleting: boolean;
@@ -79,7 +80,7 @@ export function ActivityMenu({
         <li>
           <Link
             ref={first}
-            to={`/activities/${activityId}/edit`}
+            to={editTo}
             aria-describedby={describedBy}
             className={`${ITEM} text-ink`}
           >
