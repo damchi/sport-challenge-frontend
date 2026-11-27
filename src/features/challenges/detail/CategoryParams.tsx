@@ -6,15 +6,38 @@ type Category = ChallengeDetail['categories'][number];
 
 /**
  * Settings of a category, frozen at creation, as the server sends them: the
- * elimination's X, the Grand prix's criteria, scale, minimum session and the
- * explanation of the weekly elevation criterion. The distance factors are
- * listed once, in the challenge's details.
+ * elimination's X (in km, or in repetitions of its exercise), the Grand
+ * prix's criteria, scale, minimum session and the explanation of the weekly
+ * elevation criterion. The distance factors are listed once, in the
+ * challenge's details.
  */
 export function CategoryParams({ category }: { category: Category }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const { params } = category;
 
+  if (
+    category.type === 'elimination' &&
+    params.exercise !== undefined &&
+    params.step_repetitions !== undefined
+  ) {
+    return (
+      <ul className="text-sm text-muted">
+        <li>
+          {t('challengeCreate.fields.eliminationExercise.value', {
+            exercise: t(`exercises.${params.exercise}`, { defaultValue: params.exercise }),
+          })}
+        </li>
+        <li>
+          {t('challengeCreate.recap.step', {
+            step: t('challengeCreate.fields.eliminationRepetitions.count', {
+              count: params.step_repetitions,
+            }),
+          })}
+        </li>
+      </ul>
+    );
+  }
   if (category.type === 'elimination' && params.step_meters !== undefined) {
     return (
       <p className="text-sm text-muted">

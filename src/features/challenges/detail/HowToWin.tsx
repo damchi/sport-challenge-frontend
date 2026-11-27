@@ -3,7 +3,7 @@ import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
 import { useSportName } from '../create/useSportName';
 import { CategoryParams } from './CategoryParams';
 import { CATEGORY_ICONS } from './categoryIcons';
-import { CATEGORY_EXPLANATIONS, useCategoryName } from './categoryNames';
+import { categoryExplanation, useCategoryName } from './categoryNames';
 
 const CARD = 'rounded-card border border-border bg-surface p-4 lg:p-5';
 
@@ -27,6 +27,7 @@ export function HowToWin({ challenge }: { challenge: ChallengeDetail }) {
       <ul className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
         {ordered.map((category) => {
           const Icon = CATEGORY_ICONS[category.type];
+          const { exercise } = category.params;
           return (
             <li key={category.type} className={`${CARD} flex min-w-0 flex-col`}>
               <h3 className="flex items-center gap-3 text-lg font-bold">
@@ -35,11 +36,11 @@ export function HowToWin({ challenge }: { challenge: ChallengeDetail }) {
                 </span>
                 {/* A long word breaks rather than widen the page (text enlarged). */}
                 <span className="min-w-0 [overflow-wrap:anywhere]">
-                  {categoryName(category.type)}
+                  {categoryName(category.type, exercise)}
                 </span>
               </h3>
               <p className="mt-3 mb-1 text-muted">
-                {t(CATEGORY_EXPLANATIONS[category.type], {
+                {t(categoryExplanation(category.type, exercise), {
                   sport: sportName(challenge.reference_sport),
                 })}
               </p>
@@ -47,7 +48,10 @@ export function HowToWin({ challenge }: { challenge: ChallengeDetail }) {
                 <CategoryParams category={category} />
               </div>
               <p className="mt-auto border-t border-border pt-3 font-semibold">
-                {t(`challengeDetail.upcoming.howToWin.wins.${category.type}`)}
+                {/* An elimination by repetitions is won in repetitions, not in km. */}
+                {t(
+                  `challengeDetail.upcoming.howToWin.wins.${category.type === 'elimination' && exercise ? 'eliminationRepetitions' : category.type}`,
+                )}
               </p>
             </li>
           );
