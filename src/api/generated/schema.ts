@@ -1700,7 +1700,11 @@ export interface components {
         /**
          * @description Why the admin makes the change, kept in the journal: 3 to 500
          *     characters once surrounding spaces are removed, 3 of them visible; no
-         *     control character but line breaks and tabs. It stays in the journal
+         *     control character but line breaks and tabs (line and paragraph
+         *     separators U+2028 and U+2029 allowed too), no invisible or
+         *     bidirectional formatting character (Unicode Cf, such as U+200B or
+         *     U+202E) but U+200C, U+200D, U+200E, U+200F and the tags of flags
+         *     (U+E0020 to U+E007F). It stays in the journal
          *     once the target account is deleted, unlike its profile values: it
          *     should carry no personal data.
          */
@@ -1953,6 +1957,16 @@ export interface components {
             /** @enum {string} */
             source: "manual";
             /**
+             * Format: double
+             * @description Speed in meters per second, computed as `Activity.speed_mps`; null without distance.
+             */
+            speed_mps: number | null;
+            /**
+             * Format: double
+             * @description Pace in seconds per kilometer, computed as `Activity.pace_seconds_per_km`; null without distance.
+             */
+            pace_seconds_per_km: number | null;
+            /**
              * Format: date-time
              * @description When the activity was recorded.
              */
@@ -2144,8 +2158,8 @@ export interface components {
             title: string;
             /**
              * @description 2000 characters at most; an empty string means no description. No
-             *     control character but line breaks and tabs, no line or
-             *     paragraph separator (U+2028, U+2029), no invisible or bidirectional
+             *     control character but line breaks and tabs (line and paragraph
+             *     separators U+2028 and U+2029 allowed too), no invisible or bidirectional
              *     formatting character (Unicode Cf, such as U+200B or U+202E) but
              *     U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
              *     U+E007F).
@@ -2713,8 +2727,8 @@ export interface components {
             title?: string;
             /**
              * @description 2000 characters at most; an empty string removes the description.
-             *     No control character but line breaks and tabs, no line or
-             *     paragraph separator (U+2028, U+2029), no invisible or bidirectional
+             *     No control character but line breaks and tabs (line and paragraph
+             *     separators U+2028 and U+2029 allowed too), no invisible or bidirectional
              *     formatting character (Unicode Cf, such as U+200B or U+202E) but
              *     U+200C, U+200D, U+200E, U+200F and the tags of flags (U+E0020 to
              *     U+E007F).

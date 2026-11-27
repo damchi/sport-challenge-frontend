@@ -724,6 +724,8 @@ export const handlers = [
       distance_meters: activity.distance_meters,
       elevation_gain_meters: activity.elevation_gain_meters,
       source: activity.source,
+      speed_mps: activity.speed_mps,
+      pace_seconds_per_km: activity.pace_seconds_per_km,
       created_at: activity.started_at,
       contributions: activity.contributions,
       locked: activity.locked,

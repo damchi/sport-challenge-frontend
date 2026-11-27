@@ -110,8 +110,9 @@ describe('AdminUserSheet', () => {
     const [first, yoga, padel] = await activityCards();
     if (!first || !yoga || !padel) throw new Error('No activities');
     expect(within(first).getByRole('heading', { level: 5 })).toHaveTextContent(/19 nov\. à 7/);
-    expect(within(first).getByText(/8,2 km/)).toBeInTheDocument();
-    expect(within(yoga).getByText(/pas de distance/)).toBeInTheDocument();
+    // Pace and speed as the API gives them, none without a distance.
+    expect(within(first).getByText(/8,2 km/)).toHaveTextContent('8,2 km · 5:29 /km · 10,9 km/h');
+    expect(within(yoga).getByText(/pas de distance/)).not.toHaveTextContent(/\/km|km\/h/);
     expect(within(padel).getByRole('heading', { level: 5 })).toHaveTextContent(/^Padel · /);
     expect(screen.getAllByRole('heading', { level: 4 }).map((week) => week.textContent)).toEqual([
       'Semaine dernière · 16–22 nov.',
@@ -168,6 +169,8 @@ describe('AdminUserSheet', () => {
       distance_meters: 5000,
       elevation_gain_meters: null,
       source: 'manual' as const,
+      speed_mps: null,
+      pace_seconds_per_km: null,
       created_at: startedAt,
       contributions: [],
       locked: false,
