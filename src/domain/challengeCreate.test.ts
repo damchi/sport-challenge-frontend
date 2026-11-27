@@ -3,9 +3,11 @@ import {
   factorSports,
   formFieldOf,
   rebaseFactors,
+  referenceHasDistance,
   referenceSports,
   relativeFactor,
   sortSportsByName,
+  withoutDistanceChoices,
 } from './challengeCreate';
 
 const SPORTS = [
@@ -38,13 +40,37 @@ const VALUES = {
 };
 
 describe('referenceSports', () => {
-  it('keeps the sports whose distance is required', () => {
+  it('keeps the sports whose distance is required or none, never "other"', () => {
     expect(referenceSports(SPORTS).map(({ code }) => code)).toEqual([
       'ride',
       'rowing',
       'run',
       'swim',
+      'yoga',
     ]);
+  });
+});
+
+describe('referenceHasDistance', () => {
+  it('tells a sport without distance, an unknown code counting as one with', () => {
+    expect(referenceHasDistance(SPORTS, 'yoga')).toBe(false);
+    expect(referenceHasDistance(SPORTS, 'ride')).toBe(true);
+    expect(referenceHasDistance([], 'run')).toBe(true);
+  });
+});
+
+describe('withoutDistanceChoices', () => {
+  it.each([
+    [['longest_duration', 'longest_distance', 'session_count', 'fastest_run'], true],
+    [['longest_distance', 'weekly_elevation'], false],
+  ])('unchecks the choices that need a distance, the points once left empty', (criteria, on) => {
+    expect(withoutDistanceChoices({ points: true, points_criteria: criteria })).toEqual({
+      cumulative_distance: false,
+      elimination: false,
+      cumulative_elevation: false,
+      points: on,
+      points_criteria: on ? ['longest_duration', 'session_count'] : [],
+    });
   });
 });
 
@@ -309,6 +335,8 @@ describe('formFieldOf', () => {
     ['categories.points.podium', 'points_podium'],
     ['categories.points.min_session_minutes', 'points_min_session_minutes'],
     ['categories.cumulative_elevation', 'cumulative_elevation'],
+    ['categories.cumulative_distance', 'cumulative_distance'],
+    ['categories.elimination', 'elimination'],
     ['categories', undefined],
   ])('maps %s to %s', (server, form) => {
     expect(formFieldOf(server)).toBe(form);

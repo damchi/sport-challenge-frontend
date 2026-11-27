@@ -90,8 +90,8 @@ export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
         .max(MAX_WEEKS, 'challengeCreate.fields.weeks.range'),
       start_date: z.string().refine(isCalendarDate, 'challengeCreate.fields.startDate.required'),
       timezone: z.string().refine(isTimeZone, 'challengeCreate.fields.timezone.required'),
-      // A sport of the catalogue whose distance is required: the server
-      // checks it against the catalogue.
+      // A sport of the catalogue whose distance is required or none: the
+      // server checks it against the catalogue.
       reference_sport: z.string().min(1, 'challengeCreate.fields.referenceSport.required'),
       // The cumulative time is always there; the others are chosen.
       cumulative_distance: z.boolean(),

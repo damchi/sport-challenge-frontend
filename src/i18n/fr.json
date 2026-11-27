@@ -512,7 +512,8 @@
       "referenceSport": {
         "label": "Sport de référence",
         "hint": "Les distances des autres sports y sont ramenées, et l'élimination se joue dans ce sport.",
-        "required": "Choisis le sport de référence."
+        "required": "Choisis le sport de référence.",
+        "withoutDistance": "Sport sans distance : pas de distance cumulée, de D+ cumulé ni d'élimination, et pas de critère de distance, de D+ ou de sortie course au Grand prix."
       },
       "eliminationStep": {
         "label": "Hausse minimale d'une semaine à l'autre",

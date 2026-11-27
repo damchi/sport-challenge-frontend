@@ -185,9 +185,10 @@ export interface paths {
         };
         /**
          * List the sports
-         * @description Catalogue of sports, sorted by code. The apps translate the codes and
-         *     prefill the distance factors of the challenge creation form with the
-         *     suggested ones; the creator may change them.
+         * @description Catalogue of sports, sorted by code, with the exercises of each. The
+         *     apps translate the codes and prefill the distance factors of the
+         *     challenge creation form with the suggested ones; the creator may
+         *     change them.
          */
         get: operations["getSports"];
         put?: never;
@@ -1350,7 +1351,7 @@ export interface components {
          * @description Stable error codes. Each ticket adds the codes it returns.
          * @enum {string}
          */
-        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "account_blocked" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "no_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
+        ErrorCode: "unauthenticated" | "invalid_token" | "token_expired" | "account_deleted" | "account_blocked" | "profile_incomplete" | "challenge_not_found" | "activity_not_found" | "user_not_found" | "invitation_invalid" | "forbidden" | "field_not_editable" | "registration_closed" | "already_participant" | "participation_abandoned" | "challenge_ended" | "cannot_exclude_creator" | "not_active_participant" | "last_creator" | "no_creator" | "distance_required" | "distance_not_allowed" | "elevation_not_allowed" | "unknown_exercise" | "week_locked" | "activity_overlap" | "cursor_invalid" | "rate_limited" | "not_found" | "validation_failed" | "busy" | "internal_error";
         AdminStats: {
             /**
              * Format: date-time
@@ -1603,6 +1604,9 @@ export interface components {
             categories?: components["schemas"]["CategoriesCreate"];
             /**
              * @description As at creation; a new one starts again from the suggested factors.
+             *     Moving to a sport without distance is refused while the challenge
+             *     keeps a category or a criterion that needs one (send `categories`
+             *     without them).
              * @example run
              */
             reference_sport?: string;
@@ -2142,6 +2146,12 @@ export interface components {
              *     sport without distance.
              */
             elevation_allowed: boolean;
+            /**
+             * @description Codes of the exercises of the sport (elimination by repetitions,
+             *     README §2.3 and §2.5), in display order, translated by the apps;
+             *     empty for a sport without exercises.
+             */
+            exercises: string[];
         };
         ChallengeCreate: {
             /**
@@ -2190,9 +2200,14 @@ export interface components {
             /**
              * @description Code of the sport the distances are brought back to and the
              *     elimination is run in: a sport of the catalogue whose distance is
-             *     required (`distance_mode` `required`), otherwise 400
-             *     `validation_failed` on `reference_sport`. `run` when absent; `null`
-             *     is refused (no default in the schema, which would replace it).
+             *     required or none (`distance_mode` `required` or `none`), otherwise
+             *     400 `validation_failed` on `reference_sport`. Without distance, 400
+             *     `validation_failed` names each choice that needs one:
+             *     `categories.cumulative_distance`, `categories.cumulative_elevation`,
+             *     `categories.elimination`, `categories.points.criteria` (with
+             *     `longest_distance`, `weekly_elevation` or `fastest_run`) and
+             *     `distance_factors`. `run` when absent; `null` is refused (no
+             *     default in the schema, which would replace it).
              * @example run
              */
             reference_sport?: string;
@@ -2200,9 +2215,9 @@ export interface components {
              * @description Factors chosen by the creator, by sport code (distance sports only,
              *     0.1 to 2, two decimals at most), for the cumulative distance and
              *     the `longest_distance` criterion of the points category: without
-             *     either, sending them answers 400 `validation_failed` on
-             *     `distance_factors`. Send only the factors the creator
-             *     changed: sports not given keep their suggested factor brought back
+             *     either, or with a reference sport without distance, sending them
+             *     answers 400 `validation_failed` on `distance_factors`. Send only
+             *     the factors the creator changed: sports not given keep their suggested factor brought back
              *     to the reference sport, min(1, factor / factor of the reference),
              *     rounded to two decimals and never under 0.1. The reference sport is
              *     refused, even at 1: it always counts x1.
@@ -2233,10 +2248,25 @@ export interface components {
          *     activity without is 0 m); no settings.
          */
         CumulativeElevationCreate: Record<string, never>;
-        /** @description Elimination, run in the reference sport. */
+        /**
+         * @description Elimination, run in the reference sport: `step_meters` with a
+         *     reference sport that has a distance; `exercise` and
+         *     `step_repetitions` with a reference sport without distance (the
+         *     weekly sum of the repetitions of that exercise). The other form is
+         *     refused (400 `validation_failed` on its field), and so is the
+         *     elimination under a reference sport without exercises.
+         */
         EliminationCreate: {
-            /** @description Increment X, in meters. */
-            step_meters: number;
+            /** @description Increment X, in meters; reference sport with a distance only. */
+            step_meters?: number;
+            /**
+             * @description Code of an exercise of the reference sport (`Sport.exercises`);
+             *     reference sport without distance only.
+             * @example wall_ball
+             */
+            exercise?: string;
+            /** @description Increment X, in repetitions; reference sport without distance only. */
+            step_repetitions?: number;
         };
         /**
          * @description Points: each week, each criterion ranks the participants, and the top
@@ -2310,6 +2340,10 @@ export interface components {
             sport?: string;
             /** @description Elimination category only, increment X in meters. */
             step_meters?: number;
+            /** @description Elimination category under a reference sport without distance only, the exercise whose repetitions count. */
+            exercise?: string;
+            /** @description Elimination category under a reference sport without distance only, increment X in repetitions. */
+            step_repetitions?: number;
             /** @description Points category only, its criteria in the order chosen. */
             criteria?: ("longest_duration" | "longest_distance" | "session_count" | "weekly_elevation" | "fastest_run")[];
             /**
@@ -2833,6 +2867,25 @@ export interface components {
              *     no distance. On a change, leaving it out removes it.
              */
             elevation_gain_meters?: number;
+            /**
+             * @description Repetitions by exercise, optional; they count for the elimination
+             *     by repetitions only. Each exercise once, and one of a challenge of
+             *     the user with an elimination by repetitions, whose reference
+             *     sport is `sport_code`, where they are an active participant and
+             *     whose window holds `started_at` (`unknown_exercise` otherwise).
+             *     Creation only for now: a change refuses them (400
+             *     `validation_failed` on `repetitions`).
+             */
+            repetitions?: components["schemas"]["ActivityRepetitions"][];
+        };
+        ActivityRepetitions: {
+            /**
+             * @description Code of an exercise of the catalogue (`Sport.exercises`).
+             * @example burpee
+             */
+            exercise: string;
+            /** @description Repetitions of the exercise in the activity, 0 to 10,000. */
+            repetitions: number;
         };
         Activity: {
             /** Format: uuid */
@@ -2863,6 +2916,8 @@ export interface components {
              *     possibly empty. A deleted challenge never appears.
              */
             contributions: components["schemas"]["ActivityContribution"][];
+            /** @description The repetitions by exercise; returned by the creation only for now. */
+            repetitions?: components["schemas"]["ActivityRepetitions"][];
             /**
              * @description True once the week of the activity is locked in a challenge where
              *     it counts, at 7 am, local time of the challenge, on the first day
@@ -4231,11 +4286,12 @@ export interface operations {
              * @description The profile is incomplete (`profile_incomplete`), the sport needs
              *     a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), an elevation gain is sent for a sport
-             *     or an activity that takes none (`elevation_not_allowed`), the
-             *     activity overlaps another of the
-             *     user (`activity_overlap`), or the week of `started_at` is locked
-             *     in a challenge where the activity counts, or was already locked
-             *     when the user left a challenge (`week_locked`).
+             *     or an activity that takes none (`elevation_not_allowed`), an
+             *     exercise of `repetitions` is offered by none of the user's
+             *     challenges (`unknown_exercise`), the activity overlaps another of
+             *     the user (`activity_overlap`), or the week of `started_at` is
+             *     locked in a challenge where the activity counts, or was already
+             *     locked when the user left a challenge (`week_locked`).
              */
             422: {
                 headers: {

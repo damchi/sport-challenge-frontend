@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSports } from '../../../api/hooks/useSports';
 import {
   factorSports,
+  referenceHasDistance,
   sortSportsByName,
   usesDistanceFactors,
 } from '../../../domain/challengeCreate';
@@ -15,8 +16,22 @@ import { timeZoneCity } from '../../../domain/timeZones';
 import { useSportName } from './useSportName';
 import { windowPreview } from './windowPreview';
 
-/** One line of the recap: what it is, its value, then a detail if any. */
-function Row({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) {
+/**
+ * One line of the recap: what it is, its value, then a detail if any. None
+ * for a category the reference sport does not offer (`offered`).
+ */
+function Row({
+  label,
+  value,
+  detail,
+  offered = true,
+}: {
+  label: string;
+  value: ReactNode;
+  detail?: ReactNode;
+  offered?: boolean;
+}) {
+  if (!offered) return null;
   return (
     <div className="border-t border-border py-3 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,5fr)] md:gap-4">
       <dt className="text-muted">{label}</dt>
@@ -88,6 +103,7 @@ export function RecapStep({
   const values = useFormContext<ChallengeCreateInput>().getValues();
   const period = windowPreview(values.start_date, values.weeks, values.timezone, now, locale);
   const reference = values.reference_sport;
+  const withDistance = referenceHasDistance(sports.data ?? [], reference);
   const factors = sortSportsByName(
     factorSports(sports.data ?? [], reference),
     sportName,
@@ -182,6 +198,7 @@ export function RecapStep({
         />
         <Row
           label={t('challengeCreate.categories.distance.name')}
+          offered={withDistance}
           value={t(
             values.cumulative_distance
               ? 'challengeCreate.recap.includedFeminine'
@@ -191,6 +208,7 @@ export function RecapStep({
         />
         <Row
           label={t('challengeDetail.categories.eliminationGeneric')}
+          offered={withDistance}
           value={
             values.elimination && values.elimination_step_km !== undefined
               ? t('challengeCreate.recap.stepPerWeek', {
@@ -227,6 +245,7 @@ export function RecapStep({
         />
         <Row
           label={t('challengeCreate.categories.elevation.name')}
+          offered={withDistance}
           value={t(
             values.cumulative_elevation
               ? 'challengeCreate.recap.included'
