@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import i18n from 'i18next';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeSummary } from '../../api/hooks/useChallenges';
 import { otherTimeZoneName } from '../../domain/format/challengeDates';
@@ -118,6 +119,75 @@ describe('ChallengeCard', () => {
     const [elimination] = within(card).getAllByRole('listitem');
     expect(elimination).toHaveTextContent("12 kmPas d'élimination en semaine 1");
     expect(elimination).not.toHaveTextContent('1er sur 2');
+  });
+
+  describe('an elimination by repetitions', () => {
+    // As the contract gives it: no meters, the week in repetitions.
+    const burpees = (week: number, elimination: Partial<NonNullable<Ranking['elimination']>>) => ({
+      ...ongoing(week, [
+        {
+          ...rank('elimination', 2, 6),
+          elimination: {
+            status: 'at_risk' as const,
+            eliminated_week: null,
+            minimum_meters: null,
+            distance_meters: 0,
+            week_ends_at: '2026-11-28T05:00:00Z',
+            ...elimination,
+          },
+        },
+      ]),
+      reference_sport: 'crossfit',
+      exercise: 'burpee',
+    });
+
+    it('shows the week in repetitions against its minimum, with the exercise', () => {
+      const card = renderCard(burpees(3, { repetitions: 80, minimum_repetitions: 120 }));
+
+      const elimination = within(card).getByRole('listitem');
+      expect(elimination).toHaveTextContent('Élimination · Burpees');
+      expect(elimination).toHaveTextContent('80 rép. / 120 rép.');
+      expect(elimination).not.toHaveTextContent('km');
+    });
+
+    it('shows the repetitions alone in week 1', () => {
+      const card = renderCard(
+        burpees(1, { status: null, repetitions: 45, minimum_repetitions: null }),
+      );
+
+      expect(within(card).getByRole('listitem')).toHaveTextContent(
+        "Élimination · Burpees45 rép.Pas d'élimination en semaine 1",
+      );
+    });
+
+    it('says the week of the elimination once eliminated', () => {
+      const card = renderCard(
+        burpees(4, {
+          status: 'eliminated',
+          eliminated_week: 3,
+          week_ends_at: null,
+          repetitions: 0,
+          minimum_repetitions: null,
+        }),
+      );
+
+      expect(within(card).getByRole('listitem')).toHaveTextContent(
+        'Élimination · BurpeesÉliminé en semaine 3',
+      );
+    });
+
+    it('writes the repetitions in English', async () => {
+      await i18n.changeLanguage('en');
+      try {
+        const card = renderCard(burpees(3, { repetitions: 1, minimum_repetitions: 2 }));
+
+        expect(within(card).getByRole('listitem')).toHaveTextContent(
+          'Elimination · BurpeesAt risk1 rep / 2 reps',
+        );
+      } finally {
+        await i18n.changeLanguage('fr');
+      }
+    });
   });
 
   it('shares a rank between tied participants, as the server gives it', () => {
