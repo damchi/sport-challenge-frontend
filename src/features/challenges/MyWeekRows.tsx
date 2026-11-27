@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import type { ChallengeSummary } from '../../api/hooks/useChallenges';
-import { formatKm } from '../../domain/format/distance';
 import { EliminationStatusPill } from '../leaderboard/EliminationProgress';
 import { eliminationLine, STATUS_BARS } from '../leaderboard/eliminationWeek';
+import { useEliminationAmount } from '../leaderboard/useEntryValue';
 import { useCategoryName } from './detail/categoryNames';
 
 type MyWeek = NonNullable<ChallengeSummary['my_week']>;
@@ -11,8 +11,8 @@ type MyRanking = MyWeek['rankings'][number];
 /**
  * The user's line in each category of an ongoing challenge, on its card:
  * the category, then the rank among the ranked ones ("4e sur 8"); the
- * elimination shows the week's distance against its minimum, with its
- * status and a bar, or the distance alone in week 1; the points add the
+ * elimination shows the week's distance (or repetitions) against its
+ * minimum, with its status and a bar, or the amount alone in week 1; the points add the
  * provisional ones. Every value is the server's (my_week).
  */
 export function MyWeekRows({ week, referenceSport }: { week: MyWeek; referenceSport: string }) {
@@ -29,9 +29,8 @@ export function MyWeekRows({ week, referenceSport }: { week: MyWeek; referenceSp
 }
 
 function RankingRow({ ranking, name }: { ranking: MyRanking; name: string }) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const km = (meters: number) => formatKm(meters / 1000, locale);
+  const { t } = useTranslation();
+  const amount = useEliminationAmount();
   const elimination = ranking.elimination;
   const rank = t('challenges.rank', {
     rank: t('leaderboard.rank', { count: ranking.rank, ordinal: true }),
@@ -48,9 +47,12 @@ function RankingRow({ ranking, name }: { ranking: MyRanking; name: string }) {
     // Out of its ranking, as in the leaderboard.
     value = t('leaderboard.eliminated', { week: line.week });
   } else if (line?.kind === 'live') {
-    value = t('standings.eliminationValue', { done: km(line.done), minimum: km(line.minimum) });
+    value = t('standings.eliminationValue', {
+      done: amount(line.done, line.unit),
+      minimum: amount(line.minimum, line.unit),
+    });
   } else if (line?.kind === 'distance') {
-    value = km(line.done);
+    value = amount(line.done, line.unit);
     detail = t('challenges.card.noEliminationWeek1');
   }
 

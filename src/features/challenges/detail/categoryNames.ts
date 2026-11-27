@@ -14,16 +14,22 @@ const CATEGORY_NAMES: Record<Exclude<CategoryType, 'elimination'>, string> = {
 
 /**
  * Name of a category of a challenge. The elimination names the sport it is
- * run in, the challenge's reference sport ("Vélo avec élimination"); without
- * it (the challenge list does not give it yet), "Élimination".
+ * run in, the challenge's reference sport ("Vélo avec élimination"), or the
+ * exercise of an elimination by repetitions ("Élimination · Burpees");
+ * without either (the challenge list does not give them yet), "Élimination".
  */
 export function useCategoryName(
   referenceSport: string | undefined,
-): (type: CategoryType) => string {
+): (type: CategoryType, exercise?: string | null) => string {
   const { t } = useTranslation();
   const sportName = useSportName();
-  return (type) => {
+  return (type, exercise) => {
     if (type !== 'elimination') return t(CATEGORY_NAMES[type]);
+    if (exercise) {
+      return t('challengeDetail.categories.eliminationExercise', {
+        exercise: t(`exercises.${exercise}`, { defaultValue: exercise }),
+      });
+    }
     return referenceSport === undefined
       ? t('challengeDetail.categories.eliminationGeneric')
       : t('challengeDetail.categories.elimination', { sport: sportName(referenceSport) });
@@ -38,3 +44,10 @@ export const CATEGORY_EXPLANATIONS: Record<CategoryType, string> = {
   points: 'challengeCreate.categories.points.explanation',
   cumulative_elevation: 'challengeCreate.categories.elevation.explanation',
 };
+
+/** The sentence of a category; an elimination by repetitions (its `exercise`) says so. */
+export function categoryExplanation(type: CategoryType, exercise?: string | null): string {
+  return type === 'elimination' && exercise
+    ? 'challengeCreate.categories.elimination.explanationRepetitions'
+    : CATEGORY_EXPLANATIONS[type];
+}

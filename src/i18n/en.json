@@ -703,7 +703,8 @@
         "weeklyElevation": "The elevation gain of the week adds up every sport that has one, in real meters, without factor",
         "fastestRun": "The fastest run keeps the best pace of a single run, in real distance, without factor, whatever the reference sport"
       },
-      "elevationInSentence": "total elevation gain"
+      "elevationInSentence": "total elevation gain",
+      "eliminationExercise": "Elimination · {{exercise}}"
     },
     "tabs": {
       "label": "Challenge sections",

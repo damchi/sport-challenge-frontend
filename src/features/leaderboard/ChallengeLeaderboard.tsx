@@ -22,7 +22,7 @@ import { sharedRanks } from '../../domain/format/rank';
 import type { PageSize } from '../../domain/pageSize';
 import { usePageSize } from '../../lib/pageSize';
 import { useSportName } from '../challenges/create/useSportName';
-import { CATEGORY_EXPLANATIONS, useCategoryName } from '../challenges/detail/categoryNames';
+import { categoryExplanation, useCategoryName } from '../challenges/detail/categoryNames';
 import { isOut } from '../../domain/rankingChanges';
 import { EliminationContext } from './EliminationProgress';
 import { LeaderboardRow, OutRow, PodiumCard } from './LeaderboardEntries';
@@ -72,7 +72,7 @@ export function ChallengeLeaderboard() {
   const category = shownCategory(categories, params.get('category'));
   if (!category) return <EmptyState message={t('leaderboard.empty')} />;
 
-  const name = categoryName(category.type);
+  const name = categoryName(category.type, category.params.exercise);
   // The cards of « Où tu en es », when the page shows them, choose the category.
   // While they load, no selector: it would show, then give way to them.
   const cardsChoose =
@@ -99,7 +99,7 @@ export function ChallengeLeaderboard() {
           // The categories share a line, and wrap when the text is enlarged.
           className="mb-4 flex flex-wrap rounded-row bg-segment p-1"
         >
-          {categories.map(({ type }) => (
+          {categories.map(({ type, params: { exercise } }) => (
             <button
               key={type}
               type="button"
@@ -107,7 +107,7 @@ export function ChallengeLeaderboard() {
               onClick={() => choose(type)}
               className={`${SEGMENT} ${type === category.type ? SEGMENT_ON : SEGMENT_OFF}`}
             >
-              {categoryName(type)}
+              {categoryName(type, exercise)}
             </button>
           ))}
         </div>
@@ -116,7 +116,7 @@ export function ChallengeLeaderboard() {
         {t('leaderboard.title', { category: name })}
       </h2>
       <p className="mt-1 text-sm text-muted">
-        {t(CATEGORY_EXPLANATIONS[category.type], {
+        {t(categoryExplanation(category.type, category.params.exercise), {
           sport: sportName(challenge.data.reference_sport),
         })}
       </p>
@@ -165,6 +165,8 @@ function CategoryLeaderboard({
   // Eliminated ones follow the survivors, abandoned ones come last (server's order).
   const loaded = [...podiumLines, ...lines];
   const mine = first?.me ?? null;
+  // An elimination by repetitions: its values are repetitions of that exercise.
+  const exercise = challenge.categories.find((category) => category.type === type)?.params.exercise;
   // Not loaded yet: shown after the loaded lines it comes after, until its page is.
   const apart = mine && !loaded.some((entry) => entry.user.id === mine.user.id) ? mine : null;
   // An eliminated one keeps out of the podium, even at the end (decision of 2026-11-20).
@@ -253,6 +255,7 @@ function CategoryLeaderboard({
                     <PodiumCard
                       entry={entry}
                       referenceSport={challenge.reference_sport}
+                      exercise={exercise}
                       tied={ties.has(entry.rank ?? 0)}
                       {...rowProps(entry)}
                     />
@@ -284,6 +287,7 @@ function CategoryLeaderboard({
                         entry={entry}
                         tied={ties.has(entry.rank ?? 0)}
                         referenceSport={challenge.reference_sport}
+                        exercise={exercise}
                         {...props}
                       />
                     </li>

@@ -718,7 +718,8 @@
         "weeklyElevation": "Le D+ de la semaine se cumule sur tous les sports qui en ont un, en mètres réels, sans coefficient",
         "fastestRun": "La sortie course la plus rapide retient la meilleure allure d'une seule séance de course, en distance réelle, sans coefficient, quel que soit le sport de référence"
       },
-      "elevationInSentence": "D+ cumulé"
+      "elevationInSentence": "D+ cumulé",
+      "eliminationExercise": "Élimination · {{exercise}}"
     },
     "tabs": {
       "label": "Sections du défi",

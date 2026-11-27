@@ -746,7 +746,7 @@ export interface paths {
          *     one answers 404 `activity_not_found`, the same answer in every case.
          *     The body replaces every field the author entered, with the
          *     validations of the creation: a field left out is cleared
-         *     (`sport_label`, `distance_meters`). The source and the
+         *     (`sport_label`, `distance_meters`, `repetitions`). The source and the
          *     `Idempotency-Key` of the creation stay. It is refused
          *     (`week_locked`) when the week of the current `started_at`, or of the
          *     new one, is locked in a challenge where the activity counts, or was
@@ -1561,10 +1561,14 @@ export interface components {
             user: components["schemas"]["AdminUserRef"];
             /** @description The week the participant was eliminated at. */
             week_number: number;
-            /** @description The distance of the reference sport they did that week. */
+            /** @description The distance of the reference sport they did that week; 0 in an elimination by repetitions. */
             distance_meters: number;
-            /** @description The minimum they had to reach. */
+            /** @description The minimum they had to reach; 0 in an elimination by repetitions. */
             required_meters: number;
+            /** @description Elimination by repetitions only (absent otherwise), the repetitions of the exercise they did that week, as `distance_meters` (then 0). */
+            repetitions?: number | null;
+            /** @description Elimination by repetitions only (absent otherwise), the minimum they had to reach, as `required_meters` (then 0). */
+            required_repetitions?: number | null;
         };
         /**
          * @description The fields to change, as at creation (`ChallengeCreate`); a field
@@ -1700,6 +1704,13 @@ export interface components {
             distance_meters?: number;
             /** @description As in `ActivityCreate`. */
             elevation_gain_meters?: number;
+            /**
+             * @description As in `ActivityCreate`, the challenges being those of the account
+             *     of the activity (`unknown_exercise` otherwise); a change replaces
+             *     them all, those of an exercise already on the activity being
+             *     kept.
+             */
+            repetitions?: components["schemas"]["ActivityRepetitions"][];
         };
         /**
          * @description Why the admin makes the change, kept in the journal: 3 to 500
@@ -1808,10 +1819,14 @@ export interface components {
         AdminEliminationJudgement: {
             /** @description The week the participant is eliminated at. */
             week_number: number;
-            /** @description The distance of the reference sport they did that week. */
+            /** @description The distance of the reference sport they did that week; 0 in an elimination by repetitions. */
             distance_meters: number;
-            /** @description The minimum they had to reach. */
+            /** @description The minimum they had to reach; 0 in an elimination by repetitions. */
             required_meters: number;
+            /** @description Elimination by repetitions only (absent otherwise), the repetitions of the exercise they did that week, as `distance_meters` (then 0). */
+            repetitions?: number | null;
+            /** @description Elimination by repetitions only (absent otherwise), the minimum they had to reach, as `required_meters` (then 0). */
+            required_repetitions?: number | null;
         };
         AdminInvitation: {
             /** Format: uuid */
@@ -2885,8 +2900,9 @@ export interface components {
              *     the user with an elimination by repetitions, whose reference
              *     sport is `sport_code`, where they are an active participant and
              *     whose window holds `started_at` (`unknown_exercise` otherwise).
-             *     Creation only for now: a change refuses them (400
-             *     `validation_failed` on `repetitions`).
+             *     A change replaces them all, as the other fields: left out, they
+             *     are removed; those of an exercise already on the activity are
+             *     kept even when no challenge offers it any more.
              */
             repetitions?: components["schemas"]["ActivityRepetitions"][];
         };
@@ -2928,7 +2944,11 @@ export interface components {
              *     possibly empty. A deleted challenge never appears.
              */
             contributions: components["schemas"]["ActivityContribution"][];
-            /** @description The repetitions by exercise; returned by the creation only for now. */
+            /**
+             * @description Every repetitions of the activity by exercise, sorted by
+             *     exercise, those of an exercise no challenge offers any more
+             *     included; absent when none.
+             */
             repetitions?: components["schemas"]["ActivityRepetitions"][];
             /**
              * @description True once the week of the activity is locked in a challenge where
@@ -4381,9 +4401,10 @@ export interface operations {
             /**
              * @description The sport needs a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), an elevation gain is sent for a sport
-             *     or an activity that takes none (`elevation_not_allowed`), it
-             *     would overlap another activity of
-             *     the user (`activity_overlap`), or the week of the current or the
+             *     or an activity that takes none (`elevation_not_allowed`), an
+             *     exercise of `repetitions` is neither on the activity nor offered
+             *     by the user's challenges (`unknown_exercise`), it would overlap
+             *     another activity of the user (`activity_overlap`), or the week of the current or the
              *     new `started_at` is locked in a challenge where the activity
              *     counts, or was already locked when the user left a challenge
              *     (`week_locked`).
@@ -5220,9 +5241,10 @@ export interface operations {
              * @description The profile of the account is incomplete (`profile_incomplete`),
              *     the sport needs a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), an elevation gain is sent for a sport
-             *     or an activity that takes none (`elevation_not_allowed`), or the
-             *     activity would overlap another of the account
-             *     (`activity_overlap`).
+             *     or an activity that takes none (`elevation_not_allowed`), the
+             *     repetitions name an exercise no challenge of the account offers
+             *     (`unknown_exercise`), or the activity would overlap another of
+             *     the account (`activity_overlap`).
              */
             422: {
                 headers: {
@@ -5299,9 +5321,10 @@ export interface operations {
             /**
              * @description The sport needs a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), an elevation gain is sent for a sport
-             *     or an activity that takes none (`elevation_not_allowed`), or the
-             *     activity would overlap another of the account
-             *     (`activity_overlap`).
+             *     or an activity that takes none (`elevation_not_allowed`), the
+             *     repetitions name an exercise no challenge of the account offers
+             *     (`unknown_exercise`), or the activity would overlap another of
+             *     the account (`activity_overlap`).
              */
             422: {
                 headers: {
