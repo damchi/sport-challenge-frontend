@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { ChallengeDetail } from '../../api/hooks/useChallenges';
 import { StatusPill } from '../../components/StatusPill';
 import { formatKm } from '../../domain/format/distance';
-import { minimumShare, STATUS_BARS, type LiveStatus, type Progress } from './eliminationWeek';
+import { eliminationLine, STATUS_BARS, type LiveStatus, type Progress } from './eliminationWeek';
+import { useEliminationAmount } from './useEntryValue';
 
 // Never the colour alone: each status has its icon and its label (design.md).
 const STATUSES: Record<LiveStatus, { Icon: LucideIcon; tone: 'ok' | 'risk' | 'neutral' }> = {
@@ -21,24 +22,23 @@ export function EliminationStatusPill({ status }: { status: LiveStatus }) {
 
 /**
  * The week of a survivor in the elimination: status, distance done in the
- * reference sport against the minimum of the week, and a bar. Every value
- * is the server's.
+ * reference sport (or repetitions of the exercise) against the minimum of
+ * the week, and a bar. Every value is the server's.
  */
 export function EliminationProgress({ progress }: { progress: Progress }) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const status = progress.status;
-  if (!status || status === 'eliminated' || progress.minimum_meters === null) return null;
-  const minimum = progress.minimum_meters;
-  const share = minimumShare(progress);
+  const { t } = useTranslation();
+  const amount = useEliminationAmount();
+  const line = eliminationLine(progress);
+  if (line.kind !== 'live') return null;
+  const { status, unit, share } = line;
   return (
     <span className="mt-1 flex flex-col gap-1">
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <EliminationStatusPill status={status} />
         <span className="text-sm text-muted tabular-nums">
           {t('leaderboard.elimination.progress', {
-            done: formatKm(progress.distance_meters / 1000, locale),
-            minimum: formatKm(minimum / 1000, locale),
+            done: amount(line.done, unit),
+            minimum: amount(line.minimum, unit),
           })}
         </span>
       </span>

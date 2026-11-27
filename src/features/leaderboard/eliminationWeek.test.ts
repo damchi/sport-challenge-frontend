@@ -21,7 +21,7 @@ describe('eliminationLine', () => {
       eliminationLine(
         progress({ status: 'at_risk', minimum_meters: 25_000, distance_meters: 18_000 }),
       ),
-    ).toEqual({ kind: 'live', status: 'at_risk', done: 18_000, minimum: 25_000, share: 0.72 });
+    ).toMatchObject({ kind: 'live', unit: 'meters', done: 18_000, minimum: 25_000, share: 0.72 });
     expect(
       eliminationLine(
         progress({ status: 'reached', minimum_meters: 10_000, distance_meters: 12_000 }),
@@ -32,7 +32,14 @@ describe('eliminationLine', () => {
   it('gives the distance of the week alone without a minimum (week 1)', () => {
     expect(eliminationLine(progress({ distance_meters: 12_000 }))).toEqual({
       kind: 'distance',
+      unit: 'meters',
       done: 12_000,
     });
+  });
+
+  it('counts in repetitions when the server gives them', () => {
+    const reps = { status: 'at_risk' as const, repetitions: 30, minimum_repetitions: 40 };
+    expect(eliminationLine(progress(reps))).toMatchObject({ unit: 'repetitions', done: 30 });
+    expect(eliminationLine(progress(reps))).toMatchObject({ minimum: 40, share: 0.75 });
   });
 });

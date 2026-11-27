@@ -29,6 +29,8 @@ interface RankedProps extends EntryProps {
   tied: boolean;
   /** The sport the cumulative distance is brought back to. */
   referenceSport: string;
+  /** The exercise of an elimination by repetitions: its values are then repetitions. */
+  exercise?: string | undefined;
 }
 
 const BOX = 'rounded-row border';
@@ -82,10 +84,19 @@ function useEntryName(entry: LeaderboardEntry, me: boolean): string {
 }
 
 /** A card of the podium: the rank as an ordinal ("1er"), noted when shared. */
-export function PodiumCard({ entry, type, me, href, onOpen, tied, referenceSport }: RankedProps) {
+export function PodiumCard({
+  entry,
+  type,
+  me,
+  href,
+  onOpen,
+  tied,
+  referenceSport,
+  exercise,
+}: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
-  const value = useEntryValue(type, entry.value, referenceSport);
+  const value = useEntryValue(type, entry.value, referenceSport, exercise);
   return (
     <EntryBox
       href={href}
@@ -122,10 +133,11 @@ export function LeaderboardRow({
   onOpen,
   tied,
   referenceSport,
+  exercise,
 }: RankedProps) {
   const { t } = useTranslation();
   const name = useEntryName(entry, me);
-  const value = useEntryValue(type, entry.value, referenceSport);
+  const value = useEntryValue(type, entry.value, referenceSport, exercise);
   const atRisk = entry.elimination?.status === 'at_risk';
   return (
     <EntryBox

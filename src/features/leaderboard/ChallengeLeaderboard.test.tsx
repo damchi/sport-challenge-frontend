@@ -680,6 +680,30 @@ describe('ChallengeLeaderboard, elimination', () => {
     ).toBeInTheDocument();
   });
 
+  it('counts an elimination by repetitions in repetitions of its exercise', async () => {
+    const params = { sport: 'crossfit', exercise: 'burpee', step_repetitions: 20 };
+    const categories = [{ type: 'elimination' as const, position: 1, params }];
+    answer({ current_week: 3, reference_sport: 'crossfit', categories });
+    const reps = { distance_meters: 0, minimum_meters: null, status: 'at_risk' as const };
+    leaderboard([
+      {
+        type: 'elimination',
+        ranked_count: 0,
+        entries: [
+          runner('julie', 1, 150, { ...reps, repetitions: 60, minimum_repetitions: 40 }),
+          runner('marc', 4, 90, { ...reps, repetitions: 10, minimum_repetitions: 40 }),
+        ],
+      },
+    ]);
+    renderAt(at);
+
+    const ranking = await section('Classement · Élimination · Burpees');
+    expect(await within(ranking).findByText('150 rép.')).toBeInTheDocument();
+    expect(within(ranking).getByText('90 rép.')).toBeInTheDocument();
+    expect(within(ranking).getByText('10 rép. sur 40 rép. cette semaine')).toBeInTheDocument();
+    expect(within(ranking).queryByText(/km/)).not.toBeInTheDocument();
+  });
+
   it.each([
     ['America/Montreal', /^Semaine 3 · se termine lundi 23 novembre à 00 h$/],
     ['Europe/Paris', /^Semaine 3 · se termine lundi 23 novembre à 00 h, \S/],
