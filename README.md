@@ -29,7 +29,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 **Participation**
 - ✅ On peut rejoindre jusqu'à la fin de la **première semaine**.
 - ✅ Un participant est classé dans **toutes** les catégories.
-- ✅ Les activités détaillées (date, sport, durée, distance) de chaque participant sont visibles par les autres participants du challenge. ✅ L'app n'a plus à le dire avant de rejoindre : un lien d'invitation inscrit directement (décision du 2026-11-23, SC-WEB-107).
+- ✅ Les activités détaillées (date, sport, durée, distance) de chaque participant sont visibles par les autres participants du challenge. ✅ L'app n'a plus à le dire avant de rejoindre : un lien d'invitation inscrit directement (décision du 2026-11-23, SC-WEB-107). ✅ Rejoindre un défi **depuis sa page** (en pratique un défi public) garde une confirmation qui le rappelle : on y rejoint des inconnus (décision du 2026-11-26, SC-WEB-124).
 - ✅ « Quitter » = **abandon** : éliminé de toutes les catégories, définitivement (affiché « a abandonné »). Un compte supprimé est traité de la même façon. Les créateurs peuvent supprimer le challenge, ajouter un créateur et exclure un participant.
 
 **Catégories** (1 à 5, un podium chacune, affichées dans l'ordre du challenge : temps, distance, élimination, Grand prix, D+ cumulé)

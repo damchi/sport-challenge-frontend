@@ -134,6 +134,10 @@ export function ChallengeParticipation({
         >
           {join.isPending ? t('challengeDetail.join.busy') : t('challengeDetail.join.button')}
         </button>
+        {/* Joining from the page asks first, saying the activities are seen
+            by the other participants: a public challenge gathers strangers.
+            A link joins at once (owner's decisions, 2026-11-23 and
+            2026-11-26, README §2 « Participation »). */}
         <ConfirmDialog
           open={joining}
           title={t('challengeDetail.join.title', { title: challenge.title })}
