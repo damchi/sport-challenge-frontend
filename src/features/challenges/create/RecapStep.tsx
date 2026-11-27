@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useSports } from '../../../api/hooks/useSports';
 import {
   factorSports,
+  referenceExercises,
   referenceHasDistance,
   sortSportsByName,
   usesDistanceFactors,
@@ -104,6 +105,14 @@ export function RecapStep({
   const period = windowPreview(values.start_date, values.weeks, values.timezone, now, locale);
   const reference = values.reference_sport;
   const withDistance = referenceHasDistance(sports.data ?? [], reference);
+  // The exercise counted under a sport without distance, else X in km.
+  const exercise = withDistance ? undefined : values.elimination_exercise;
+  const eliminationStep = withDistance
+    ? values.elimination_step_km !== undefined && formatKm(values.elimination_step_km, locale)
+    : values.elimination_step_repetitions !== undefined &&
+      t('challengeCreate.fields.eliminationRepetitions.count', {
+        count: values.elimination_step_repetitions,
+      });
   const factors = sortSportsByName(
     factorSports(sports.data ?? [], reference),
     sportName,
@@ -208,17 +217,20 @@ export function RecapStep({
         />
         <Row
           label={t('challengeDetail.categories.eliminationGeneric')}
-          offered={withDistance}
+          offered={withDistance || referenceExercises(sports.data ?? [], reference).length > 0}
           value={
-            values.elimination && values.elimination_step_km !== undefined
-              ? t('challengeCreate.recap.stepPerWeek', {
-                  step: formatKm(values.elimination_step_km, locale),
-                })
+            values.elimination && eliminationStep
+              ? t('challengeCreate.recap.stepPerWeek', { step: eliminationStep })
               : t('challengeCreate.recap.excludedFeminine')
           }
           detail={
             values.elimination &&
-            t('challengeCreate.recap.eliminationDetail', { sport: sportName(reference) })
+            (exercise
+              ? t('challengeCreate.recap.eliminationExerciseDetail', {
+                  exercise: t(`exercises.${exercise}`, { defaultValue: exercise }),
+                  sport: sportName(reference),
+                })
+              : t('challengeCreate.recap.eliminationDetail', { sport: sportName(reference) }))
           }
         />
         <Row

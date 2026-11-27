@@ -202,6 +202,36 @@ describe('challengeCreateSchema', () => {
     });
   });
 
+  describe('elimination in repetitions, under a sport without distance', () => {
+    const crossfit = challengeCreateSchema(NOW, { withoutDistance: ['crossfit'] });
+    const messages = (input: Record<string, unknown>) => {
+      const result = crossfit.safeParse({
+        ...valid,
+        reference_sport: 'crossfit',
+        elimination_step_km: undefined,
+        elimination_exercise: 'burpee',
+        ...input,
+      });
+      return result.success ? [] : result.error.issues.map((issue) => issue.message);
+    };
+
+    it.each([1, 1000])('accepts %d repetitions, without km', (repetitions) => {
+      expect(messages({ elimination_step_repetitions: repetitions })).toEqual([]);
+    });
+
+    it.each([0, 1001, 1.5, Number.NaN, undefined])('refuses %s repetitions', (repetitions) => {
+      expect(messages({ elimination_step_repetitions: repetitions })).toEqual([
+        'challengeCreate.fields.eliminationRepetitions.range',
+      ]);
+    });
+
+    it('asks for the exercise', () => {
+      expect(messages({ elimination_exercise: '', elimination_step_repetitions: 10 })).toEqual([
+        'challengeCreate.fields.eliminationExercise.required',
+      ]);
+    });
+  });
+
   describe('distance factors', () => {
     it.each([0.1, 0.25, 2])('accepts %d', (factor) => {
       expect(firstMessage({ factors: { ride: factor } })).toBeUndefined();

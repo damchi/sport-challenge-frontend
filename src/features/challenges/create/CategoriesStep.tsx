@@ -9,6 +9,7 @@ import {
   criterionOffered,
   factorSports,
   rebaseFactors,
+  referenceExercises,
   referenceHasDistance,
   referenceSports,
   sortSportsByName,
@@ -31,6 +32,11 @@ const EXAMPLE_STEP_KM = 2;
 // README). Example figures, not a rule.
 const EXAMPLE_WEEK1_KM = 5;
 const EXAMPLE_ABOVE_MINIMUM_KM = 3;
+// The same in repetitions (100, then 110 when X = 10, as in the backend's
+// README).
+const EXAMPLE_STEP_REPETITIONS = 10;
+const EXAMPLE_WEEK1_REPETITIONS = 100;
+const EXAMPLE_ABOVE_MINIMUM_REPETITIONS = 20;
 
 /**
  * Step 3 of the creation: the reference sport, then the categories, one card
@@ -42,9 +48,16 @@ const EXAMPLE_ABOVE_MINIMUM_KM = 3;
  * by distance is chosen: the catalogue's suggestions brought back to the
  * reference, which follow it when it changes unless the creator set them.
  * `sportsWaiting`: Next was pressed before the sports could be shown, which
- * the step explains.
+ * the step explains. `repetitions` false: no elimination by repetitions (the
+ * admin settings, until SC-WEB-137).
  */
-export function CategoriesStep({ sportsWaiting }: { sportsWaiting: boolean }) {
+export function CategoriesStep({
+  sportsWaiting,
+  repetitions = true,
+}: {
+  sportsWaiting: boolean;
+  repetitions?: boolean;
+}) {
   const { t } = useTranslation();
   const sports = useSports();
 
@@ -59,7 +72,7 @@ export function CategoriesStep({ sportsWaiting }: { sportsWaiting: boolean }) {
         <LoadingState />
       ) : sports.data ? (
         // A failed refresh keeps the catalogue: the global banner says so.
-        <Categories sports={sports.data} />
+        <Categories sports={sports.data} repetitions={repetitions} />
       ) : (
         <ErrorState error={sports.error} onRetry={() => void sports.refetch()} />
       )}
@@ -162,7 +175,7 @@ function CategoryCard({
   );
 }
 
-function Categories({ sports }: { sports: Sports }) {
+function Categories({ sports, repetitions }: { sports: Sports; repetitions: boolean }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
@@ -173,27 +186,47 @@ function Categories({ sports }: { sports: Sports }) {
     setValue,
     formState: { errors },
   } = useFormContext<ChallengeCreateInput>();
-  const [reference, distance, elimination, stepKm, points, criteria, elevation] = useWatch({
-    control,
-    name: [
-      'reference_sport',
-      'cumulative_distance',
-      'elimination',
-      'elimination_step_km',
-      'points',
-      'points_criteria',
-      'cumulative_elevation',
-    ],
-  });
+  const [reference, distance, elimination, stepKm, stepRepetitions, points, criteria, elevation] =
+    useWatch({
+      control,
+      name: [
+        'reference_sport',
+        'cumulative_distance',
+        'elimination',
+        'elimination_step_km',
+        'elimination_step_repetitions',
+        'points',
+        'points_criteria',
+        'cumulative_elevation',
+      ],
+    });
   const withDistance = referenceHasDistance(sports, reference);
-  const exampleKm = stepKm !== undefined && stepKm > 0 && stepKm <= 100 ? stepKm : EXAMPLE_STEP_KM;
-  const week2DoneKm = EXAMPLE_WEEK1_KM + exampleKm + EXAMPLE_ABOVE_MINIMUM_KM;
+  const exercises = repetitions ? referenceExercises(sports, reference) : [];
+  // Example figures in km, or in repetitions under a sport without distance.
+  const [exampleStep, week1, aboveMinimum, formatExample] = withDistance
+    ? [
+        stepKm !== undefined && stepKm > 0 && stepKm <= 100 ? stepKm : EXAMPLE_STEP_KM,
+        EXAMPLE_WEEK1_KM,
+        EXAMPLE_ABOVE_MINIMUM_KM,
+        (km: number) => formatKm(km, locale),
+      ]
+    : [
+        stepRepetitions !== undefined && Number.isInteger(stepRepetitions) && stepRepetitions >= 1
+          ? stepRepetitions
+          : EXAMPLE_STEP_REPETITIONS,
+        EXAMPLE_WEEK1_REPETITIONS,
+        EXAMPLE_ABOVE_MINIMUM_REPETITIONS,
+        (count: number) => t('challengeCreate.fields.eliminationRepetitions.count', { count }),
+      ];
+  const week2Done = week1 + exampleStep + aboveMinimum;
   const examples = [
-    { week: 1, done: EXAMPLE_WEEK1_KM, needed: EXAMPLE_WEEK1_KM + exampleKm },
-    { week: 2, done: week2DoneKm, needed: week2DoneKm + exampleKm },
+    { week: 1, done: week1, needed: week1 + exampleStep },
+    { week: 2, done: week2Done, needed: week2Done + exampleStep },
   ];
   const referenceError = errors.reference_sport?.message;
   const stepError = errors.elimination_step_km?.message;
+  const exerciseError = errors.elimination_exercise?.message;
+  const repetitionsError = errors.elimination_step_repetitions?.message;
   const criteriaError = errors.points_criteria?.message;
   // The criteria that do not use the equivalent distance say how they count.
   const criteriaHints = [
@@ -232,6 +265,8 @@ function Categories({ sports }: { sports: Sports }) {
               for (const [code, factor] of Object.entries(changes)) {
                 setValue(`factors.${code}`, factor);
               }
+              // An exercise of the former sport only.
+              setValue('elimination_exercise', '');
               // Unchecked, hidden, then offered again unchecked.
               if (!referenceHasDistance(sports, event.target.value)) {
                 const choices = withoutDistanceChoices(getValues());
@@ -254,7 +289,12 @@ function Categories({ sports }: { sports: Sports }) {
           {t('challengeCreate.fields.referenceSport.hint')}
           {/* Announced when the sport changes: the cards below go. */}
           <span aria-live="polite" className="mt-1 block empty:hidden">
-            {!withDistance && t('challengeCreate.fields.referenceSport.withoutDistance')}
+            {!withDistance &&
+              t(
+                exercises.length > 0
+                  ? 'challengeCreate.fields.referenceSport.withoutDistanceExercises'
+                  : 'challengeCreate.fields.referenceSport.withoutDistance',
+              )}
           </span>
         </p>
         <FieldError id="reference_sport-error" message={referenceError} />
@@ -297,46 +337,113 @@ function Categories({ sports }: { sports: Sports }) {
             name={t('challengeDetail.categories.elimination', {
               sport: sportName(reference),
             })}
-            explanation={t('challengeCreate.categories.elimination.explanation', {
-              sport: sportName(reference),
-            })}
+            explanation={t(
+              withDistance
+                ? 'challengeCreate.categories.elimination.explanation'
+                : 'challengeCreate.categories.elimination.explanationRepetitions',
+              { sport: sportName(reference) },
+            )}
             toggle="elimination"
             on={elimination}
-            offered={withDistance}
+            offered={withDistance || exercises.length > 0}
           >
-            <div>
-              <label htmlFor="elimination_step_km" className="block font-semibold">
-                {t('challengeCreate.fields.eliminationStep.label')}{' '}
-                <span className="sr-only">
-                  {t('challengeCreate.fields.eliminationStep.unitLong')}
+            {withDistance ? (
+              <div>
+                <label htmlFor="elimination_step_km" className="block font-semibold">
+                  {t('challengeCreate.fields.eliminationStep.label')}{' '}
+                  <span className="sr-only">
+                    {t('challengeCreate.fields.eliminationStep.unitLong')}
+                  </span>
+                </label>
+                <span className="relative mt-2 block w-40">
+                  <input
+                    id="elimination_step_km"
+                    type="number"
+                    inputMode="decimal"
+                    min={0.1}
+                    max={100}
+                    step={0.1}
+                    aria-invalid={stepError ? true : undefined}
+                    aria-describedby={`${describedBy('elimination_step_km', stepError)} elimination-example`}
+                    className={`${inputClass} mt-0! h-13 w-full pr-12`}
+                    {...register('elimination_step_km', { valueAsNumber: true })}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 right-4 flex items-center font-semibold text-muted"
+                  >
+                    {t('challengeCreate.fields.eliminationStep.unit')}
+                  </span>
                 </span>
-              </label>
-              <span className="relative mt-2 block w-40">
-                <input
-                  id="elimination_step_km"
-                  type="number"
-                  inputMode="decimal"
-                  min={0.1}
-                  max={100}
-                  step={0.1}
-                  aria-invalid={stepError ? true : undefined}
-                  aria-describedby={`${describedBy('elimination_step_km', stepError)} elimination-example`}
-                  className={`${inputClass} mt-0! h-13 w-full pr-12`}
-                  {...register('elimination_step_km', { valueAsNumber: true })}
-                />
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 right-4 flex items-center font-semibold text-muted"
-                >
-                  {t('challengeCreate.fields.eliminationStep.unit')}
-                </span>
-              </span>
-              <p id="elimination_step_km-hint" className="mt-2 text-sm text-muted">
-                {t('challengeCreate.fields.eliminationStep.hint')}
-              </p>
-              <FieldError id="elimination_step_km-error" message={stepError} />
-              <ChangedPill field="elimination_step_km" className="mt-2" />
-            </div>
+                <p id="elimination_step_km-hint" className="mt-2 text-sm text-muted">
+                  {t('challengeCreate.fields.eliminationStep.hint')}
+                </p>
+                <FieldError id="elimination_step_km-error" message={stepError} />
+                <ChangedPill field="elimination_step_km" className="mt-2" />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="elimination_exercise" className="block font-semibold">
+                    {t('challengeCreate.fields.eliminationExercise.label')}
+                  </label>
+                  <select
+                    id="elimination_exercise"
+                    aria-invalid={exerciseError ? true : undefined}
+                    aria-describedby={describedBy('elimination_exercise', exerciseError)}
+                    className={`${inputClass} h-13 w-full`}
+                    {...register('elimination_exercise')}
+                  >
+                    <option value="">
+                      {t('challengeCreate.fields.eliminationExercise.placeholder')}
+                    </option>
+                    {exercises.map((code) => (
+                      <option key={code} value={code}>
+                        {t(`exercises.${code}`, { defaultValue: code })}
+                      </option>
+                    ))}
+                  </select>
+                  <p id="elimination_exercise-hint" className="mt-2 text-sm text-muted">
+                    {t('challengeCreate.fields.eliminationExercise.hint')}
+                  </p>
+                  <FieldError id="elimination_exercise-error" message={exerciseError} />
+                  <ChangedPill field="elimination_exercise" className="mt-2" />
+                </div>
+                <div>
+                  <label htmlFor="elimination_step_repetitions" className="block font-semibold">
+                    {t('challengeCreate.fields.eliminationStep.label')}{' '}
+                    <span className="sr-only">
+                      {t('challengeCreate.fields.eliminationRepetitions.unitLong')}
+                    </span>
+                  </label>
+                  <span className="relative mt-2 block w-40">
+                    <input
+                      id="elimination_step_repetitions"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={1000}
+                      step={1}
+                      aria-invalid={repetitionsError ? true : undefined}
+                      aria-describedby={`${describedBy('elimination_step_repetitions', repetitionsError)} elimination-example`}
+                      className={`${inputClass} mt-0! h-13 w-full pr-14`}
+                      {...register('elimination_step_repetitions', { valueAsNumber: true })}
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-y-0 right-4 flex items-center font-semibold text-muted"
+                    >
+                      {t('challengeCreate.fields.eliminationRepetitions.unit')}
+                    </span>
+                  </span>
+                  <p id="elimination_step_repetitions-hint" className="mt-2 text-sm text-muted">
+                    {t('challengeCreate.fields.eliminationRepetitions.hint')}
+                  </p>
+                  <FieldError id="elimination_step_repetitions-error" message={repetitionsError} />
+                  <ChangedPill field="elimination_step_repetitions" className="mt-2" />
+                </div>
+              </>
+            )}
             <div id="elimination-example" className="rounded-row bg-bg p-4">
               <p className="text-xs font-bold tracking-[0.6px] text-muted uppercase">
                 {t('challengeCreate.categories.elimination.exampleTitle')}
@@ -346,9 +453,9 @@ function Categories({ sports }: { sports: Sports }) {
                   <Trans
                     i18nKey="challengeCreate.categories.elimination.example"
                     values={{
-                      done: formatKm(done, locale),
+                      done: formatExample(done),
                       week,
-                      needed: formatKm(needed, locale),
+                      needed: formatExample(needed),
                       next: week + 1,
                     }}
                     components={{ b: <strong /> }}

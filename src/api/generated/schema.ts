@@ -2419,6 +2419,13 @@ export interface components {
             /** @enum {string} */
             type: "cumulative_time" | "cumulative_distance" | "elimination" | "points" | "cumulative_elevation";
             /**
+             * @description Elimination by repetitions only, the exercise whose repetitions
+             *     count: the values, the minimum and the live status are then in
+             *     repetitions (`EliminationProgress.repetitions`); absent or null
+             *     for an elimination in meters and the other categories.
+             */
+            exercise?: string | null;
+            /**
              * @description How many participants are ranked in the category, abandoned ones
              *     and deleted accounts left out: the `ranked_count` of `MyRanking`,
              *     frozen with the results once the challenge is over.
@@ -2435,7 +2442,8 @@ export interface components {
              *     `limit`, a page of the lines after the podium. Ranked ones first,
              *     best first; abandoned ones last. `value` is in seconds for
              *     `cumulative_time`, in meters for `cumulative_distance`,
-             *     `elimination` and `cumulative_elevation`, in points acquired for
+             *     `elimination` (in repetitions for an elimination by repetitions,
+             *     `exercise`) and `cumulative_elevation`, in points acquired for
              *     `points`.
              */
             entries: components["schemas"]["LeaderboardEntry"][];
@@ -2562,8 +2570,12 @@ export interface components {
             eliminated_week: number | null;
             /** @description The distance the current week needs; null in week 1, when eliminated, or outside the weeks. Until the week before locks, it may still rise. */
             minimum_meters: number | null;
-            /** @description The distance already covered in the reference sport in the current week; 0 when eliminated or outside the weeks. */
+            /** @description The distance already covered in the reference sport in the current week; 0 when eliminated or outside the weeks, and in an elimination by repetitions. */
             distance_meters: number;
+            /** @description Elimination by repetitions only (absent otherwise), the repetitions the current week needs, as `minimum_meters` (then null). */
+            minimum_repetitions?: number | null;
+            /** @description Elimination by repetitions only (absent otherwise), the repetitions of the exercise already done in the current week, as `distance_meters` (then 0). */
+            repetitions?: number;
             /**
              * Format: date-time
              * @description The end of the current week; null when eliminated or outside the weeks.

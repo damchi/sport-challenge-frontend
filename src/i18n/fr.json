@@ -513,7 +513,8 @@
         "label": "Sport de référence",
         "hint": "Les distances des autres sports y sont ramenées, et l'élimination se joue dans ce sport.",
         "required": "Choisis le sport de référence.",
-        "withoutDistance": "Sport sans distance : pas de distance cumulée, de D+ cumulé ni d'élimination, et pas de critère de distance, de D+ ou de sortie course au Grand prix."
+        "withoutDistance": "Sport sans distance : pas de distance cumulée, de D+ cumulé ni d'élimination, et pas de critère de distance, de D+ ou de sortie course au Grand prix.",
+        "withoutDistanceExercises": "Sport sans distance : pas de distance cumulée ni de D+ cumulé, l'élimination se joue aux répétitions d'un exercice, et pas de critère de distance, de D+ ou de sortie course au Grand prix."
       },
       "eliminationStep": {
         "label": "Hausse minimale d'une semaine à l'autre",
@@ -521,6 +522,21 @@
         "range": "La hausse doit être entre 0,1 et 100 km, avec une décimale au plus.",
         "unit": "km",
         "unitLong": "(en km)"
+      },
+      "eliminationExercise": {
+        "label": "Exercice compté",
+        "placeholder": "Choisis un exercice",
+        "hint": "Seules ses répétitions comptent, sur les activités de ce sport.",
+        "required": "Choisis l'exercice compté."
+      },
+      "eliminationRepetitions": {
+        "hint": "Un nombre entier de répétitions, de 1 à 1 000.",
+        "range": "La hausse doit être un nombre entier de répétitions, de 1 à 1 000.",
+        "unit": "rép.",
+        "unitLong": "(en répétitions)",
+        "count_one": "{{count, number}} rép.",
+        "count_many": "{{count, number}} rép.",
+        "count_other": "{{count, number}} rép."
       },
       "factors": {
         "label": "Coefficients de distance",
@@ -571,6 +587,7 @@
       },
       "elimination": {
         "explanation": "{{sport}} seulement, en distance réelle. Chaque semaine, il faut au moins égaler la semaine précédente plus une hausse, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
+        "explanationRepetitions": "{{sport}} seulement, en répétitions d'un exercice. Chaque semaine, il faut au moins égaler le total de la semaine précédente plus une hausse, sinon on est éliminé de cette catégorie. Pas d'élimination en semaine 1.",
         "example": "{{done}} en semaine {{week}} → au moins <b>{{needed}}</b> en semaine {{next}}",
         "exampleTitle": "Exemple"
       },
@@ -627,7 +644,8 @@
         "session_count": "nombre de séances",
         "weekly_elevation": "D+ de la semaine",
         "fastest_run": "sortie course la plus rapide"
-      }
+      },
+      "eliminationExerciseDetail": "{{exercise}} en {{sport}}, pas d'élimination en semaine 1"
     },
     "submit": {
       "label": "Créer le défi",
@@ -860,6 +878,18 @@
     "crossfit": "CrossFit",
     "hyrox": "Hyrox",
     "paragliding": "Parapente"
+  },
+  "exercises": {
+    "burpee": "Burpees",
+    "wall_ball": "Wall ball",
+    "air_squat": "Air squats",
+    "push_up": "Pompes",
+    "pull_up": "Tractions",
+    "box_jump": "Sauts sur box",
+    "double_under": "Double unders",
+    "kettlebell_swing": "Kettlebell swings",
+    "thruster": "Thrusters",
+    "sit_up": "Abdominaux"
   },
   "leaderboard": {
     "categories": "Catégorie du classement",

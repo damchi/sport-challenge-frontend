@@ -592,6 +592,39 @@ describe('ChallengeCreateWizard', () => {
       }
     });
 
+    it('names the exercises and the repetitions in English', async () => {
+      await i18n.changeLanguage('en');
+      try {
+        renderWizard();
+        const nextStep = () => fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+        type(await screen.findByRole('textbox', { name: 'Title' }), 'Spring challenge');
+        fireEvent.click(screen.getByRole('radio', { name: 'Public' }));
+        nextStep();
+        await screen.findByRole('heading', { level: 2, name: 'When it happens' });
+        type(screen.getByRole('spinbutton', { name: 'Duration' }), '6');
+        type(screen.getByLabelText('First day'), '2026-10-05');
+        nextStep();
+        await screen.findByRole('heading', { level: 2, name: 'How to win' });
+        fireEvent.change(await screen.findByRole('combobox', { name: 'Reference sport' }), {
+          target: { value: 'crossfit' },
+        });
+        fireEvent.click(screen.getByRole('switch', { name: 'CrossFit with elimination' }));
+
+        expect(screen.getByRole('option', { name: 'Push-ups' })).toBeInTheDocument();
+        type(
+          screen.getByRole('spinbutton', {
+            name: 'Minimum increase from one week to the next (in repetitions)',
+          }),
+          '1',
+        );
+        expect(document.getElementById('elimination-example')).toHaveTextContent(
+          'Example100 reps in week 1 → at least 101 reps in week 2',
+        );
+      } finally {
+        await i18n.changeLanguage('fr');
+      }
+    });
+
     it('shows the suggested factors once the total distance is added', async () => {
       renderWizard();
       await fillInfoStep();
@@ -1322,7 +1355,6 @@ describe('ChallengeCreateWizard', () => {
       fireEvent.click(top10());
       const hidden = () => [
         screen.queryByRole('switch', { name: 'Distance cumulée' }),
-        screen.queryByRole('switch', { name: / avec élimination$/ }),
         screen.queryByRole('switch', { name: 'D+ cumulé' }),
         screen.queryByRole('checkbox', { name: 'D+ de la semaine' }),
         screen.queryByRole('checkbox', { name: 'Sortie course la plus rapide' }),
@@ -1332,6 +1364,8 @@ describe('ChallengeCreateWizard', () => {
       fireEvent.change(reference(), { target: { value: 'crossfit' } });
       expect(await screen.findByText(/^Sport sans distance/)).toBeInTheDocument();
       expect(hidden().every((element) => element === null)).toBe(true);
+      // In repetitions of an exercise, unchecked.
+      expect(screen.getByRole('switch', { name: 'CrossFit avec élimination' })).not.toBeChecked();
       expect(criterion('Séance la plus longue en temps')).toBeChecked();
       expect(
         screen.queryByRole('region', { name: 'Coefficients de distance' }),
@@ -1344,6 +1378,8 @@ describe('ChallengeCreateWizard', () => {
       expect(criterion('Séance la plus longue en distance équivalente')).not.toBeChecked();
 
       fireEvent.change(reference(), { target: { value: 'yoga' } });
+      // Without exercises: no elimination.
+      expect(screen.queryByRole('switch', { name: / avec élimination$/ })).not.toBeInTheDocument();
       next();
       await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
       expect(row('Sport de référence')).toHaveTextContent('Yoga');
@@ -1358,6 +1394,64 @@ describe('ChallengeCreateWizard', () => {
         points: { criteria: ['longest_duration'], podium: 10, min_session_minutes: 20 },
       });
       expect(bodies[0]).not.toHaveProperty('distance_factors');
+    });
+
+    it('creates an elimination by repetitions of an exercise under CrossFit', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      fireEvent.change(reference(), { target: { value: 'crossfit' } });
+      await addElimination();
+      const exercise = screen.getByRole('combobox', { name: 'Exercice compté' });
+      const repetitions = screen.getByRole('spinbutton', {
+        name: "Hausse minimale d'une semaine à l'autre (en répétitions)",
+      });
+      expect(
+        within(exercise)
+          .getAllByRole('option')
+          .map((option) => option.textContent),
+      ).toEqual([
+        'Choisis un exercice',
+        'Burpees',
+        'Wall ball',
+        'Air squats',
+        'Pompes',
+        'Tractions',
+        'Sauts sur box',
+        'Double unders',
+        'Kettlebell swings',
+        'Thrusters',
+        'Abdominaux',
+      ]);
+      expect(screen.getByText(/^CrossFit seulement, en répétitions/)).toBeInTheDocument();
+
+      // Neither chosen: both asked for.
+      type(repetitions, '0');
+      next();
+      expect(await screen.findByText("Choisis l'exercice compté.")).toBeInTheDocument();
+      expect(
+        screen.getByText('La hausse doit être un nombre entier de répétitions, de 1 à 1 000.'),
+      ).toBeInTheDocument();
+
+      fireEvent.change(exercise, { target: { value: 'wall_ball' } });
+      type(repetitions, '10');
+      expect(document.getElementById('elimination-example')).toHaveTextContent(
+        'Exemple100 rép. en semaine 1 → au moins 110 rép. en semaine 2130 rép. en semaine 2 → au moins 140 rép. en semaine 3',
+      );
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+      expect(row('Élimination')).toHaveTextContent('+10 rép. par semaine');
+      expect(row('Élimination')).toHaveTextContent(
+        "Wall ball en CrossFit, pas d'élimination en semaine 1",
+      );
+
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.categories).toEqual({
+        elimination: { exercise: 'wall_ball', step_repetitions: 10 },
+      });
     });
 
     it('creates a challenge with Hyrox as its reference', async () => {
@@ -1473,6 +1567,44 @@ describe('ChallengeCreateWizard', () => {
           name: "Hausse minimale d'une semaine à l'autre (en km)",
         }),
       ).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    it('shows a refused exercise on its field', async () => {
+      answerCreation(() =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 'validation_failed',
+              params: { fields: 'categories.elimination.exercise' },
+            },
+          },
+          { status: 400 },
+        ),
+      );
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      fireEvent.change(reference(), { target: { value: 'crossfit' } });
+      await addElimination();
+      fireEvent.change(screen.getByRole('combobox', { name: 'Exercice compté' }), {
+        target: { value: 'burpee' },
+      });
+      type(screen.getByRole('spinbutton', { name: /en répétitions\)$/ }), '5');
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+
+      send();
+
+      expect(
+        await screen.findByText(
+          'Certaines informations ont été refusées : Exercice compté. Corrige-les, puis réessaie.',
+        ),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retour' }));
+      expect(await screen.findByRole('combobox', { name: 'Exercice compté' })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
     });
 
     it('shows a refused reference and refused factors on their fields', async () => {

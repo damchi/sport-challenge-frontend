@@ -9,6 +9,8 @@ export interface CatalogueSport {
   distance_mode: 'required' | 'none' | 'optional';
   /** Suggested factor, against the run; null for a sport without distance. */
   suggested_factor: number | null;
+  /** Codes of its exercises, in display order (the elimination by repetitions). */
+  exercises?: readonly string[];
 }
 
 /**
@@ -45,6 +47,14 @@ const DISTANCE_CRITERIA: readonly string[] = [
  */
 export function referenceHasDistance(sports: readonly CatalogueSport[], code: string): boolean {
   return sports.find((sport) => sport.code === code)?.distance_mode !== 'none';
+}
+
+/** The exercises of the reference sport, those its elimination by repetitions may count. */
+export function referenceExercises(
+  sports: readonly CatalogueSport[],
+  code: string,
+): readonly string[] {
+  return sports.find((sport) => sport.code === code)?.exercises ?? [];
 }
 
 /** Whether a criterion of the points is offered, given the reference sport. */
@@ -166,6 +176,8 @@ export type CategoryChoices = Pick<
   | 'cumulative_distance'
   | 'elimination'
   | 'elimination_step_km'
+  | 'elimination_exercise'
+  | 'elimination_step_repetitions'
   | 'points'
   | 'points_criteria'
   | 'points_podium'
@@ -175,17 +187,28 @@ export type CategoryChoices = Pick<
 
 /**
  * The optional categories of a request (the cumulative time is always
- * there): only those chosen, X in meters, the minimum session entered with
- * the number of sessions alone (the default otherwise).
+ * there): only those chosen, X in meters (in repetitions of the exercise
+ * under a reference sport without distance, `withDistance` false), the
+ * minimum session entered with the number of sessions alone (the default
+ * otherwise).
  */
-export function challengeCategories(values: CategoryChoices) {
+export function challengeCategories(values: CategoryChoices, withDistance = true) {
   const stepKm = values.elimination_step_km;
+  const exercise = values.elimination_exercise;
+  const stepRepetitions = values.elimination_step_repetitions;
   const podium = values.points_podium;
   const criteria = values.points_criteria;
   return {
     ...(values.cumulative_distance && { cumulative_distance: {} }),
     ...(values.elimination &&
+      withDistance &&
       stepKm !== undefined && { elimination: { step_meters: Math.round(stepKm * 1000) } }),
+    ...(values.elimination &&
+      !withDistance &&
+      exercise &&
+      stepRepetitions !== undefined && {
+        elimination: { exercise, step_repetitions: stepRepetitions },
+      }),
     ...(values.points &&
       podium && {
         points: {
@@ -218,7 +241,10 @@ export function challengeCreateRequest(
         ([code, factor]) => suggested.has(code) && suggested.get(code) !== factor,
       )
     : [];
-  const categories = challengeCategories(values);
+  const categories = challengeCategories(
+    values,
+    referenceHasDistance(sports, values.reference_sport),
+  );
   return {
     title: values.title,
     description: values.description,
@@ -243,6 +269,7 @@ const POINTS_FIELDS: Record<string, string> = {
 /**
  * The form field of a field the server refused (`params.fields` of
  * validation_failed): "categories.elimination.step_meters" is X in km,
+ * (".exercise" and ".step_repetitions" its exercise and X in repetitions),
  * "categories.points.*" a setting of the points, "categories.cumulative_elevation"
  * the total elevation gain itself (it has no settings), "distance_factors.ride" a
  * factor, "distance_factors" the factors as a whole; the cumulative distance and
@@ -251,6 +278,10 @@ const POINTS_FIELDS: Record<string, string> = {
  */
 export function formFieldOf(serverField: string): string | undefined {
   if (serverField === 'categories.elimination.step_meters') return 'elimination_step_km';
+  if (serverField === 'categories.elimination.exercise') return 'elimination_exercise';
+  if (serverField === 'categories.elimination.step_repetitions') {
+    return 'elimination_step_repetitions';
+  }
   // A category refused as a whole, under a reference sport without distance.
   const category = /^categories\.(cumulative_distance|elimination|cumulative_elevation)$/.exec(
     serverField,
