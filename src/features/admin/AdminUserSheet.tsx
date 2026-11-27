@@ -202,7 +202,7 @@ function SheetContent({
         ))}
       </dl>
       <AdminUserChallenges userId={user.id} at={at} />
-      <AdminUserActivities userId={user.id} at={at} locale={locale} changes={changes} />
+      <AdminUserActivities userId={user.id} timeZone={zone} changes={changes} />
       {account?.danger}
     </article>
   );

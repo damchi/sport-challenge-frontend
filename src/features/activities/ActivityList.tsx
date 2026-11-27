@@ -21,7 +21,6 @@ import { formatKm, formatMeters } from '../../domain/format/distance';
 import { formatDuration } from '../../domain/format/duration';
 import type { PageSize } from '../../domain/pageSize';
 import { usePageSize } from '../../lib/pageSize';
-import type { Activity } from '../../api/hooks/useActivities';
 import { ActivityItem } from './ActivityItem';
 import { ElevationGain } from './ElevationGain';
 import { SportFilter } from './SportFilter';
@@ -226,20 +225,22 @@ function WeekList({
  * A week of activities: "This week", "Last week" or "Week of 9 Nov", its
  * days, the server's totals once loaded ("4 sessions · 2:36 · 26 km · ↗ 450 m",
  * distance and elevation gain left out at 0), then its activities in one card. The year shows
- * when it is not the current one.
+ * when it is not the current one. Its title is an `h2`, or `Heading` under a deeper one.
  */
-function WeekGroup({
+export function WeekGroup<A extends { id: string }>({
   week,
   totals,
   timeZone,
   now,
+  Heading = 'h2',
   children,
 }: {
-  week: ActivityWeek<Activity>;
+  week: ActivityWeek<A>;
   totals: ActivityWeekTotals | undefined;
   timeZone: string;
   now: Date;
-  children: (activity: Activity) => ReactNode;
+  Heading?: 'h2' | 'h4';
+  children: (activity: A) => ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
@@ -255,13 +256,13 @@ function WeekGroup({
   return (
     <section aria-labelledby={titleId}>
       <div className="mb-3 flex flex-col gap-0.5 lg:flex-row lg:items-baseline lg:justify-between lg:gap-4">
-        <h2 id={titleId} className="font-display text-lg font-bold">
+        <Heading id={titleId} className="font-display text-lg font-bold">
           {title}
           <span className="font-sans text-base font-normal text-muted">
             {' · '}
             {weekDays(week.monday, week.sunday, locale, withYear)}
           </span>
-        </h2>
+        </Heading>
         {totals && (
           <p className="text-muted">
             {t('activities.sessions', { count: totals.sessions })}

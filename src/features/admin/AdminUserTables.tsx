@@ -1,4 +1,5 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import {
@@ -7,10 +8,16 @@ import {
   type AdminActivity,
 } from '../../api/hooks/admin/useAdminUsers';
 import { useFetchAllPages } from '../../api/hooks/useFetchAllPages';
+import { groupByWeek, dayKind } from '../../domain/activityWeeks';
 import { userChallengeRole } from '../../domain/adminUsers';
-import { formatKm, formatMeters } from '../../domain/format/distance';
+import { activityClock, activityDay } from '../../domain/format/activityDates';
+import { formatKm } from '../../domain/format/distance';
 import { formatActivityDuration } from '../../domain/format/duration';
 import { usePageSize } from '../../lib/pageSize';
+import { ActivityMenu } from '../activities/ActivityMenu';
+import { WeekGroup } from '../activities/ActivityList';
+import { ElevationGain } from '../activities/ElevationGain';
+import { SportIcon } from '../activities/SportIcon';
 import { useSportName } from '../challenges/create/useSportName';
 import { AdminTable } from './AdminTable';
 import { CELL } from './adminCells';
@@ -101,27 +108,26 @@ export interface ActivityChanges {
 
 /**
  * The activities of the account, deleted ones excluded, the most recent
- * session first: sport, start, duration, distance and elevation gain. With
- * `changes`, the admin adds one, or changes or deletes any, in any week.
+ * session first, in cards grouped by week (Monday to Sunday) in `timeZone`:
+ * sport, start, duration, distance and elevation gain. With `changes`, the
+ * admin adds one, or changes or deletes any, in any week, from its "…" menu.
  */
 export function AdminUserActivities({
   userId,
-  at,
-  locale,
+  timeZone,
   changes,
 }: {
   userId: string;
-  at: At;
-  locale: string;
+  timeZone: string;
   changes?: ActivityChanges;
 }) {
   const { t } = useTranslation();
-  const sportName = useSportName();
+  // "Today" and "this week" as the sheet opened.
+  const [now] = useState(() => new Date());
   const [size, setSize] = usePageSize('adminUserActivities');
   const activities = useAdminUserActivities(userId, size);
   useFetchAllPages(activities, size === 'all');
   const items = activities.data?.pages.flatMap((page) => page.items) ?? [];
-  const none = <span className="text-muted">{t('admin.users.activities.none')}</span>;
   return (
     <PagedPart
       title={t('admin.users.activities.title')}
@@ -155,68 +161,97 @@ export function AdminUserActivities({
         ))
       }
       table={
-        <AdminTable
-          caption={t('admin.users.activities.title')}
-          columns={[
-            t('admin.users.activities.sport'),
-            t('admin.users.activities.startedAt'),
-            t('admin.users.activities.duration'),
-            t('admin.users.activities.distance'),
-            t('admin.users.activities.elevation'),
-            ...(changes ? [t('admin.users.activities.actions')] : []),
-          ]}
-        >
-          {items.map((activity) => (
-            <tr key={activity.id}>
-              <th scope="row" className={`${CELL} font-semibold`}>
-                {activity.sport_code === 'other'
-                  ? (activity.sport_label ?? t('activities.otherSport'))
-                  : sportName(activity.sport_code)}
-              </th>
-              <td className={CELL}>{at(activity.started_at)}</td>
-              <td className={`${CELL} tabular-nums`}>
-                {formatActivityDuration(activity.duration_seconds)}
-              </td>
-              <td className={`${CELL} whitespace-nowrap tabular-nums`}>
-                {activity.distance_meters === null
-                  ? none
-                  : formatKm(activity.distance_meters / 1000, locale)}
-              </td>
-              <td className={`${CELL} whitespace-nowrap tabular-nums`}>
-                {activity.elevation_gain_meters === null
-                  ? none
-                  : formatMeters(activity.elevation_gain_meters, locale)}
-              </td>
-              {changes && (
-                <td className={CELL}>
-                  <div className="flex gap-2">
-                    <Link
-                      to={`/admin/users/${encodeURIComponent(userId)}/activities/${encodeURIComponent(activity.id)}`}
-                      aria-label={t('admin.users.activities.edit', {
-                        activity: at(activity.started_at),
-                      })}
-                      className="inline-flex size-11 items-center justify-center rounded-full border border-border bg-surface hover-fill"
-                    >
-                      <Pencil aria-hidden="true" size={18} />
-                    </Link>
-                    <button
-                      type="button"
-                      disabled={changes.pending}
-                      onClick={() => changes.onDelete(activity)}
-                      aria-label={t('admin.users.activities.delete', {
-                        activity: at(activity.started_at),
-                      })}
-                      className="inline-flex size-11 items-center justify-center rounded-full border border-risk-border bg-surface text-risk-fg hover-fill disabled:opacity-60"
-                    >
-                      <Trash2 aria-hidden="true" size={18} />
-                    </button>
-                  </div>
-                </td>
+        <div className="flex flex-col gap-6">
+          {groupByWeek(items, timeZone).map((week) => (
+            <WeekGroup
+              key={week.monday}
+              week={week}
+              totals={undefined}
+              timeZone={timeZone}
+              now={now}
+              Heading="h4"
+            >
+              {(activity) => (
+                <AdminActivityCard
+                  userId={userId}
+                  activity={activity}
+                  timeZone={timeZone}
+                  now={now}
+                  changes={changes}
+                />
               )}
-            </tr>
+            </WeekGroup>
           ))}
-        </AdminTable>
+          {changes && <p className="text-sm text-muted">{t('admin.users.activities.rule')}</p>}
+        </div>
       }
     />
+  );
+}
+
+/** An activity of the account, one card of its week, with its "…" menu. */
+function AdminActivityCard({
+  userId,
+  activity,
+  timeZone,
+  now,
+  changes,
+}: {
+  userId: string;
+  activity: AdminActivity;
+  timeZone: string;
+  now: Date;
+  changes: ActivityChanges | undefined;
+}) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage ?? 'fr';
+  const sportName = useSportName();
+  // Never focused back here: a deletion goes on in the preview, which takes
+  // the place of the sheet, and its outcome is said (and focused) above.
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+  const sport =
+    activity.sport_code === 'other'
+      ? (activity.sport_label ?? t('activities.otherSport'))
+      : sportName(activity.sport_code);
+  const time = activityClock(activity.started_at, timeZone, locale);
+  const day = dayKind(activity.started_at, now, timeZone);
+  const start =
+    day === 'other'
+      ? t('activities.startAt', { day: activityDay(activity.started_at, timeZone, locale), time })
+      : t(`activities.${day}`, { time });
+  return (
+    <article aria-labelledby={titleId} className="flex gap-3 p-4">
+      <SportIcon code={activity.sport_code} />
+      <div className="min-w-0 flex-1">
+        <h5 id={titleId} className="font-bold break-words">
+          {sport}
+          {' · '}
+          <time dateTime={activity.started_at}>{start}</time>
+        </h5>
+        <p className="text-muted tabular-nums">
+          {formatActivityDuration(activity.duration_seconds)}
+          {' · '}
+          {activity.distance_meters === null
+            ? t('admin.users.activities.noDistance')
+            : formatKm(activity.distance_meters / 1000, locale)}
+          {activity.elevation_gain_meters !== null && (
+            <>
+              {' · '}
+              <ElevationGain meters={activity.elevation_gain_meters} />
+            </>
+          )}
+        </p>
+      </div>
+      {changes && (
+        <ActivityMenu
+          editTo={`/admin/users/${encodeURIComponent(userId)}/activities/${encodeURIComponent(activity.id)}`}
+          describedBy={titleId}
+          buttonRef={menuButton}
+          deleting={changes.pending}
+          onDelete={() => changes.onDelete(activity)}
+        />
+      )}
+    </article>
   );
 }

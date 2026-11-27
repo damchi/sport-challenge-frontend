@@ -31,6 +31,16 @@ function part(name: string) {
   return within(section);
 }
 
+/** The activity cards of the sheet, once loaded. */
+const activityCards = async () => {
+  await screen.findByRole('heading', { level: 4, name: /^Semaine dernière/ });
+  return part('Activités du compte').getAllByRole('article');
+};
+
+/** Opens the "…" menu of `card`. */
+const openMenu = (card: HTMLElement) =>
+  fireEvent.click(within(card).getByRole('button', { name: "Actions de l'activité" }));
+
 const rowsOf = async (name: string) => {
   const table = await screen.findByRole('table', { name });
   return within(table).getAllByRole('row').slice(1);
@@ -46,8 +56,14 @@ beforeEach(() => {
     ...options,
     timeZone: 'America/Montreal',
   });
+  // Monday 23 November: the mock activities start last week.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-11-23T15:00:00Z'));
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 beforeEach(() => localStorage.clear());
 afterEach(() => server.events.removeAllListeners());
@@ -88,24 +104,31 @@ describe('AdminUserSheet', () => {
     expect(await rowsOf('Défis du compte')).toHaveLength(10);
   });
 
-  it('shows its activities page by page', async () => {
+  it('shows its activities by week, page by page', async () => {
     renderSheet(marie.id);
 
-    const [first] = await rowsOf('Activités du compte');
-    if (!first) throw new Error('No activities');
-    expect(within(first).getByText('19 nov. 2026, 07:30')).toBeInTheDocument();
-    expect(await rowsOf('Activités du compte')).toHaveLength(10);
+    const [first, yoga, padel] = await activityCards();
+    if (!first || !yoga || !padel) throw new Error('No activities');
+    expect(within(first).getByRole('heading', { level: 5 })).toHaveTextContent(/19 nov\. à 7/);
+    expect(within(first).getByText(/8,2 km/)).toBeInTheDocument();
+    expect(within(yoga).getByText(/pas de distance/)).toBeInTheDocument();
+    expect(within(padel).getByRole('heading', { level: 5 })).toHaveTextContent(/^Padel · /);
+    expect(screen.getAllByRole('heading', { level: 4 }).map((week) => week.textContent)).toEqual([
+      'Semaine dernière · 16–22 nov.',
+      'Semaine du 9 nov. · 9–15 nov.',
+    ]);
+    expect(await activityCards()).toHaveLength(10);
 
     fireEvent.click(part('Activités du compte').getByRole('button', { name: 'Charger plus' }));
 
-    await screen.findByText('10 nov. 2026, 07:30');
-    expect(await rowsOf('Activités du compte')).toHaveLength(20);
+    await screen.findByRole('heading', { level: 4, name: /^Semaine du 2 nov\./ });
+    expect(await activityCards()).toHaveLength(20);
 
     // 50 at a time: every activity, no more button.
     const sizes = screen.getByRole('group', { name: 'Activités du compte' });
     fireEvent.click(within(sizes).getByRole('radio', { name: '50' }));
-    await screen.findByText('27 oct. 2026, 08:30');
-    expect(await rowsOf('Activités du compte')).toHaveLength(24);
+    await screen.findByRole('heading', { level: 4, name: /^Semaine du 26 oct\./ });
+    expect(await activityCards()).toHaveLength(24);
     expect(
       part('Activités du compte').queryByRole('button', { name: 'Charger plus' }),
     ).not.toBeInTheDocument();
@@ -164,7 +187,7 @@ describe('AdminUserSheet', () => {
     // The rest of the sheet is there.
     expect(await rowsOf('Défis du compte')).toHaveLength(10);
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
-    expect(await rowsOf('Activités du compte')).toHaveLength(10);
+    expect(await activityCards()).toHaveLength(10);
   });
 
   it('shows the error of the account and reloads on retry', async () => {
@@ -190,17 +213,19 @@ describe('AdminUserSheet', () => {
   it('adds an activity, or changes one, on its own page', async () => {
     renderSheet(marie.id);
 
-    await rowsOf('Activités du compte');
+    const [first] = await activityCards();
+    if (!first) throw new Error('No activities');
     const activities = part('Activités du compte');
-    expect(await activities.findByRole('link', { name: 'Ajouter une activité' })).toHaveAttribute(
+    expect(activities.getByRole('link', { name: 'Ajouter une activité' })).toHaveAttribute(
       'href',
       `/admin/users/${marie.id}/activities/new`,
     );
-    expect(
-      await activities.findByRole('link', {
-        name: "Modifier l'activité du 19 nov. 2026, 07:30",
-      }),
-    ).toHaveAttribute('href', `/admin/users/${marie.id}/activities/${mockActivities[0]?.id ?? ''}`);
+    expect(activities.getByText(/ne se modifie plus que par un admin/)).toBeInTheDocument();
+    openMenu(first);
+    expect(within(first).getByRole('link', { name: 'Modifier' })).toHaveAttribute(
+      'href',
+      `/admin/users/${marie.id}/activities/${mockActivities[0]?.id ?? ''}`,
+    );
   });
 
   it('deletes an activity of any week after the preview and the reason', async () => {
@@ -217,10 +242,10 @@ describe('AdminUserSheet', () => {
     // Five days back: a locked week.
     const old = mockActivities[5];
     if (!old) throw new Error('No mock activity');
-    await rowsOf('Activités du compte');
-    fireEvent.click(
-      screen.getByRole('button', { name: "Supprimer l'activité du 14 nov. 2026, 07:30" }),
-    );
+    const card = (await activityCards())[5];
+    if (!card) throw new Error('No card');
+    openMenu(card);
+    fireEvent.click(within(card).getByRole('button', { name: 'Supprimer' }));
     expect(
       await screen.findByRole('heading', { level: 2, name: 'Aperçu des changements' }),
     ).toBeInTheDocument();
