@@ -22,15 +22,4 @@ describe('startLanguage', () => {
     await i18n.changeLanguage('fr');
     expect(document.documentElement.lang).toBe('fr');
   });
-
-  it('reads navigator.language when the browser has no languages list', async () => {
-    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(
-      undefined as unknown as readonly string[],
-    );
-    vi.spyOn(navigator, 'language', 'get').mockReturnValue('fr-FR');
-
-    stop = await startLanguage();
-
-    expect(i18n.language).toBe('fr');
-  });
 });

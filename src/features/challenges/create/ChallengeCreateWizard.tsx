@@ -19,6 +19,7 @@ import {
   type ChallengeCreateInput,
   type ChallengeCreateValues,
 } from '../../../domain/schemas/challenge';
+import { supportedTimeZones } from '../../../domain/timeZones';
 import { CategoriesStep } from './CategoriesStep';
 import { CreationPreview, CreationTip } from './CreationAside';
 import { DurationStep } from './DurationStep';
@@ -97,7 +98,7 @@ export function ChallengeCreateWizard({
   // "Today" is the page's opening day: the server checks the date again.
   const [now] = useState(() => givenNow ?? new Date());
   // Read once: the picker's labels cost one Intl format per zone.
-  const [timeZones] = useState(() => givenTimeZones ?? Intl.supportedValuesOf('timeZone'));
+  const [timeZones] = useState(() => givenTimeZones ?? supportedTimeZones([DEFAULT_TIME_ZONE]));
   const form = useForm<ChallengeCreateInput, unknown, ChallengeCreateValues>({
     resolver: zodResolver(challengeCreateSchema(now)),
     // Checked once the field is left, then at each keystroke.

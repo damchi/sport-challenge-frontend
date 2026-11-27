@@ -12,11 +12,9 @@ export async function startLanguage(): Promise<() => void> {
     document.documentElement.lang = language;
   };
   i18n.on('languageChanged', syncLang);
-  // Old browsers only have navigator.language.
-  const preferred = navigator.languages ?? [navigator.language];
   const stop = () => i18n.off('languageChanged', syncLang);
   try {
-    await initI18n(pickLanguage(preferred));
+    await initI18n(pickLanguage(navigator.languages));
   } catch (error) {
     stop();
     throw error;

@@ -76,6 +76,7 @@ Résumé des règles décidées. Le détail complet est dans le README du backen
 - ✅ **Authentification** : **Auth0**, flux Authorization Code avec PKCE ; en V1 le SDK `@auth0/auth0-react` ; le SDK mobile (`react-native-auth0`, builds de développement Expo) viendra en V2. La connexion est obligatoire pour toute l'application, sauf la landing page (`/`) et `/callback`. Sign in with Apple devient obligatoire seulement avec l'application iOS (V2) si une autre connexion sociale y est proposée.
 - 🟡 **Tests** : Vitest et Testing Library (composants), Playwright (web), Maestro (parcours mobile).
 - **Suivi d'erreurs** sur web et mobile (ex. Sentry) ; analytics produit plus tard, avec consentement.
+- ✅ **Navigateurs pris en charge** (décision du 2026-11-26) : Safari et iOS 15.4, Chrome et Edge 99, Firefox 93 (versions de mars 2022 au plus tard). C'est ce qu'exigent `Intl.supportedValuesOf` et l'option `timeZoneName: 'longGeneric'` ; en dessous, ces deux appels ont un repli (liste de fuseaux réduite, identifiant IANA à la place du nom du fuseau). Les API plus récentes que ce plancher (`URL.canParse`, `URL.parse`) ne sont pas utilisées.
 
 ---
 

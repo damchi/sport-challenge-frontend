@@ -118,9 +118,23 @@ describe('challengeWeekday', () => {
   });
 });
 describe('timeZoneName', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('names the time zone without its summer or winter time', () => {
     expect(timeZoneName('America/Toronto', 'fr')).toBe('heure de l’Est nord-américain');
     expect(timeZoneName('America/Toronto', 'en')).toBe('Eastern Time');
+  });
+
+  it('falls back to the IANA name where Intl refuses the option', () => {
+    const DateTimeFormat = Intl.DateTimeFormat;
+    vi.spyOn(Intl, 'DateTimeFormat').mockImplementation((locale, options) => {
+      if (options?.timeZoneName === 'longGeneric') throw new RangeError('timeZoneName');
+      return new DateTimeFormat(locale, options);
+    });
+
+    expect(timeZoneName('America/Toronto', 'fr')).toBe('America/Toronto');
   });
 });
 

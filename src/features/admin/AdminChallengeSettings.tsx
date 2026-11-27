@@ -32,6 +32,7 @@ import {
   type ChallengeCreateInput,
   type ChallengeCreateValues,
 } from '../../domain/schemas/challenge';
+import { supportedTimeZones } from '../../domain/timeZones';
 import { CategoriesStep } from '../challenges/create/CategoriesStep';
 import { PreviousValueProvider } from '../challenges/create/ChangedPill';
 import { DurationStep } from '../challenges/create/DurationStep';
@@ -134,7 +135,7 @@ function SettingsForm({
   // Read once: the picker's labels cost one Intl format per zone.
   // The challenge's own is offered too, though the device may not list it.
   const [timeZones] = useState(() => {
-    const zones = givenTimeZones ?? Intl.supportedValuesOf('timeZone');
+    const zones = givenTimeZones ?? supportedTimeZones();
     return zones.includes(challenge.timezone) ? zones : [...zones, challenge.timezone];
   });
   // The settings as they were on opening: a later read of the challenge

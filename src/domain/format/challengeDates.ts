@@ -135,12 +135,20 @@ export function activityStart(instant: Date, timeZone: string, locale: string): 
   }).format(instant);
 }
 
-/** Name of a time zone that holds all year ("heure de l'Est nord-américain"). */
+/**
+ * Name of a time zone that holds all year ("heure de l'Est nord-américain").
+ * Below the supported browsers (README §3) the option throws: the IANA name.
+ */
 export function timeZoneName(timeZone: string, locale: string): string {
-  const parts = new Intl.DateTimeFormat(locale, {
-    timeZone,
-    timeZoneName: 'longGeneric',
-  }).formatToParts(new Date(0));
+  let parts: Intl.DateTimeFormatPart[];
+  try {
+    parts = new Intl.DateTimeFormat(locale, {
+      timeZone,
+      timeZoneName: 'longGeneric',
+    }).formatToParts(new Date(0));
+  } catch {
+    return timeZone;
+  }
   return parts.find((part) => part.type === 'timeZoneName')?.value ?? timeZone;
 }
 
