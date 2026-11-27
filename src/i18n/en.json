@@ -515,7 +515,8 @@
         "label": "Counted exercise",
         "placeholder": "Choose an exercise",
         "hint": "Only its repetitions count, on the activities of this sport.",
-        "required": "Choose the counted exercise."
+        "required": "Choose the counted exercise.",
+        "value": "Exercise: {{exercise}}"
       },
       "eliminationRepetitions": {
         "hint": "A whole number of repetitions, from 1 to 1,000.",
@@ -826,6 +827,7 @@
           "cumulative_time": "The most total time, all sports together, wins",
           "cumulative_distance": "The most equivalent km wins",
           "elimination": "The most km among those still in wins",
+          "eliminationRepetitions": "The most repetitions among those still in wins",
           "points": "The most points wins",
           "cumulative_elevation": "The most meters of elevation gain wins"
         }

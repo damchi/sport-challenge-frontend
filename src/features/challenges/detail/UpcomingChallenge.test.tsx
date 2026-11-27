@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import type { ChallengeDetail } from '../../../api/hooks/useChallenges';
-import { mockChallengeDetail, mockChallenges } from '../../../mocks/handlers';
+import { mockChallengeDetail, mockChallenges, mockMe } from '../../../mocks/handlers';
 import { server } from '../../../mocks/server';
 import { routes } from '../../../routes/routes';
 import { AppProviders } from '../../../test/AppProviders';
@@ -248,6 +248,53 @@ describe('UpcomingChallenge', () => {
     ]) {
       expect(within(howToWin).getByText(wins)).toBeInTheDocument();
     }
+  });
+
+  function answerRepetitions() {
+    answer({
+      reference_sport: 'crossfit',
+      categories: [
+        { type: 'cumulative_time', position: 1, params: {} },
+        {
+          type: 'elimination',
+          position: 3,
+          params: { sport: 'crossfit', exercise: 'wall_ball', step_repetitions: 10 },
+        },
+      ],
+    });
+  }
+
+  it('says how an elimination by repetitions is won', async () => {
+    answerRepetitions();
+    renderAt(`/challenges/${id}`);
+
+    const howToWin = (await screen.findByRole('heading', { name: 'Comment on gagne' }))
+      .parentElement as HTMLElement;
+    const card = within(howToWin).getByRole('heading', {
+      level: 3,
+      name: 'Élimination · Wall ball',
+    }).parentElement as HTMLElement;
+    expect(card).toHaveTextContent(/^Élimination · Wall ballCrossFit seulement, en répétitions/);
+    expect(card).toHaveTextContent(
+      'Exercice : Wall ballIncrément X : 10 rép.Le plus de répétitions cumulées, parmi ceux encore en lice, gagne',
+    );
+  });
+
+  it('says in English how an elimination by repetitions is won', async () => {
+    server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+    answerRepetitions();
+    renderAt(`/challenges/${id}`);
+
+    const howToWin = (await screen.findByRole('heading', { name: 'How to win' }))
+      .parentElement as HTMLElement;
+    const card = within(howToWin).getByRole('heading', {
+      level: 3,
+      name: 'Elimination · Wall balls',
+    }).parentElement as HTMLElement;
+    expect(card).toHaveTextContent(/^Elimination · Wall ballsCrossFit only, in repetitions/);
+    expect(card).toHaveTextContent(
+      'Exercise: Wall ballsIncrement X: 10 repsThe most repetitions among those still in wins',
+    );
   });
 
   it('says how the total elevation gain is won, without settings', async () => {

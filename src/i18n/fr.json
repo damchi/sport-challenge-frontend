@@ -527,7 +527,8 @@
         "label": "Exercice compté",
         "placeholder": "Choisis un exercice",
         "hint": "Seules ses répétitions comptent, sur les activités de ce sport.",
-        "required": "Choisis l'exercice compté."
+        "required": "Choisis l'exercice compté.",
+        "value": "Exercice : {{exercise}}"
       },
       "eliminationRepetitions": {
         "hint": "Un nombre entier de répétitions, de 1 à 1 000.",
@@ -847,6 +848,7 @@
           "cumulative_time": "Le plus de temps cumulé, tous sports confondus, gagne",
           "cumulative_distance": "Le plus de km équivalents gagne",
           "elimination": "Le plus de km cumulés, parmi ceux encore en lice, gagne",
+          "eliminationRepetitions": "Le plus de répétitions cumulées, parmi ceux encore en lice, gagne",
           "points": "Le plus de points gagne",
           "cumulative_elevation": "Le plus de mètres de dénivelé positif gagne"
         }
