@@ -1,5 +1,6 @@
 import {
   activityTimeZone,
+  holdsEntry,
   isActivityId,
   isSportCode,
   keptSport,
@@ -128,5 +129,22 @@ describe('sortSportsForEntry', () => {
       'archery',
       'other',
     ]);
+  });
+});
+
+describe('holdsEntry', () => {
+  const entry = { sport_code: 'run', started_at: '2026-11-20T12:30:00.000Z', duration_seconds: 60 };
+  const recorded = { ...entry, started_at: '2026-11-20T12:30:00Z', distance_meters: null };
+
+  it.each([
+    [{}, true],
+    [{ sport_code: 'ride' }, false],
+    [{ sport_label: 'Padel' }, false],
+    [{ started_at: '2026-11-20T12:31:00Z' }, false],
+    [{ duration_seconds: 61 }, false],
+    [{ distance_meters: 8200 }, false],
+    [{ elevation_gain_meters: 85 }, false],
+  ])('compares the activity recorded, changed by %o, with the entry', (change, same) => {
+    expect(holdsEntry({ ...recorded, ...change }, entry)).toBe(same);
   });
 });

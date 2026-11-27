@@ -339,7 +339,8 @@
       "counts_many": "Elle compte dans {{count}} défis :",
       "counts_other": "Elle compte dans {{count}} défis :",
       "none": "Elle ne compte encore dans aucun défi. Elle comptera dans un défi rejoint plus tard, si elle a lieu pendant ses dates.",
-      "leaderboard": "Voir le classement"
+      "leaderboard": "Voir le classement",
+      "correctionRefused": "Elle avait déjà été enregistrée avec d'autres valeurs : ta correction n'a pas été appliquée. {{reason}}"
     },
     "back": "Retour à mes activités"
   },
