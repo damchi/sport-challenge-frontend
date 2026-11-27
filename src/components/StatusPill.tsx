@@ -7,6 +7,7 @@ const TONES = {
   ok: 'bg-ok-bg text-ok-fg',
   out: 'bg-out-bg text-out-fg',
   risk: 'bg-risk-bg text-risk-fg',
+  raised: 'border border-raised-border bg-surface-raised text-on-raised',
 } as const;
 
 interface StatusPillProps {

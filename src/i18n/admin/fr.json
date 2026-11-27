@@ -212,6 +212,9 @@
       "empty": "Ce compte n'a aucune activité.",
       "add": "Ajouter une activité",
       "deleted": "Activité supprimée. Les défis où elle comptait sont recalculés.",
+      "judged": "Semaine jugée",
+      "created": "Ajoutée par l'admin le {{date}}",
+      "updated": "Modifiée par l'admin le {{date}}",
       "noDistance": "pas de distance",
       "rule": "Une semaine jugée ne se modifie plus que par un admin. Toute modification recalcule chaque défi où l'activité compte."
     }
