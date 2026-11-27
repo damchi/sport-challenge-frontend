@@ -13,8 +13,9 @@ import { CATEGORY_ICONS } from '../challenges/detail/categoryIcons';
 import { useCategoryName } from '../challenges/detail/categoryNames';
 import { useSportName } from '../challenges/create/useSportName';
 import { EliminationStatusPill } from './EliminationProgress';
-import { minimumShare, STATUS_BARS } from './eliminationWeek';
+import { minimumShare, STATUS_BARS, weekFigures } from './eliminationWeek';
 import { hasStandings, myLines, shownCategory } from './shownCategory';
+import { useEliminationAmount } from './useEntryValue';
 
 type CategoryRanking = Leaderboard['categories'][number];
 
@@ -45,6 +46,9 @@ export function MyStandings({ challenge }: { challenge: ChallengeDetail }) {
   const shown = onLeaderboard ? shownCategory(categories, params.get('category'))?.type : undefined;
   const cards = myLines(categories, me.data.id);
   if (cards.length === 0) return null;
+  // An elimination by repetitions: its figures are repetitions of that exercise.
+  const exercise = challenge.categories.find((category) => category.type === 'elimination')?.params
+    .exercise;
 
   return (
     <section aria-labelledby="my-standings" className="mt-6">
@@ -73,6 +77,7 @@ export function MyStandings({ challenge }: { challenge: ChallengeDetail }) {
                 category={category}
                 entry={entry}
                 referenceSport={challenge.reference_sport}
+                exercise={exercise}
               />
             </Link>
           </li>
@@ -86,15 +91,18 @@ function StandingCard({
   category,
   entry,
   referenceSport,
+  exercise,
 }: {
   category: CategoryRanking;
   entry: LeaderboardEntry;
   referenceSport: string;
+  exercise: string | undefined;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const categoryName = useCategoryName(referenceSport);
   const sportName = useSportName();
+  const amount = useEliminationAmount();
   // Inside a sentence: "en équivalent course".
   const sport = sportName(referenceSport).toLocaleLowerCase(locale);
   const Icon = CATEGORY_ICONS[category.type];
@@ -102,6 +110,10 @@ function StandingCard({
   const status =
     elimination?.status && elimination.status !== 'eliminated' ? elimination.status : null;
   const km = (meters: number) => formatKm(meters / 1000, locale);
+  // In meters, or in repetitions of the exercise, as the server gives them.
+  const figures = elimination ? weekFigures(elimination) : null;
+  // A survivor's week with a minimum: its figures against it, and a bar.
+  const minimum = status && figures ? figures.minimum : null;
 
   let value = '';
   let detail: string | null = null;
@@ -122,22 +134,26 @@ function StandingCard({
         : null;
     }
   }
-  if (category.type === 'elimination' && elimination) {
-    // During a week with a minimum, the distance of this week against it;
+  if (category.type === 'elimination' && figures) {
+    // During a week with a minimum, the amount of this week against it;
     // else (week 1, eliminated, after the end) the total, as ranked.
-    const minimum = status ? elimination.minimum_meters : null;
     value =
       minimum === null
         ? entry.value === null
           ? ''
-          : km(entry.value)
+          : amount(entry.value, figures.unit)
         : t('standings.eliminationValue', {
-            done: km(elimination.distance_meters),
-            minimum: km(minimum),
+            done: amount(figures.done, figures.unit),
+            minimum: amount(minimum, figures.unit),
           });
-    detail = t(minimum === null ? 'standings.elimination' : 'standings.eliminationWeek', {
-      sport,
-    });
+    const week = minimum !== null;
+    // By repetitions: "Burpees en CrossFit", the sport keeping its capitals.
+    detail = exercise
+      ? t(week ? 'standings.eliminationExerciseWeek' : 'standings.eliminationExercise', {
+          exercise: t(`exercises.${exercise}`, { defaultValue: exercise }),
+          sport: sportName(referenceSport),
+        })
+      : t(week ? 'standings.eliminationWeek' : 'standings.elimination', { sport });
   }
 
   const eliminatedWeek = elimination?.eliminated_week ?? null;
@@ -145,12 +161,12 @@ function StandingCard({
     <>
       <span className="flex items-center gap-2 text-xs font-bold tracking-wide text-muted uppercase">
         <Icon aria-hidden="true" size={16} strokeWidth={2} className="flex-none" />
-        {categoryName(category.type)}
+        {categoryName(category.type, exercise)}
       </span>
       {/* No value only for one who abandoned, who has no cards: nothing shown. */}
       {value && <span className="mt-1 font-display text-3xl font-bold tabular-nums">{value}</span>}
       {detail && <span className="text-sm text-muted">{detail}</span>}
-      {status && elimination && elimination.minimum_meters !== null && (
+      {status && elimination && minimum !== null && (
         // The figures are written above.
         <span aria-hidden="true" className="mt-1 block h-2.5 overflow-hidden rounded-full bg-track">
           <span

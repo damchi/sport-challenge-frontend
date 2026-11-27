@@ -2,7 +2,6 @@ import { Check, Timer, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ChallengeDetail } from '../../api/hooks/useChallenges';
 import { StatusPill } from '../../components/StatusPill';
-import { formatKm } from '../../domain/format/distance';
 import { eliminationLine, STATUS_BARS, type LiveStatus, type Progress } from './eliminationWeek';
 import { useEliminationAmount } from './useEntryValue';
 
@@ -59,16 +58,21 @@ export function EliminationProgress({ progress }: { progress: Progress }) {
  * moves (the server applies it; only X is shown here).
  */
 export function EliminationContext({ challenge }: { challenge: ChallengeDetail }) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? 'fr';
-  const step = challenge.categories.find((category) => category.type === 'elimination')?.params
-    .step_meters;
+  const { t } = useTranslation();
+  const amount = useEliminationAmount();
+  const params = challenge.categories.find((category) => category.type === 'elimination')?.params;
+  // X in km, or in repetitions of the exercise.
+  const rule =
+    params?.step_repetitions !== undefined
+      ? t('leaderboard.elimination.ruleRepetitions', {
+          step: amount(params.step_repetitions, 'repetitions'),
+        })
+      : params?.step_meters !== undefined &&
+        t('leaderboard.elimination.rule', { step: amount(params.step_meters, 'meters') });
   return (
     <div className="mt-4 grid gap-1 text-sm text-muted">
       {challenge.current_week === 1 && <p>{t('leaderboard.elimination.firstWeek')}</p>}
-      {step !== undefined && (
-        <p>{t('leaderboard.elimination.rule', { step: formatKm(step / 1000, locale) })}</p>
-      )}
+      {rule && <p>{rule}</p>}
     </div>
   );
 }

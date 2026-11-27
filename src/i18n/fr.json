@@ -925,7 +925,8 @@
       "at_risk": "À risque",
       "progress": "{{done}} sur {{minimum}} cette semaine",
       "firstWeek": "Pas d'élimination en semaine 1 : le premier minimum s'applique en semaine 2.",
-      "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu fais plus que le minimum, ta distance devient la nouvelle base."
+      "rule": "Le minimum de la semaine suivante = ta distance de cette semaine + {{step}}. Si tu fais plus que le minimum, ta distance devient la nouvelle base.",
+      "ruleRepetitions": "Le minimum de la semaine suivante = tes répétitions de cette semaine + {{step}} ; si tu fais plus que le minimum, tes répétitions deviennent la nouvelle base."
     },
     "elevation": "{{elevation}} D+"
   },
@@ -961,6 +962,8 @@
     "elimination": "en {{sport}}",
     "eliminationWeek": "en {{sport}}, cette semaine",
     "eliminationValue": "{{done}} / {{minimum}}",
+    "eliminationExercise": "{{exercise}} en {{sport}}",
+    "eliminationExerciseWeek": "{{exercise}} en {{sport}}, cette semaine",
     "elevation": "de dénivelé positif, tous sports"
   },
   "invitations": {

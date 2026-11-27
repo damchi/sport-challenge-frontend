@@ -749,6 +749,30 @@ describe('ChallengeLeaderboard, elimination', () => {
     ).toBeInTheDocument();
   });
 
+  it('explains how the minimum moves in repetitions, with the X of the challenge', async () => {
+    const params = { sport: 'crossfit', exercise: 'burpee', step_repetitions: 20 };
+    answer({
+      current_week: 3,
+      reference_sport: 'crossfit',
+      categories: [{ type: 'elimination', position: 1, params }],
+    });
+    const reps = { distance_meters: 0, minimum_meters: null, status: 'reached' as const };
+    leaderboard([
+      {
+        type: 'elimination',
+        ranked_count: 0,
+        entries: [runner('julie', 1, 150, { ...reps, repetitions: 60, minimum_repetitions: 40 })],
+      },
+    ]);
+    renderAt(at);
+
+    expect(
+      await screen.findByText(
+        'Le minimum de la semaine suivante = tes répétitions de cette semaine + 20 rép. ; si tu fais plus que le minimum, tes répétitions deviennent la nouvelle base.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('shows no minimum nor status in week 1, and says so', async () => {
     answer({ current_week: 1 });
     leaderboard([
