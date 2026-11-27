@@ -64,6 +64,8 @@ const FIELD_LABELS: Record<string, string> = {
   points_podium: 'challengeCreate.fields.pointsPodium.label',
   points_min_session_minutes: 'challengeCreate.fields.minSession.label',
   cumulative_elevation: 'challengeCreate.categories.elevation.name',
+  cumulative_distance: 'challengeCreate.categories.distance.name',
+  elimination: 'challengeDetail.categories.eliminationGeneric',
 };
 
 // Montréal's time zone (IANA names it after Toronto): the product's default.

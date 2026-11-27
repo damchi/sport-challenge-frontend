@@ -11,6 +11,7 @@ import { answerLeaderboard, type FullRanking } from './leaderboard';
 // that test).
 
 type SportList = components['schemas']['SportList'];
+type Sport = components['schemas']['Sport'];
 type Challenge = components['schemas']['Challenge'];
 type ChallengeCreate = components['schemas']['ChallengeCreate'];
 type Me = components['schemas']['Me'];
@@ -589,6 +590,11 @@ function mockPage<T>(items: T[], cursor: string | null | undefined, limit: numbe
   return { items: page, next_cursor: from + size < items.length ? String(from + size) : null };
 }
 
+// The catalogue's sports have no exercise yet in the mocks.
+function withoutExercises(sports: Omit<Sport, 'exercises'>[]): Sport[] {
+  return sports.map((sport) => ({ ...sport, exercises: [] }));
+}
+
 export const handlers = [
   http.get('*/api/v1/me', () => HttpResponse.json<Me>(mockMe)),
   http.delete('*/api/v1/me', () => new HttpResponse(null, { status: 204 })),
@@ -991,7 +997,7 @@ export const handlers = [
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({
-      sports: [
+      sports: withoutExercises([
         {
           code: 'climbing',
           distance_mode: 'none',
@@ -1042,7 +1048,7 @@ export const handlers = [
           elevation_allowed: true,
         },
         { code: 'yoga', distance_mode: 'none', suggested_factor: null, elevation_allowed: false },
-      ],
+      ]),
     }),
   ),
   // The recorded activity as the server answers it, from the request: it

@@ -6,11 +6,14 @@ import { useSports } from '../../../api/hooks/useSports';
 import { ErrorState } from '../../../components/states/ErrorState';
 import { LoadingState } from '../../../components/states/LoadingState';
 import {
+  criterionOffered,
   factorSports,
   rebaseFactors,
+  referenceHasDistance,
   referenceSports,
   sortSportsByName,
   usesDistanceFactors,
+  withoutDistanceChoices,
 } from '../../../domain/challengeCreate';
 import { formatFactor, formatKm } from '../../../domain/format/distance';
 import { POINTS_CRITERIA, type ChallengeCreateInput } from '../../../domain/schemas/challenge';
@@ -73,6 +76,7 @@ type CategoryToggle = 'cumulative_distance' | 'elimination' | 'points' | 'cumula
  * A category's card: icon, name, what it ranks, then on the right its switch
  * (`toggle`, the form's field) or what stands in for it (`fixed`). Its
  * settings show inside once it is on; a switch the server refused, below.
+ * Not shown when the reference sport does not offer it (`offered`).
  */
 function CategoryCard({
   id,
@@ -82,6 +86,7 @@ function CategoryCard({
   toggle,
   fixed,
   on,
+  offered = true,
   children,
 }: {
   id: string;
@@ -91,12 +96,14 @@ function CategoryCard({
   toggle?: CategoryToggle;
   fixed?: ReactNode;
   on: boolean;
+  offered?: boolean;
   children?: ReactNode;
 }) {
   const {
     register,
     formState: { errors },
   } = useFormContext<ChallengeCreateInput>();
+  if (!offered) return null;
   const toggleError = toggle && errors[toggle]?.message;
   const head = (
     <>
@@ -178,6 +185,7 @@ function Categories({ sports }: { sports: Sports }) {
       'cumulative_elevation',
     ],
   });
+  const withDistance = referenceHasDistance(sports, reference);
   const exampleKm = stepKm !== undefined && stepKm > 0 && stepKm <= 100 ? stepKm : EXAMPLE_STEP_KM;
   const week2DoneKm = EXAMPLE_WEEK1_KM + exampleKm + EXAMPLE_ABOVE_MINIMUM_KM;
   const examples = [
@@ -224,6 +232,14 @@ function Categories({ sports }: { sports: Sports }) {
               for (const [code, factor] of Object.entries(changes)) {
                 setValue(`factors.${code}`, factor);
               }
+              // Unchecked, hidden, then offered again unchecked.
+              if (!referenceHasDistance(sports, event.target.value)) {
+                const choices = withoutDistanceChoices(getValues('points_criteria'));
+                setValue('cumulative_distance', choices.cumulative_distance);
+                setValue('elimination', choices.elimination);
+                setValue('cumulative_elevation', choices.cumulative_elevation);
+                setValue('points_criteria', choices.points_criteria);
+              }
             },
           })}
         >
@@ -235,6 +251,10 @@ function Categories({ sports }: { sports: Sports }) {
         </select>
         <p id="reference_sport-hint" className="mt-2 text-sm text-muted">
           {t('challengeCreate.fields.referenceSport.hint')}
+          {/* Announced when the sport changes: the cards below go. */}
+          <span aria-live="polite" className="mt-1 block empty:hidden">
+            {!withDistance && t('challengeCreate.fields.referenceSport.withoutDistance')}
+          </span>
         </p>
         <FieldError id="reference_sport-error" message={referenceError} />
         <ChangedPill field="reference_sport" className="mt-2" />
@@ -267,6 +287,7 @@ function Categories({ sports }: { sports: Sports }) {
             explanation={t('challengeCreate.categories.distance.explanation')}
             toggle="cumulative_distance"
             on={distance}
+            offered={withDistance}
           />
 
           <CategoryCard
@@ -280,6 +301,7 @@ function Categories({ sports }: { sports: Sports }) {
             })}
             toggle="elimination"
             on={elimination}
+            offered={withDistance}
           >
             <div>
               <label htmlFor="elimination_step_km" className="block font-semibold">
@@ -349,7 +371,9 @@ function Categories({ sports }: { sports: Sports }) {
               </legend>
               <FieldError id="points_criteria-error" message={criteriaError} />
               <div className="mt-3 flex flex-wrap gap-2">
-                {POINTS_CRITERIA.map((criterion) => (
+                {POINTS_CRITERIA.filter((criterion) =>
+                  criterionOffered(criterion, withDistance),
+                ).map((criterion) => (
                   <label
                     key={criterion}
                     className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 font-semibold hover-choice has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:ring-1 has-[:checked]:ring-accent"
@@ -440,6 +464,7 @@ function Categories({ sports }: { sports: Sports }) {
             explanation={t('challengeCreate.categories.elevation.explanation')}
             toggle="cumulative_elevation"
             on={elevation}
+            offered={withDistance}
           />
         </ol>
       </section>

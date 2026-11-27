@@ -510,18 +510,22 @@ describe('ChallengeCreateWizard', () => {
       expect(await screen.findByRole('combobox', { name: 'Sport de référence' })).toHaveValue(
         'run',
       );
-      // The sports whose distance is required, by name.
+      // The sports whose distance is required or none, by name, never "other".
       expect([...reference().querySelectorAll('option')].map(({ value }) => value)).toEqual([
         'rowing',
         'run',
+        'crossfit',
+        'climbing',
         'hyrox',
         'walk',
         'swim',
         'paragliding',
         'hike',
+        'strength',
         'roller',
         'xc_ski',
         'ride',
+        'yoga',
       ]);
       for (const name of [
         'Temps cumulé',
@@ -1303,6 +1307,54 @@ describe('ChallengeCreateWizard', () => {
       expect(bodies[0]?.reference_sport).toBe('ride');
       expect(bodies[0]?.categories).toEqual({ cumulative_distance: {} });
       expect(bodies[0]?.distance_factors).toEqual({ swim: 0.8 });
+    });
+
+    it('hides the choices that need a distance under CrossFit, and sends none', async () => {
+      const bodies = answerCreation();
+      renderWizard();
+      await fillInfoStep();
+      await fillDurationStep();
+      await addDistance();
+      await addElevation();
+      await addPoints();
+      fireEvent.click(criterion('Séance la plus longue en temps'));
+      fireEvent.click(criterion('Séance la plus longue en distance équivalente'));
+      fireEvent.click(top10());
+      const hidden = () => [
+        screen.queryByRole('switch', { name: 'Distance cumulée' }),
+        screen.queryByRole('switch', { name: / avec élimination$/ }),
+        screen.queryByRole('switch', { name: 'D+ cumulé' }),
+        screen.queryByRole('checkbox', { name: 'D+ de la semaine' }),
+        screen.queryByRole('checkbox', { name: 'Sortie course la plus rapide' }),
+        screen.queryByRole('checkbox', { name: 'Séance la plus longue en distance équivalente' }),
+      ];
+
+      fireEvent.change(reference(), { target: { value: 'crossfit' } });
+      expect(await screen.findByText(/^Sport sans distance/)).toBeInTheDocument();
+      expect(hidden().every((element) => element === null)).toBe(true);
+      expect(criterion('Séance la plus longue en temps')).toBeChecked();
+      expect(
+        screen.queryByRole('region', { name: 'Coefficients de distance' }),
+      ).not.toBeInTheDocument();
+
+      // Offered again, unchecked.
+      fireEvent.change(reference(), { target: { value: 'run' } });
+      expect(screen.getByRole('switch', { name: 'Distance cumulée' })).not.toBeChecked();
+      expect(screen.getByRole('switch', { name: 'D+ cumulé' })).not.toBeChecked();
+      expect(criterion('Séance la plus longue en distance équivalente')).not.toBeChecked();
+
+      fireEvent.change(reference(), { target: { value: 'yoga' } });
+      next();
+      await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
+      expect(row('Sport de référence')).toHaveTextContent('Yoga');
+      send();
+
+      await screen.findByText('Défi c42');
+      expect(bodies[0]?.reference_sport).toBe('yoga');
+      expect(bodies[0]?.categories).toEqual({
+        points: { criteria: ['longest_duration'], podium: 10, min_session_minutes: 20 },
+      });
+      expect(bodies[0]).not.toHaveProperty('distance_factors');
     });
 
     it('creates a challenge with Hyrox as its reference', async () => {

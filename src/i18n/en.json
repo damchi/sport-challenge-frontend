@@ -500,7 +500,8 @@
       "referenceSport": {
         "label": "Reference sport",
         "hint": "The distances of the other sports are brought back to it, and the elimination is played in this sport.",
-        "required": "Choose the reference sport."
+        "required": "Choose the reference sport.",
+        "withoutDistance": "Sport without distance: no total distance, total elevation gain or elimination, and no distance, elevation or run criterion in the Grand Prix."
       },
       "eliminationStep": {
         "label": "Minimum increase from one week to the next",

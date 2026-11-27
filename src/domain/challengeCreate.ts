@@ -22,11 +22,47 @@ export const DEFAULT_MIN_SESSION_MINUTES = 20;
 export const DEFAULT_REFERENCE_SPORT = 'run';
 
 /**
- * Sports the challenge may be run in: those whose distance is required (API
- * contract, `reference_sport`). Catalogue order.
+ * Sports the challenge may be run in: those whose distance is required or
+ * none, never the free "other" (API contract, `reference_sport`). Catalogue
+ * order.
  */
 export function referenceSports<S extends CatalogueSport>(sports: readonly S[]): S[] {
-  return sports.filter((sport) => sport.distance_mode === 'required');
+  return sports.filter((sport) => sport.distance_mode !== 'optional');
+}
+
+/** The points' criteria that need a reference sport with a distance. */
+const DISTANCE_CRITERIA: readonly string[] = [
+  'longest_distance',
+  'weekly_elevation',
+  'fastest_run',
+];
+
+/**
+ * Whether the reference sport has a distance: a sport without one offers
+ * neither the cumulative distance, the total elevation gain, the elimination
+ * in km, nor the points' criteria of `DISTANCE_CRITERIA` (API contract,
+ * `reference_sport`). A code missing from the catalogue counts as one.
+ */
+export function referenceHasDistance(sports: readonly CatalogueSport[], code: string): boolean {
+  return sports.find((sport) => sport.code === code)?.distance_mode !== 'none';
+}
+
+/** Whether a criterion of the points is offered, given the reference sport. */
+export function criterionOffered(criterion: string, withDistance: boolean): boolean {
+  return withDistance || !DISTANCE_CRITERIA.includes(criterion);
+}
+
+/**
+ * The choices a reference sport without distance unchecks: the categories
+ * and the points' criteria it does not offer.
+ */
+export function withoutDistanceChoices<C extends string>(criteria: readonly C[]) {
+  return {
+    cumulative_distance: false,
+    elimination: false,
+    cumulative_elevation: false,
+    points_criteria: criteria.filter((criterion) => criterionOffered(criterion, false)),
+  };
 }
 
 /**
@@ -203,12 +239,17 @@ const POINTS_FIELDS: Record<string, string> = {
  * validation_failed): "categories.elimination.step_meters" is X in km,
  * "categories.points.*" a setting of the points, "categories.cumulative_elevation"
  * the total elevation gain itself (it has no settings), "distance_factors.ride" a
- * factor, "distance_factors" the factors as a whole. Undefined for a field
+ * factor, "distance_factors" the factors as a whole; the cumulative distance and
+ * the elimination are refused as a whole too. Undefined for a field
  * the form lacks.
  */
 export function formFieldOf(serverField: string): string | undefined {
   if (serverField === 'categories.elimination.step_meters') return 'elimination_step_km';
-  if (serverField === 'categories.cumulative_elevation') return 'cumulative_elevation';
+  // A category refused as a whole, under a reference sport without distance.
+  const category = /^categories\.(cumulative_distance|elimination|cumulative_elevation)$/.exec(
+    serverField,
+  );
+  if (category) return category[1];
   const points = POINTS_FIELDS[serverField];
   if (points) return points;
   if (serverField === 'distance_factors') return 'factors';
