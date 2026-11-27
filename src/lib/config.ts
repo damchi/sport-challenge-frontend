@@ -28,7 +28,8 @@ function required(env: Record<string, unknown>, name: string): string {
 
 export function readConfig(env: Record<string, unknown>): Config {
   const apiUrl = required(env, 'VITE_API_URL');
-  // new URL rather than URL.canParse: older Safari versions lack the latter.
+  // new URL rather than URL.canParse: the supported browsers (README §3,
+  // Safari 15.4) lack the latter.
   let url: URL | undefined;
   try {
     url = new URL(apiUrl);

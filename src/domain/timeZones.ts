@@ -43,3 +43,16 @@ export function groupTimeZones(timeZones: readonly string[]): TimeZoneGroup[] {
     zones: zones.sort((a, b) => a.city.localeCompare(b.city)),
   }));
 }
+
+/**
+ * The zones the runtime knows, with the given ones always in. Below the
+ * supported browsers (README §3) the runtime cannot list them: the device's
+ * zone, the given ones and UTC.
+ */
+export function supportedTimeZones(always: readonly string[] = []): string[] {
+  const known =
+    typeof Intl.supportedValuesOf === 'function'
+      ? Intl.supportedValuesOf('timeZone')
+      : [Intl.DateTimeFormat().resolvedOptions().timeZone, 'UTC'];
+  return [...new Set([...known, ...always])];
+}

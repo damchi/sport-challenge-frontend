@@ -57,7 +57,8 @@ export function useAuth(): Auth {
  */
 export function safeReturnTo(value: unknown, origin: string): string {
   if (typeof value !== 'string' || !value.startsWith('/')) return HOME_PATH;
-  // new URL rather than URL.parse: older Safari versions lack the latter.
+  // new URL rather than URL.parse: the supported browsers (README §3,
+  // Safari 15.4) lack the latter.
   let url: URL;
   try {
     url = new URL(value, origin);
