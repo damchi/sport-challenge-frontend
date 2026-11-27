@@ -329,4 +329,108 @@ describe('MyStandings', () => {
     expect(elimination).toHaveTextContent('5e sur 6');
     expect(elimination).not.toHaveTextContent('cette semaine');
   });
+
+  describe('an elimination by repetitions', () => {
+    const repetitionsChallenge = {
+      reference_sport: 'crossfit',
+      categories: [
+        { type: 'cumulative_time' as const, position: 1, params: {} },
+        {
+          type: 'elimination' as const,
+          position: 3,
+          params: { sport: 'crossfit', exercise: 'burpee', step_repetitions: 20 },
+        },
+      ],
+    };
+    // As the contract gives it: no meters, the week in repetitions.
+    const myRepetitions = (
+      value: number,
+      elimination: Partial<NonNullable<LeaderboardEntry['elimination']>>,
+    ) => ({
+      ...myElimination({ minimum_meters: null, distance_meters: 0, ...elimination }),
+      value,
+    });
+    // The time first: the leaderboard shows it, the elimination's card keeps its own border.
+    const repetitionsRanking = (me: LeaderboardEntry): FullRanking[] => [
+      fourRankings[0] as FullRanking,
+      { type: 'elimination', ranked_count: 6, entries: [line(1, 300), me] },
+    ];
+
+    it('shows the week in repetitions against its minimum, at risk', async () => {
+      answer(repetitionsChallenge);
+      leaderboard(
+        repetitionsRanking(myRepetitions(150, { repetitions: 80, minimum_repetitions: 120 })),
+      );
+      renderAt(`/challenges/${id}`);
+
+      const [, elimination] = (await cards()) as [HTMLElement, HTMLElement];
+      expect(elimination).toHaveTextContent('Élimination · Burpees');
+      expect(elimination).toHaveTextContent('80 rép. / 120 rép.');
+      expect(elimination).toHaveTextContent('Burpees en CrossFit, cette semaine');
+      expect(elimination).toHaveTextContent('5e sur 6');
+      expect(within(elimination).getByText('À risque')).toBeInTheDocument();
+      expect(elimination).toHaveClass('border-risk-border');
+      expect(elimination.querySelector('.bg-risk-bar')).toHaveStyle({
+        width: `${(80 / 120) * 100}%`,
+      });
+      expect(elimination).not.toHaveTextContent('km');
+    });
+
+    it('shows the total in repetitions in week 1, without a minimum', async () => {
+      answer({ ...repetitionsChallenge, current_week: 1 });
+      leaderboard(
+        repetitionsRanking(
+          myRepetitions(45, { status: 'in_progress', repetitions: 45, minimum_repetitions: null }),
+        ),
+      );
+      renderAt(`/challenges/${id}`);
+
+      const [, elimination] = (await cards()) as [HTMLElement, HTMLElement];
+      expect(elimination).toHaveTextContent('45 rép.');
+      expect(elimination).toHaveTextContent('Burpees en CrossFit');
+      expect(elimination).not.toHaveTextContent('cette semaine');
+      expect(elimination).not.toHaveTextContent('/');
+    });
+
+    it('shows the total in repetitions once the challenge is finished', async () => {
+      answer({
+        ...repetitionsChallenge,
+        status: 'finished',
+        current_week: null,
+        week_ends_at: null,
+      });
+      leaderboard(
+        repetitionsRanking(
+          myRepetitions(150, {
+            status: null,
+            week_ends_at: null,
+            repetitions: 0,
+            minimum_repetitions: null,
+          }),
+        ),
+      );
+      renderAt(`/challenges/${id}`);
+
+      const [, elimination] = (await cards()) as [HTMLElement, HTMLElement];
+      expect(elimination).toHaveTextContent('150 rép.');
+      expect(elimination).toHaveTextContent('Burpees en CrossFit');
+      expect(elimination).toHaveTextContent('5e sur 6');
+    });
+
+    it('writes the repetitions in English, singular and plural', async () => {
+      server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
+      answer(repetitionsChallenge);
+      leaderboard(
+        repetitionsRanking(myRepetitions(150, { repetitions: 1, minimum_repetitions: 2 })),
+      );
+      renderAt(`/challenges/${id}`);
+
+      const elimination = within(
+        await screen.findByRole('region', { name: 'Where you stand' }),
+      ).getAllByRole('link')[1];
+      expect(elimination).toHaveTextContent('Elimination · Burpees');
+      expect(elimination).toHaveTextContent('1 rep / 2 reps');
+      expect(elimination).toHaveTextContent('Burpees in CrossFit, this week');
+    });
+  });
 });
