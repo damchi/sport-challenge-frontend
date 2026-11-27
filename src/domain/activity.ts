@@ -92,3 +92,28 @@ export function sortSportsForEntry<S extends { code: string }>(
     (a, b) => rank(a) - rank(b) || name(a.code).localeCompare(name(b.code), locale),
   );
 }
+
+/** An entry as sent, or an activity as recorded: what the user types. */
+interface EntryFields {
+  sport_code: string;
+  sport_label?: string | null;
+  started_at: string;
+  duration_seconds: number;
+  distance_meters?: number | null;
+  elevation_gain_meters?: number | null;
+}
+
+/**
+ * Whether the activity the server recorded holds `entry`: same sport, label,
+ * start, duration, distance and elevation gain (left out or null alike).
+ */
+export function holdsEntry(recorded: EntryFields, entry: EntryFields): boolean {
+  return (
+    recorded.sport_code === entry.sport_code &&
+    (recorded.sport_label ?? null) === (entry.sport_label ?? null) &&
+    Date.parse(recorded.started_at) === Date.parse(entry.started_at) &&
+    recorded.duration_seconds === entry.duration_seconds &&
+    (recorded.distance_meters ?? null) === (entry.distance_meters ?? null) &&
+    (recorded.elevation_gain_meters ?? null) === (entry.elevation_gain_meters ?? null)
+  );
+}

@@ -757,6 +757,88 @@ describe('ActivityForm', () => {
     expect(sent[1]?.body.duration_seconds).toBe(1800);
   });
 
+  describe('corrected after an attempt that got no clear answer', () => {
+    /** The first attempt fails as if unanswered; the next ones get it back. */
+    function recordedAtFirst() {
+      let attempts = 0;
+      return recordWith(() => {
+        attempts += 1;
+        return attempts === 1 ? HttpResponse.error() : recorded();
+      });
+    }
+
+    /** Answers the correction with `respond`, keeping each body. */
+    function correctWith(respond: () => Response) {
+      const patched: ActivityCreate[] = [];
+      server.use(
+        http.patch('*/api/v1/activities/:activityId', async ({ request }) => {
+          patched.push((await request.json()) as ActivityCreate);
+          return respond();
+        }),
+      );
+      return patched;
+    }
+
+    async function sendThenCorrect(duration: string) {
+      renderForm();
+      await fill();
+      fireEvent.click(save());
+      await screen.findByRole('alert');
+      type(minutes(), duration);
+      fireEvent.click(save());
+    }
+
+    it('applies the correction to the activity recorded the first time', async () => {
+      const sent = recordedAtFirst();
+      const patched = correctWith(() => recorded());
+      await sendThenCorrect('30');
+
+      expect(await screen.findByText('Activité enregistrée.')).toBeInTheDocument();
+      expect(sent.map(({ key }) => key)).toEqual([KEY, KEY]);
+      expect(patched).toHaveLength(1);
+      expect(patched[0]?.duration_seconds).toBe(1800);
+      expect(screen.queryByText(/ta correction n'a pas été appliquée/)).not.toBeInTheDocument();
+    });
+
+    it('keeps the key when the next attempt is refused, the first maybe recorded', async () => {
+      let attempts = 0;
+      const sent = recordWith(() => {
+        attempts += 1;
+        if (attempts === 1) return HttpResponse.error();
+        if (attempts === 2) {
+          return HttpResponse.json(
+            { error: { code: 'activity_overlap', message: 'Refused' } },
+            { status: 422 },
+          );
+        }
+        return recorded();
+      });
+      correctWith(() => recorded());
+      await sendThenCorrect('30');
+      await screen.findByText(/chevauche une autre de tes activités/);
+      fireEvent.click(save());
+
+      expect(await screen.findByText('Activité enregistrée.')).toBeInTheDocument();
+      expect(sent.map(({ key }) => key)).toEqual([KEY, KEY, KEY]);
+    });
+
+    it.each([
+      ['week_locked', /Une semaine terminée dans un de tes défis bloque ce changement/],
+      ['activity_overlap', /chevauche une autre de tes activités/],
+    ])('says why the correction is refused (%s), the activity kept', async (code, reason) => {
+      recordedAtFirst();
+      correctWith(() =>
+        HttpResponse.json({ error: { code, message: 'Refused' } }, { status: 422 }),
+      );
+      await sendThenCorrect('30');
+
+      const outcome = await screen.findByRole('status');
+      expect(outcome).toHaveTextContent('Activité enregistrée.');
+      expect(outcome).toHaveTextContent(/ta correction n'a pas été appliquée/);
+      expect(outcome).toHaveTextContent(reason);
+    });
+  });
+
   it.each([
     ['week_locked', /La semaine de cette activité est terminée/],
     ['activity_overlap', /chevauche une autre de tes activités/],

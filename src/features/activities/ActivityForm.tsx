@@ -4,10 +4,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { ApiError, errorMessage } from '../../api/errors';
-import { useCreateActivity, type Activity } from '../../api/hooks/useActivities';
+import { useCreateActivity, useUpdateActivity, type Activity } from '../../api/hooks/useActivities';
 import type { Sport } from '../../api/hooks/useSports';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { sortSportsForEntry } from '../../domain/activity';
+import { holdsEntry, sortSportsForEntry } from '../../domain/activity';
 import { toZonedDateTime } from '../../domain/challengeWindow';
 import { timeZoneName } from '../../domain/format/challengeDates';
 import {
@@ -71,33 +71,70 @@ export function ActivityForm({
   deviceTimeZone?: string;
   newIdempotencyKey?: () => string;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const makeKey = newIdempotencyKey ?? (() => crypto.randomUUID());
   const createActivity = useCreateActivity();
+  const updateActivity = useUpdateActivity();
   // Chosen once per entry; it goes with every attempt that may have been
   // recorded.
   const [idempotencyKey, setIdempotencyKey] = useState(makeKey);
+  // An attempt with this key got no clear answer: it may have been recorded.
+  const uncertain = useRef(false);
   const [saved, setSaved] = useState<Activity>();
+  // Why the entry corrected after an uncertain attempt was not applied.
+  const [correctionRefused, setCorrectionRefused] = useState<string>();
   const loaded = useActivityFormData(deviceTimeZone, saved !== undefined);
   if (saved) {
     return (
-      <ActivitySaved title={t('activityForm.saved.title')} contributions={saved.contributions} />
+      <ActivitySaved
+        title={t('activityForm.saved.title')}
+        contributions={saved.contributions}
+        refusal={
+          correctionRefused &&
+          t('activityForm.saved.correctionRefused', { reason: correctionRefused })
+        }
+      />
     );
   }
   if (loaded.state !== 'ready') return loaded.view;
 
   const record = async (activity: ActivityCreateValues) => {
+    let created: Activity;
     try {
-      setSaved(await createActivity.mutateAsync({ activity, idempotencyKey }));
+      created = await createActivity.mutateAsync({ activity, idempotencyKey });
     } catch (error) {
-      // Refused for good by the contract (400, 404, 422): nothing was
-      // recorded, the corrected entry goes with a new key. Otherwise (no
-      // answer, server error, timeout) it may have been: the same key comes
-      // again, so nothing is recorded twice.
-      if (error instanceof ApiError && REFUSED_FOR_GOOD.has(error.status)) {
+      // Refused for good by the contract (400, 404, 422): this attempt
+      // recorded nothing, the corrected entry goes with a new key, unless an
+      // uncertain attempt came first: it may have been recorded, and only
+      // its key gives it back, so the key stays until the server says it is
+      // gone. Otherwise (no answer, server error, timeout) this one may have
+      // been: the same key comes again, so nothing is recorded twice.
+      if (!(error instanceof ApiError && REFUSED_FOR_GOOD.has(error.status))) {
+        uncertain.current = true;
+      } else if (!uncertain.current || error.code === 'activity_not_found') {
         setIdempotencyKey(makeKey());
+        uncertain.current = false;
       }
       throw error;
+    }
+    if (!uncertain.current || holdsEntry(created, activity)) {
+      setSaved(created);
+      return;
+    }
+    // An uncertain attempt was recorded after all, with the entry as it was
+    // then: the server gives it back, whatever was sent again. The entry
+    // corrected since replaces it (owner's decision, 2026-11-26).
+    try {
+      setSaved(await updateActivity.mutateAsync({ activityId: created.id, activity }));
+    } catch (error) {
+      const { key, values } =
+        error instanceof ApiError
+          ? error.code === 'week_locked'
+            ? { key: 'activityEdit.weekLocked', values: {} }
+            : errorMessage(error, (candidate) => i18n.exists(candidate))
+          : { key: 'errors.unknown', values: {} };
+      setCorrectionRefused(t(key, values));
+      setSaved(created);
     }
   };
 
@@ -108,7 +145,7 @@ export function ActivityForm({
       now={now ?? (() => new Date())}
       initialValues={EMPTY_ACTIVITY_INPUT}
       submitKey="activityForm.submit"
-      busy={createActivity.isPending}
+      busy={createActivity.isPending || updateActivity.isPending}
       save={record}
     />
   );

@@ -8,14 +8,17 @@ import type { ActivityContribution } from '../../api/hooks/useActivities';
  * Outcome of a recorded or changed activity (`title` says which): the
  * challenges it counts in, as the server says, each leading to its
  * leaderboard. Counting in none is a success too: it will count in a
- * challenge joined later whose dates contain it.
+ * challenge joined later whose dates contain it. `refusal` says what
+ * was not done, read with the outcome.
  */
 export function ActivitySaved({
   title,
   contributions,
+  refusal,
 }: {
   title: string;
   contributions: readonly ActivityContribution[];
+  refusal?: string | undefined;
 }) {
   const { t } = useTranslation();
   const count = contributions.length;
@@ -26,6 +29,7 @@ export function ActivitySaved({
     <div className="mt-6 flex max-w-md flex-col items-start gap-4">
       <div ref={status} tabIndex={-1} role="status">
         <p className="font-bold">{title}</p>
+        {refusal && <p className="mt-1 font-semibold text-risk-fg">{refusal}</p>}
         <p className="mt-1">
           {count > 0 ? t('activityForm.saved.counts', { count }) : t('activityForm.saved.none')}
         </p>
