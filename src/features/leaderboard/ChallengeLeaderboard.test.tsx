@@ -701,6 +701,7 @@ describe('ChallengeLeaderboard, elimination', () => {
     expect(await within(ranking).findByText('150 rép.')).toBeInTheDocument();
     expect(within(ranking).getByText('90 rép.')).toBeInTheDocument();
     expect(within(ranking).getByText('10 rép. sur 40 rép. cette semaine')).toBeInTheDocument();
+    expect(within(ranking).getByText(/en répétitions d'un exercice/)).toBeInTheDocument();
     expect(within(ranking).queryByText(/km/)).not.toBeInTheDocument();
   });
 
