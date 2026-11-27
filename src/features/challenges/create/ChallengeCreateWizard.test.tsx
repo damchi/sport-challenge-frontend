@@ -1347,6 +1347,9 @@ describe('ChallengeCreateWizard', () => {
       next();
       await screen.findByRole('heading', { level: 2, name: 'Tout vérifier' });
       expect(row('Sport de référence')).toHaveTextContent('Yoga');
+      for (const label of ['Distance cumulée', 'Élimination', 'D+ cumulé']) {
+        expect(step().queryByText(label, { selector: 'dt' })).not.toBeInTheDocument();
+      }
       send();
 
       await screen.findByText('Défi c42');
