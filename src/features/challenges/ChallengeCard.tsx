@@ -130,7 +130,11 @@ function OngoingBody({ challenge }: { challenge: ChallengeSummary }) {
         </p>
       )}
       {challenge.my_week && (
-        <MyWeekRows week={challenge.my_week} referenceSport={challenge.reference_sport} />
+        <MyWeekRows
+          week={challenge.my_week}
+          referenceSport={challenge.reference_sport}
+          exercise={challenge.exercise}
+        />
       )}
     </>
   );

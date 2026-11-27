@@ -2487,10 +2487,9 @@ paths:
             The profile of the account is incomplete (`profile_incomplete`),
             the sport needs a distance (`distance_required`) or takes none
             (`distance_not_allowed`), an elevation gain is sent for a sport
-            or an activity that takes none (`elevation_not_allowed`), the
-            repetitions name an exercise no challenge of the account offers
-            (`unknown_exercise`), or the activity would overlap another of
-            the account (`activity_overlap`).
+            or an activity that takes none (`elevation_not_allowed`), an exercise
+            no challenge of the account offers (`unknown_exercise`), or the
+            activity would overlap another of the account (`activity_overlap`).
           content:
             application/json:
               schema:
@@ -2546,10 +2545,9 @@ paths:
           description: |
             The sport needs a distance (`distance_required`) or takes none
             (`distance_not_allowed`), an elevation gain is sent for a sport
-            or an activity that takes none (`elevation_not_allowed`), the
-            repetitions name an exercise no challenge of the account offers
-            (`unknown_exercise`), or the activity would overlap another of
-            the account (`activity_overlap`).
+            or an activity that takes none (`elevation_not_allowed`), an exercise
+            no challenge of the account offers (`unknown_exercise`), or the
+            activity would overlap another of the account (`activity_overlap`).
           content:
             application/json:
               schema:
@@ -3464,11 +3462,7 @@ components:
         repetitions:
           type: array
           maxItems: 50
-          description: |
-            As in `ActivityCreate`, the challenges being those of the account
-            of the activity (`unknown_exercise` otherwise); a change replaces
-            them all, those of an exercise already on the activity being
-            kept.
+          description: As in `ActivityCreate`, from the challenges of the account of the activity.
           items:
             $ref: "#/components/schemas/ActivityRepetitions"
     AdminReason:
@@ -3914,6 +3908,11 @@ components:
             never appears.
           items:
             $ref: "#/components/schemas/ActivityContribution"
+        repetitions:
+          type: array
+          description: As `Activity.repetitions`, every one, sorted by exercise; absent when none.
+          items:
+            $ref: "#/components/schemas/ActivityRepetitions"
         locked:
           type: boolean
           description: |
@@ -4814,7 +4813,7 @@ components:
           description: The end of the current week; null when eliminated or outside the weeks.
     ChallengeSummary:
       type: object
-      required: [id, title, visibility, timezone, reference_sport, starts_at, ends_at, participant_count, my_role, my_status, status, current_week, week_ends_at, week_count, my_week, best_result]
+      required: [id, title, visibility, timezone, reference_sport, exercise, starts_at, ends_at, participant_count, my_role, my_status, status, current_week, week_ends_at, week_count, my_week, best_result]
       additionalProperties: false
       properties:
         id:
@@ -4831,6 +4830,14 @@ components:
           type: string
           description: Code of the sport the distances are brought back to and the elimination is run in.
           example: ride
+        exercise:
+          type: string
+          nullable: true
+          description: |
+            Code of the exercise of the elimination when it is by repetitions
+            (`Sport.exercises`), as `CategoryRanking.exercise`; null otherwise
+            (elimination in meters, or none). Whatever the scope and status.
+          example: burpee
         starts_at:
           type: string
           format: date-time
@@ -5529,6 +5536,13 @@ components:
             where it counts, at 7 am, local time of the challenge, on the
             first day of the next week; for an author who abandoned, only
             when the week was already locked when they left.
+        repetitions:
+          type: array
+          description: |
+            As `Activity.repetitions`: every one, sorted by exercise, those of
+            an exercise this challenge does not offer included; absent when none.
+          items:
+            $ref: "#/components/schemas/ActivityRepetitions"
         user:
           $ref: "#/components/schemas/LeaderboardUser"
     ChallengeActivityPage:

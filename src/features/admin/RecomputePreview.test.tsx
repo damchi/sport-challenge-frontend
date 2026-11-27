@@ -129,6 +129,48 @@ describe('RecomputePreview', () => {
     expect(within(card).getByText('Les autres rangs ne bougent pas.')).toBeInTheDocument();
   });
 
+  it('shows the values of an elimination by repetitions in repetitions', async () => {
+    const burpees = (entries: LeaderboardEntry[]) => {
+      const before = ranking(entries);
+      return {
+        ...before,
+        categories: before.categories.map((category) => ({
+          ...category,
+          type: 'elimination' as const,
+          exercise: 'burpee',
+        })),
+      };
+    };
+    renderPreview([
+      {
+        challenge_id: challenge.id,
+        ...unchanged,
+        before: burpees([entry('ami_1', 1, 120), entry('ami_2', 2, 80)]),
+        after: burpees([entry('ami_2', 1, 150), entry('ami_1', 2, 120)]),
+        // By repetitions: the meters are 0, the repetitions are given.
+        eliminations: [
+          {
+            user: { id: 'id-ami_3', pseudo: 'ami_3', first_name: null, last_name: null },
+            before: null,
+            after: {
+              week_number: 3,
+              distance_meters: 0,
+              required_meters: 0,
+              repetitions: 30,
+              required_repetitions: 40,
+            },
+          },
+        ],
+      },
+    ]);
+
+    const card = await category('Élimination · Burpees');
+    expect(row(card, 'ami_2')).toEqual(['Monte : 2e à 1er', '80 rép.', '150 rép.']);
+    expect(card).not.toHaveTextContent('km');
+    const given = (await screen.findByText(/ami_3/u)).closest('li');
+    expect(given).toHaveTextContent('30 rép. pour un minimum de 40 rép.');
+  });
+
   it('says who leaves the ranking, and a category where nothing changes', async () => {
     renderPreview([
       {

@@ -1704,12 +1704,7 @@ export interface components {
             distance_meters?: number;
             /** @description As in `ActivityCreate`. */
             elevation_gain_meters?: number;
-            /**
-             * @description As in `ActivityCreate`, the challenges being those of the account
-             *     of the activity (`unknown_exercise` otherwise); a change replaces
-             *     them all, those of an exercise already on the activity being
-             *     kept.
-             */
+            /** @description As in `ActivityCreate`, from the challenges of the account of the activity. */
             repetitions?: components["schemas"]["ActivityRepetitions"][];
         };
         /**
@@ -1996,6 +1991,8 @@ export interface components {
              *     never appears.
              */
             contributions: components["schemas"]["ActivityContribution"][];
+            /** @description As `Activity.repetitions`, every one, sorted by exercise; absent when none. */
+            repetitions?: components["schemas"]["ActivityRepetitions"][];
             /**
              * @description As `Activity.locked`: true once the week of the activity is locked
              *     in a challenge where it counts, or was already locked when the
@@ -2609,6 +2606,13 @@ export interface components {
              * @example ride
              */
             reference_sport: string;
+            /**
+             * @description Code of the exercise of the elimination when it is by repetitions
+             *     (`Sport.exercises`), as `CategoryRanking.exercise`; null otherwise
+             *     (elimination in meters, or none). Whatever the scope and status.
+             * @example burpee
+             */
+            exercise: string | null;
             /** Format: date-time */
             starts_at: string;
             /** Format: date-time */
@@ -3095,6 +3099,11 @@ export interface components {
              *     when the week was already locked when they left.
              */
             locked: boolean;
+            /**
+             * @description As `Activity.repetitions`: every one, sorted by exercise, those of
+             *     an exercise this challenge does not offer included; absent when none.
+             */
+            repetitions?: components["schemas"]["ActivityRepetitions"][];
             user: components["schemas"]["LeaderboardUser"];
         };
         ChallengeActivityPage: {
@@ -5241,10 +5250,9 @@ export interface operations {
              * @description The profile of the account is incomplete (`profile_incomplete`),
              *     the sport needs a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), an elevation gain is sent for a sport
-             *     or an activity that takes none (`elevation_not_allowed`), the
-             *     repetitions name an exercise no challenge of the account offers
-             *     (`unknown_exercise`), or the activity would overlap another of
-             *     the account (`activity_overlap`).
+             *     or an activity that takes none (`elevation_not_allowed`), an exercise
+             *     no challenge of the account offers (`unknown_exercise`), or the
+             *     activity would overlap another of the account (`activity_overlap`).
              */
             422: {
                 headers: {
@@ -5321,10 +5329,9 @@ export interface operations {
             /**
              * @description The sport needs a distance (`distance_required`) or takes none
              *     (`distance_not_allowed`), an elevation gain is sent for a sport
-             *     or an activity that takes none (`elevation_not_allowed`), the
-             *     repetitions name an exercise no challenge of the account offers
-             *     (`unknown_exercise`), or the activity would overlap another of
-             *     the account (`activity_overlap`).
+             *     or an activity that takes none (`elevation_not_allowed`), an exercise
+             *     no challenge of the account offers (`unknown_exercise`), or the
+             *     activity would overlap another of the account (`activity_overlap`).
              */
             422: {
                 headers: {

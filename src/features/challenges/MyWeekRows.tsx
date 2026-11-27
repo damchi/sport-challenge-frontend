@@ -10,18 +10,27 @@ type MyRanking = MyWeek['rankings'][number];
 
 /**
  * The user's line in each category of an ongoing challenge, on its card:
- * the category, then the rank among the ranked ones ("4e sur 8"); the
- * elimination shows the week's distance (or repetitions) against its
- * minimum, with its status and a bar, or the amount alone in week 1; the points add the
- * provisional ones. Every value is the server's (my_week).
+ * the category (with the exercise of an elimination by repetitions), then
+ * the rank among the ranked ones ("4e sur 8"); the elimination shows the
+ * week's distance (or repetitions) against its minimum, with its status and
+ * a bar, or the amount alone in week 1; the points add the provisional ones.
+ * Every value is the server's (my_week).
  */
-export function MyWeekRows({ week, referenceSport }: { week: MyWeek; referenceSport: string }) {
+export function MyWeekRows({
+  week,
+  referenceSport,
+  exercise,
+}: {
+  week: MyWeek;
+  referenceSport: string;
+  exercise: string | null;
+}) {
   const categoryName = useCategoryName(referenceSport);
   return (
     <ul className="mt-4">
       {week.rankings.map((ranking) => (
         <li key={ranking.type} className="border-t border-border py-3 last:pb-0">
-          <RankingRow ranking={ranking} name={categoryName(ranking.type)} />
+          <RankingRow ranking={ranking} name={categoryName(ranking.type, exercise)} />
         </li>
       ))}
     </ul>

@@ -114,6 +114,7 @@ export const mockChallenges: ChallengeSummary[] = Array.from({ length: 24 }, (_,
     timezone: 'America/Montreal',
     // The ride challenge (mockRideChallengeId) is run in cycling.
     reference_sport: index === 4 ? 'ride' : 'run',
+    exercise: null,
     starts_at: '2026-11-02T05:00:00Z',
     ends_at: '2026-11-30T05:00:00Z',
     participant_count: (index % 7) + 1,

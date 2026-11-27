@@ -12,7 +12,6 @@ import { EmptyState } from '../../components/states/EmptyState';
 import { ErrorState } from '../../components/states/ErrorState';
 import { LoadingState } from '../../components/states/LoadingState';
 import { displayName } from '../../domain/displayName';
-import { formatKm } from '../../domain/format/distance';
 import { sharedRanks } from '../../domain/format/rank';
 import {
   categoryChanges,
@@ -21,7 +20,7 @@ import {
   type LineChange,
 } from '../../domain/rankingChanges';
 import { useCategoryName } from '../challenges/detail/categoryNames';
-import { useEntryValue } from '../leaderboard/useEntryValue';
+import { useEliminationAmount, useEntryValue } from '../leaderboard/useEntryValue';
 import { CELL } from './adminCells';
 
 type CategoryRanking = Leaderboard['categories'][number];
@@ -128,12 +127,14 @@ function ValueCell({
   entry,
   type,
   referenceSport,
+  exercise,
 }: {
   entry: LeaderboardEntry | null;
   type: CategoryType;
   referenceSport: string | undefined;
+  exercise: string | null | undefined;
 }) {
-  const value = useEntryValue(type, shownValue(entry), referenceSport);
+  const value = useEntryValue(type, shownValue(entry), referenceSport, exercise);
   return <>{value || '—'}</>;
 }
 
@@ -166,7 +167,9 @@ function CategoryPreview({
 }) {
   const { t } = useTranslation();
   const headingId = useId();
-  const categoryName = useCategoryName(referenceSport)(type);
+  // An elimination by repetitions: its values are repetitions of that exercise.
+  const exercise = (after ?? before)?.exercise;
+  const categoryName = useCategoryName(referenceSport)(type, exercise);
   const name = useName();
   const all = rankingChanges(
     showBefore ? (before?.entries ?? []) : null,
@@ -229,6 +232,7 @@ function CategoryPreview({
                           entry={change.before}
                           type={type}
                           referenceSport={referenceSport}
+                          exercise={exercise}
                         />
                       </td>
                     )}
@@ -240,6 +244,7 @@ function CategoryPreview({
                           entry={change.after}
                           type={type}
                           referenceSport={referenceSport}
+                          exercise={exercise}
                         />
                       </td>
                     )}
@@ -263,17 +268,23 @@ function CategoryPreview({
  * say which; the colour only repeats it.
  */
 function EliminationNote({ change }: { change: AdminEliminationChange }) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.resolvedLanguage ?? 'fr';
+  const { t } = useTranslation();
   const name = useName()(change.user);
-  const km = (meters: number) => formatKm(meters / 1000, locale);
+  const amount = useEliminationAmount();
   const { before, after } = change;
   const judged = after ?? before;
   if (!judged) return null;
-  const figures = (judgement: typeof judged) => ({
-    done: km(judgement.distance_meters),
-    required: km(judgement.required_meters),
-  });
+  // By repetitions, the server gives them (its meters are then 0).
+  const figures = (judgement: typeof judged) =>
+    judgement.repetitions != null
+      ? {
+          done: amount(judgement.repetitions, 'repetitions'),
+          required: amount(judgement.required_repetitions ?? 0, 'repetitions'),
+        }
+      : {
+          done: amount(judgement.distance_meters, 'meters'),
+          required: amount(judgement.required_meters, 'meters'),
+        };
   let sentence: string;
   let detail: string;
   if (after === null) {
