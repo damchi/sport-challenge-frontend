@@ -73,9 +73,13 @@ const descriptionField = z
  * must be between today and the same day next year in the chosen time zone.
  * With `pastStart`, for an admin changing a challenge's settings, it may be
  * in the past too, at most a year ahead all the same (API contract,
- * AdminChallengeUpdate).
+ * AdminChallengeUpdate). `withoutDistance`: the codes of the sports without
+ * distance, whose elimination counts the repetitions of an exercise.
  */
-export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
+export function challengeCreateSchema(
+  now: Date,
+  { pastStart = false, withoutDistance = [] as readonly string[] } = {},
+) {
   return z
     .object({
       title: titleField,
@@ -102,6 +106,10 @@ export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
       // meters (1 to 100 000). Checked below, with the elimination only: an
       // empty field reads NaN.
       elimination_step_km: z.union([z.number(), z.nan()]).optional(),
+      // Under a reference sport without distance instead: an exercise of the
+      // sport (empty until chosen) and X in whole repetitions, 1 to 1 000.
+      elimination_exercise: z.string().optional(),
+      elimination_step_repetitions: z.union([z.number(), z.nan()]).optional(),
       points: z.boolean(),
       // Checked below, with the points only: at least one criterion, a
       // scale, and the minimum session with the number of sessions alone.
@@ -116,7 +124,26 @@ export function challengeCreateSchema(now: Date, { pastStart = false } = {}) {
     })
     .superRefine((values, context) => {
       const km = values.elimination_step_km;
-      if (
+      const repetitions = values.elimination_step_repetitions;
+      if (values.elimination && withoutDistance.includes(values.reference_sport)) {
+        if (!values.elimination_exercise) {
+          context.addIssue({
+            code: 'custom',
+            path: ['elimination_exercise'],
+            message: 'challengeCreate.fields.eliminationExercise.required',
+          });
+        }
+        if (
+          repetitions === undefined ||
+          !(Number.isInteger(repetitions) && repetitions >= 1 && repetitions <= 1000)
+        ) {
+          context.addIssue({
+            code: 'custom',
+            path: ['elimination_step_repetitions'],
+            message: 'challengeCreate.fields.eliminationRepetitions.range',
+          });
+        }
+      } else if (
         values.elimination &&
         (km === undefined || !(km > 0 && km <= 100 && hasDecimals(km, 1)))
       ) {

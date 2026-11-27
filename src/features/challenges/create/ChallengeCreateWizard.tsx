@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm, type FieldErrors, type FieldPath } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -39,6 +39,8 @@ const STEP_FIELDS = [
     'cumulative_distance',
     'elimination',
     'elimination_step_km',
+    'elimination_exercise',
+    'elimination_step_repetitions',
     'points',
     'points_criteria',
     'points_podium',
@@ -60,6 +62,8 @@ const FIELD_LABELS: Record<string, string> = {
   reference_sport: 'challengeCreate.fields.referenceSport.label',
   factors: 'challengeCreate.fields.factors.label',
   elimination_step_km: 'challengeCreate.fields.eliminationStep.label',
+  elimination_exercise: 'challengeCreate.fields.eliminationExercise.label',
+  elimination_step_repetitions: 'challengeCreate.fields.eliminationStep.label',
   points_criteria: 'challengeCreate.fields.pointsCriteria.label',
   points_podium: 'challengeCreate.fields.pointsPodium.label',
   points_min_session_minutes: 'challengeCreate.fields.minSession.label',
@@ -101,8 +105,16 @@ export function ChallengeCreateWizard({
   const [now] = useState(() => givenNow ?? new Date());
   // Read once: the picker's labels cost one Intl format per zone.
   const [timeZones] = useState(() => givenTimeZones ?? supportedTimeZones([DEFAULT_TIME_ZONE]));
+  // The elimination of a sport without distance counts repetitions: known
+  // once the catalogue is, which the step waits for.
+  const resolver = useMemo(() => {
+    const withoutDistance = (sports.data ?? [])
+      .filter((sport) => sport.distance_mode === 'none')
+      .map((sport) => sport.code);
+    return zodResolver(challengeCreateSchema(now, { withoutDistance }));
+  }, [now, sports.data]);
   const form = useForm<ChallengeCreateInput, unknown, ChallengeCreateValues>({
-    resolver: zodResolver(challengeCreateSchema(now)),
+    resolver,
     // Checked once the field is left, then at each keystroke.
     mode: 'onTouched',
     reValidateMode: 'onChange',
@@ -117,6 +129,7 @@ export function ChallengeCreateWizard({
       // Added at will: the cumulative time alone until then.
       cumulative_distance: false,
       elimination: false,
+      elimination_exercise: '',
       points: false,
       points_criteria: [],
       points_min_session_minutes: DEFAULT_MIN_SESSION_MINUTES,

@@ -207,6 +207,25 @@ describe('challengeCreateRequest', () => {
     });
   });
 
+  it('sends the exercise and X in repetitions under a sport without distance', () => {
+    expect(
+      challengeCreateRequest(
+        {
+          ...VALUES,
+          reference_sport: 'yoga',
+          cumulative_distance: false,
+          elimination_exercise: 'burpee',
+          elimination_step_repetitions: 15,
+        },
+        SPORTS,
+      ),
+    ).toEqual({
+      ...BASE,
+      reference_sport: 'yoga',
+      categories: { elimination: { exercise: 'burpee', step_repetitions: 15 } },
+    });
+  });
+
   it('sends only the factors the creator changed', () => {
     const request = challengeCreateRequest(
       { ...VALUES, factors: { ride: 0.25, rowing: 0.5, swim: 1, other: 0.5, run: 2 } },
@@ -328,6 +347,8 @@ describe('formFieldOf', () => {
     ['title', 'title'],
     ['start_date', 'start_date'],
     ['categories.elimination.step_meters', 'elimination_step_km'],
+    ['categories.elimination.exercise', 'elimination_exercise'],
+    ['categories.elimination.step_repetitions', 'elimination_step_repetitions'],
     ['distance_factors.ride', 'factors.ride'],
     ['distance_factors', 'factors'],
     ['reference_sport', 'reference_sport'],

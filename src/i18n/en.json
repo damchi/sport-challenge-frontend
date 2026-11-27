@@ -501,7 +501,8 @@
         "label": "Reference sport",
         "hint": "The distances of the other sports are brought back to it, and the elimination is played in this sport.",
         "required": "Choose the reference sport.",
-        "withoutDistance": "Sport without distance: no total distance, total elevation gain or elimination, and no distance, elevation or run criterion in the Grand Prix."
+        "withoutDistance": "Sport without distance: no total distance, total elevation gain or elimination, and no distance, elevation or run criterion in the Grand Prix.",
+        "withoutDistanceExercises": "Sport without distance: no total distance or total elevation gain, the elimination counts the repetitions of an exercise, and no distance, elevation or run criterion in the Grand Prix."
       },
       "eliminationStep": {
         "label": "Minimum increase from one week to the next",
@@ -509,6 +510,20 @@
         "range": "The increase must be from 0.1 to 100 km, with one decimal at most.",
         "unit": "km",
         "unitLong": "(in km)"
+      },
+      "eliminationExercise": {
+        "label": "Counted exercise",
+        "placeholder": "Choose an exercise",
+        "hint": "Only its repetitions count, on the activities of this sport.",
+        "required": "Choose the counted exercise."
+      },
+      "eliminationRepetitions": {
+        "hint": "A whole number of repetitions, from 1 to 1,000.",
+        "range": "The increase must be a whole number of repetitions, from 1 to 1,000.",
+        "unit": "reps",
+        "unitLong": "(in repetitions)",
+        "count_one": "{{count, number}} rep",
+        "count_other": "{{count, number}} reps"
       },
       "factors": {
         "label": "Distance factors",
@@ -558,6 +573,7 @@
       },
       "elimination": {
         "explanation": "{{sport}} only, in real distance. Each week, you must at least match the previous week plus an increase, or you are eliminated from this category. No elimination in week 1.",
+        "explanationRepetitions": "{{sport}} only, in repetitions of an exercise. Each week, you must at least match the previous week's total plus an increase, or you are eliminated from this category. No elimination in week 1.",
         "example": "{{done}} in week {{week}} → at least <b>{{needed}}</b> in week {{next}}",
         "exampleTitle": "Example"
       },
@@ -614,7 +630,8 @@
         "session_count": "number of sessions",
         "weekly_elevation": "elevation gain of the week",
         "fastest_run": "fastest run"
-      }
+      },
+      "eliminationExerciseDetail": "{{exercise}} in {{sport}}, no elimination in week 1"
     },
     "submit": {
       "label": "Create the challenge",
@@ -839,6 +856,18 @@
     "crossfit": "CrossFit",
     "hyrox": "Hyrox",
     "paragliding": "Paragliding"
+  },
+  "exercises": {
+    "burpee": "Burpees",
+    "wall_ball": "Wall balls",
+    "air_squat": "Air squats",
+    "push_up": "Push-ups",
+    "pull_up": "Pull-ups",
+    "box_jump": "Box jumps",
+    "double_under": "Double unders",
+    "kettlebell_swing": "Kettlebell swings",
+    "thruster": "Thrusters",
+    "sit_up": "Sit-ups"
   },
   "leaderboard": {
     "categories": "Leaderboard category",

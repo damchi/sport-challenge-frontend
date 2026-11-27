@@ -590,9 +590,24 @@ function mockPage<T>(items: T[], cursor: string | null | undefined, limit: numbe
   return { items: page, next_cursor: from + size < items.length ? String(from + size) : null };
 }
 
-// The catalogue's sports have no exercise yet in the mocks.
-function withoutExercises(sports: Omit<Sport, 'exercises'>[]): Sport[] {
-  return sports.map((sport) => ({ ...sport, exercises: [] }));
+// The exercises of the catalogue, in the server's order: CrossFit's only.
+const CROSSFIT_EXERCISES = [
+  'burpee',
+  'wall_ball',
+  'air_squat',
+  'push_up',
+  'pull_up',
+  'box_jump',
+  'double_under',
+  'kettlebell_swing',
+  'thruster',
+  'sit_up',
+];
+function withExercises(sports: Omit<Sport, 'exercises'>[]): Sport[] {
+  return sports.map((sport) => ({
+    ...sport,
+    exercises: sport.code === 'crossfit' ? CROSSFIT_EXERCISES : [],
+  }));
 }
 
 export const handlers = [
@@ -997,7 +1012,7 @@ export const handlers = [
   // Any API address: the tests and the development server use different ones.
   http.get('*/api/v1/sports', () =>
     HttpResponse.json<SportList>({
-      sports: withoutExercises([
+      sports: withExercises([
         {
           code: 'climbing',
           distance_mode: 'none',

@@ -252,7 +252,7 @@ function SettingsForm({
                     <DurationStep now={now} timeZones={timeZones} pastStart />
                   </Section>
                   <Section id="categories" title={t('admin.settings.sections.categories')}>
-                    <CategoriesStep sportsWaiting={false} />
+                    <CategoriesStep sportsWaiting={false} repetitions={false} />
                   </Section>
                 </div>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-6">
