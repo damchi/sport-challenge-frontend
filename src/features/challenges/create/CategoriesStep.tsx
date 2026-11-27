@@ -234,10 +234,11 @@ function Categories({ sports }: { sports: Sports }) {
               }
               // Unchecked, hidden, then offered again unchecked.
               if (!referenceHasDistance(sports, event.target.value)) {
-                const choices = withoutDistanceChoices(getValues('points_criteria'));
+                const choices = withoutDistanceChoices(getValues());
                 setValue('cumulative_distance', choices.cumulative_distance);
                 setValue('elimination', choices.elimination);
                 setValue('cumulative_elevation', choices.cumulative_elevation);
+                setValue('points', choices.points);
                 setValue('points_criteria', choices.points_criteria);
               }
             },

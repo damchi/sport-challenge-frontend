@@ -54,14 +54,20 @@ export function criterionOffered(criterion: string, withDistance: boolean): bool
 
 /**
  * The choices a reference sport without distance unchecks: the categories
- * and the points' criteria it does not offer.
+ * and the points' criteria it does not offer, and the points themselves once
+ * no criterion is left.
  */
-export function withoutDistanceChoices<C extends string>(criteria: readonly C[]) {
+export function withoutDistanceChoices<C extends string>(values: {
+  points: boolean;
+  points_criteria: readonly C[];
+}) {
+  const offered = values.points_criteria.filter((criterion) => criterionOffered(criterion, false));
   return {
     cumulative_distance: false,
     elimination: false,
     cumulative_elevation: false,
-    points_criteria: criteria.filter((criterion) => criterionOffered(criterion, false)),
+    points: values.points && offered.length > 0,
+    points_criteria: offered,
   };
 }
 

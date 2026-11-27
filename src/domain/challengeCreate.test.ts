@@ -60,20 +60,16 @@ describe('referenceHasDistance', () => {
 });
 
 describe('withoutDistanceChoices', () => {
-  it('unchecks the categories and the criteria that need a distance', () => {
-    expect(
-      withoutDistanceChoices([
-        'longest_duration',
-        'longest_distance',
-        'session_count',
-        'weekly_elevation',
-        'fastest_run',
-      ]),
-    ).toEqual({
+  it.each([
+    [['longest_duration', 'longest_distance', 'session_count', 'fastest_run'], true],
+    [['longest_distance', 'weekly_elevation'], false],
+  ])('unchecks the choices that need a distance, the points once left empty', (criteria, on) => {
+    expect(withoutDistanceChoices({ points: true, points_criteria: criteria })).toEqual({
       cumulative_distance: false,
       elimination: false,
       cumulative_elevation: false,
-      points_criteria: ['longest_duration', 'session_count'],
+      points: on,
+      points_criteria: on ? ['longest_duration', 'session_count'] : [],
     });
   });
 });
