@@ -12,8 +12,8 @@ import { groupByWeek, dayKind } from '../../domain/activityWeeks';
 import { userChallengeRole } from '../../domain/adminUsers';
 import { challengeDay } from '../../domain/format/challengeDates';
 import { activityClock, activityDay } from '../../domain/format/activityDates';
-import { formatKm } from '../../domain/format/distance';
-import { formatActivityDuration } from '../../domain/format/duration';
+import { formatKm, formatSpeed } from '../../domain/format/distance';
+import { formatActivityDuration, formatPace } from '../../domain/format/duration';
 import { StatusPill } from '../../components/StatusPill';
 import { usePageSize } from '../../lib/pageSize';
 import { ActivityMenu } from '../activities/ActivityMenu';
@@ -251,6 +251,9 @@ function AdminActivityCard({
           {activity.distance_meters === null
             ? t('admin.users.activities.noDistance')
             : formatKm(activity.distance_meters / 1000, locale)}
+          {activity.pace_seconds_per_km !== null &&
+            ` · ${t('activities.paceValue', { pace: formatPace(activity.pace_seconds_per_km) })}`}
+          {activity.speed_mps !== null && ` · ${formatSpeed(activity.speed_mps, locale)}`}
           {activity.elevation_gain_meters !== null && (
             <>
               {' · '}
