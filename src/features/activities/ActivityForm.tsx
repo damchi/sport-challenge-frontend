@@ -7,13 +7,19 @@ import { ApiError, errorMessage } from '../../api/errors';
 import { useCreateActivity, useUpdateActivity, type Activity } from '../../api/hooks/useActivities';
 import type { Sport } from '../../api/hooks/useSports';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { holdsEntry, sortSportsForEntry } from '../../domain/activity';
+import {
+  holdsEntry,
+  offeredExercises,
+  sortSportsForEntry,
+  type ExerciseChallenge,
+} from '../../domain/activity';
 import { toZonedDateTime } from '../../domain/challengeWindow';
 import { timeZoneName } from '../../domain/format/challengeDates';
 import {
   activityCreateSchema,
   activityFormFieldOf,
   EMPTY_ACTIVITY_INPUT,
+  startOf,
   takesElevation,
   type ActivityCreateInput,
   type ActivityCreateValues,
@@ -142,6 +148,7 @@ export function ActivityForm({
     <ActivityFormFields
       sports={loaded.sports}
       timeZone={loaded.timeZone}
+      challenges={loaded.challenges}
       now={now ?? (() => new Date())}
       initialValues={EMPTY_ACTIVITY_INPUT}
       submitKey="activityForm.submit"
@@ -164,10 +171,13 @@ export function ActivityForm({
  * words a week that has ended; `errorScope` holds the caller's own words for
  * the API's codes). `submitKey` holds the button's label and busy label;
  * "Annuler" goes to `cancelTo`. Leaving with a changed entry asks first.
+ * The repetitions of the exercises the sport and start take in
+ * `challenges` (offeredExercises) open with "Ajouter des répétitions".
  */
 export function ActivityFormFields({
   sports,
   timeZone,
+  challenges = [],
   now,
   initialValues,
   submitKey,
@@ -179,6 +189,7 @@ export function ActivityFormFields({
 }: {
   sports: readonly Sport[];
   timeZone: string;
+  challenges?: readonly ExerciseChallenge[];
   now: () => Date;
   initialValues: ActivityCreateInput;
   submitKey: 'activityForm.submit' | 'activityEdit.submit' | 'admin.activityForm.preview';
@@ -198,8 +209,11 @@ export function ActivityFormFields({
   const focusError = useRef(false);
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sorted = sortSportsForEntry(sports, sportName, locale);
+  const exercisesOf = (sportCode: string, start: Date) =>
+    offeredExercises(challenges, sportCode, start);
+  const [repetitionsOpen, setRepetitionsOpen] = useState(false);
   const form = useForm<ActivityCreateInput, unknown, ActivityCreateValues>({
-    resolver: zodResolver(activityCreateSchema(now, sports, timeZone)),
+    resolver: zodResolver(activityCreateSchema(now, sports, timeZone, exercisesOf)),
     // Checked once the field is left, then at each keystroke.
     mode: 'onTouched',
     reValidateMode: 'onChange',
@@ -213,6 +227,16 @@ export function ActivityFormFields({
   const blocker = useLeaveWarning(Object.keys(dirtyFields).length > 0);
   const sportCode = useWatch({ control: form.control, name: 'sport_code' });
   const distanceKm = useWatch({ control: form.control, name: 'distance_km' });
+  const [startDate, startHour, startMinute] = useWatch({
+    control: form.control,
+    name: ['start_date', 'start_hour', 'start_minute'],
+  });
+  // Follows the sport and the start: a value left on another exercise is not sent.
+  const entryStart = startOf(
+    { start_date: startDate, start_hour: startHour, start_minute: startMinute },
+    timeZone,
+  );
+  const exercises = entryStart ? exercisesOf(sportCode, entryStart) : [];
   const sport = sports.find((candidate) => candidate.code === sportCode);
   const mode = sport?.distance_mode;
   const hasElevation = takesElevation(sport, distanceKm);
@@ -276,6 +300,8 @@ export function ActivityFormFields({
   const durationError = errors.hours?.message;
   const distanceError = errors.distance_km?.message;
   const elevationError = errors.elevation_m?.message;
+  // The server refuses the repetitions without saying which exercise.
+  const repetitionsError = errors.root?.repetitions?.message;
   const hasDistance = mode === 'required' || mode === 'optional';
   const [today] = toZonedDateTime(now(), timeZone).split('T');
 
@@ -505,6 +531,65 @@ export function ActivityFormFields({
               <FieldError id="elevation_m-error" message={elevationError} />
             </div>
           )}
+
+          {exercises.length > 0 &&
+            (repetitionsOpen ? (
+              <fieldset
+                className="min-w-0"
+                aria-describedby={describedBy('repetitions', repetitionsError)}
+              >
+                <legend className={legendClass}>
+                  {t('activityForm.fields.repetitions.label')}
+                </legend>
+                <p id="repetitions-hint" className="mt-1 text-sm text-muted">
+                  {t('activityForm.fields.repetitions.hint')}
+                </p>
+                <div className="mt-3 flex flex-col gap-4 lg:max-w-sm">
+                  {exercises.map((exercise) => {
+                    const id = `repetitions-${exercise}`;
+                    const error = errors.repetitions?.[exercise]?.message;
+                    return (
+                      <div key={exercise}>
+                        <label htmlFor={id} className="block font-semibold">
+                          {t(`exercises.${exercise}`, { defaultValue: exercise })}{' '}
+                          <span className="sr-only">
+                            {t('activityForm.fields.repetitions.unitLong')}
+                          </span>
+                        </label>
+                        <div className="relative mt-2">
+                          <input
+                            id={id}
+                            inputMode="numeric"
+                            autoComplete="off"
+                            aria-invalid={error || repetitionsError ? true : undefined}
+                            aria-describedby={
+                              [error && `${id}-error`, repetitionsError && 'repetitions-error']
+                                .filter(Boolean)
+                                .join(' ') || undefined
+                            }
+                            className={`${inputClass} mt-0! h-13 w-full pr-14`}
+                            {...register(`repetitions.${exercise}`)}
+                          />
+                          <span aria-hidden="true" className={unitClass}>
+                            {t('challengeCreate.fields.eliminationRepetitions.unit')}
+                          </span>
+                        </div>
+                        <FieldError id={`${id}-error`} message={error} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <FieldError id="repetitions-error" message={repetitionsError} />
+              </fieldset>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setRepetitionsOpen(true)}
+                className="flex h-11 items-center self-start font-semibold text-accent underline underline-offset-4 hover-link"
+              >
+                {t('activityForm.fields.repetitions.add')}
+              </button>
+            ))}
         </div>
 
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">

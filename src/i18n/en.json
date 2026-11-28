@@ -39,6 +39,7 @@
     "unauthenticated": "Your session has ended. Sign in again.",
     "unknown": "Something went wrong. Try again.",
     "validation_failed": "Some details are invalid. Check them, then try again.",
+    "unknown_exercise": "None of your challenges offers one of these exercises for this sport on this date. Check the sport and the start date.",
     "week_locked": "The week of this activity has ended in one of your challenges: it can no longer be added. Check the start date."
   },
   "errorPage": {
@@ -305,6 +306,10 @@
         "range": "Enter an elevation gain in meters, a whole number from 0 to 20,000."
       },
       "repetitions": {
+        "label": "Repetitions",
+        "unitLong": "in repetitions",
+        "hint": "Optional. Each exercise counts in all your challenges that offer it.",
+        "add": "Add repetitions",
         "range": "Enter a whole number of repetitions, from 0 to 10,000."
       },
       "serverInvalid": "Value refused. Check it."
