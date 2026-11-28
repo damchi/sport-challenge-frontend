@@ -31,7 +31,8 @@ export function ActivityEdit({
  * The API gives an activity only in the user's list: it is looked for there,
  * page after page (one request per page for an old one, until the contract
  * offers a route for a single activity). It opens in the entry form while the server says it is
- * not locked; a locked one is read only and says why. Once changed, the
+ * not locked; a locked one is read only and says why. Its repetitions are
+ * there, with the fields of the exercises offered. Once changed, the
  * challenges where it now counts are shown.
  */
 function ActivityEditContent({
@@ -87,6 +88,9 @@ function ActivityEditContent({
     <ActivityFormFields
       sports={loaded.sports}
       timeZone={loaded.timeZone}
+      challenges={loaded.challenges}
+      // Kept whatever its sport or start now, as the server keeps them.
+      keptExercises={activity.repetitions?.map(({ exercise }) => exercise)}
       now={now ?? (() => new Date())}
       initialValues={activityFormValues(activity, loaded.timeZone, i18n.resolvedLanguage ?? 'fr')}
       submitKey="activityEdit.submit"

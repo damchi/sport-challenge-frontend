@@ -1,5 +1,5 @@
 import { Lock, PenLine } from 'lucide-react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError, errorMessage } from '../../api/errors';
 import { useDeleteActivity, type Activity } from '../../api/hooks/useActivities';
@@ -17,8 +17,8 @@ import { SportIcon } from './SportIcon';
 /**
  * An activity of the user, one row of its week: sport (marked "manual"), its
  * start in `timeZone` ("today", "yesterday" seen at `now`), the challenges
- * where it counts, its duration, distance, and the pace and speed the API
- * computes. While the server says it is not `locked`, a "…" menu changes or
+ * where it counts, its duration, distance, the pace and speed the API computes, its elevation
+ * gain and repetitions. While the server says it is not `locked`, a "…" menu changes or
  * deletes it (deleting asks first, then `onDeleted` is told); a locked one
  * says its week is judged.
  */
@@ -83,7 +83,7 @@ export function ActivityItem({
     }
   };
 
-  const stats = [
+  const stats: { key: string; label?: string; value: ReactNode }[] = [
     { key: 'duration', value: formatActivityDuration(activity.duration_seconds) },
     {
       key: 'distance',
@@ -112,6 +112,12 @@ export function ActivityItem({
     ...(activity.elevation_gain_meters !== null
       ? [{ key: 'elevation', value: <ElevationGain meters={activity.elevation_gain_meters} /> }]
       : []),
+    // Named after their exercise, offered or not any more.
+    ...(activity.repetitions ?? []).map(({ exercise, repetitions }) => ({
+      key: `repetitions-${exercise}`,
+      label: t(`exercises.${exercise}`, { defaultValue: exercise }),
+      value: t('activities.repetitionsValue', { count: repetitions }),
+    })),
   ];
 
   return (
@@ -145,9 +151,9 @@ export function ActivityItem({
             columns, the same from one activity to the next, wrap when the
             text is enlarged. */}
         <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 lg:mt-0 lg:grid lg:w-xl lg:max-w-full lg:grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] lg:gap-x-4">
-          {stats.map(({ key, value }) => (
+          {stats.map(({ key, label, value }) => (
             <div key={key} className="flex min-w-0 flex-col-reverse">
-              <dt className="text-sm text-muted">{t(`activities.${key}`)}</dt>
+              <dt className="text-sm text-muted break-words">{label ?? t(`activities.${key}`)}</dt>
               <dd className="font-bold tabular-nums">{value}</dd>
             </div>
           ))}

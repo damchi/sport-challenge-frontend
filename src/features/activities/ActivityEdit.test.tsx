@@ -254,6 +254,36 @@ describe('ActivityEdit', () => {
     expect(screen.queryByRole('group', { name: 'Sport' })).not.toBeInTheDocument();
   });
 
+  describe('repetitions', () => {
+    // Burpees no challenge offers any more: the mock challenges have no exercise.
+    const kept = { ...run, repetitions: [{ exercise: 'burpee', repetitions: 120 }] };
+    const burpees = () => screen.findByRole('textbox', { name: 'Burpees en répétitions' });
+
+    it('keeps an exercise no longer offered, shown and sent as it is', async () => {
+      listing([kept]);
+      const sent = replaceWith((body) => HttpResponse.json<Activity>({ ...kept, ...body }));
+      renderEdit();
+      expect(await burpees()).toHaveValue('120');
+
+      fireEvent.click(save());
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body.repetitions).toEqual([{ exercise: 'burpee', repetitions: 120 }]);
+    });
+
+    it('removes them once emptied: the change leaves them out', async () => {
+      listing([kept]);
+      const sent = replaceWith((body) => HttpResponse.json<Activity>({ ...run, ...body }));
+      renderEdit();
+
+      fireEvent.change(await burpees(), { target: { value: '' } });
+      fireEvent.click(save());
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body).not.toHaveProperty('repetitions');
+    });
+  });
+
   describe('elevation gain', () => {
     const elevation = () => screen.findByRole('textbox', { name: 'Dénivelé positif en mètres' });
 

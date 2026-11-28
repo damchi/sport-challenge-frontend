@@ -196,6 +196,8 @@
     "distance": "Distance",
     "elevation": "Elevation",
     "climbed": "{{elevation}} climbed",
+    "repetitionsValue_one": "{{count, number}} rep",
+    "repetitionsValue_other": "{{count, number}} reps",
     "speed": "Speed",
     "pace": "Pace",
     "paceValue": "{{pace}} /km",

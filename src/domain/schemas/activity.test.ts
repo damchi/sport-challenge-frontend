@@ -93,6 +93,17 @@ describe('activityCreateSchema, repetitions', () => {
     expect(crossfit.parse(moved)).not.toHaveProperty('repetitions');
   });
 
+  it('keeps an exercise already on the activity, whatever its sport or start now', () => {
+    const changed = activityCreateSchema(() => now, sports, 'America/Toronto', offered, [
+      'push_up',
+    ]);
+    const moved = entry({ push_up: '40', burpee: '9' }, { sport_code: 'run', distance_km: '5' });
+    expect(changed.parse(moved).repetitions).toEqual([{ exercise: 'push_up', repetitions: 40 }]);
+    expect(changed.parse({ ...moved, repetitions: { push_up: '' } })).not.toHaveProperty(
+      'repetitions',
+    );
+  });
+
   it('puts the repetitions the server refuses on the repetitions', () => {
     expect(activityFormFieldOf('repetitions')).toBe('root.repetitions');
   });

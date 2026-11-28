@@ -13,8 +13,8 @@ import { ElevationGain } from './ElevationGain';
 
 /**
  * An activity, read only: sport (marked "manual" when entered by hand),
- * start in `timeZone`, duration, distance, and the pace and speed the API
- * computes. With `author`, their initials and name head it, as text: no link.
+ * start in `timeZone`, duration, distance, the pace and speed the API computes, its elevation
+ * gain and repetitions. With `author`, their initials and name head it, as text: no link.
  */
 export function ActivityCard({
   activity,
@@ -106,6 +106,15 @@ export function ActivityCard({
             </dd>
           </div>
         )}
+        {/* Named after their exercise, offered or not any more. */}
+        {activity.repetitions?.map(({ exercise, repetitions }) => (
+          <div key={exercise} className="flex gap-1">
+            <dt className="text-muted">{t(`exercises.${exercise}`, { defaultValue: exercise })}</dt>
+            <dd className="font-semibold tabular-nums">
+              {t('activities.repetitionsValue', { count: repetitions })}
+            </dd>
+          </div>
+        ))}
       </dl>
     </article>
   );
