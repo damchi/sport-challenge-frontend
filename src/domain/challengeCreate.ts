@@ -192,7 +192,7 @@ export type CategoryChoices = Pick<
  * minimum session entered with the number of sessions alone (the default
  * otherwise).
  */
-export function challengeCategories(values: CategoryChoices, withDistance = true) {
+export function challengeCategories(values: CategoryChoices, withDistance: boolean) {
   const stepKm = values.elimination_step_km;
   const exercise = values.elimination_exercise;
   const stepRepetitions = values.elimination_step_repetitions;

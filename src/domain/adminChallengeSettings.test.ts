@@ -16,6 +16,12 @@ const sports: CatalogueSport[] = [
   { code: 'ride', distance_mode: 'required', suggested_factor: 0.3 },
   { code: 'rowing', distance_mode: 'required', suggested_factor: 0.5 },
   { code: 'yoga', distance_mode: 'none', suggested_factor: null },
+  {
+    code: 'crossfit',
+    distance_mode: 'none',
+    suggested_factor: null,
+    exercises: ['burpee', 'wall_ball'],
+  },
 ];
 
 const challenge: ChallengeSettings = {
@@ -47,8 +53,66 @@ const initial = settingsFormValues(challenge);
 
 /** The form's values once checked, as an admin's form gives them. */
 function checked(values: ChallengeCreateInput): ChallengeCreateValues {
-  return challengeCreateSchema(new Date('2026-11-24T12:00:00Z'), { pastStart: true }).parse(values);
+  return challengeCreateSchema(new Date('2026-11-24T12:00:00Z'), {
+    pastStart: true,
+    withoutDistance: ['yoga', 'crossfit'],
+  }).parse(values);
 }
+
+// A CrossFit challenge, eliminated on the wall balls (X = 10).
+const crossfit = settingsFormValues({
+  ...challenge,
+  reference_sport: 'crossfit',
+  categories: [
+    { type: 'cumulative_time', params: {} },
+    { type: 'elimination', params: { exercise: 'wall_ball', step_repetitions: 10 } },
+  ],
+});
+
+describe('the elimination by repetitions', () => {
+  it('fills its exercise and X in repetitions', () => {
+    expect(crossfit).toMatchObject({
+      elimination: true,
+      elimination_exercise: 'wall_ball',
+      elimination_step_repetitions: 10,
+    });
+  });
+
+  it('names and sends a new exercise and a new X', () => {
+    const values = {
+      ...crossfit,
+      elimination_exercise: 'burpee',
+      elimination_step_repetitions: 20,
+    };
+
+    expect(changedSettings(crossfit, values, sports)).toEqual([
+      'elimination_exercise',
+      'elimination_step_repetitions',
+    ]);
+    expect(settingsUpdate(crossfit, checked(values), sports)).toEqual({
+      categories: { elimination: { exercise: 'burpee', step_repetitions: 20 } },
+    });
+  });
+
+  it('leaves the categories alone while they stay the same', () => {
+    expect(settingsUpdate(crossfit, checked(crossfit), sports)).toEqual({});
+  });
+
+  it('sends a reference sport without distance with the categories it keeps', () => {
+    const values = {
+      ...initial,
+      reference_sport: 'crossfit',
+      cumulative_distance: false,
+      elimination: false,
+      points_criteria: ['session_count' as const],
+    };
+
+    expect(settingsUpdate(initial, checked(values), sports)).toEqual({
+      reference_sport: 'crossfit',
+      categories: { points: { criteria: ['session_count'], podium: 5, min_session_minutes: 30 } },
+    });
+  });
+});
 
 describe('settingsFormValues', () => {
   it('fills the form with the settings of the challenge', () => {
@@ -64,6 +128,7 @@ describe('settingsFormValues', () => {
       cumulative_distance: true,
       elimination: true,
       elimination_step_km: 3,
+      elimination_exercise: '',
       points: true,
       points_criteria: ['longest_duration', 'session_count'],
       points_podium: '5',

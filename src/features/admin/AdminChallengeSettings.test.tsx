@@ -282,6 +282,52 @@ describe('AdminChallengeSettings', () => {
     expect(bodies).toEqual([]);
   });
 
+  it('changes the exercise of a CrossFit elimination, and shows X when the server refuses it', async () => {
+    const detail = mockAdminChallengeDetail(first);
+    server.use(
+      http.get('*/api/v1/admin/challenges/:challengeId', () =>
+        HttpResponse.json({
+          ...detail,
+          reference_sport: 'crossfit',
+          categories: [
+            { type: 'cumulative_time', position: 1, params: {} },
+            {
+              type: 'elimination',
+              position: 3,
+              params: { sport: 'crossfit', exercise: 'wall_ball', step_repetitions: 10 },
+            },
+          ],
+        }),
+      ),
+    );
+    const fields = 'categories.elimination.step_repetitions';
+    const bodies = servePatch(() =>
+      HttpResponse.json(
+        { error: { code: 'validation_failed', message: 'invalid', params: { fields } } },
+        { status: 400 },
+      ),
+    );
+    renderSettings(first.id);
+
+    const exercise = await screen.findByRole('combobox', { name: /Exercice compté/ });
+    expect(exercise).toHaveValue('wall_ball');
+    fireEvent.change(exercise, { target: { value: 'burpee' } });
+    fireEvent.click(screen.getByRole('button', { name: "Voir l'aperçu" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('spinbutton', { name: /Hausse minimale/ })).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      ),
+    );
+    expect(bodies).toEqual([
+      {
+        categories: { elimination: { exercise: 'burpee', step_repetitions: 10 } },
+        dry_run: true,
+      },
+    ]);
+  });
+
   it('shows the field the server refuses', async () => {
     servePatch(() =>
       HttpResponse.json(

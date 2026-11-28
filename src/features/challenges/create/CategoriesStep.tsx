@@ -48,16 +48,9 @@ const EXAMPLE_ABOVE_MINIMUM_REPETITIONS = 20;
  * by distance is chosen: the catalogue's suggestions brought back to the
  * reference, which follow it when it changes unless the creator set them.
  * `sportsWaiting`: Next was pressed before the sports could be shown, which
- * the step explains. `repetitions` false: no elimination by repetitions (the
- * admin settings, until SC-WEB-137).
+ * the step explains.
  */
-export function CategoriesStep({
-  sportsWaiting,
-  repetitions = true,
-}: {
-  sportsWaiting: boolean;
-  repetitions?: boolean;
-}) {
+export function CategoriesStep({ sportsWaiting }: { sportsWaiting: boolean }) {
   const { t } = useTranslation();
   const sports = useSports();
 
@@ -72,7 +65,7 @@ export function CategoriesStep({
         <LoadingState />
       ) : sports.data ? (
         // A failed refresh keeps the catalogue: the global banner says so.
-        <Categories sports={sports.data} repetitions={repetitions} />
+        <Categories sports={sports.data} />
       ) : (
         <ErrorState error={sports.error} onRetry={() => void sports.refetch()} />
       )}
@@ -175,7 +168,7 @@ function CategoryCard({
   );
 }
 
-function Categories({ sports, repetitions }: { sports: Sports; repetitions: boolean }) {
+function Categories({ sports }: { sports: Sports }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? 'fr';
   const sportName = useSportName();
@@ -201,7 +194,7 @@ function Categories({ sports, repetitions }: { sports: Sports; repetitions: bool
       ],
     });
   const withDistance = referenceHasDistance(sports, reference);
-  const exercises = repetitions ? referenceExercises(sports, reference) : [];
+  const exercises = referenceExercises(sports, reference);
   // Example figures in km, or in repetitions under a sport without distance.
   const [exampleStep, week1, aboveMinimum, formatExample] = withDistance
     ? [
