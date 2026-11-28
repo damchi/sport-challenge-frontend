@@ -311,6 +311,9 @@
         "tagOptional": "facultatif",
         "range": "Indique un dénivelé en mètres, nombre entier de 0 à 20 000."
       },
+      "repetitions": {
+        "range": "Indique un nombre entier de répétitions, de 0 à 10 000."
+      },
       "serverInvalid": "Valeur refusée. Vérifie-la."
     },
     "submit": {

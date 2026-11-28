@@ -30,6 +30,41 @@ export function activityTimeZone(
   return zones.size === 1 && only !== undefined ? only : deviceTimeZone;
 }
 
+/** A challenge of the user, as far as the exercises of an entry go. */
+export interface ExerciseChallenge {
+  reference_sport: string;
+  /** The exercise of its elimination by repetitions; null without one. */
+  exercise: string | null;
+  starts_at: string;
+  ends_at: string;
+  my_status: 'active' | 'abandoned' | null;
+}
+
+/**
+ * The exercises an entry of `sportCode` started at `start` takes
+ * repetitions of, each once, in the order of the challenges: those of the
+ * eliminations by repetitions where the user takes part, run in that sport,
+ * whose window [starts_at, ends_at) holds the start (README backend §2.5).
+ * The server refuses any other (unknown_exercise).
+ */
+export function offeredExercises(
+  challenges: readonly ExerciseChallenge[],
+  sportCode: string,
+  start: Date,
+): string[] {
+  const at = start.getTime();
+  const offered = challenges.flatMap((challenge) =>
+    challenge.exercise !== null &&
+    challenge.my_status === 'active' &&
+    challenge.reference_sport === sportCode &&
+    Date.parse(challenge.starts_at) <= at &&
+    at < Date.parse(challenge.ends_at)
+      ? [challenge.exercise]
+      : [],
+  );
+  return [...new Set(offered)];
+}
+
 /** Whether an address parameter can be an activity id, checked before any request. */
 export function isActivityId(value: unknown): value is string {
   return isUuid(value);

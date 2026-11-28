@@ -34,6 +34,7 @@ const valid: ActivityCreateInput = {
   seconds: '3',
   distance_km: '12,5',
   elevation_m: '',
+  repetitions: {},
 };
 
 function errorsOf(input: Partial<ActivityCreateInput>): Record<string, string> {
@@ -43,6 +44,59 @@ function errorsOf(input: Partial<ActivityCreateInput>): Record<string, string> {
     result.error.issues.map((issue) => [String(issue.path[0]), issue.message]),
   );
 }
+
+describe('activityCreateSchema, repetitions', () => {
+  // A CrossFit entry whose start takes burpees and wall balls.
+  const offered = (sportCode: string, start: Date) =>
+    sportCode === 'crossfit' && start.toISOString() === STARTED_AT ? ['burpee', 'wall_ball'] : [];
+  const crossfit = activityCreateSchema(
+    () => now,
+    [...sports, { code: 'crossfit', distance_mode: 'none', elevation_allowed: false }],
+    'America/Toronto',
+    offered,
+  );
+  const entry = (repetitions: Record<string, string>, more: Partial<ActivityCreateInput> = {}) => ({
+    ...valid,
+    sport_code: 'crossfit',
+    distance_km: '',
+    repetitions,
+    ...more,
+  });
+
+  it('sends the repetitions typed, for the exercises offered only', () => {
+    expect(
+      crossfit.parse(entry({ burpee: ' 120 ', wall_ball: '', box_jump: '30' })).repetitions,
+    ).toEqual([{ exercise: 'burpee', repetitions: 120 }]);
+  });
+
+  it('sends no repetitions without any typed', () => {
+    expect(crossfit.parse(entry({ burpee: '', wall_ball: ' ' }))).not.toHaveProperty('repetitions');
+  });
+
+  it('takes 0 to 10 000 repetitions', () => {
+    expect(crossfit.parse(entry({ burpee: '0', wall_ball: '10000' })).repetitions).toEqual([
+      { exercise: 'burpee', repetitions: 0 },
+      { exercise: 'wall_ball', repetitions: 10_000 },
+    ]);
+  });
+
+  it.each(['10001', '-1', '12,5', 'dix'])('refuses %s repetitions on their exercise', (typed) => {
+    const result = crossfit.safeParse(entry({ wall_ball: typed }));
+    expect(result.error?.issues.map(({ path, message }) => [path, message])).toEqual([
+      [['repetitions', 'wall_ball'], 'activityForm.fields.repetitions.range'],
+    ]);
+  });
+
+  it('neither checks nor sends the repetitions of an exercise no longer offered', () => {
+    // Another day: the start takes no exercise any more.
+    const moved = entry({ burpee: 'dix' }, { start_date: '2026-11-19' });
+    expect(crossfit.parse(moved)).not.toHaveProperty('repetitions');
+  });
+
+  it('puts the repetitions the server refuses on the repetitions', () => {
+    expect(activityFormFieldOf('repetitions')).toBe('repetitions');
+  });
+});
 
 describe('activityCreateSchema', () => {
   it('gives the request: start in UTC, duration in seconds, distance in meters', () => {
@@ -364,6 +418,7 @@ describe('activityFormValues', () => {
       seconds: '',
       distance_km: '',
       elevation_m: '',
+      repetitions: {},
     });
   });
 
