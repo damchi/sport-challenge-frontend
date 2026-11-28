@@ -17,18 +17,16 @@ export function useActivityTimeZone(deviceTimeZone: string | undefined, paused =
   const isPending = ongoing.isPending || (hasNextPage && !isError);
   const failed = !isPending && (!ongoing.data || (isError && hasNextPage));
   const device = deviceTimeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const challenges = ongoing.data?.pages.flatMap((page) => page.items) ?? [];
   return {
     isPending,
     isError: failed,
     error: ongoing.error,
     refetch: () => void ongoing.refetch(),
     deviceTimeZone: device,
+    /** The ongoing challenges, whose exercises an entry offers. */
+    challenges,
     timeZone:
-      isPending || failed || !ongoing.data
-        ? undefined
-        : activityTimeZone(
-            ongoing.data.pages.flatMap((page) => page.items),
-            device,
-          ),
+      isPending || failed || !ongoing.data ? undefined : activityTimeZone(challenges, device),
   };
 }

@@ -875,6 +875,95 @@ describe('ActivityForm', () => {
     expect(screen.getAllByText('Valeur refusée. Vérifie-la.')).toHaveLength(2);
   });
 
+  describe('repetitions', () => {
+    /** Ongoing CrossFit challenges of the user, by repetitions of `exercises`. */
+    function crossfitOn(...exercises: string[]) {
+      const items = exercises.map((exercise, index) => ({
+        ...challenge,
+        id: `00000000-0000-4000-8000-00000000020${index}`,
+        reference_sport: 'crossfit',
+        exercise,
+        my_status: 'active' as const,
+        status: 'ongoing' as const,
+      }));
+      const page = { items, next_cursor: null, counts: { upcoming: 0, ongoing: 1, finished: 0 } };
+      server.use(http.get('*/api/v1/challenges', () => HttpResponse.json<ChallengePage>(page)));
+    }
+    const burpees = () => screen.getByRole('textbox', { name: 'Burpees en répétitions' });
+
+    /** A CrossFit hour this morning, its repetitions opened. */
+    async function crossfitSession() {
+      await pick('CrossFit');
+      typeStart('2026-11-20', '07:30');
+      type(hours(), '1');
+      fireEvent.click(screen.getByRole('button', { name: 'Ajouter des répétitions' }));
+    }
+
+    it('offers a field per exercise of the challenges, and sends the typed ones', async () => {
+      crossfitOn('burpee', 'wall_ball', 'burpee');
+      const sent = recordWith(() => recorded());
+      renderForm();
+      await crossfitSession();
+
+      const group = within(screen.getByRole('group', { name: 'Répétitions' }));
+      expect(group.getAllByRole('textbox').map(({ id }) => id)).toEqual([
+        'repetitions-burpee',
+        'repetitions-wall_ball',
+      ]);
+      type(burpees(), '120');
+      fireEvent.click(save());
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body.repetitions).toEqual([{ exercise: 'burpee', repetitions: 120 }]);
+    });
+
+    it('drops the repetitions once the sport takes none, and sends none', async () => {
+      crossfitOn('burpee');
+      const sent = recordWith(() => recorded());
+      renderForm();
+      await crossfitSession();
+      type(burpees(), '50');
+      await pick('Yoga');
+
+      expect(screen.queryByRole('group', { name: 'Répétitions' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /répétitions/ })).not.toBeInTheDocument();
+      fireEvent.click(save());
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0]?.body).not.toHaveProperty('repetitions');
+    });
+
+    it('takes 0 to 10 000, then shows what the server refuses', async () => {
+      crossfitOn('burpee');
+      refuse('validation_failed', 400, { fields: 'repetitions' });
+      renderForm();
+      await crossfitSession();
+      type(burpees(), '10001');
+      expect(await screen.findByText(/de 0 à 10 000\.$/)).toBeInTheDocument();
+
+      type(burpees(), '50');
+      fireEvent.click(save());
+      expect(await screen.findByText('Valeur refusée. Vérifie-la.')).toBeInTheDocument();
+      expect(burpees()).toHaveAttribute('aria-invalid', 'true');
+      refuse('unknown_exercise');
+      fireEvent.click(save());
+      expect(await screen.findByText(/n'est proposé par aucun de tes défis/)).toBeInTheDocument();
+    });
+
+    it('offers the repetitions in English', async () => {
+      await i18n.changeLanguage('en');
+      try {
+        crossfitOn('burpee');
+        renderForm();
+        await pick('CrossFit');
+        type(startDate(), '2026-11-20');
+        type(screen.getByRole('textbox', { name: 'Start hour' }), '7');
+        fireEvent.click(screen.getByRole('button', { name: 'Add repetitions' }));
+        expect(screen.getByRole('textbox', { name: 'Burpees in repetitions' })).toBeInTheDocument();
+      } finally {
+        await i18n.changeLanguage('fr');
+      }
+    });
+  });
+
   it('offers a retry when the catalogue cannot load', async () => {
     let fail = true;
     server.use(

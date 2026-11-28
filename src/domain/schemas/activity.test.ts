@@ -94,7 +94,7 @@ describe('activityCreateSchema, repetitions', () => {
   });
 
   it('puts the repetitions the server refuses on the repetitions', () => {
-    expect(activityFormFieldOf('repetitions')).toBe('repetitions');
+    expect(activityFormFieldOf('repetitions')).toBe('root.repetitions');
   });
 });
 

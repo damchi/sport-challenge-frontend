@@ -107,9 +107,11 @@ export function clockTime(hour: string, minute: string): string | undefined {
   return `${pad(hours)}:${pad(minutes)}`;
 }
 
-// The start, a day as a native date field gives it and a time of day as
-// typed, read in `timeZone`.
-function startOf(
+/**
+ * The start, a day as a native date field gives it and a time of day as
+ * typed, read in `timeZone`; undefined until it reads as one.
+ */
+export function startOf(
   input: { start_date: string; start_hour: string; start_minute: string },
   timeZone: string,
 ): Date | undefined {
@@ -381,8 +383,8 @@ const FORM_FIELDS = {
   duration_seconds: 'hours',
   distance_meters: 'distance_km',
   elevation_gain_meters: 'elevation_m',
-  // Which exercise is not said: the error goes on the repetitions.
-  repetitions: 'repetitions',
+  // Which exercise is not said: the error goes on the repetitions as a whole.
+  repetitions: 'root.repetitions',
 } as const;
 
 export type ActivityFormField = (typeof FORM_FIELDS)[keyof typeof FORM_FIELDS];

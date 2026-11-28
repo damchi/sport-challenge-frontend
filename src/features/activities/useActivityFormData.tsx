@@ -4,9 +4,10 @@ import { LoadingState } from '../../components/states/LoadingState';
 import { useActivityTimeZone } from './useActivityTimeZone';
 
 /**
- * What an activity form needs before it shows: the catalogue of sports and
- * the time zone its start is read in. `view` is what to show meanwhile:
- * loading, or the error with a retry.
+ * What an activity form needs before it shows: the catalogue of sports, the
+ * time zone its start is read in and the ongoing challenges (their
+ * exercises). `view` is what to show meanwhile: loading, or the error with a
+ * retry.
  */
 export function useActivityFormData(deviceTimeZone: string | undefined, paused = false) {
   const sports = useSports();
@@ -28,5 +29,10 @@ export function useActivityFormData(deviceTimeZone: string | undefined, paused =
       ),
     } as const;
   }
-  return { state: 'ready', sports: sports.data, timeZone: zone.timeZone } as const;
+  return {
+    state: 'ready',
+    sports: sports.data,
+    timeZone: zone.timeZone,
+    challenges: zone.challenges,
+  } as const;
 }
