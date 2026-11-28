@@ -18,6 +18,7 @@ const LABEL_MAX = 40;
 const MAX_DURATION_SECONDS = 86_400;
 const MAX_DISTANCE_METERS = 1_000_000;
 const MAX_ELEVATION_METERS = 20_000;
+const MAX_REPETITIONS = 10_000;
 // The server accepts an end up to 5 minutes ahead (clocks drift).
 const END_TOLERANCE_MS = 5 * 60 * 1000;
 const EARLIEST_START = Date.UTC(2000, 0, 1);
@@ -116,6 +117,14 @@ function startOf(
   return clock === undefined ? undefined : zonedDateTime(`${input.start_date}T${clock}`, timeZone);
 }
 
+// Repetitions typed as a whole number, or undefined when they are not one.
+function repetitionCount(value: string): number | undefined {
+  const text = value.trim();
+  if (!WHOLE.test(text)) return undefined;
+  const number = Number(text);
+  return number <= MAX_REPETITIONS ? number : undefined;
+}
+
 /**
  * Activity entry input. `now` gives the current instant at each check: the
  * activity is entered once done, so neither its start nor its end is in the
@@ -124,11 +133,15 @@ function startOf(
  * sports take an elevation gain (optional, with a distance). The start,
  * a day as a native field gives it and a time of day typed as an hour and
  * minutes, is read in `timeZone`; its one error goes on the day.
+ * `exercisesOf` gives the exercises the sport and start take repetitions
+ * of (offeredExercises): one optional field each, typed under its code;
+ * the others are neither checked nor sent.
  */
 export function activityCreateSchema(
   now: () => Date,
   sports: readonly ActivitySport[],
   timeZone: string,
+  exercisesOf: (sportCode: string, start: Date) => readonly string[] = () => [],
 ) {
   const sportOf = (code: string) => sports.find((sport) => sport.code === code);
   const modeOf = (code: string) => sportOf(code)?.distance_mode;
@@ -137,6 +150,20 @@ export function activityCreateSchema(
     takesElevation(sportOf(input.sport_code), input.distance_km) && input.elevation_m.trim() !== ''
       ? input.elevation_m
       : undefined;
+  // The repetitions typed for the exercises the entry takes, by code.
+  const repetitionsOf = (
+    input: Parameters<typeof startOf>[0] & {
+      sport_code: string;
+      repetitions: Record<string, string>;
+    },
+  ) => {
+    const start = startOf(input, timeZone);
+    if (!start) return [];
+    return exercisesOf(input.sport_code, start).flatMap((exercise) => {
+      const typed = input.repetitions[exercise]?.trim() ?? '';
+      return typed === '' ? [] : [{ exercise, typed }];
+    });
+  };
 
   return z
     .object({
@@ -150,6 +177,7 @@ export function activityCreateSchema(
       seconds: z.string(),
       distance_km: z.string(),
       elevation_m: z.string(),
+      repetitions: z.record(z.string(), z.string()),
     })
     .superRefine((input, context) => {
       const issue = (path: string, message: string) =>
@@ -206,6 +234,16 @@ export function activityCreateSchema(
       if (elevation !== undefined && elevationMeters(elevation) === undefined) {
         issue('elevation_m', 'activityForm.fields.elevation.range');
       }
+
+      for (const { exercise, typed } of repetitionsOf(input)) {
+        if (repetitionCount(typed) === undefined) {
+          context.addIssue({
+            code: 'custom',
+            path: ['repetitions', exercise],
+            message: 'activityForm.fields.repetitions.range',
+          });
+        }
+      }
     })
     .transform((input) => {
       const mode = modeOf(input.sport_code);
@@ -215,6 +253,11 @@ export function activityCreateSchema(
       const climb = elevation === undefined ? undefined : elevationMeters(elevation);
       // Valid by now: the refinement above passed.
       const start = startOf(input, timeZone) ?? new Date(Number.NaN);
+      // Left out without any typed: on a change, that removes them.
+      const repetitions = repetitionsOf(input).map(({ exercise, typed }) => ({
+        exercise,
+        repetitions: repetitionCount(typed) ?? 0,
+      }));
       return {
         sport_code: input.sport_code,
         ...(input.sport_code === 'other' && { sport_label: cleanSportLabel(input.sport_label) }),
@@ -222,6 +265,7 @@ export function activityCreateSchema(
         duration_seconds: durationSeconds(input.hours, input.minutes, input.seconds) ?? 0,
         ...(meters !== undefined && { distance_meters: meters }),
         ...(climb !== undefined && { elevation_gain_meters: climb }),
+        ...(repetitions.length > 0 && { repetitions }),
       };
     });
 }
@@ -243,6 +287,7 @@ export const EMPTY_ACTIVITY_INPUT: ActivityCreateInput = {
   seconds: '',
   distance_km: '',
   elevation_m: '',
+  repetitions: {},
 };
 
 /** What is entered so far that reads as a value, for a summary of the entry. */
@@ -257,7 +302,10 @@ interface ActivityDraft {
  * (start read in `timeZone`, duration of 1 second to 24 hours, distance
  * over 0): nothing is computed from them.
  */
-export function activityDraft(input: ActivityCreateInput, timeZone: string): ActivityDraft {
+export function activityDraft(
+  input: Omit<ActivityCreateInput, 'repetitions'>,
+  timeZone: string,
+): ActivityDraft {
   const start = startOf(input, timeZone);
   const duration = durationSeconds(input.hours, input.minutes, input.seconds);
   const meters = distanceMeters(input.distance_km);
@@ -319,6 +367,7 @@ export function activityFormValues(
             meters / 1000,
           ),
     elevation_m: elevation === null ? '' : String(elevation),
+    repetitions: {},
   };
 }
 
@@ -332,6 +381,8 @@ const FORM_FIELDS = {
   duration_seconds: 'hours',
   distance_meters: 'distance_km',
   elevation_gain_meters: 'elevation_m',
+  // Which exercise is not said: the error goes on the repetitions.
+  repetitions: 'repetitions',
 } as const;
 
 export type ActivityFormField = (typeof FORM_FIELDS)[keyof typeof FORM_FIELDS];

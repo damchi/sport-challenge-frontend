@@ -4,7 +4,9 @@ import {
   isActivityId,
   isSportCode,
   keptSport,
+  offeredExercises,
   sortSportsForEntry,
+  type ExerciseChallenge,
 } from './activity';
 
 describe('activityTimeZone', () => {
@@ -42,6 +44,40 @@ describe('activityTimeZone', () => {
     expect(
       activityTimeZone([{ timezone: 'America/Toronto', my_status: 'abandoned' }], 'Europe/Paris'),
     ).toBe('Europe/Paris');
+  });
+});
+
+describe('offeredExercises', () => {
+  // Two CrossFit challenges on burpees and one on wall balls, in November.
+  const challenge = (exercise: string | null, more: Partial<ExerciseChallenge> = {}) => ({
+    reference_sport: 'crossfit',
+    exercise,
+    starts_at: '2026-11-02T05:00:00Z',
+    ends_at: '2026-11-30T05:00:00Z',
+    my_status: 'active' as const,
+    ...more,
+  });
+  const start = new Date('2026-11-20T12:00:00Z');
+
+  it('offers each exercise once, in the order of the challenges', () => {
+    const challenges = [challenge('burpee'), challenge('wall_ball'), challenge('burpee')];
+    expect(offeredExercises(challenges, 'crossfit', start)).toEqual(['burpee', 'wall_ball']);
+  });
+
+  it.each([
+    ['another sport', challenge('burpee', { reference_sport: 'yoga' })],
+    ['an elimination in km', challenge(null)],
+    ['an abandoned challenge', challenge('burpee', { my_status: 'abandoned' })],
+    ['a challenge not joined', challenge('burpee', { my_status: null })],
+    ['a start before the window', challenge('burpee', { starts_at: '2026-11-21T05:00:00Z' })],
+    ['a start at its end', challenge('burpee', { ends_at: '2026-11-20T12:00:00Z' })],
+  ])('offers nothing for %s', (_, offering) => {
+    expect(offeredExercises([offering], 'crossfit', start)).toEqual([]);
+  });
+
+  it('offers an exercise from the very start of its window', () => {
+    const opening = challenge('burpee', { starts_at: '2026-11-20T12:00:00Z' });
+    expect(offeredExercises([opening], 'crossfit', start)).toEqual(['burpee']);
   });
 });
 
