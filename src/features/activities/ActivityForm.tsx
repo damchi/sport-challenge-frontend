@@ -536,7 +536,8 @@ export function ActivityFormFields({
             (repetitionsOpen ? (
               <fieldset
                 className="min-w-0"
-                aria-describedby={describedBy('repetitions', repetitionsError)}
+                // The error is said on each field, the hint once here.
+                aria-describedby="repetitions-hint"
               >
                 <legend className={legendClass}>
                   {t('activityForm.fields.repetitions.label')}
@@ -571,7 +572,7 @@ export function ActivityFormFields({
                             {...register(`repetitions.${exercise}`)}
                           />
                           <span aria-hidden="true" className={unitClass}>
-                            {t('challengeCreate.fields.eliminationRepetitions.unit')}
+                            {t('activityForm.fields.repetitions.unit')}
                           </span>
                         </div>
                         <FieldError id={`${id}-error`} message={error} />

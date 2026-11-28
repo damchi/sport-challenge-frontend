@@ -38,8 +38,8 @@
     "token_expired": "Ta session a pris fin. Reconnecte-toi.",
     "unauthenticated": "Ta session a pris fin. Reconnecte-toi.",
     "unknown": "Une erreur est survenue. Réessaie.",
-    "validation_failed": "Certaines informations sont invalides. Vérifie-les, puis réessaie.",
     "unknown_exercise": "Un de ces exercices n'est proposé par aucun de tes défis pour ce sport à cette date. Vérifie le sport et la date de début.",
+    "validation_failed": "Certaines informations sont invalides. Vérifie-les, puis réessaie.",
     "week_locked": "La semaine de cette activité est terminée dans un de tes défis : elle ne peut plus être ajoutée. Vérifie la date de début."
   },
   "errorPage": {
@@ -315,6 +315,7 @@
       "repetitions": {
         "label": "Répétitions",
         "unitLong": "en répétitions",
+        "unit": "rép.",
         "hint": "Facultatif. Chaque exercice compte dans tous tes défis qui le proposent.",
         "add": "Ajouter des répétitions",
         "range": "Indique un nombre entier de répétitions, de 0 à 10 000."
