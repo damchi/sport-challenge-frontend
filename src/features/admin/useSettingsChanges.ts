@@ -46,6 +46,8 @@ const LABELS: Record<Exclude<SettingField, FactorField | 'elimination'>, string>
   points: 'challengeDetail.categories.points',
   cumulative_elevation: 'challengeCreate.categories.elevation.name',
   elimination_step_km: 'challengeCreate.fields.eliminationStep.label',
+  elimination_exercise: 'challengeCreate.fields.eliminationExercise.label',
+  elimination_step_repetitions: 'challengeCreate.fields.eliminationStep.label',
   points_criteria: 'challengeCreate.fields.pointsCriteria.label',
   points_podium: 'challengeCreate.fields.pointsPodium.label',
   points_min_session_minutes: 'admin.settings.minSession',
@@ -122,6 +124,14 @@ export function useSettingsChanges(
       }
       case 'elimination_step_km':
         return number(input.elimination_step_km, (km) => formatKm(km, locale));
+      case 'elimination_exercise': {
+        const exercise = input.elimination_exercise;
+        return exercise ? t(`exercises.${exercise}`, { defaultValue: exercise }) : empty;
+      }
+      case 'elimination_step_repetitions':
+        return number(input.elimination_step_repetitions, (count) =>
+          t('challengeCreate.fields.eliminationRepetitions.count', { count }),
+        );
       case 'points_criteria':
         return input.points_criteria.length > 0
           ? input.points_criteria

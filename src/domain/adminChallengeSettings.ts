@@ -2,6 +2,7 @@ import {
   challengeCategories,
   DEFAULT_MIN_SESSION_MINUTES,
   factorSports,
+  referenceHasDistance,
   usesDistanceFactors,
   type CatalogueSport,
 } from './challengeCreate';
@@ -36,6 +37,8 @@ export interface ChallengeSettings {
     params: {
       factors?: Record<string, number>;
       step_meters?: number;
+      exercise?: string;
+      step_repetitions?: number;
       criteria?: readonly string[];
       podium?: 5 | 10;
       min_session_seconds?: number;
@@ -49,7 +52,7 @@ function isCriterion(criterion: string): criterion is PointsCriterion {
 
 /**
  * The form filled with the challenge's settings: its first day in its time
- * zone, X in km, the minimum session in minutes, and the factors of the
+ * zone, X in km (or its exercise and X in repetitions), the minimum session in minutes, and the factors of the
  * category that uses them (the reference's left out: it counts ×1).
  */
 export function settingsFormValues(challenge: ChallengeSettings): ChallengeCreateInput {
@@ -77,6 +80,8 @@ export function settingsFormValues(challenge: ChallengeSettings): ChallengeCreat
     elimination: elimination !== undefined,
     elimination_step_km:
       elimination?.step_meters === undefined ? undefined : elimination.step_meters / 1000,
+    elimination_exercise: elimination?.exercise ?? '',
+    elimination_step_repetitions: elimination?.step_repetitions,
     points: points !== undefined,
     points_criteria: (points?.criteria ?? []).filter(isCriterion),
     points_podium: points?.podium === undefined ? null : points.podium === 10 ? '10' : '5',
@@ -100,6 +105,8 @@ export type SettingField =
   | 'cumulative_distance'
   | 'elimination'
   | 'elimination_step_km'
+  | 'elimination_exercise'
+  | 'elimination_step_repetitions'
   | 'points'
   | 'points_criteria'
   | 'points_podium'
@@ -116,7 +123,8 @@ const sameSet = (a: readonly string[], b: readonly string[]) =>
 /**
  * The settings the form changes, in its order. A category's settings count
  * while it is on before and after (switched on or off, the category itself
- * is named); a factor, while a category uses them, against the challenge's
+ * is named), the elimination's in km or in repetitions as the reference
+ * sport has a distance or not; a factor, while a category uses them, against the challenge's
  * (its suggestion when it had none).
  */
 export function changedSettings(
@@ -138,11 +146,25 @@ export function changedSettings(
   add('reference_sport', initial.reference_sport !== values.reference_sport);
   add('cumulative_distance', initial.cumulative_distance !== values.cumulative_distance);
   add('elimination', initial.elimination !== values.elimination);
+  const bothElimination = initial.elimination && values.elimination;
+  const withDistance = referenceHasDistance(sports, values.reference_sport);
   add(
     'elimination_step_km',
-    initial.elimination &&
-      values.elimination &&
+    bothElimination &&
+      withDistance &&
       !sameNumber(initial.elimination_step_km, values.elimination_step_km),
+  );
+  add(
+    'elimination_exercise',
+    bothElimination &&
+      !withDistance &&
+      initial.elimination_exercise !== values.elimination_exercise,
+  );
+  add(
+    'elimination_step_repetitions',
+    bothElimination &&
+      !withDistance &&
+      !sameNumber(initial.elimination_step_repetitions, values.elimination_step_repetitions),
   );
   add('points', initial.points !== values.points);
   const bothPoints = initial.points && values.points;
@@ -222,8 +244,15 @@ export function settingsUpdate(
   if (values.weeks !== initial.weeks) update.weeks = values.weeks;
   const newReference = values.reference_sport !== initial.reference_sport;
   if (newReference) update.reference_sport = values.reference_sport;
-  const categories = challengeCategories(values);
-  if (!sameCategories(categories, challengeCategories(initial))) {
+  const categories = challengeCategories(
+    values,
+    referenceHasDistance(sports, values.reference_sport),
+  );
+  const before = challengeCategories(
+    initial,
+    referenceHasDistance(sports, initial.reference_sport),
+  );
+  if (!sameCategories(categories, before)) {
     update.categories = categories;
   }
   if (usesDistanceFactors(values)) {

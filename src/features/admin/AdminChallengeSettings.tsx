@@ -141,8 +141,15 @@ function SettingsForm({
   // The settings as they were on opening: a later read of the challenge
   // leaves the fields as the admin set them.
   const [initial] = useState(() => settingsFormValues(challenge));
+  // The elimination of a sport without distance counts repetitions.
+  const [resolver] = useState(() => {
+    const withoutDistance = sports
+      .filter((sport) => sport.distance_mode === 'none')
+      .map((sport) => sport.code);
+    return zodResolver(challengeCreateSchema(now, { pastStart: true, withoutDistance }));
+  });
   const form = useForm<ChallengeCreateInput, unknown, ChallengeCreateValues>({
-    resolver: zodResolver(challengeCreateSchema(now, { pastStart: true })),
+    resolver,
     // Checked once the field is left, then at each keystroke.
     mode: 'onTouched',
     reValidateMode: 'onChange',
@@ -252,7 +259,7 @@ function SettingsForm({
                     <DurationStep now={now} timeZones={timeZones} pastStart />
                   </Section>
                   <Section id="categories" title={t('admin.settings.sections.categories')}>
-                    <CategoriesStep sportsWaiting={false} repetitions={false} />
+                    <CategoriesStep sportsWaiting={false} />
                   </Section>
                 </div>
                 <div className="flex flex-col gap-4 lg:sticky lg:top-6">
