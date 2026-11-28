@@ -19,6 +19,7 @@ import {
   activityCreateSchema,
   activityFormFieldOf,
   EMPTY_ACTIVITY_INPUT,
+  entryExercises,
   startOf,
   takesElevation,
   type ActivityCreateInput,
@@ -172,12 +173,15 @@ export function ActivityForm({
  * the API's codes). `submitKey` holds the button's label and busy label;
  * "Annuler" goes to `cancelTo`. Leaving with a changed entry asks first.
  * The repetitions of the exercises the sport and start take in
- * `challenges` (offeredExercises) open with "Ajouter des répétitions".
+ * `challenges` (offeredExercises) open with "Ajouter des répétitions";
+ * those of `keptExercises`, already on a changed activity, are always
+ * there, and open at once.
  */
 export function ActivityFormFields({
   sports,
   timeZone,
   challenges = [],
+  keptExercises = [],
   now,
   initialValues,
   submitKey,
@@ -190,6 +194,7 @@ export function ActivityFormFields({
   sports: readonly Sport[];
   timeZone: string;
   challenges?: readonly ExerciseChallenge[];
+  keptExercises?: readonly string[];
   now: () => Date;
   initialValues: ActivityCreateInput;
   submitKey: 'activityForm.submit' | 'activityEdit.submit' | 'admin.activityForm.preview';
@@ -211,9 +216,9 @@ export function ActivityFormFields({
   const sorted = sortSportsForEntry(sports, sportName, locale);
   const exercisesOf = (sportCode: string, start: Date) =>
     offeredExercises(challenges, sportCode, start);
-  const [repetitionsOpen, setRepetitionsOpen] = useState(false);
+  const [repetitionsOpen, setRepetitionsOpen] = useState(keptExercises.length > 0);
   const form = useForm<ActivityCreateInput, unknown, ActivityCreateValues>({
-    resolver: zodResolver(activityCreateSchema(now, sports, timeZone, exercisesOf)),
+    resolver: zodResolver(activityCreateSchema(now, sports, timeZone, exercisesOf, keptExercises)),
     // Checked once the field is left, then at each keystroke.
     mode: 'onTouched',
     reValidateMode: 'onChange',
@@ -236,7 +241,10 @@ export function ActivityFormFields({
     { start_date: startDate, start_hour: startHour, start_minute: startMinute },
     timeZone,
   );
-  const exercises = entryStart ? exercisesOf(sportCode, entryStart) : [];
+  const exercises = entryExercises(
+    entryStart ? exercisesOf(sportCode, entryStart) : [],
+    keptExercises,
+  );
   const sport = sports.find((candidate) => candidate.code === sportCode);
   const mode = sport?.distance_mode;
   const hasElevation = takesElevation(sport, distanceKm);

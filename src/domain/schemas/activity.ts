@@ -128,6 +128,14 @@ function repetitionCount(value: string): number | undefined {
 }
 
 /**
+ * The exercises an entry takes repetitions of: those `offered`, then those
+ * already on the activity (`kept`), whatever its sport or start now.
+ */
+export function entryExercises(offered: readonly string[], kept: readonly string[]): string[] {
+  return [...offered, ...kept.filter((exercise) => !offered.includes(exercise))];
+}
+
+/**
  * Activity entry input. `now` gives the current instant at each check: the
  * activity is entered once done, so neither its start nor its end is in the
  * future. `sports` is the catalogue, whose distance mode tells whether the
@@ -137,13 +145,15 @@ function repetitionCount(value: string): number | undefined {
  * minutes, is read in `timeZone`; its one error goes on the day.
  * `exercisesOf` gives the exercises the sport and start take repetitions
  * of (offeredExercises): one optional field each, typed under its code;
- * the others are neither checked nor sent.
+ * the others are neither checked nor sent. `kept`, the exercises already on
+ * a changed activity, are taken too (entryExercises).
  */
 export function activityCreateSchema(
   now: () => Date,
   sports: readonly ActivitySport[],
   timeZone: string,
   exercisesOf: (sportCode: string, start: Date) => readonly string[] = () => [],
+  kept: readonly string[] = [],
 ) {
   const sportOf = (code: string) => sports.find((sport) => sport.code === code);
   const modeOf = (code: string) => sportOf(code)?.distance_mode;
@@ -160,8 +170,8 @@ export function activityCreateSchema(
     },
   ) => {
     const start = startOf(input, timeZone);
-    if (!start) return [];
-    return exercisesOf(input.sport_code, start).flatMap((exercise) => {
+    const offered = start ? exercisesOf(input.sport_code, start) : [];
+    return entryExercises(offered, kept).flatMap((exercise) => {
       const typed = input.repetitions[exercise]?.trim() ?? '';
       return typed === '' ? [] : [{ exercise, typed }];
     });
@@ -330,12 +340,14 @@ export interface RecordedActivity {
   duration_seconds: number;
   distance_meters: number | null;
   elevation_gain_meters: number | null;
+  repetitions?: readonly { exercise: string; repetitions: number }[];
 }
 
 /**
  * What the form holds to change a recorded activity: its start read in
  * `timeZone` (day, hour and minutes, as entered), its duration in parts, its distance
- * in km written in the user's language, its elevation gain in meters.
+ * in km written in the user's language, its elevation gain in meters, its
+ * repetitions by exercise.
  */
 export function activityFormValues(
   activity: RecordedActivity,
@@ -369,7 +381,12 @@ export function activityFormValues(
             meters / 1000,
           ),
     elevation_m: elevation === null ? '' : String(elevation),
-    repetitions: {},
+    repetitions: Object.fromEntries(
+      (activity.repetitions ?? []).map(({ exercise, repetitions }) => [
+        exercise,
+        String(repetitions),
+      ]),
+    ),
   };
 }
 

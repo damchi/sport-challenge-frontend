@@ -183,4 +183,15 @@ describe('holdsEntry', () => {
   ])('compares the activity recorded, changed by %o, with the entry', (change, same) => {
     expect(holdsEntry({ ...recorded, ...change }, entry)).toBe(same);
   });
+
+  it('compares the repetitions by exercise, in any order', () => {
+    const burpees = { exercise: 'burpee', repetitions: 120 };
+    const squats = { exercise: 'air_squat', repetitions: 50 };
+    const sent = { ...entry, repetitions: [burpees, squats] };
+    expect(holdsEntry({ ...recorded, repetitions: [squats, burpees] }, sent)).toBe(true);
+    expect(holdsEntry(recorded, sent)).toBe(false);
+    expect(
+      holdsEntry({ ...recorded, repetitions: [{ ...squats, repetitions: 5 }, burpees] }, sent),
+    ).toBe(false);
+  });
 });

@@ -180,6 +180,15 @@ describe('ChallengeActivities', () => {
     expect(elevations).toEqual(['↗ 450 m', '↗ 0 m', undefined]);
   });
 
+  it('shows the repetitions of each exercise, named', async () => {
+    answer();
+    listing([{ ...run, repetitions: [{ exercise: 'wall_ball', repetitions: 80 }] }]);
+    renderAt(path);
+
+    const activity = within(await list()).getByRole('article');
+    expect(statOf(activity, 'Wall ball')).toBe('80 rép.');
+  });
+
   it('writes the elevation gain in English', async () => {
     server.use(http.get('*/api/v1/me', () => HttpResponse.json({ ...mockMe, language: 'en' })));
     answer();

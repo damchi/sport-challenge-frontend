@@ -259,6 +259,42 @@ describe('ActivityList', () => {
     });
   });
 
+  describe('repetitions', () => {
+    afterEach(async () => {
+      await i18n.changeLanguage('fr');
+    });
+
+    // Burpees offered, push-ups of no challenge any more: both named.
+    const crossfit: Activity = {
+      ...run,
+      sport_code: 'crossfit',
+      distance_meters: null,
+      repetitions: [
+        { exercise: 'burpee', repetitions: 1200 },
+        { exercise: 'push_up', repetitions: 1 },
+      ],
+    };
+
+    it('shows each exercise as a stat of its own, named', async () => {
+      listing([crossfit]);
+      renderList();
+
+      const activity = await item('CrossFit');
+      expect(statOf(activity, 'Burpees')).toBe('1 200 rép.');
+      expect(statOf(activity, 'Pompes')).toBe('1 rép.');
+    });
+
+    it('writes them in English', async () => {
+      await i18n.changeLanguage('en');
+      listing([crossfit]);
+      renderList();
+
+      const activity = await item('CrossFit');
+      expect(statOf(activity, 'Burpees')).toBe('1,200 reps');
+      expect(statOf(activity, 'Push-ups')).toBe('1 rep');
+    });
+  });
+
   it('shows the label of the sport "other", no distance, and neither pace nor speed without one', async () => {
     listing([padel]);
     renderList();

@@ -136,11 +136,24 @@ interface EntryFields {
   duration_seconds: number;
   distance_meters?: number | null;
   elevation_gain_meters?: number | null;
+  repetitions?: readonly { exercise: string; repetitions: number }[];
+}
+
+// The same repetitions by exercise, in any order (left out or none alike).
+function sameRepetitions(recorded: EntryFields, entry: EntryFields): boolean {
+  const kept = recorded.repetitions ?? [];
+  const sent = entry.repetitions ?? [];
+  const counts = new Map(kept.map(({ exercise, repetitions }) => [exercise, repetitions]));
+  return (
+    kept.length === sent.length &&
+    sent.every(({ exercise, repetitions }) => counts.get(exercise) === repetitions)
+  );
 }
 
 /**
  * Whether the activity the server recorded holds `entry`: same sport, label,
- * start, duration, distance and elevation gain (left out or null alike).
+ * start, duration, distance, elevation gain (left out or null alike) and
+ * repetitions.
  */
 export function holdsEntry(recorded: EntryFields, entry: EntryFields): boolean {
   return (
@@ -149,6 +162,7 @@ export function holdsEntry(recorded: EntryFields, entry: EntryFields): boolean {
     Date.parse(recorded.started_at) === Date.parse(entry.started_at) &&
     recorded.duration_seconds === entry.duration_seconds &&
     (recorded.distance_meters ?? null) === (entry.distance_meters ?? null) &&
-    (recorded.elevation_gain_meters ?? null) === (entry.elevation_gain_meters ?? null)
+    (recorded.elevation_gain_meters ?? null) === (entry.elevation_gain_meters ?? null) &&
+    sameRepetitions(recorded, entry)
   );
 }
